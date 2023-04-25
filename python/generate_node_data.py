@@ -60,6 +60,24 @@ def generate_inter_graph(onnx_path: str,
   return output_names
 
 
+def get_shape_str(arr: np.ndarray):
+  return "x".join(str(dim) for dim in arr.shape)
+
+
+def get_tensor(name: str,
+               input_tensor: np.ndarray,
+               initializers: Mapping[str, np.ndarray],
+               output_tensors: Mapping[str, np.ndarray]):
+  if name == "input":
+    return to_numpy(input_tensor)
+  elif name in initializers:
+    return numpy_helper.to_array(initializers[name])
+  elif name in output_tensors:
+    return output_tensors[name]
+  else:
+    raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
+
+
 if __name__ == '__main__':
   TXT_DATA_COUNT = 100
   DATA_PATH = "../data"
@@ -71,6 +89,7 @@ if __name__ == '__main__':
   INTER_TXT_PREFIX = "../data/lenet_mnist"
   OUTPUT_JSON = False
   OUTPUT_TXT = True
+  N_PER_ROW = 2 # bitwidth of 64, float32
 
   if not os.path.exists(TEST_DATA_TXT) or not os.path.exists(TEST_LABEL_TXT):
     generate_txt(is_train=False, data_count=TXT_DATA_COUNT, data_path=DATA_PATH, 
@@ -97,3 +116,32 @@ if __name__ == '__main__':
   np.testing.assert_allclose(to_numpy(torch_out), ort_outs[-1], rtol=1e-03, atol=1e-05)
 
   print("Exported model has been tested with ONNXRuntime, and the result looks good!")
+
+  # generate graph info
+  model = onnx.load(ONNX_PATH)
+  nodes = model.graph.node
+  initializers = {init.name: init for init in model.graph.initializer}
+  output_tensors = {outname: out for outname, out in zip(output_names, ort_outs)}
+
+  res = []
+  node = nodes[0]
+  for i, node in enumerate(nodes):
+    node_name = node.name.replace("/", "\\")
+    out_dict = MessageToDict(node)
+    for name in out_dict.get("input", []) + out_dict.get("output", []):
+      tensor = get_tensor(name, input_tensor, initializers, output_tensors)
+      
+      key = f"__{name}_{get_shape_str(tensor)}"
+      out_dict[key] = " ".join(str(i) for i in tensor.flatten().tolist())
+      out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__" + key.replace("/", "\\") + ".txt"
+      if tensor.size >= N_PER_ROW:
+        np.savetxt(out_txt_path, tensor.reshape(-1, N_PER_ROW), fmt="%f")
+      else:
+        np.savetxt(out_txt_path, tensor.flatten(), fmt="%f")
+      print(f"Exported node: {node_name}; I/O name: {name}; to {out_txt_path}")
+    
+    if OUTPUT_JSON:
+      out_json_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}.json"
+      with open(out_json_path, "w") as f:
+        json.dump(out_dict, f)  
+      print(f"Exported intermediate node {node.name} to {out_json_path}")
