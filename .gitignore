@@ -16,3 +16,13 @@ x86simulator_output/
 pl_sample_count*
 .AIE_SIM_CMD_LINE_OPTIONS
 aiesimulator_output/
+
+# external data
+data/MNIST
+
+# python
+*.pyc
+*.pkl
+*.onnx
+data/mnist_*.txt
+data/lenet_mnist*.txt

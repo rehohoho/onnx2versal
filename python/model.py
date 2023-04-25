@@ -1,5 +1,4 @@
 from torch import nn
-from tqdm import tqdm
 
 
 class Lenet(nn.Module):
