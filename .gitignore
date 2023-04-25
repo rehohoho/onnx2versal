@@ -1,0 +1,18 @@
+build*
+**.log
+**/.*.sw*
+**/core.*
+**vitis*
+**vivado*
+**/.Xil
+**/.nfs*
+reports_dir
+xpe_dir
+
+# x86sim
+x86simulator_output/
+
+# aiesim
+pl_sample_count*
+.AIE_SIM_CMD_LINE_OPTIONS
+aiesimulator_output/
