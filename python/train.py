@@ -14,7 +14,7 @@ from model import Lenet
 
 if __name__ == "__main__":
   BATCH_SIZE = 256
-  ALL_EPOCH = 1
+  ALL_EPOCH = 10
   DATA_PATH = "../data"
   MODEL_PATH = "../models"
 

@@ -5,7 +5,6 @@
 
 
 // instance to be compiled and used in host within xclbin
-// illegal shit here
 char conv1_input[]  = "lenet_mnist__0__.conv1.Conv__input__1x28x28x1.txt";
 char conv1_weight[] = "lenet_mnist__0__.conv1.Conv__conv1.weight__6x5x5x1.txt";
 char conv1_bias[]   = "lenet_mnist__0__.conv1.Conv__conv1.bias__6.txt";

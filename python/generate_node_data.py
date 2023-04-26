@@ -89,6 +89,7 @@ if __name__ == '__main__':
   INTER_TXT_PREFIX = "../data/lenet_mnist"
   OUTPUT_JSON = False
   OUTPUT_TXT = True
+  OUTPUT_IMAGE = False
   N_PER_ROW = 2 # bitwidth of 64, float32
 
   if not os.path.exists(TEST_DATA_TXT) or not os.path.exists(TEST_LABEL_TXT):
@@ -150,3 +151,7 @@ if __name__ == '__main__':
       with open(out_json_path, "w") as f:
         json.dump(out_dict, f)  
       print(f"Exported intermediate node {node.name} to {out_json_path}")
+
+  if OUTPUT_IMAGE:
+    from torchvision.utils import save_image
+    save_image(input_tensor, "input_tensor.png")
