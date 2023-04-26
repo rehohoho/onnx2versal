@@ -93,6 +93,7 @@ RELATIVE_PROJECT_DIR := ./
 PROJECT_REPO := $(shell readlink -f $(RELATIVE_PROJECT_DIR))
 
 DESIGN_REPO  := $(PROJECT_REPO)/design
+DATA_REPO := $(PROJECT_REPO)/data
 AIE_SRC_REPO := $(DESIGN_REPO)/aie_src
 PL_SRC_REPO  := $(DESIGN_REPO)/pl_src
 HOST_APP_SRC_REPO := $(DESIGN_REPO)/host_app_src
@@ -210,10 +211,9 @@ $(BUILD_TARGET_DIR)/$(DATAMOVER_KERNEL_XO).xo:
 #	Work/ 
 #	xnwOut/
 LIBADF_A 			:= $(BUILD_TARGET_DIR)/libadf.a
-GRAPH_SRC_CPP := $(AIE_SRC_REPO)/graph_mmul.cpp
+GRAPH_SRC_CPP := $(AIE_SRC_REPO)/graph_conv.cpp
 
 AIE_FLAGS := -include=$(AIE_SRC_REPO) \
-						 -include=$(AIE_SRC_REPO)/data \
 						 --verbose \
 						 --Xpreproc="-DNET_INSTS=$(NET_INSTS)" \
 						 --Xpreproc="-DITER_CNT=$(ITER_CNT)" \
@@ -248,7 +248,7 @@ $(LIBADF_A): $(AIE_SRC_REPO)/*
 #-i - Alias of --input-dir=<dir> option
 #-o - Alias of --output-dir=<dir> option
 AIE_SIM_FLAGS := --pkg-dir=$(BUILD_TARGET_DIR)/$(WORK_DIR)/ \
-								 -i=$(AIE_SRC_REPO)/aiesim_data
+								 -i=$(DATA_REPO)
 X86SIM_REPORT_DIR := $(BLD_REPORTS_DIR)/x86simulator_output
 AIESIM_REPORT_DIR := $(BLD_REPORTS_DIR)/aiesimulator_output
 
@@ -269,11 +269,11 @@ else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(AIE_SRC_REPO)/aiesim_data --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log
+	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(AIE_SRC_REPO)/aiesim_data --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log
+	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log
 endif
 endif
 
@@ -292,11 +292,11 @@ else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(AIE_SRC_REPO)/aiesim_data --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log
+	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(AIE_SRC_REPO)/aiesim_data --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log
+	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log
 endif
 endif
 
@@ -477,7 +477,7 @@ ifeq ($(TARGET),hw_emu)
 ifeq ($(EXTIO), true)
 	mkdir -p $(BLD_REPORTS_DIR)/aiesimulator_output; \
 	cd $(EMBEDDED_PACKAGE_OUT); \
-	python3 $(TRAFFIC_GEN_PY) --input_dir $(AIE_SRC_REPO)/aiesim_data --output_dir $(BLD_REPORTS_DIR)/aiesimulator_output 2>&1 | tee embedded_run_trafficgen.log & \
+	python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(BLD_REPORTS_DIR)/aiesimulator_output 2>&1 | tee embedded_run_trafficgen.log & \
 	./launch_hw_emu.sh -run-app $(EMBEDDED_EXEC_SCRIPT) -no-reboot | tee embedded_run.log
 else
 	cd $(EMBEDDED_PACKAGE_OUT); \
@@ -493,7 +493,7 @@ ifeq ($(EXTIO), true)
 	export XCL_EMULATION_MODE=sw_emu; \
 	export LD_LIBRARY_PATH=${XILINX_X86_XRT}/lib; \
 	./$(APP_ELF) a.xclbin 2>&1 | tee embedded_run.log & \
-	python3 $(TRAFFIC_GEN_PY) --input_dir $(AIE_SRC_REPO)/aiesim_data --output_dir $(BLD_REPORTS_DIR)/x86simulator_output 2>&1 | tee embedded_run_trafficgen.log; \
+	python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(BLD_REPORTS_DIR)/x86simulator_output 2>&1 | tee embedded_run_trafficgen.log; \
 	unset LD_LIBRARY_PATH
 else
 	@echo "sw_emu without EXTIO is not possible since kernel requires hw | hw_emu"
