@@ -6,7 +6,7 @@
 
 
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
-void conv_scalar(
+void conv_relu_scalar(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   input_window<float>* weight,  // MKKC (6x5x5x1)
   input_window<float>* bias,    // M    (6)

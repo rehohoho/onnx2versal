@@ -3,7 +3,7 @@
 
 
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
-void conv_scalar(
+void conv_relu_scalar(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   input_window<float>* weight,  // MKKC (6x5x5x1)
   input_window<float>* bias,    // M    (6)
@@ -33,6 +33,7 @@ void conv_scalar(
             // if (m == 0) printf("\n");
           }
 
+          if (res < 0) res = 0;
           window_writeincr(out, res);
           window_incr(in, C*(-K*INP_W)); // go up K
         }

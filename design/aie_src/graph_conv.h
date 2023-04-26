@@ -7,7 +7,7 @@
 
 template <int INP_W, int OUT_W, int B, int C, int M, int K, 
   const char* INP_TXT, const char* WEIGHT_TXT, const char* BIAS_TXT, const char* OUT_TXT>
-class ConvScalar : public adf::graph {
+class ConvReluScalar : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -17,10 +17,10 @@ class ConvScalar : public adf::graph {
     adf::input_plio plin[3];
     adf::output_plio plout[1];
 
-    ConvScalar(const std::string& conv_num) { 
+    ConvReluScalar(const std::string& conv_num) { 
       this->conv_num = conv_num;
 
-      k[0] = adf::kernel::create(conv_scalar<INP_W, OUT_W, B, C, M, K>);
+      k[0] = adf::kernel::create(conv_relu_scalar<INP_W, OUT_W, B, C, M, K>);
       adf::source(k[0]) = "conv.cc";
 
 #ifdef EXTERNAL_IO

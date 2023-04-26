@@ -9,16 +9,16 @@
 char conv1_input[]  = "lenet_mnist__0__.conv1.Conv__input__1x28x28x1.txt";
 char conv1_weight[] = "lenet_mnist__0__.conv1.Conv__conv1.weight__6x5x5x1.txt";
 char conv1_bias[]   = "lenet_mnist__0__.conv1.Conv__conv1.bias__6.txt";
-char conv1_output[] = "lenet_mnist__0__.conv1.Conv__.conv1.Conv_output_0__1x24x24x6.txt";
-ConvScalar<28, 24, 1, 1, 6, 5, 
-           conv1_input, conv1_weight, conv1_bias, conv1_output> conv1("1");
+char conv1_output[] = "lenet_mnist__1__.relu1.Relu__.relu1.Relu_output_0__1x24x24x6.txt";
+ConvReluScalar<28, 24, 1, 1, 6, 5, 
+  conv1_input, conv1_weight, conv1_bias, conv1_output> conv1("1");
 
 char conv3_input[]  = "lenet_mnist__3__.conv2.Conv__.pool1.MaxPool_output_0__1x12x12x6.txt";
 char conv3_weight[] = "lenet_mnist__3__.conv2.Conv__conv2.weight__16x5x5x6.txt";
 char conv3_bias[]   = "lenet_mnist__3__.conv2.Conv__conv2.bias__16.txt";
-char conv3_output[] = "lenet_mnist__3__.conv2.Conv__.conv2.Conv_output_0__1x8x8x16.txt";
-ConvScalar<12, 8, 1, 6, 16, 5, 
-           conv3_input, conv3_weight, conv3_bias, conv3_output> conv3("3");
+char conv3_output[] = "lenet_mnist__4__.relu2.Relu__.relu2.Relu_output_0__1x8x8x16.txt";
+ConvReluScalar<12, 8, 1, 6, 16, 5, 
+  conv3_input, conv3_weight, conv3_bias, conv3_output> conv3("3");
 
 
 #ifdef __X86SIM__
