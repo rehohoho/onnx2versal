@@ -126,18 +126,23 @@ if __name__ == '__main__':
   res = []
   node = nodes[0]
   for i, node in enumerate(nodes):
-    node_name = node.name.replace("/", "\\")
+    node_name = node.name.replace("/", ".")
     out_dict = MessageToDict(node)
     for name in out_dict.get("input", []) + out_dict.get("output", []):
       tensor = get_tensor(name, input_tensor, initializers, output_tensors)
       
       key = f"__{name}_{get_shape_str(tensor)}"
       out_dict[key] = " ".join(str(i) for i in tensor.flatten().tolist())
-      out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__" + key.replace("/", "\\") + ".txt"
+      
+      if tensor.ndim == 4:
+        tensor = tensor.transpose(0, 2, 3, 1) # BCHW to BHWC
+      out_name = name.replace("/", ".")
+      out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__{out_name}__{get_shape_str(tensor)}.txt"
+      
       if tensor.size >= N_PER_ROW:
-        np.savetxt(out_txt_path, tensor.reshape(-1, N_PER_ROW), fmt="%f")
+        np.savetxt(out_txt_path, tensor.reshape(-1, N_PER_ROW))
       else:
-        np.savetxt(out_txt_path, tensor.flatten(), fmt="%f")
+        np.savetxt(out_txt_path, tensor.flatten())
       print(f"Exported node: {node_name}; I/O name: {name}; to {out_txt_path}")
     
     if OUTPUT_JSON:
