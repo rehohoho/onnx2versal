@@ -65,14 +65,20 @@ class MnistLenetScalar : public adf::graph {
       plin[8] = adf::input_plio::create("plin08_"+id+"_gemm16b", adf::plio_64_bits);
       plin[9] = adf::input_plio::create("plin09_"+id+"_gemm18w", adf::plio_64_bits);
       plin[10] = adf::input_plio::create("plin10_"+id+"_gemm18b", adf::plio_64_bits);
-      plout[0] = adf::output_plio::create("plout0_"+id+"_conv00", adf::plio_64_bits);
-      plout[1] = adf::output_plio::create("plout1_"+id+"_pool02", adf::plio_64_bits);
-      plout[2] = adf::output_plio::create("plout2_"+id+"_conv03", adf::plio_64_bits);
-      plout[3] = adf::output_plio::create("plout3_"+id+"_pool05", adf::plio_64_bits);
-      plout[4] = adf::output_plio::create("plout4_"+id+"_tran05", adf::plio_64_bits);
-      plout[5] = adf::output_plio::create("plout5_"+id+"_gemm14", adf::plio_64_bits);
-      plout[6] = adf::output_plio::create("plout6_"+id+"_gemm16", adf::plio_64_bits);
-      plout[7] = adf::output_plio::create("plout7_"+id+"_gemm18", adf::plio_64_bits);
+    
+#define SET_PLOUT(STMT, PLOUT_NAME) { \
+  adf::output_plio a = adf::output_plio::create( \
+    "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME, adf::plio_64_bits); \
+  STMT; plout.push_back(a); } 
+
+      SET_PLOUT(adf::connect<adf::window<1*24*24*6*4>> (k[0].out[0], a.in[0]), "conv00");
+      SET_PLOUT(adf::connect<adf::window<1*12*12*6*4>> (k[1].out[0], a.in[0]), "pool02");
+      SET_PLOUT(adf::connect<adf::window<1*8*8*16*4>>  (k[2].out[0], a.in[0]), "conv03");
+      SET_PLOUT(adf::connect<adf::window<1*4*4*16*4>>  (k[3].out[0], a.in[0]), "pool05");
+      SET_PLOUT(adf::connect<adf::window<1*256*4>>     (k[4].out[0], a.in[0]), "tran05");
+      SET_PLOUT(adf::connect<adf::window<1*120*4>>     (k[5].out[0], a.in[0]), "gemm14");
+      SET_PLOUT(adf::connect<adf::window<1*84*4>>      (k[6].out[0], a.in[0]), "gemm16");
+      SET_PLOUT(adf::connect<adf::window<1*10*4>>      (k[7].out[0], a.in[0]), "gemm18");
 #else
       plin[0] = adf::input_plio::create("plin00_"+id+"_inp", adf::plio_64_bits, INPUT_TXT);
       plin[1] = adf::input_plio::create("plin01_"+id+"_conv00w", adf::plio_64_bits, CONV01_W_TXT);
@@ -88,8 +94,8 @@ class MnistLenetScalar : public adf::graph {
 
 #define SET_OPT_PLOUT(TXT_PATH, STMT, PLOUT_NAME) \
   if (!TXT_PATH.empty()) { \
-    std::string plout_handle = "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME; \
-    adf::output_plio a = adf::output_plio::create(plout_handle, adf::plio_64_bits, TXT_PATH); \
+    adf::output_plio a = adf::output_plio::create( \
+      "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME, adf::plio_64_bits, TXT_PATH); \
     STMT; plout.push_back(a);} 
 
       SET_OPT_PLOUT(OUT_CONV01, adf::connect<adf::window<1*24*24*6*4>> (k[0].out[0], a.in[0]), "conv00");
