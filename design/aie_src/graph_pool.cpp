@@ -10,7 +10,7 @@ char pool1_output[] = "lenet_mnist__2__.pool1.MaxPool__.pool1.MaxPool_output_0__
 MaxpoolScalar<24, 12, 1, 6, pool1_input, pool1_output> pool1("1");
 
 char pool2_input[]  = "lenet_mnist__5__.pool2.MaxPool__.relu2.Relu_output_0__1x8x8x16.txt";
-char pool2_output[] = "lenet_mnist__5__.pool2.MaxPool__.pool2.MaxPool_output_0__1x4x4x16";
+char pool2_output[] = "lenet_mnist__5__.pool2.MaxPool__.pool2.MaxPool_output_0__1x4x4x16.txt";
 MaxpoolScalar<8, 4, 1, 16, pool2_input, pool2_output> pool2("2");
 
 
