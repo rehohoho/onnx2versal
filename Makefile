@@ -259,7 +259,8 @@ ifeq ($(EXTIO), false)
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log
+	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log; \
+	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
@@ -269,7 +270,8 @@ else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log
+	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log; \
+	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
@@ -280,9 +282,7 @@ endif
 aiesim_profile: graph
 ifeq ($(EXTIO), false)
 ifeq ($(TARGET), sw_emu)
-	mkdir -p $(X86SIM_REPORT_DIR); \
-	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log
+	@echo "sw_emu does not support profiling, requires hw | hw_emu"
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
@@ -290,9 +290,7 @@ else
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
-	mkdir -p $(X86SIM_REPORT_DIR); \
-	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log
+	@echo "sw_emu does not support profiling, requires hw | hw_emu"
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \

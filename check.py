@@ -44,8 +44,8 @@ if __name__ == "__main__":
     
     print(f"Checking directories {DATA_DIR} and {OUT_DIR}")
     filenames = set(os.listdir(DATA_DIR)).intersection(os.listdir(OUT_DIR))
-    for fn in filenames:
-      print(f"Checking {fn}")
+    for i, fn in enumerate(filenames):
+      print(f"Checking {i+1}/{len(filenames)}: {fn}")
       check(
         os.path.join(DATA_DIR, fn), 
         os.path.join(OUT_DIR, fn))
