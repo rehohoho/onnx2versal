@@ -19,15 +19,7 @@ template <
   const char* GEMM16_W_TXT,
   const char* GEMM16_B_TXT,
   const char* GEMM18_W_TXT,
-  const char* GEMM18_B_TXT,
-  const char* OUT_CONV01,
-  const char* OUT_POOL02,
-  const char* OUT_CONV03,
-  const char* OUT_POOL05,
-  const char* OUT_TRAN05,
-  const char* OUT_GEMM14,
-  const char* OUT_GEMM16,
-  const char* OUT_GEMM18
+  const char* GEMM18_B_TXT
 >
 class MnistLenetScalar : public adf::graph {
 
@@ -37,9 +29,19 @@ class MnistLenetScalar : public adf::graph {
 
   public:
     adf::input_plio plin[11];
-    adf::output_plio plout[8];
+    std::vector<adf::output_plio> plout; // intermediate outputs optional
 
-    MnistLenetScalar(const std::string& id) { 
+    MnistLenetScalar(
+      const std::string& id,
+      const std::string& OUT_CONV01 = std::string(),
+      const std::string& OUT_POOL02 = std::string(),
+      const std::string& OUT_CONV03 = std::string(),
+      const std::string& OUT_POOL05 = std::string(),
+      const std::string& OUT_TRAN05 = std::string(),
+      const std::string& OUT_GEMM14 = std::string(),
+      const std::string& OUT_GEMM16 = std::string(),
+      const std::string& OUT_GEMM18 = std::string()
+    ) { 
       this->id = id;
 
       k[0] = adf::kernel::create(conv_relu_scalar<28, 24, 1, 1, 6, 5>); adf::source(k[0]) = "conv.cc";
@@ -83,14 +85,21 @@ class MnistLenetScalar : public adf::graph {
       plin[8] = adf::input_plio::create("plin08_"+id+"_gemm16b", adf::plio_64_bits, GEMM16_B_TXT);
       plin[9] = adf::input_plio::create("plin09_"+id+"_gemm18w", adf::plio_64_bits, GEMM18_W_TXT);
       plin[10] = adf::input_plio::create("plin10_"+id+"_gemm18b", adf::plio_64_bits, GEMM18_B_TXT);
-      plout[0] = adf::output_plio::create("plout0_"+id+"_conv00", adf::plio_64_bits, OUT_CONV01);
-      plout[1] = adf::output_plio::create("plout1_"+id+"_pool02", adf::plio_64_bits, OUT_POOL02);
-      plout[2] = adf::output_plio::create("plout2_"+id+"_conv03", adf::plio_64_bits, OUT_CONV03);
-      plout[3] = adf::output_plio::create("plout3_"+id+"_pool05", adf::plio_64_bits, OUT_POOL05);
-      plout[4] = adf::output_plio::create("plout4_"+id+"_tran05", adf::plio_64_bits, OUT_TRAN05);
-      plout[5] = adf::output_plio::create("plout5_"+id+"_gemm14", adf::plio_64_bits, OUT_GEMM14);
-      plout[6] = adf::output_plio::create("plout6_"+id+"_gemm16", adf::plio_64_bits, OUT_GEMM16);
-      plout[7] = adf::output_plio::create("plout7_"+id+"_gemm18", adf::plio_64_bits, OUT_GEMM18);
+
+#define SET_OPT_PLOUT(TXT_PATH, STMT, PLOUT_NAME) \
+  if (!TXT_PATH.empty()) { \
+    std::string plout_handle = "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME; \
+    adf::output_plio a = adf::output_plio::create(plout_handle, adf::plio_64_bits, TXT_PATH); \
+    STMT; plout.push_back(a);} 
+
+      SET_OPT_PLOUT(OUT_CONV01, adf::connect<adf::window<1*24*24*6*4>> (k[0].out[0], a.in[0]), "conv00");
+      SET_OPT_PLOUT(OUT_POOL02, adf::connect<adf::window<1*12*12*6*4>> (k[1].out[0], a.in[0]), "pool02");
+      SET_OPT_PLOUT(OUT_CONV03, adf::connect<adf::window<1*8*8*16*4>>  (k[2].out[0], a.in[0]), "conv03");
+      SET_OPT_PLOUT(OUT_POOL05, adf::connect<adf::window<1*4*4*16*4>>  (k[3].out[0], a.in[0]), "pool05");
+      SET_OPT_PLOUT(OUT_TRAN05, adf::connect<adf::window<1*256*4>>     (k[4].out[0], a.in[0]), "tran05");
+      SET_OPT_PLOUT(OUT_GEMM14, adf::connect<adf::window<1*120*4>>     (k[5].out[0], a.in[0]), "gemm14");
+      SET_OPT_PLOUT(OUT_GEMM16, adf::connect<adf::window<1*84*4>>      (k[6].out[0], a.in[0]), "gemm16");
+      SET_OPT_PLOUT(OUT_GEMM18, adf::connect<adf::window<1*10*4>>      (k[7].out[0], a.in[0]), "gemm18");
 #endif
       
       // interkernel
@@ -101,16 +110,6 @@ class MnistLenetScalar : public adf::graph {
       adf::connect<adf::window<1*256*4>>      (k[4].out[0], k[5].in[0]); // gemm14 in
       adf::connect<adf::window<1*120*4>>      (k[5].out[0], k[6].in[0]); // gemm16 in
       adf::connect<adf::window<1*84*4>>       (k[6].out[0], k[7].in[0]); // gemm18 in
-      
-      // outputs
-      adf::connect<adf::window<1*24*24*6*4>>  (k[0].out[0], plout[0].in[0]); // conv00
-      adf::connect<adf::window<1*12*12*6*4>>  (k[1].out[0], plout[1].in[0]); // pool02
-      adf::connect<adf::window<1*8*8*16*4>>   (k[2].out[0], plout[2].in[0]); // conv03
-      adf::connect<adf::window<1*4*4*16*4>>   (k[3].out[0], plout[3].in[0]); // pool05
-      adf::connect<adf::window<1*256*4>>      (k[4].out[0], plout[4].in[0]); // tran05
-      adf::connect<adf::window<1*120*4>>      (k[5].out[0], plout[5].in[0]); // gemm14
-      adf::connect<adf::window<1*84*4>>       (k[6].out[0], plout[6].in[0]); // gemm16
-      adf::connect<adf::window<1*10*4>>       (k[7].out[0], plout[7].in[0]); // gemm18
       
       // inputs and parameters
       adf::connect<adf::window<1*28*28*1*4>> (plin[0].out[0], k[0].in[0]);// input

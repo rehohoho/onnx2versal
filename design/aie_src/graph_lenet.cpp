@@ -34,10 +34,9 @@ MnistLenetScalar<
   conv3_w, conv3_b,
   gemm14_w, gemm14_b,
   gemm16_w, gemm16_b,
-  gemm18_w, gemm18_b,
-  o_conv00, o_pool02, o_conv03, o_pool05, o_tran05, 
-  o_gemm14, o_gemm16, o_gemm18
-> lenet1 ("1");
+  gemm18_w, gemm18_b
+> lenet1 ("1", 
+  o_conv00, o_pool02, o_conv03, o_pool05, o_tran05, o_gemm14, o_gemm16, o_gemm18);
 
 
 #ifdef __X86SIM__
