@@ -252,7 +252,7 @@ AIE_SIM_FLAGS := --pkg-dir=$(BUILD_TARGET_DIR)/$(WORK_DIR)/ \
 X86SIM_REPORT_DIR := $(BLD_REPORTS_DIR)/x86simulator_output
 AIESIM_REPORT_DIR := $(BLD_REPORTS_DIR)/aiesimulator_output
 
-TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_aie.py
+TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_lenet.py
 
 aiesim: graph
 ifeq ($(EXTIO), false)
