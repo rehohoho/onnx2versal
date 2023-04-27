@@ -5,28 +5,28 @@
 
 
 // instance to be compiled and used in host within xclbin
-char inp0[]    = "lenet_mnist__0__.conv1.Conv__input__1x28x28x1.txt";
+char inp0[]    = "lenet_mnist__0___conv1_Conv__input__1x28x28x1.txt";
 
-char conv1_w[]  = "lenet_mnist__0__.conv1.Conv__conv1.weight__6x5x5x1.txt";
-char conv1_b[]  = "lenet_mnist__0__.conv1.Conv__conv1.bias__6.txt";
-char conv3_w[]  = "lenet_mnist__3__.conv2.Conv__conv2.weight__16x5x5x6.txt";
-char conv3_b[]  = "lenet_mnist__3__.conv2.Conv__conv2.bias__16.txt";
+char conv1_w[]  = "lenet_mnist__0___conv1_Conv__conv1_weight__6x5x5x1.txt";
+char conv1_b[]  = "lenet_mnist__0___conv1_Conv__conv1_bias__6.txt";
+char conv3_w[]  = "lenet_mnist__3___conv2_Conv__conv2_weight__16x5x5x6.txt";
+char conv3_b[]  = "lenet_mnist__3___conv2_Conv__conv2_bias__16.txt";
 
-char gemm14_w[] = "lenet_mnist__14__.fc1.Gemm__fc1.weight__120x256.txt";
-char gemm14_b[] = "lenet_mnist__14__.fc1.Gemm__fc1.bias__120.txt";
-char gemm16_w[] = "lenet_mnist__16__.fc2.Gemm__fc2.weight__84x120.txt";
-char gemm16_b[] = "lenet_mnist__16__.fc2.Gemm__fc2.bias__84.txt";
-char gemm18_w[] = "lenet_mnist__18__.fc3.Gemm__fc3.weight__10x84.txt";
-char gemm18_b[] = "lenet_mnist__18__.fc3.Gemm__fc3.bias__10.txt";
+char gemm14_w[] = "lenet_mnist__14___fc1_Gemm__fc1_weight__120x256.txt";
+char gemm14_b[] = "lenet_mnist__14___fc1_Gemm__fc1_bias__120.txt";
+char gemm16_w[] = "lenet_mnist__16___fc2_Gemm__fc2_weight__84x120.txt";
+char gemm16_b[] = "lenet_mnist__16___fc2_Gemm__fc2_bias__84.txt";
+char gemm18_w[] = "lenet_mnist__18___fc3_Gemm__fc3_weight__10x84.txt";
+char gemm18_b[] = "lenet_mnist__18___fc3_Gemm__fc3_bias__10.txt";
 
-char o_conv00[] = "lenet_mnist__1__.relu1.Relu__.relu1.Relu_output_0__1x24x24x6.txt";
-char o_pool02[] = "lenet_mnist__2__.pool1.MaxPool__.pool1.MaxPool_output_0__1x12x12x6.txt";
-char o_conv03[] = "lenet_mnist__4__.relu2.Relu__.relu2.Relu_output_0__1x8x8x16.txt";
-char o_pool05[] = "lenet_mnist__5__.pool2.MaxPool__.pool2.MaxPool_output_0__1x4x4x16.txt";
-char o_tran05[] = "lenet_mnist__13__.Reshape__.Reshape_output_0__1x256.txt";
-char o_gemm14[] = "lenet_mnist__15__.relu3.Relu__.relu3.Relu_output_0__1x120.txt";
-char o_gemm16[] = "lenet_mnist__17__.relu4.Relu__.relu4.Relu_output_0__1x84.txt";
-char o_gemm18[] = "lenet_mnist__19__.relu5.Relu__output__1x10.txt";
+char o_conv00[] = "lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x24x24x6.txt";
+char o_pool02[] = "lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x12x12x6.txt";
+char o_conv03[] = "lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x8x8x16.txt";
+char o_pool05[] = "lenet_mnist__5___pool2_MaxPool___pool2_MaxPool_output_0__1x4x4x16.txt";
+char o_tran05[] = "lenet_mnist__13___Reshape___Reshape_output_0__1x256.txt";
+char o_gemm14[] = "lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt";
+char o_gemm16[] = "lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt";
+char o_gemm18[] = "lenet_mnist__19___relu5_Relu__output__1x10.txt";
 
 MnistLenetScalar< 
   inp0,

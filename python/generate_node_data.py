@@ -127,7 +127,7 @@ if __name__ == '__main__':
   res = []
   node = nodes[0]
   for i, node in enumerate(nodes):
-    node_name = node.name.replace("/", ".")
+    node_name = node.name.replace("/", "_").replace(".", "_")
     out_dict = MessageToDict(node)
     for name in out_dict.get("input", []) + out_dict.get("output", []):
       tensor = get_tensor(name, input_tensor, initializers, output_tensors)
@@ -137,7 +137,7 @@ if __name__ == '__main__':
       
       if tensor.ndim == 4:
         tensor = tensor.transpose(0, 2, 3, 1) # BCHW to BHWC
-      out_name = name.replace("/", ".")
+      out_name = name.replace("/", "_").replace(".", "_")
       out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__{out_name}__{get_shape_str(tensor)}.txt"
       
       if tensor.size >= N_PER_ROW:

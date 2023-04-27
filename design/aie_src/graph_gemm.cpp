@@ -5,24 +5,24 @@
 
 
 // instance to be compiled and used in host within xclbin
-char gemm1_input[]  = "lenet_mnist__14__.fc1.Gemm__.Reshape_output_0__1x256.txt";
-char gemm1_weight[] = "lenet_mnist__14__.fc1.Gemm__fc1.weight__120x256.txt";
-char gemm1_bias[]   = "lenet_mnist__14__.fc1.Gemm__fc1.bias__120.txt";
-char gemm1_output[] = "lenet_mnist__15__.relu3.Relu__.relu3.Relu_output_0__1x120.txt";
+char gemm1_input[]  = "lenet_mnist__14___fc1_Gemm___Reshape_output_0__1x256.txt";
+char gemm1_weight[] = "lenet_mnist__14___fc1_Gemm__fc1_weight__120x256.txt";
+char gemm1_bias[]   = "lenet_mnist__14___fc1_Gemm__fc1_bias__120.txt";
+char gemm1_output[] = "lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt";
 GemmReluScalar<1, 256, 120, 
   gemm1_input, gemm1_weight, gemm1_bias, gemm1_output> gemm1("1");
 
-char gemm2_input[]  = "lenet_mnist__16__.fc2.Gemm__.relu3.Relu_output_0__1x120.txt";
-char gemm2_weight[] = "lenet_mnist__16__.fc2.Gemm__fc2.weight__84x120.txt";
-char gemm2_bias[]   = "lenet_mnist__16__.fc2.Gemm__fc2.bias__84.txt";
-char gemm2_output[] = "lenet_mnist__17__.relu4.Relu__.relu4.Relu_output_0__1x84.txt";
+char gemm2_input[]  = "lenet_mnist__16___fc2_Gemm___relu3_Relu_output_0__1x120.txt";
+char gemm2_weight[] = "lenet_mnist__16___fc2_Gemm__fc2_weight__84x120.txt";
+char gemm2_bias[]   = "lenet_mnist__16___fc2_Gemm__fc2_bias__84.txt";
+char gemm2_output[] = "lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt";
 GemmReluScalar<1, 120, 84, 
   gemm2_input, gemm2_weight, gemm2_bias, gemm2_output> gemm2("2");
 
-char gemm3_input[]  = "lenet_mnist__18__.fc3.Gemm__.relu4.Relu_output_0__1x84.txt";
-char gemm3_weight[] = "lenet_mnist__18__.fc3.Gemm__fc3.weight__10x84.txt";
-char gemm3_bias[]   = "lenet_mnist__18__.fc3.Gemm__fc3.bias__10.txt";
-char gemm3_output[] = "lenet_mnist__19__.relu5.Relu__output__1x10.txt";
+char gemm3_input[]  = "lenet_mnist__18___fc3_Gemm___relu4_Relu_output_0__1x84.txt";
+char gemm3_weight[] = "lenet_mnist__18___fc3_Gemm__fc3_weight__10x84.txt";
+char gemm3_bias[]   = "lenet_mnist__18___fc3_Gemm__fc3_bias__10.txt";
+char gemm3_output[] = "lenet_mnist__19___relu5_Relu__output__1x10.txt";
 GemmReluScalar<1, 84, 10, 
   gemm3_input, gemm3_weight, gemm3_bias, gemm3_output> gemm3("3");
 

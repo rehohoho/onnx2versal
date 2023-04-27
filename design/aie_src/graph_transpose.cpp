@@ -5,8 +5,8 @@
 
 
 // instance to be compiled and used in host within xclbin
-char transpose1_input[]  = "lenet_mnist__13__.Reshape__.pool2.MaxPool_output_0__1x4x4x16.txt";
-char transpose1_output[] = "lenet_mnist__13__.Reshape__.Reshape_output_0__1x256.txt";
+char transpose1_input[]  = "lenet_mnist__13___Reshape___pool2_MaxPool_output_0__1x4x4x16.txt";
+char transpose1_output[] = "lenet_mnist__13___Reshape___Reshape_output_0__1x256.txt";
 TransposeScalar<1, 4, 4, 16, transpose1_input, transpose1_output> transpose1("1");
 
 
