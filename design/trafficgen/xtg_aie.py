@@ -47,6 +47,12 @@ def int32_tobytes(data: List[int]):
 def int32_fstr(payload_len_in_bytes: int):
   return "<"+str(payload_len_in_bytes//4)+"i"
 
+def float32_tobytes(data: List[int]):
+  return np.real(data).astype(np.float32).tolist()
+
+def float32_fstr(payload_len_in_bytes: int):
+  return "<"+str(payload_len_in_bytes//4)+"f"
+
 def get_format_to_bytes_callable(dtype: str):
   if dtype == "int32":
     return int32_tobytes
@@ -56,6 +62,8 @@ def get_format_to_bytes_callable(dtype: str):
     return int8_tobytes
   elif dtype == "cint16":
     return cint16_tobytes
+  elif dtype == "float32":
+    return float32_tobytes
   else:
     raise NotImplementedError(f"{dtype} formatting not supported.")
 
@@ -68,6 +76,8 @@ def get_format_string_callable_send(dtype: str):
     return int8_fstr
   elif dtype == "cint16":
     return cint16_fstr_send
+  elif dtype == "float32":
+    return float32_fstr
   else:
     raise NotImplementedError(f"{dtype} format string not supported.")
 
@@ -80,6 +90,8 @@ def get_format_string_callable_recv(dtype: str):
     return int8_fstr
   elif dtype == "cint16":
     return cint16_fstr_recv
+  elif dtype == "float32":
+    return float32_fstr
   else:
     raise NotImplementedError(f"{dtype} format string not supported.")
 
@@ -119,8 +131,7 @@ class ExternalTraffic:
       logging.info(f"[{ipc_name}]: Sending {len(L)} {dtype} data...")
       
       for i, line in enumerate(L):
-        values = re.findall(r'-?\d+', line)
-        values = [int(v) for v in values]
+        values = line.split()
         packet = format_to_bytes(values)
 
         payload = xtlm_ipc.axi_stream_packet()
@@ -220,76 +231,28 @@ if __name__ == "__main__":
   logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 
   master_list = [
-    # mul
-    # ("smul_plin1", f"{args.input_dir}/va_10samples.txt", 64, "int32"),
-    # ("smul_plin2", f"{args.input_dir}/vb_10samples.txt", 64, "int32"),
-    # ("vmul_plin1", f"{args.input_dir}/va_10samples.txt", 64, "int32"),
-    # ("vmul_plin2", f"{args.input_dir}/vb_10samples.txt", 64, "int32"),
-    
-    # fir
-    # ("sfir_plin1", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("vfir_plin0", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mfir_plin0", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mfir_plin1", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mfir_plin2", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mfir_plin3", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("vifir_plin0", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mifir_plin0", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mifir_plin1", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mifir_plin2", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("mifir_plin3", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("x4fir_plin0", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("x4fir_plin1", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("x4fir_plin2", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-    # ("x4fir_plin3", f"{args.input_dir}/fir_100samples.txt", 64, "cint16"),
-
-    # mmul aieapi
-    ("mmul_plin0", f"{args.input_dir}/mmul_100samples_rand.txt", 64, "int8"),
-    ("mmul_plin1", f"{args.input_dir}/mmul_100samples_rand.txt", 64, "int8"),
-
-    # vmul intrinsic
-    ("vscalar_plin0", f"{args.input_dir}/vmula_100samples.txt", 64, "int16"),
-    ("vscalar_plin1", f"{args.input_dir}/vmulb_100samples.txt", 64, "int16"),
-    ("vvector_plin0", f"{args.input_dir}/vmula_100samples.txt", 64, "int16"),
-    ("vvector_plin1", f"{args.input_dir}/vmulb_100samples.txt", 64, "int16"),
-    ("v2vector_plin0", f"{args.input_dir}/vmula_100samples_phase1.txt", 64, "int16"),
-    ("v2vector_plin1", f"{args.input_dir}/vmula_100samples_phase2.txt", 64, "int16"),
-    ("v2vector_plin2", f"{args.input_dir}/vmulb_100samples.txt", 64, "int16"),
-    
-    # mmul intrinsic
-    ("mscalar_plin0", f"{args.input_dir}/mmula_100samples_rand.txt", 64, "int16"),
-    ("mscalar_plin1", f"{args.input_dir}/mmulb_100samples_rand.txt", 64, "int16"),
-    ("mvector_plin0", f"{args.input_dir}/mmula_100samples_rand.txt", 64, "int16"),
-    ("mvector_plin1", f"{args.input_dir}/mmulb_100samples_rand.txt", 64, "int16"),
+    ("plin00_1_inp", f"{args.input_dir}/lenet_mnist__0___conv1_Conv__input__1x28x28x1.txt", 64, "float32"),
+    ("plin01_1_conv00w", f"{args.input_dir}/lenet_mnist__0___conv1_Conv__conv1_weight__6x5x5x1.txt", 64, "float32"),
+    ("plin02_1_conv00b", f"{args.input_dir}/lenet_mnist__0___conv1_Conv__conv1_bias__6.txt", 64, "float32"),
+    ("plin03_1_conv03w", f"{args.input_dir}/lenet_mnist__3___conv2_Conv__conv2_weight__16x5x5x6.txt", 64, "float32"),
+    ("plin04_1_conv03b", f"{args.input_dir}/lenet_mnist__3___conv2_Conv__conv2_bias__16.txt", 64, "float32"),
+    ("plin05_1_gemm14w", f"{args.input_dir}/lenet_mnist__14___fc1_Gemm__fc1_weight__120x256.txt", 64, "float32"),
+    ("plin06_1_gemm14b", f"{args.input_dir}/lenet_mnist__14___fc1_Gemm__fc1_bias__120.txt", 64, "float32"),
+    ("plin07_1_gemm16w", f"{args.input_dir}/lenet_mnist__16___fc2_Gemm__fc2_weight__84x120.txt", 64, "float32"),
+    ("plin08_1_gemm16b", f"{args.input_dir}/lenet_mnist__16___fc2_Gemm__fc2_bias__84.txt", 64, "float32"),
+    ("plin09_1_gemm18w", f"{args.input_dir}/lenet_mnist__18___fc3_Gemm__fc3_weight__10x84.txt", 64, "float32"),
+    ("plin10_1_gemm18b", f"{args.input_dir}/lenet_mnist__18___fc3_Gemm__fc3_bias__10.txt", 64, "float32"),
   ]
 
   slave_list = [
-    # mul
-    # ("smul_plout1", f"{args.output_dir}/scalar_mul.txt", 64, "int32", 512), 
-    # ("vmul_plout1", f"{args.output_dir}/vector_mul.txt", 64, "int32", 512), 
-    
-    # fir
-    # ("sfir_plout1", f"{args.output_dir}/sfir.txt", 64, "cint16", 64),
-    # ("vfir_plout0", f"{args.output_dir}/vfir.txt", 64, "cint16", 64),
-    # ("mfir_plout0", f"{args.output_dir}/mfir.txt", 64, "cint16", 64),
-    # ("vifir_plout0", f"{args.output_dir}/vifir.txt", 64, "cint16", 64),
-    # ("mifir_plout0", f"{args.output_dir}/mifir.txt", 64, "cint16", 64),
-    # ("x4fir_plout0", f"{args.output_dir}/x4fir_0.txt", 64, "cint16", 64),
-    # ("x4fir_plout1", f"{args.output_dir}/x4fir_1.txt", 64, "cint16", 64),
-    # ("x4fir_plout2", f"{args.output_dir}/x4fir_2.txt", 64, "cint16", 64),
-    # ("x4fir_plout3", f"{args.output_dir}/x4fir_3.txt", 64, "cint16", 64),
-
-    # mmul aieapi
-    ("mmul_plout0", f"{args.output_dir}/mmul_aieapi.txt", 64, "int8", 4096),
-
-    # vmul intrinsic
-    ("vscalar_plout0", f"{args.output_dir}/vmul_scalar.txt", 64, "int16", 64),
-    ("vvector_plout0", f"{args.output_dir}/vmul_vector.txt", 64, "int16", 64),
-    ("v2vector_plout0", f"{args.output_dir}/vmul_2vector.txt", 64, "int16", 64),
-    
-    # mmul_intrinsic
-    ("mscalar_plout0", f"{args.output_dir}/mmul_scalar.txt", 64, "int16", 128),
-    ("mvector_plout0", f"{args.output_dir}/mmul_vector.txt", 64, "int16", 128),
+    ("plout0_1_conv00", f"{args.output_dir}/lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x24x24x6.txt", 64, "float32", 24*24*6),
+    ("plout1_1_pool02", f"{args.output_dir}/lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x12x12x6.txt", 64, "float32", 12*12*6),
+    ("plout2_1_conv03", f"{args.output_dir}/lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x8x8x16.txt", 64, "float32", 8*8*16),
+    ("plout3_1_pool05", f"{args.output_dir}/lenet_mnist__5___pool2_MaxPool___pool2_MaxPool_output_0__1x4x4x16.txt", 64, "float32", 4*4*16),
+    ("plout4_1_tran05", f"{args.output_dir}/lenet_mnist__13___Reshape___Reshape_output_0__1x256.txt", 64, "float32", 256),
+    ("plout5_1_gemm14", f"{args.output_dir}/lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt", 64, "float32", 120),
+    ("plout6_1_gemm16", f"{args.output_dir}/lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt", 64, "float32", 84),
+    ("plout7_1_gemm18", f"{args.output_dir}/lenet_mnist__19___relu5_Relu__output__1x10.txt", 64, "float32", 10),
   ]
   
   design = ExternalTraffic(master_list, slave_list)
