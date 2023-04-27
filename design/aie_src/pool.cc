@@ -9,10 +9,11 @@ void maxpool_scalar(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   output_window<float>* out     // BPQC (1x24x24x6)
 ) {
+  PROFILE_HEADER;
+  printf("Running maxpool_scalar<%d, %d, %d, %d>", INP_W, OUT_W, B, C);
 
   const int K = INP_W / OUT_W;
 
-  // BHWM
   for (int b = 0; b < B; b++) {
     for (int h = 0; h < OUT_W; h++) {
       for (int w = 0; w < OUT_W; w++) {
@@ -39,4 +40,5 @@ void maxpool_scalar(
     }
   }
 
+  PROFILE_FOOTER;
 }

@@ -9,6 +9,8 @@ void conv_relu_scalar(
   input_window<float>* bias,    // M    (6)
   output_window<float>* out     // BHWM (1x24x24x6)
 ) {
+  PROFILE_HEADER;
+  printf("Running conv_relu_scalar<%d, %d, %d, %d, %d, %d>", INP_W, OUT_W, B, C, M, K);
 
   // BHWM
   for (int b = 0; b < B; b++) {
@@ -44,4 +46,5 @@ void conv_relu_scalar(
     }
   }
 
+  PROFILE_FOOTER;
 }

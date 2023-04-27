@@ -10,6 +10,8 @@ void gemm_relu_scalar(
   input_window<float>* bias,    // N    (120)
   output_window<float>* out     // MxN  (1x120)
 ) {
+  PROFILE_HEADER;
+  printf("Running gemm_relu_scalar<%d, %d, %d>", M, K, N);
 
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) {
@@ -27,4 +29,5 @@ void gemm_relu_scalar(
     window_incr(out, 1); // next row
   }
 
+  PROFILE_FOOTER;
 }

@@ -7,6 +7,8 @@ void bhwc2bchw_scalar(
 	input_window<float>* in,      // BHWC (1x4x4x16)
   output_window<float>* out     // BCHW (1x16x4x4)
 ) {
+  PROFILE_HEADER;
+  printf("Running bhwc2bchw_scalar<%d, %d, %d, %d>", B, H, W, C);
 
   for (int b = 0; b < B; b++) {
     for (int h = 0; h < H; h++) {
@@ -23,4 +25,5 @@ void bhwc2bchw_scalar(
     }
   }
 
+  PROFILE_FOOTER;
 }
