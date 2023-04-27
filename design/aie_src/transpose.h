@@ -1,5 +1,5 @@
-#ifndef CONV_H_
-#define CONV_H_
+#ifndef TRANSPOSE_H_
+#define TRANSPOSE_H_
 
 #include <adf.h>
 #include "aie_api/aie.hpp"
@@ -11,4 +11,4 @@ void bhwc2bchw_scalar(
   output_window<float>* out     // BCHW (1x16x4x4)
 );
 
-#endif // CONV_H_
+#endif // TRANSPOSE_H_
