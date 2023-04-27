@@ -4,21 +4,21 @@
 
 // xA^T + b as per torch,nn.Linear
 template <int M, int K, int N>
-void gemm_relu_scalar(
+void GemmReluScalar<M, K, N>::filter(
 	input_window<float>* in,      // MxK  (1x256)
-  input_window<float>* weight,  // NxK  (120x256)
-  input_window<float>* bias,    // N    (120)
   output_window<float>* out     // MxN  (1x120)
 ) {
   PROFILE_HEADER;
   printf("Running gemm_relu_scalar<%d, %d, %d>", M, K, N);
+  int weightIdx = 0;
 
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) {
-      float res = window_readincr(bias);
+      float res = bias[j];
       for (int k = 0; k < K; k++) {
         float a = window_readincr(in);
-        float b = window_readincr(weight);
+        float b = weights[weightIdx];
+        weightIdx++;
         res += a * b; // matB is a circular buffer
       }    
       
