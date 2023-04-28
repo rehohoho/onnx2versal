@@ -12,16 +12,19 @@ class GemmReluScalar {
   private:
     alignas(32) float weights[N*K]; // NxK (120x256)
     alignas(32) float bias[N];      // N   (120)
+    int nOff;
   
   public:
     GemmReluScalar (
       const float (&w)[N*K],
-      const float (&b)[N]
+      const float (&b)[N],
+      int nOff
     ) {
       for (int i = 0; i < N*K; i++)
         weights[i] = w[i];
       for (int i = 0; i < N; i++)
         bias[i] = b[i];
+      this->nOff = nOff;
     };
 
     void filter(
