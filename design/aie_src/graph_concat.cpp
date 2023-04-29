@@ -8,7 +8,7 @@
 char concat1_input[]  = "concat_in.txt";
 char concat1_empty[]  = "empty.txt";
 char concat1_output[] = "concat_out.txt";
-ConcatScalarGraph<3, 8, 8, 8, 0, concat1_input, concat1_empty, concat1_output> concat1("1");
+ConcatScalarGraph<3, 8, 8, 8, 0, 18, concat1_input, concat1_empty, concat1_output> concat1("1");
 
 
 #ifdef __X86SIM__
