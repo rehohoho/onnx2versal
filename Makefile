@@ -27,17 +27,17 @@ help::
 	@echo  "    EN_TRACE           0 (default) | 1,                 enable profiling .ini (hw)"
 	@echo  ""
 	@echo  " Runs in x86simulator / x86 threads. Functional only, no profiling."
-	@echo  "  TARGET=sw_emu EXTIO=false make kernels graph aiesim"
-	@echo  "  TARGET=sw_emu EXTIO=false make kernels graph xsa application package run_emu"
-	@echo  "  TARGET=sw_emu EXTIO=true make kernels graph aiesim"
-	@echo  "  TARGET=sw_emu EXTIO=true make kernels graph xsa application package run_emu"
+	@echo  "  TARGET=sw_emu EXTIO=false GRAPH=lenet make graph aiesim"
+	@echo  "  TARGET=sw_emu EXTIO=false GRAPH=lenet make graph kernels xsa application package run_emu"
+	@echo  "  TARGET=sw_emu EXTIO=true GRAPH=lenet make graph aiesim"
+	@echo  "  TARGET=sw_emu EXTIO=true GRAPH=lenet make graph kernels xsa application package run_emu"
 	@echo  "  TARGET=sw_emu make clean clean_reports clean_xpe"
 	@echo  ""
 	@echo  " Runs in aiesimulator / QEMU. Profiling ok."
-	@echo  "  TARGET=hw_emu EXTIO=false make kernels graph aiesim"
-	@echo  "  TARGET=hw_emu EXTIO=false make kernels graph xsa application package run_emu"
-	@echo  "  TARGET=hw_emu EXTIO=true make kernels graph aiesim"
-	@echo  "  TARGET=hw_emu EXTIO=true make kernels graph xsa application package run_emu"
+	@echo  "  TARGET=hw_emu EXTIO=false GRAPH=lenet make graph aiesim_profile"
+	@echo  "  TARGET=hw_emu EXTIO=false GRAPH=lenet make graph kernels xsa application package run_emu"
+	@echo  "  TARGET=hw_emu EXTIO=true GRAPH=lenet make graph aiesim_profile"
+	@echo  "  TARGET=hw_emu EXTIO=true GRAPH=lenet make graph kernels xsa application package run_emu"
 	@echo  "  TARGET=hw_emu make clean clean_reports clean_xpe"
 	@echo  ""
 	@echo  " Other build options: aiesim_profile, vcd, run, all, report_metrics"
@@ -53,6 +53,7 @@ print-%  : ; @echo $* = $($*)
 # =========================================================
 TARGET ?= sw_emu
 EXTIO ?= true
+GRAPH ?= lenet
 
 # =========================================================
 # No of Instances can be set as:
@@ -80,11 +81,6 @@ VPP_CLOCK_FREQ := $(shell printf "%.0f" `echo "${PL_FREQ} * $(HZ_UNIT)" | bc`)
 # =========================================================
 EN_TRACE	:= 0
 
-############################################################
-# maximum cycle count for aiesimulator to get powerfrom vcd
-# default 100
-# #########################################################
-MAX_CYCLES   := 100000
 # =========================================================
 # Source directories
 # =========================================================
@@ -211,8 +207,10 @@ $(BUILD_TARGET_DIR)/$(DATAMOVER_KERNEL_XO).xo:
 #	Work/ 
 #	xnwOut/
 LIBADF_A 			:= $(BUILD_TARGET_DIR)/libadf.a
-GRAPH_SRC_CPP := $(AIE_SRC_REPO)/graph_lenet.cpp
+GRAPH_SRC_CPP := $(AIE_SRC_REPO)/graph_$(GRAPH).cpp
 
+# heapsize + stacksize (1024 default) + syncsize = 32768 bytes max
+# heapsize of 16384 bytes allows maximum of 4096 float params per AIE
 AIE_FLAGS := -include=$(AIE_SRC_REPO) \
 						 --verbose \
 						 --Xpreproc="-DNET_INSTS=$(NET_INSTS)" \
@@ -222,7 +220,7 @@ AIE_FLAGS := -include=$(AIE_SRC_REPO) \
 						 --log-level=5 \
 						 --pl-freq=500 \
 						 --dataflow \
-						 --heapsize=2048 \
+						 --heapsize=30000 \
 						 --workdir=$(WORK_DIR)
 ifeq ($(TARGET), sw_emu)
 	AIE_FLAGS += --target=x86sim --Xpreproc=-O0
@@ -252,14 +250,14 @@ AIE_SIM_FLAGS := --pkg-dir=$(BUILD_TARGET_DIR)/$(WORK_DIR)/ \
 X86SIM_REPORT_DIR := $(BLD_REPORTS_DIR)/x86simulator_output
 AIESIM_REPORT_DIR := $(BLD_REPORTS_DIR)/aiesimulator_output
 
-TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_lenet.py
+TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_$(GRAPH).py
 
 aiesim: graph
 ifeq ($(EXTIO), false)
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log; \
+	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR); \
 	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
@@ -270,7 +268,7 @@ else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log; \
+	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log; \
 	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
