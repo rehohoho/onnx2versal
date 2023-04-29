@@ -5,7 +5,7 @@
 #include "aie_api/aie.hpp"
 
 
-template <int L0, int L1, int L2, int L3>
+template <int L0, int L1, int L2, int L3, int OUTSIZE>
 void concat_scalar(
 	input_window<float>* in0,
 	input_window<float>* in1,
