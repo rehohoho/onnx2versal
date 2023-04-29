@@ -11,7 +11,7 @@ class ConcatScalarGraph : public adf::graph {
   private:
     adf::kernel k[1];
     std::string id;
-    static const int NLANES = 32;
+    static const int NLANES = 8;
 
   public:
     adf::input_plio plin[NLANES];
@@ -27,35 +27,11 @@ class ConcatScalarGraph : public adf::graph {
       const std::string& INP5_TXT,
       const std::string& INP6_TXT,
       const std::string& INP7_TXT,
-      const std::string& INP8_TXT,
-      const std::string& INP9_TXT,
-      const std::string& INP10_TXT,
-      const std::string& INP11_TXT,
-      const std::string& INP12_TXT,
-      const std::string& INP13_TXT,
-      const std::string& INP14_TXT,
-      const std::string& INP15_TXT,
-      const std::string& INP16_TXT,
-      const std::string& INP17_TXT,
-      const std::string& INP18_TXT,
-      const std::string& INP19_TXT,
-      const std::string& INP20_TXT,
-      const std::string& INP21_TXT,
-      const std::string& INP22_TXT,
-      const std::string& INP23_TXT,
-      const std::string& INP24_TXT,
-      const std::string& INP25_TXT,
-      const std::string& INP26_TXT,
-      const std::string& INP27_TXT,
-      const std::string& INP28_TXT,
-      const std::string& INP29_TXT,
-      const std::string& INP30_TXT,
-      const std::string& INP31_TXT,
       const std::string& OUT_TXT = "concat_out.txt"
     ) { 
       this->id = id;
 
-      k[0] = adf::kernel::create(concat32_scalar<NCHUNK, OUTSIZE>);
+      k[0] = adf::kernel::create(concat8_scalar<NCHUNK, OUTSIZE>);
       adf::source(k[0]) = "concat.cc";
       adf::runtime<ratio>(k[0]) = 0.6;
 
@@ -87,30 +63,6 @@ class ConcatScalarGraph : public adf::graph {
       SET_PLIN(5, INP5_TXT);
       SET_PLIN(6, INP6_TXT);
       SET_PLIN(7, INP7_TXT);
-      SET_PLIN(8, INP8_TXT);
-      SET_PLIN(9, INP9_TXT);
-      SET_PLIN(10, INP10_TXT);
-      SET_PLIN(11, INP11_TXT);
-      SET_PLIN(12, INP12_TXT);
-      SET_PLIN(13, INP13_TXT);
-      SET_PLIN(14, INP14_TXT);
-      SET_PLIN(15, INP15_TXT);
-      SET_PLIN(16, INP16_TXT);
-      SET_PLIN(17, INP17_TXT);
-      SET_PLIN(18, INP18_TXT);
-      SET_PLIN(19, INP19_TXT);
-      SET_PLIN(20, INP20_TXT);
-      SET_PLIN(21, INP21_TXT);
-      SET_PLIN(22, INP22_TXT);
-      SET_PLIN(23, INP23_TXT);
-      SET_PLIN(24, INP24_TXT);
-      SET_PLIN(25, INP25_TXT);
-      SET_PLIN(26, INP26_TXT);
-      SET_PLIN(27, INP27_TXT);
-      SET_PLIN(28, INP28_TXT);
-      SET_PLIN(29, INP29_TXT);
-      SET_PLIN(30, INP30_TXT);
-      SET_PLIN(31, INP31_TXT);
       
       plout[0] = adf::output_plio::create("plout0_concat"+id+"_output", adf::plio_64_bits, OUT_TXT);
 #endif

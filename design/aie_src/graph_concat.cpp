@@ -14,30 +14,6 @@ ConcatScalarGraph<5, 8, 36> concat1("1",
   "empty.txt",     // INP5_TXT
   "empty.txt",     // INP6_TXT
   "empty.txt",     // INP7_TXT
-  "empty.txt",     // INP8_TXT
-  "empty.txt",     // INP9_TXT
-  "empty.txt",     // INP10_TXT
-  "empty.txt",     // INP11_TXT
-  "empty.txt",     // INP12_TXT
-  "empty.txt",     // INP13_TXT
-  "empty.txt",     // INP14_TXT
-  "empty.txt",     // INP15_TXT
-  "empty.txt",     // INP16_TXT
-  "empty.txt",     // INP17_TXT
-  "empty.txt",     // INP18_TXT
-  "empty.txt",     // INP19_TXT
-  "empty.txt",     // INP20_TXT
-  "empty.txt",     // INP21_TXT
-  "empty.txt",     // INP22_TXT
-  "empty.txt",     // INP23_TXT
-  "empty.txt",     // INP24_TXT
-  "empty.txt",     // INP25_TXT
-  "empty.txt",     // INP26_TXT
-  "empty.txt",     // INP27_TXT
-  "empty.txt",     // INP28_TXT
-  "empty.txt",     // INP29_TXT
-  "empty.txt",     // INP30_TXT
-  "empty.txt",     // INP31_TXT  
   "concat_out.txt" // OUT_TXT
 );
 
