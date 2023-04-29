@@ -5,11 +5,39 @@
 
 
 // instance to be compiled and used in host within xclbin
-ConcatScalarGraph<3, 8, 18> concat1("1",
+ConcatScalarGraph<5, 8, 36> concat1("1",
   "concat_in.txt", // INP0_TXT
   "concat_in.txt", // INP1_TXT
   "concat_in.txt", // INP2_TXT
-  "empty.txt",     // INP3_TXT
+  "concat_in.txt", // INP3_TXT
+  "concat_in.txt", // INP4_TXT
+  "empty.txt",     // INP5_TXT
+  "empty.txt",     // INP6_TXT
+  "empty.txt",     // INP7_TXT
+  "empty.txt",     // INP8_TXT
+  "empty.txt",     // INP9_TXT
+  "empty.txt",     // INP10_TXT
+  "empty.txt",     // INP11_TXT
+  "empty.txt",     // INP12_TXT
+  "empty.txt",     // INP13_TXT
+  "empty.txt",     // INP14_TXT
+  "empty.txt",     // INP15_TXT
+  "empty.txt",     // INP16_TXT
+  "empty.txt",     // INP17_TXT
+  "empty.txt",     // INP18_TXT
+  "empty.txt",     // INP19_TXT
+  "empty.txt",     // INP20_TXT
+  "empty.txt",     // INP21_TXT
+  "empty.txt",     // INP22_TXT
+  "empty.txt",     // INP23_TXT
+  "empty.txt",     // INP24_TXT
+  "empty.txt",     // INP25_TXT
+  "empty.txt",     // INP26_TXT
+  "empty.txt",     // INP27_TXT
+  "empty.txt",     // INP28_TXT
+  "empty.txt",     // INP29_TXT
+  "empty.txt",     // INP30_TXT
+  "empty.txt",     // INP31_TXT  
   "concat_out.txt" // OUT_TXT
 );
 
@@ -30,7 +58,7 @@ int main(int argc, char ** argv) {
 int main(int argc, char ** argv) {
 	
 	adfCheck(concat1.init(), "init concat1");
-  get_graph_throughput_by_port(concat1, "plout[0]", concat1.plout[0], 8+8+8+8, sizeof(float), ITER_CNT);
+  get_graph_throughput_by_port(concat1, "plout[0]", concat1.plout[0], 36, sizeof(float), ITER_CNT);
 	adfCheck(concat1.end(), "end concat1");
 
   return 0;
