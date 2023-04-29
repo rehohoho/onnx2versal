@@ -5,7 +5,7 @@
 
 
 // instance to be compiled and used in host within xclbin
-ConcatScalarGraph<3, 8, 8, 8, 0, 18> concat1("1",
+ConcatScalarGraph<3, 8, 18> concat1("1",
   "concat_in.txt", // INP0_TXT
   "concat_in.txt", // INP1_TXT
   "concat_in.txt", // INP2_TXT
