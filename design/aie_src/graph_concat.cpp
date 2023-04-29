@@ -5,10 +5,13 @@
 
 
 // instance to be compiled and used in host within xclbin
-char concat1_input[]  = "concat_in.txt";
-char concat1_empty[]  = "empty.txt";
-char concat1_output[] = "concat_out.txt";
-ConcatScalarGraph<3, 8, 8, 8, 0, 18, concat1_input, concat1_empty, concat1_output> concat1("1");
+ConcatScalarGraph<3, 8, 8, 8, 0, 18> concat1("1",
+  "concat_in.txt", // INP0_TXT
+  "concat_in.txt", // INP1_TXT
+  "concat_in.txt", // INP2_TXT
+  "empty.txt",     // INP3_TXT
+  "concat_out.txt" // OUT_TXT
+);
 
 
 #ifdef __X86SIM__
