@@ -6,11 +6,13 @@
 #include "concat.h"
 
 
+// loads weight into heap
 // chunks NxK weight params since they are too large
 template <int NCHUNK, int M, int K, int N>
 class GemmReluScalarGraph : public adf::graph {
 
   private:
+    static const int CONCAT_NLANES = 8;
     static const int CHUNK_COUNT = N / NCHUNK + 1;
     static constexpr int NCUTCHUNK = N % NCHUNK;
     adf::kernel gemms[CHUNK_COUNT];
@@ -18,7 +20,7 @@ class GemmReluScalarGraph : public adf::graph {
     std::string id;
 
   public:
-    adf::input_plio plins[CHUNK_COUNT];
+    adf::input_plio plins[CONCAT_NLANES];
     adf::output_plio plout[1];
 
     GemmReluScalarGraph(
@@ -31,7 +33,7 @@ class GemmReluScalarGraph : public adf::graph {
     ) { 
       this->id = id;
 
-      concat = adf::kernel::create(concat4_scalar<NCHUNK, M*N>);
+      concat = adf::kernel::create(concat8_scalar<NCHUNK, M*N>);
       adf::source(concat) = "concat.cc";
       adf::runtime<ratio>(concat) = 0.6;
 
@@ -44,34 +46,36 @@ class GemmReluScalarGraph : public adf::graph {
         wChunk.resize(NCHUNK*K, 0);
         bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+chunkSize);
         bChunk.resize(NCHUNK, 0);
-        gemms[i] = adf::kernel::create_object<GemmReluScalar<M, K, NCHUNK>>(wChunk, bChunk, i*NCHUNK);
+        gemms[i] = adf::kernel::create_object<GemmReluScalar<M, K, NCHUNK>>(wChunk, bChunk);
         adf::source(gemms[i]) = "gemm.cc";
         adf::runtime<ratio>(gemms[i]) = 0.6;
-
-#ifdef EXTERNAL_IO
-        plins[i] = adf::input_plio::create("plin"+std::to_string(i)+"_gemm"+id+"_input", adf::plio_64_bits);
-#else
-        plins[i] = adf::input_plio::create("plin"+std::to_string(i)+"_gemm"+id+"_input", adf::plio_64_bits, INP_TXT);
-#endif
-        
-        adf::connect<adf::window<M*K*4>> (plins[i].out[0], gemms[i].in[0]);
-        adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat.in[i]);
-      }
-
-      for (int i = CHUNK_COUNT; i < 4; i++) {
-#ifdef EXTERNAL_IO
-        plins[i] = adf::input_plio::create("plin"+std::to_string(i)+"_gemm"+id+"_input", adf::plio_64_bits);
-#else
-        plins[i] = adf::input_plio::create("plin"+std::to_string(i)+"_gemm"+id+"_input", adf::plio_64_bits, EMPTY_TXT);
-#endif
-        adf::connect<adf::window<4>> (plins[i].out[0], concat.in[i]);
       }
 
 #ifdef EXTERNAL_IO
+#define SET_PLIN(i, TXT_PATH) { \
+      std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input"; \
+      plins[i] = adf::input_plio::create(plio_name, adf::plio_64_bits); }
+      
       plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", adf::plio_64_bits);
 #else
+#define SET_PLIN(i, TXT_PATH) { \
+      std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input"; \
+      plins[i] = adf::input_plio::create(plio_name, adf::plio_64_bits, TXT_PATH); }
+
       plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", adf::plio_64_bits, OUT_TXT);
-#endif  
+#endif
+
+      for (int i = 0; i < CONCAT_NLANES; i++) {
+        if (i < CHUNK_COUNT) {
+          SET_PLIN(i, INP_TXT);
+          adf::connect<adf::window<M*K*4>> (plins[i].out[0], gemms[i].in[0]);
+          adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat.in[i]);
+        } else {
+          SET_PLIN(i, EMPTY_TXT);
+          adf::connect<adf::window<4>> (plins[i].out[0], concat.in[i]);
+        }
+      }
+
       adf::connect<adf::window<M*N*4>> (concat.out[0], plout[0].in[0]);
     }
 

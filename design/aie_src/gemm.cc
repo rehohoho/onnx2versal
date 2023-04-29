@@ -17,7 +17,6 @@ void GemmReluScalar<M, K, NCHUNK>::filter(
   PROFILE_HEADER;
   printf("Running gemm_relu_scalar<%d, %d, %d>", M, K, NCHUNK);
   int weightIdx = 0;
-  float* outptr = (float *) out -> ptr;
 
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < NCHUNK; j++) {
@@ -30,7 +29,7 @@ void GemmReluScalar<M, K, NCHUNK>::filter(
       }    
       
       if (res < 0) res = 0;
-      *outptr += res; outptr++;
+      window_writeincr(out, res);
       window_incr(in, -K); // repeat same in row for next j
     }
     window_incr(in, K); // next in row for next NCHUNK
