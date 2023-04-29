@@ -10,17 +10,14 @@ template <int M, int K, int NCHUNK>
 class GemmReluScalar {
   
   private:
-    alignas(32) float weights[NCHUNK*K]; // NCHUNKxK (120x256)
-    alignas(32) float bias[NCHUNK];      // NCHUNK   (120/?)
+    alignas(32) float (&weights)[NCHUNK*K]; // NCHUNKxK (120x256)
+    alignas(32) float (&bias)[NCHUNK];      // NCHUNK   (120/?)
   
   public:
     GemmReluScalar (
-      const float (&w)[NCHUNK*K],
-      const float (&b)[NCHUNK]
-    ) {
-      for (int i = 0; i < NCHUNK*K; i++) weights[i] = w[i];
-      for (int i = 0; i < NCHUNK; i++) bias[i] = b[i];
-    };
+      float (&w)[NCHUNK*K],
+      float (&b)[NCHUNK]
+    ): weights(w), bias(b) {};
 
     void filter(
       input_window<float>* in,      // MxK       (1x256)
@@ -29,6 +26,8 @@ class GemmReluScalar {
     
     static void registerKernelClass() {
       REGISTER_FUNCTION(GemmReluScalar::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
     };
 };
 

@@ -4,6 +4,8 @@
 
 /*
 xA^T + b as per torch,nn.Linear
+8581 cycles for lenet fc1 (broke in 8 sections)
+4488 cycles for lenet fc2 (broke in 4 sections)
 1956 cycles for lenet fc3
 MxK * NxK
 weights[N*K] (120x256)
@@ -15,6 +17,7 @@ void GemmReluScalar<M, K, NCHUNK>::filter(
   output_window<float>* out     // MxN  (1x120)
 ) {
   PROFILE_HEADER;
+
   printf("Running gemm_relu_scalar<%d, %d, %d>", M, K, NCHUNK);
   int weightIdx = 0;
 
