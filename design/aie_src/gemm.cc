@@ -9,18 +9,18 @@ MxK * NxK
 weights[N*K] (120x256)
 bias[N]      (120)
 */
-template <int M, int K, int N>
-void GemmReluScalar<M, K, N>::filter(
+template <int M, int K, int NCHUNK>
+void GemmReluScalar<M, K, NCHUNK>::filter(
 	input_window<float>* in,      // MxK  (1x256)
   output_window<float>* out     // MxN  (1x120)
 ) {
   PROFILE_HEADER;
-  printf("Running gemm_relu_scalar<%d, %d, %d>", M, K, N);
+  printf("Running gemm_relu_scalar<%d, %d, %d>", M, K, NCHUNK);
   int weightIdx = 0;
+  float* outptr = (float *) out -> ptr;
 
   for (int i = 0; i < M; i++) {
-    window_incr(out, nOff);  // move to column offset for each i-th out row
-    for (int j = 0; j < N; j++) {
+    for (int j = 0; j < NCHUNK; j++) {
       float res = bias[j];
       for (int k = 0; k < K; k++) {
         float a = window_readincr(in);
@@ -30,10 +30,10 @@ void GemmReluScalar<M, K, N>::filter(
       }    
       
       if (res < 0) res = 0;
-      window_writeincr(out, res);
+      *outptr += res; outptr++;
       window_incr(in, -K); // repeat same in row for next j
     }
-    window_incr(in, K); // next in row for next N
+    window_incr(in, K); // next in row for next NCHUNK
   }
 
   PROFILE_FOOTER;
