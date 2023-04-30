@@ -47,7 +47,7 @@ class GemmReluScalarGraph : public adf::graph {
     ) { 
       this->id = id;
 
-      concat = adf::kernel::create(concat8_scalar<NCHUNK, M*N>);
+      concat = adf::kernel::create(concat8_scalar<CHUNK_COUNT, NCHUNK, NCHUNK, M*N>);
       adf::source(concat) = "concat.cc";
       adf::runtime<ratio>(concat) = 0.6;
 

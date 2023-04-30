@@ -21,10 +21,19 @@ if __name__ == "__main__":
     ("plin5_concat1_input", f"{args.input_dir}/empty.txt", 64, "float32"),
     ("plin6_concat1_input", f"{args.input_dir}/empty.txt", 64, "float32"),
     ("plin7_concat1_input", f"{args.input_dir}/empty.txt", 64, "float32"),
+    ("plin0_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
+    ("plin1_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
+    ("plin2_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
+    ("plin3_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
+    ("plin4_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
+    ("plin5_concat2_input", f"{args.input_dir}/empty.txt", 64, "float32"),
+    ("plin6_concat2_input", f"{args.input_dir}/empty.txt", 64, "float32"),
+    ("plin7_concat2_input", f"{args.input_dir}/empty.txt", 64, "float32"),
   ]
 
   slave_list = [
-    ("plout0_concat1_output", f"{args.output_dir}/concat_out.txt", 64, "float32", 36),
+    ("plout0_concat1_output", f"{args.output_dir}/concat1_out.txt", 64, "float32", 36),
+    ("plout0_concat2_output", f"{args.output_dir}/concat2_out.txt", 64, "float32", 36),
   ]
   
   design = ExternalTraffic(master_list, slave_list)

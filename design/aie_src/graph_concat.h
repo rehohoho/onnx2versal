@@ -5,7 +5,7 @@
 #include "concat.h"
 
 
-template <int LCNT, int NCHUNK, int OUTSIZE>
+template <int LCNT, int N, int NCHUNK, int OUTSIZE>
 class ConcatScalarGraph : public adf::graph {
 
   private:
@@ -31,29 +31,23 @@ class ConcatScalarGraph : public adf::graph {
     ) { 
       this->id = id;
 
-      k[0] = adf::kernel::create(concat8_scalar<NCHUNK, OUTSIZE>);
+      k[0] = adf::kernel::create(concat8_scalar<LCNT, N, NCHUNK, OUTSIZE>);
       adf::source(k[0]) = "concat.cc";
       adf::runtime<ratio>(k[0]) = 0.6;
 
 #ifdef EXTERNAL_IO
-      for (int i = 0; i < NLANES; i++) {
-        std::string plin_name = "plin"+std::to_string(i)+"_concat"+id+"_input";
-        plin[i] = adf::input_plio::create(plin_name, adf::plio_64_bits);
-        if (LCNT > i) {
-          adf::connect<adf::window<NCHUNK*4>> (plin[i].out[0], k[0].in[i]);
-        } else {
-          adf::connect<adf::window<4>> (plin[i].out[0], k[0].in[i]);
-        }
-      }
+#define SET_PLIN(i, TXT_PATH) { \
+      std::string plin_name = "plin"+std::to_string(i)+"_concat"+id+"_input"; \
+      plin[i] = adf::input_plio::create(plin_name, adf::plio_64_bits);}
+      
       plout[0] = adf::output_plio::create("plout0_concat"+id+"_output", adf::plio_64_bits);
 #else
 #define SET_PLIN(i, TXT_PATH) { \
       std::string plin_name = "plin"+std::to_string(i)+"_concat"+id+"_input"; \
-      plin[i] = adf::input_plio::create(plin_name, adf::plio_64_bits, TXT_PATH); \
-      if (LCNT > i) { \
-        adf::connect<adf::window<NCHUNK*4>> (plin[i].out[0], k[0].in[i]); \
-      } else { \
-        adf::connect<adf::window<4>> (plin[i].out[0], k[0].in[i]); }}
+      plin[i] = adf::input_plio::create(plin_name, adf::plio_64_bits, TXT_PATH);}
+      
+      plout[0] = adf::output_plio::create("plout0_concat"+id+"_output", adf::plio_64_bits, OUT_TXT);
+#endif  
       
       SET_PLIN(0, INP0_TXT);
       SET_PLIN(1, INP1_TXT);
@@ -63,10 +57,14 @@ class ConcatScalarGraph : public adf::graph {
       SET_PLIN(5, INP5_TXT);
       SET_PLIN(6, INP6_TXT);
       SET_PLIN(7, INP7_TXT);
-      
-      plout[0] = adf::output_plio::create("plout0_concat"+id+"_output", adf::plio_64_bits, OUT_TXT);
-#endif
-      
+
+      for (int i = 0; i < NLANES; i++) {  
+        if (LCNT > i) {
+          adf::connect<adf::window<N*4>> (plin[i].out[0], k[0].in[i]);
+        } else {
+          adf::connect<adf::window<4>> (plin[i].out[0], k[0].in[i]);
+        }
+      }
       adf::connect<adf::window<OUTSIZE*4>> (k[0].out[0], plout[0].in[0]);
     }
 
