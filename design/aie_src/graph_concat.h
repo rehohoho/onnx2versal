@@ -5,7 +5,7 @@
 #include "concat.h"
 
 
-template <int LCNT, int N, int NCHUNK, int OUTSIZE>
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatScalarGraph : public adf::graph {
 
   private:
@@ -31,7 +31,7 @@ class ConcatScalarGraph : public adf::graph {
     ) { 
       this->id = id;
 
-      k[0] = adf::kernel::create(concat8_scalar<LCNT, N, NCHUNK, OUTSIZE>);
+      k[0] = adf::kernel::create(concat8_scalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>);
       adf::source(k[0]) = "concat.cc";
       adf::runtime<ratio>(k[0]) = 0.6;
 
@@ -60,12 +60,13 @@ class ConcatScalarGraph : public adf::graph {
 
       for (int i = 0; i < NLANES; i++) {  
         if (LCNT > i) {
-          adf::connect<adf::window<N*4>> (plin[i].out[0], k[0].in[i]);
+          adf::connect<adf::window<WINDOW_SIZE*4>> (plin[i].out[0], k[0].in[i]);
         } else {
           adf::connect<adf::window<4>> (plin[i].out[0], k[0].in[i]);
         }
       }
-      adf::connect<adf::window<OUTSIZE*4>> (k[0].out[0], plout[0].in[0]);
+      // BLOCK_SIZE <= WINDOW_SIZE
+      adf::connect<adf::window<WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4>> (k[0].out[0], plout[0].in[0]);
     }
 
 };
