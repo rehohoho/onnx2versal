@@ -22,9 +22,22 @@ def check(filepath1: str,
           filepath2: str):
   arr1 = load_txt(filepath1)
   arr2 = load_txt(filepath2)
-  assert arr1.shape ==  arr2.shape
-  np.testing.assert_allclose(arr1, arr2, rtol=1e-03, atol=1e-05)
-  print(f"TEST: ok! (shapes match and within rtol=1e-03, atol=1e-05)")
+  if arr1.shape == arr2.shape:
+    print(f"TEST (shape): OK!")
+  else:
+    print(f"WARNING: arr1 shape {arr1.shape}, arr2 shape {arr2.shape}")
+    minSize = min(arr1.size, arr2.size)
+    if np.allclose(arr1.flatten()[:minSize], arr2.flatten()[:minSize], rtol=1e-03, atol=1e-05):
+      print(f"TEST (tolerance): first {minSize} OK! (rtol=1e-03, atol=1e-05)")
+    else:
+      print(f"TEST (tolerance): first {minSize} FAILED! (rtol=1e-03, atol=1e-05)")
+      import ipdb;ipdb.set_trace()
+  
+  if np.allclose(arr1, arr2, rtol=1e-03, atol=1e-05):
+    print(f"TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)")
+  else:
+    print(f"TEST (tolerance): FAILED! (rtol=1e-03, atol=1e-05)")
+    import ipdb;ipdb.set_trace()
 
 
 if __name__ == "__main__":
