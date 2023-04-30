@@ -220,7 +220,8 @@ AIE_FLAGS := -include=$(AIE_SRC_REPO) \
 						 --log-level=5 \
 						 --pl-freq=500 \
 						 --dataflow \
-						 --heapsize=30000 \
+						 --stacksize=1024 \
+						 --heapsize=2048 \
 						 --workdir=$(WORK_DIR)
 ifeq ($(TARGET), sw_emu)
 	AIE_FLAGS += --target=x86sim --Xpreproc=-O0
@@ -262,7 +263,8 @@ ifeq ($(TARGET), sw_emu)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log
+	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log; \
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
@@ -273,7 +275,8 @@ ifeq ($(TARGET), sw_emu)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log
+	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log; \
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
 endif
 endif
 
@@ -284,7 +287,8 @@ ifeq ($(TARGET), sw_emu)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log
+	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log; \
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
@@ -292,7 +296,8 @@ ifeq ($(TARGET), sw_emu)
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
-	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log
+	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log; \
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
 endif
 endif
 
