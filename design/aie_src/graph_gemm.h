@@ -5,19 +5,33 @@
 #include "gemm.h"
 #include "concat.h"
 
+#define CHUNK_COUNT   N / NCHUNK + 1
+#define NCUTCHUNK     N % NCHUNK
+#define CONCAT_NLANES 8
 
-// loads weight into heap
-// chunks NxK weight params since they are too large
+
+/*
+Chunks NxK weight params into ~16384B chunks by N dimension
+Assumes weight <=16384B, bias <=4096B, input <=4096B per chunk
+Places a maximum of 3x3 tiles, 8 gemm tiles surrounding a concat tile (max AIE DMA input = 8)
+*/
 template <int NCHUNK, int M, int K, int N>
 class GemmReluScalarGraph : public adf::graph {
 
   private:
-    static const int CONCAT_NLANES = 8;
-    static const int CHUNK_COUNT = N / NCHUNK + 1;
-    static constexpr int NCUTCHUNK = N % NCHUNK;
     adf::kernel gemms[CHUNK_COUNT];
     adf::kernel concat;
     std::string id;
+    adf::relative_coordinate tileOffsets[8] = {
+      {.col_offset = -1, .row_offset = -1},
+      {.col_offset = 0, .row_offset = -1},
+      {.col_offset = 1, .row_offset = -1},
+      {.col_offset = -1, .row_offset = 0},
+      {.col_offset = 1, .row_offset = 0},
+      {.col_offset = -1, .row_offset = 1},
+      {.col_offset = 0, .row_offset = 1},
+      {.col_offset = 1, .row_offset = 1},
+    };
 
   public:
     adf::input_plio plins[CONCAT_NLANES];
@@ -49,6 +63,16 @@ class GemmReluScalarGraph : public adf::graph {
         gemms[i] = adf::kernel::create_object<GemmReluScalar<M, K, NCHUNK>>(wChunk, bChunk);
         adf::source(gemms[i]) = "gemm.cc";
         adf::runtime<ratio>(gemms[i]) = 0.6;
+
+        adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat) + 
+          adf::relative_offset(tileOffsets[i]);
+        adf::location_constraint tilePos = adf::location<adf::kernel>(gemms[i]);
+        adf::location<adf::parameter>(gemms[i].param[0]) = tilePos; // weight (<= 16384B)
+        adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(0x0000);
+        adf::location<adf::parameter>(gemms[i].param[1]) = tilePos; // bias   (<= 4096B)
+        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(0x4000); 
+        adf::location<adf::buffer>(gemms[i].in[0]) = tilePos;  // input window (<= 4096B)
+        adf::location<adf::buffer>(gemms[i].in[0]) = {adf::offset(0x5000), adf::offset(0x6000)};
       }
 
 #ifdef EXTERNAL_IO
