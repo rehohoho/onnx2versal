@@ -5,7 +5,7 @@
 #include "aie_api/aie.hpp"
 
 
-template <int NLANES, int N, int CHUNKSIZE, int OUTSIZE>
+template <int NLANES, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 void concat8_scalar(
 	input_window<float>* in0,
 	input_window<float>* in1,
