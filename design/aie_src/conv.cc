@@ -121,20 +121,30 @@ Reuses weights.
 in[(k*row)+i:(k*row)+i+8] * weights[k*K+i], 0<=i<=K
 
 */
+#define print_vecs \
+  if (c == 0) { \
+    float* print_x = (float*) &data; \
+    printf("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f \n", \
+      print_x[0], print_x[1], print_x[2], print_x[3], print_x[4], print_x[5], print_x[6], print_x[7], \
+      print_x[8], print_x[9], print_x[10], print_x[11], print_x[12], print_x[13], print_x[14], print_x[15]); \
+    float* print_w = (float*) &wvec; \
+    printf("%f %f %f %f %f %f %f %f \n", print_w[0], print_w[1], print_w[2], print_w[3], print_w[4], print_w[5], print_w[6], print_w[7]); \
+  }
+
 template <int INP_W, int OUT_W, int B, int C, int M>
 void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
   PROFILE_HEADER;
-  printf("Running Conv5x5ReluBCHW<%d, %d, %d, %d, %d>", INP_W, OUT_W, B, C, M);
+  printf("Running Conv5x5ReluBCHW<%d, %d, %d, %d, %d>\n", INP_W, OUT_W, B, C, M);
 
   v32float data = null_v32float();
   v8float zeros = null_v8float();
+  v8float wvec = undef_v8float();
   float* wp; // MCKK
+  int widx, zstart;
   
-  int wremainder = OUT_W % 8;
-
   // BHWM
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { // computes one output channel
@@ -142,35 +152,71 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
         for (int w = 0; w < OUT_W; w+=8) { // computes 8 output channel pixels
           
           v8float acc = aie::broadcast<float, 8>(bias[m]);
-          wp = weights + m*C*5*5;
+          widx = (m*C*5*5)/4*4;
+          zstart = m*C*5*5 & 0x3;
 
           for (int c = 0; c < C; c++) {   // computes 8 partial products
+            wvec = *(v8float*) (weights+widx);          // load in wvec[0:8], use 0:5
+            data = upd_x(data, 0, window_read_v16(in)); // load in data, len = 2+8+2 < 16       
+            
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, zstart, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, zstart, 0x11111111);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, zstart, 0x22222222);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, zstart, 0x33333333);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, zstart, 0x44444444);
+            zstart = (zstart + 1) & 0x3;              // zstart increments modulo 4
+            widx += ((widx + 8) % 20 == 0) ? 8 : 4; // wp moves in 16B, must contain next K
+            window_incr(in, INP_W);                 // data go down 1
 
-            for (int p = 0; p < 5; p++) {
-              v8float wvec = *(v8float*) wp;              // load in wvec, len = 5 < 8
-              data = upd_x(data, 0, window_read_v16(in)); // load in data, len = 2+8+2 < 16
+            wvec = *(v8float*) (weights+widx);          // load in wvec[4:12] use 5:10
+            data = upd_x(data, 0, window_read_v16(in)); // load in data, len = 2+8+2 < 16              
+            
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, zstart, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, zstart, 0x11111111);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, zstart, 0x22222222);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, zstart, 0x33333333);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, zstart, 0x44444444);
+            zstart = (zstart + 1) & 0x3;
+            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
+            window_incr(in, INP_W); // data go down 1
 
-              // if (c == 0) {
-              //   float* print_x = (float*) &data;
-              //   printf("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f \n", 
-              //     print_x[0], print_x[1], print_x[2], print_x[3], print_x[4], print_x[5], print_x[6], print_x[7],
-              //     print_x[8], print_x[9], print_x[10], print_x[11], print_x[12], print_x[13], print_x[14], print_x[15]);
-                // float* print_w = (float*) &wvec;
-                // printf("%f %f %f %f %f %f %f %f \n", print_w[0], print_w[1], print_w[2], print_w[3], print_w[4], print_w[5], print_w[6], print_w[7]);
-              // }
-              
-              acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000); 
-              acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000); 
-              acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000); 
-              acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000); 
-              acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);               
-              wp += 5;                // wvec go right 5
-              window_incr(in, INP_W); // data go down 1
-            }
-            // printf("\n");
-            // wvec goes next channel since MCKK
-            window_incr(in, INP_W*INP_W - 5*INP_W); // data go up 5, channel 1
+            wvec = *(v8float*) (weights+widx);          // load in wvec[8:16] use 10:15
+            data = upd_x(data, 0, window_read_v16(in)); // load in data, len = 2+8+2 < 16              
+            
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, zstart, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, zstart, 0x11111111);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, zstart, 0x22222222);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, zstart, 0x33333333);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, zstart, 0x44444444);
+            zstart = (zstart + 1) & 0x3;
+            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
+            window_incr(in, INP_W); // data go down 1
+
+            wvec = *(v8float*) (weights+widx);          // load in wvec[12:20] use 15:20
+            data = upd_x(data, 0, window_read_v16(in)); // load in data, len = 2+8+2 < 16              
+            
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, zstart, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, zstart, 0x11111111);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, zstart, 0x22222222);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, zstart, 0x33333333);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, zstart, 0x44444444);
+            zstart = (zstart + 1) & 0x3;
+            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
+            window_incr(in, INP_W); // data go down 1
+
+            wvec = *(v8float*) (weights+widx);          // load in wvec[20:28] use 20:25
+            data = upd_x(data, 0, window_read_v16(in)); // load in data, len = 2+8+2 < 16              
+            
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, zstart, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, zstart, 0x11111111);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, zstart, 0x22222222);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, zstart, 0x33333333);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, zstart, 0x44444444);
+            zstart = (zstart + 1) & 0x3;
+            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
+            window_incr(in, INP_W*INP_W - 4*INP_W); // data go up 4, channel 1
           }
+          // printf("\n");
 
           window_incr(in, -C*INP_W*INP_W + 8); // data go channel -C, right 8
           
@@ -181,10 +227,10 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
 
         } // W
         window_incr(in, INP_W-OUT_W/8*8); // go left OUT_W/8*8, go down 1
-
+        // printf("\n");
       } // H
-
       window_incr(in, -OUT_W*INP_W); // go up OUT_W
+      // printf("\n");
     } // M
   } // B
 
