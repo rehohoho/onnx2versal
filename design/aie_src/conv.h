@@ -6,14 +6,14 @@
 
 
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluScalar {
+class ConvReluScalarBHWC {
 
   private:
     alignas(32) float (&weights)[M*K*K*C];
     alignas(32) float (&bias)[M];
 
   public:
-    ConvReluScalar(
+    ConvReluScalarBHWC(
       float (&w)[M*K*K*C], // only accepts reference to MKKC array
       float (&b)[M]
     ): weights(w), bias(b) {}; 
@@ -24,7 +24,7 @@ class ConvReluScalar {
     );
     
     static void registerKernelClass() {
-      REGISTER_FUNCTION(ConvReluScalar::filter);
+      REGISTER_FUNCTION(ConvReluScalarBHWC::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
     }

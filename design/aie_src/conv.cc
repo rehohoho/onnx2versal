@@ -3,12 +3,12 @@
 
 
 /*
-weight+bias const: 249103 cycles
+weight+bias const: 249103 cycles (conv01), 392981 (conv03)
 weight const: 314790 cycles
 weight load: 93331*28=2613268 cycles
 */
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
-void ConvReluScalar<INP_W, OUT_W, B, C, M, K>::filter(
+void ConvReluScalarBHWC<INP_W, OUT_W, B, C, M, K>::filter(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   output_window<float>* out     // BHWM (1x24x24x6)
 ) {

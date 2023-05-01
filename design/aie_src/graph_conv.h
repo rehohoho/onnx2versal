@@ -7,7 +7,7 @@
 
 
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluScalarGraph : public adf::graph {
+class ConvReluScalarBhwcGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -17,7 +17,7 @@ class ConvReluScalarGraph : public adf::graph {
     adf::input_plio plins[1];
     adf::output_plio plouts[1];
 
-    ConvReluScalarGraph(
+    ConvReluScalarBhwcGraph(
       const std::string& id,
       std::vector<float> weights,
       std::vector<float> bias,
@@ -26,7 +26,7 @@ class ConvReluScalarGraph : public adf::graph {
     ) { 
       this->id = id;
 
-      k[0] = adf::kernel::create_object<ConvReluScalar<INP_W, OUT_W, B, C, M, K>>(weights, bias);
+      k[0] = adf::kernel::create_object<ConvReluScalarBHWC<INP_W, OUT_W, B, C, M, K>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
 
 #ifdef EXTERNAL_IO
@@ -51,7 +51,7 @@ class ConvReluScalarGraph : public adf::graph {
 #define CONCAT_NLANES 8
 
 template <int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluScalarChunkGraph : public adf::graph {
+class ConvReluScalarBhwcChunkGraph : public adf::graph {
 
   private:
     adf::kernel convs[CHUNK_COUNT];
@@ -63,7 +63,7 @@ class ConvReluScalarChunkGraph : public adf::graph {
     adf::output_plio plouts[1];
     // adf::output_plio plouts[CONCAT_NLANES];
 
-    ConvReluScalarChunkGraph(
+    ConvReluScalarBhwcChunkGraph(
       const std::string& id,
       std::vector<float> weights,
       std::vector<float> bias,
@@ -88,7 +88,7 @@ class ConvReluScalarChunkGraph : public adf::graph {
         bChunk = std::vector<float>(bias.begin()+i*MCHUNK, bias.begin()+i*MCHUNK+chunkSize);
         bChunk.resize(MCHUNK, 0);
 
-        convs[i] = adf::kernel::create_object<ConvReluScalar<INP_W, OUT_W, B, C, MCHUNK, K>>(
+        convs[i] = adf::kernel::create_object<ConvReluScalarBHWC<INP_W, OUT_W, B, C, MCHUNK, K>>(
           wChunk, bChunk);
         adf::source(convs[i]) = "conv.cc";
         adf::runtime<ratio>(convs[i]) = 0.6;
