@@ -46,6 +46,47 @@ class ConvReluScalarBhwcGraph : public adf::graph {
 };
 
 
+template <int INP_W, int OUT_W, int B, int C, int M, int K>
+class ConvReluScalarBchwGraph : public adf::graph {
+
+  private:
+    adf::kernel k[1];
+    std::string id;
+
+  public:
+    adf::input_plio plins[1];
+    adf::output_plio plouts[1];
+
+    ConvReluScalarBchwGraph(
+      const std::string& id,
+      std::vector<float> weights,
+      std::vector<float> bias,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT = "conv_out.txt"
+    ) { 
+      this->id = id;
+
+      k[0] = adf::kernel::create_object<ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K>>(weights, bias);
+      adf::source(k[0]) = "conv.cc";
+
+#ifdef EXTERNAL_IO
+      plins[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits);
+      plouts[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits);
+#else
+      plins[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits, INP_TXT);
+      plouts[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits, OUT_TXT);
+#endif
+      
+      adf::connect<adf::window<B*INP_W*INP_W*C*4>> (plins[0].out[0], k[0].in[0]);
+      adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], plouts[0].in[0]);
+
+      adf::runtime<ratio>(k[0]) = 0.6;
+    }
+
+};
+
+
+
 #define CHUNK_COUNT   M / MCHUNK + 1
 #define MCUTCHUNK     M % MCHUNK
 #define CONCAT_NLANES 8
