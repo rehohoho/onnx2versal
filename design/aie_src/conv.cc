@@ -120,6 +120,7 @@ Reuses weights.
 8 outputs per loop:
 in[(k*row)+i:(k*row)+i+8] * weights[k*K+i], 0<=i<=K
 
+53147 cycles
 */
 #define print_vecs \
   if (c == 0) { \
@@ -164,34 +165,32 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
           zstart = m*C*5*5 & 0x3;
 
           for (int c = 0; c < C; c++) {   // computes 8 partial products
-            // load in wvec[0:8], use 0:5
-            conv_krow(zstart);
-            zstart = (zstart + 1) & 0x3;
-            widx += ((widx + 8) % 20 == 0) ? 8 : 4;
-            window_incr(in, INP_W);
-
-            // load in wvec[4:12] use 5:10
-            conv_krow(zstart);
-            zstart = (zstart + 1) & 0x3;
-            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
-            window_incr(in, INP_W);
-
-            // load in wvec[8:16] use 10:15
-            conv_krow(zstart);
-            zstart = (zstart + 1) & 0x3;
-            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
-            window_incr(in, INP_W);
-
-            // load in wvec[12:20] use 15:20
-            conv_krow(zstart);
-            zstart = (zstart + 1) & 0x3;
-            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
-            window_incr(in, INP_W);
-
-            // load in wvec[20:28] use 20:25
-            conv_krow(zstart);
-            zstart = (zstart + 1) & 0x3;
-            widx += ((widx + 8) % 20 == 0) ? 8 : 4; 
+            if (zstart == 0) {
+              conv_krow(0); widx += 4; window_incr(in, INP_W); // load in wvec[0:8], use 0:5
+              conv_krow(1); widx += 4; window_incr(in, INP_W); // load in wvec[4:12], use 5:10
+              conv_krow(2); widx += 4; window_incr(in, INP_W); // load in wvec[8:16], use 10:15
+              conv_krow(3); widx += 8; window_incr(in, INP_W); // load in wvec[12:20], use 15:20
+              conv_krow(0); widx += 4;                         // load in wvec[20:28], use 20:25
+            } else if (zstart == 1) {
+              conv_krow(1); widx += 4; window_incr(in, INP_W); // load in wvec[24:7], use 0:5
+              conv_krow(2); widx += 4; window_incr(in, INP_W); // load in wvec[3:11], use 5:10
+              conv_krow(3); widx += 8; window_incr(in, INP_W); // load in wvec[7:15], use 10:15
+              conv_krow(0); widx += 4; window_incr(in, INP_W); // load in wvec[15:23], use 15:20
+              conv_krow(1); widx += 4;                         // load in wvec[19:27], use 20:25
+            } else if (zstart == 2) {
+              conv_krow(2); widx += 4; window_incr(in, INP_W); // load in wvec[23:6], use 0:5
+              conv_krow(3); widx += 8; window_incr(in, INP_W); // load in wvec[2:10], use 5:10
+              conv_krow(0); widx += 4; window_incr(in, INP_W); // load in wvec[10:18], use 10:15
+              conv_krow(1); widx += 4; window_incr(in, INP_W); // load in wvec[14:22], use 15:20
+              conv_krow(2); widx += 4;                         // load in wvec[18:26], use 20:25
+            } else {
+              conv_krow(3); widx += 8; window_incr(in, INP_W); // load in wvec[22:5], use 0:5
+              conv_krow(0); widx += 4; window_incr(in, INP_W); // load in wvec[1:9], use 5:10
+              conv_krow(1); widx += 4; window_incr(in, INP_W); // load in wvec[9:17], use 10:15
+              conv_krow(2); widx += 4; window_incr(in, INP_W); // load in wvec[13:21], use 15:20
+              conv_krow(3); widx += 8;                         // load in wvec[17:25], use 20:25
+            }
+            zstart = (zstart + 5) & 0x3;
             window_incr(in, INP_W*INP_W - 4*INP_W); // data go up 4, channel 1
           }
           // printf("\n");
