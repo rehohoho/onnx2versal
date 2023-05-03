@@ -123,9 +123,18 @@ Reference performance: Lenet Tutorial (int8) example with matmul ~2k cycles
 - Using conditionals ~2x loop time, so shuffle down to handle %4 vs %5
 - Loop order BMHW seems faster since H and W > M
 
-37720 cycles (1x6x24x24), 
-50794 cycles (1x16x12x12)
+lenet conv2 (1x16x12x12):
+manual unroll: 46757 cycles
 */
+#ifdef __X86SIM__
+#define GET_WVEC(wp, zstart) \
+  wvec = *(v8float*) wp;
+#else
+#define GET_WVEC(wp, zstart) \
+  wvecc = aie::load_v<8>(wp); \
+  wvec = aie::shuffle_down(wvecc, zstart);
+#endif
+
 template <int INP_W, int OUT_W, int B, int C, int M>
 void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
 	input_window<float>* in,      // BCHW
@@ -145,41 +154,76 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
           v8float acc = aie::broadcast<float, 8>(bias[m]);
           float* wp = weights + m*C*5*5;
           int zstart = m*C*5*5 & 0x3;
+          
+          aie::vector<float, 8> wvecc;
+          v8float wvec;
+          v16float data;
 
-          for (int c = 0; c < C; c++) {   // computes 8 partial products over 5x5 kernel
+          // flatten to avoid pipelining this, TODO: compute multiple channels to allow pipelining
+          for (int c = 0; c < C; c++) chess_flatten_loop { // computes 8 partial products over 5x5 kernel
             
-            for (int p = 0; p < 5; p++) { // computes 8 partial products over 1x5 kernel
-#ifdef __X86SIM__
-              v8float wvec = *(v8float*) wp;              // load in wvec, len = 5 < 8
-#else              
-              aie::vector<float, 8> wvecc = aie::load_v<8>(wp);
-              v8float wvec = aie::shuffle_down(wvecc, zstart);
-#endif
-              v16float data = window_read_v16(in);
-              acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000); 
-              acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000); 
-              acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000); 
-              acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000); 
-              acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);               
-              wp += 5;                // wvec go right 5
-              window_incr(in, INP_W); // data go down 1
-              zstart = (zstart + 1) & 0x3;
-              // if (c < 2) print_fvec<float>((float*) &wvec, 5);
-              // if (c < 2) print_fvec<float>((float*) &data, 8);
-            }
-            // if (c < 2) printf("\n");
-            
-            // wvec goes next channel since MCKK
-            window_incr(in, INP_W*INP_W - 5*INP_W); // data go up 5, channel 1
+            GET_WVEC(wp, zstart);
+            data = window_read_v16(in);
+            wp += 5;
+            zstart = (zstart + 1) & 0x3;
+            window_incr(in, INP_W);
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);
+
+            GET_WVEC(wp, zstart);
+            data = window_read_v16(in);
+            wp += 5;
+            zstart = (zstart + 1) & 0x3;
+            window_incr(in, INP_W);
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);
+
+            GET_WVEC(wp, zstart);
+            data = window_read_v16(in);
+            wp += 5;
+            zstart = (zstart + 1) & 0x3;
+            window_incr(in, INP_W);
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);
+
+            GET_WVEC(wp, zstart);
+            data = window_read_v16(in);
+            wp += 5;
+            zstart = (zstart + 1) & 0x3;
+            window_incr(in, INP_W);
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);
+
+            GET_WVEC(wp, zstart);
+            data = window_read_v16(in);
+            wp += 5;
+            zstart = (zstart + 1) & 0x3;
+            window_incr(in, INP_W);
+            acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);
+
+            window_incr(in, INP_W*INP_W - 5*INP_W);
           }
-          // printf("\n");
-
           window_incr(in, -C*INP_W*INP_W + 8); // data go channel -C, right 8
                     
           acc = fpmax(acc, zeros, 0, 0x76543210);
           int outincr = (OUT_W - w < 8 && OUT_W - w > 0) ? OUT_W - w : 8;
           window_write(out, acc);
-          // print_fvec<float>((float*) &acc, 8); printf("\n");
           window_incr(out, outincr);
 
         } // W
