@@ -125,18 +125,18 @@ Reference performance: Lenet Tutorial (int8) example with matmul ~2k cycles
 
 lenet conv2 (1x16x12x12):
 manual unroll: 46757 cycles
-use upd_w instead of loading direct: 75421 cycles
+use upd_w and fpshuffle intrinsics: 46244 cycles
 
-direct load: 46449
-upd_w: 40711 -> 39700
+unrolling tests: 
+upd_w only: 40711 -> 39700
+wvec only: 
 */
 #ifdef __X86SIM__
 #define GET_WVEC(wp, zstart) \
   wvec = *(v8float*) wp;
 #else
 #define GET_WVEC(wp, zstart) \
-  wvecc = aie::load_v<8>(wp); \
-  wvec = aie::shuffle_down(wvecc, zstart);
+  wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
 #endif
 
 template <int INP_W, int OUT_W, int B, int C, int M>
@@ -152,6 +152,9 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
   v16float data = null_v16float();
   aie::vector<float, 8> wvecc;
 
+  float* wp;
+  int zstart;
+
   // BHWM
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(1,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(1,)  { // computes one output channel
@@ -159,8 +162,8 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
         for (int w = 0; w < OUT_W; w+=8) chess_prepare_for_pipelining chess_loop_range(1,)  { // computes 8 output channel pixels
           
           v8float acc = aie::broadcast<float, 8>(bias[m]);
-          float* wp = weights + m*C*5*5;
-          int zstart = m*C*5*5 & 0x3;
+          wp = weights + m*C*5*5;
+          zstart = m*C*5*5 & 0x3;
 
           // flatten to avoid pipelining this, TODO: compute multiple channels to allow pipelining
           for (int c = 0; c < C; c++) chess_flatten_loop { // computes 8 partial products over 5x5 kernel
@@ -168,7 +171,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            GET_WVEC(wp, zstart);
+            wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
             wp += 5;
             zstart = (zstart + 1) & 0x3;
             acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
@@ -180,7 +183,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            GET_WVEC(wp, zstart);
+            wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
             wp += 5;
             zstart = (zstart + 1) & 0x3;
             acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
@@ -192,7 +195,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            GET_WVEC(wp, zstart);
+            wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
             wp += 5;
             zstart = (zstart + 1) & 0x3;
             acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
@@ -204,7 +207,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            GET_WVEC(wp, zstart);
+            wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
             wp += 5;
             zstart = (zstart + 1) & 0x3;
             acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
@@ -216,7 +219,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            GET_WVEC(wp, zstart);
+            wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
             wp += 5;
             zstart = (zstart + 1) & 0x3;
             acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000);
