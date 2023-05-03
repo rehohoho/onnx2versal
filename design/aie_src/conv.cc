@@ -149,6 +149,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
   v8float zeros = null_v8float();
   v8float wvec;
   v16float data1 = null_v16float();
+  v16float data2 = null_v16float();
   aie::vector<float, 8> wvecc;
 
   float* wp;
@@ -157,37 +158,59 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
   // BHWM
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(1,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(1,)  { // computes one output channel
-      for (int h = 0; h < OUT_W; h++) chess_prepare_for_pipelining chess_loop_range(1,)  {
+      for (int h = 0; h < OUT_W; h+=2) chess_prepare_for_pipelining chess_loop_range(1,)  {
         for (int w = 0; w < OUT_W; w+=8) chess_prepare_for_pipelining chess_loop_range(1,)  { // computes 8 output channel pixels
           
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
+          v8float acc2 = aie::broadcast<float, 8>(bias[m]);
           wp = weights + m*C*5*5;
           zstart = m*C*5*5 & 0x3;
 
           // flatten to avoid pipelining this, TODO: compute multiple channels to allow pipelining
           for (int c = 0; c < C; c++) chess_flatten_loop { // computes 8 partial products over 5x5 kernel
             for (int p = 0; p < 5; p++) chess_flatten_loop {
+              GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
               data1 = upd_w(data1, 0, window_readincr_v8(in));
               data1 = upd_w(data1, 1, window_readincr_v8(in));
               window_incr(in, INP_W-16);
-              GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
+              // print_fvec<float>((float*) &data1, 16);
               acc1 = fpmac(acc1, data1, 0, 0x76543210, wvec, 0, 0x00000000);
               acc1 = fpmac(acc1, data1, 1, 0x76543210, wvec, 1, 0x00000000);
               acc1 = fpmac(acc1, data1, 2, 0x76543210, wvec, 2, 0x00000000);
               acc1 = fpmac(acc1, data1, 3, 0x76543210, wvec, 3, 0x00000000);
               acc1 = fpmac(acc1, data1, 4, 0x76543210, wvec, 4, 0x00000000);
+              
+              data2 = upd_w(data2, 0, window_readincr_v8(in));
+              data2 = upd_w(data2, 1, window_readincr_v8(in));
+              window_incr(in, INP_W-16);
+              // print_fvec<float>((float*) &data2, 16);
+              acc2 = fpmac(acc2, data2, 0, 0x76543210, wvec, 0, 0x00000000);
+              acc2 = fpmac(acc2, data2, 1, 0x76543210, wvec, 1, 0x00000000);
+              acc2 = fpmac(acc2, data2, 2, 0x76543210, wvec, 2, 0x00000000);
+              acc2 = fpmac(acc2, data2, 3, 0x76543210, wvec, 3, 0x00000000);
+              acc2 = fpmac(acc2, data2, 4, 0x76543210, wvec, 4, 0x00000000);
+              window_decr(in, INP_W);
             }
+            // printf("\n");
             window_incr(in, INP_W*INP_W - 5*INP_W);
           }
+          // printf("\n");
           window_incr(in, -C*INP_W*INP_W + 8); // data1 go channel -C, right 8
                     
           acc1 = fpmax(acc1, zeros, 0, 0x76543210);
-          int outincr = (OUT_W - w < 8 && OUT_W - w > 0) ? OUT_W - w : 8;
+          acc2 = fpmax(acc2, zeros, 0, 0x76543210);
           window_write(out, acc1);
+          
+          window_incr(out, OUT_W);
+          window_write(out, acc2);
+          window_decr(out, OUT_W);
+          
+          int outincr = (OUT_W - w < 8 && OUT_W - w > 0) ? OUT_W - w : 8;
           window_incr(out, outincr);
 
         } // W
-        window_incr(in, INP_W-OUT_W/8*8); // go left OUT_W/8*8, go down 1
+        window_incr(in, 2*INP_W-OUT_W/8*8); // go left OUT_W/8*8, go down 1
+        window_incr(out, OUT_W);
 
       } // H
 
