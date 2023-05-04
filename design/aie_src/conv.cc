@@ -118,19 +118,17 @@ for (i = 0; i < 8; i++)
 8 outputs per loop:
 in[(k*row)+i:(k*row)+i+8] * weights[k*K+i], 0<=i<=K
 
-Reference performance: Lenet Tutorial (int8) example with matmul ~2k cycles
+Reference performance: Lenet Conv2 Tutorial (1x16x12x12 int8) example with matmul ~2k cycles
 - Note zstart must be a compile time constant
 - Using conditionals ~2x loop time, so shuffle down to handle %4 vs %5
 - Loop order BMHW seems faster since H and W > M
 - Unrolling is not useful, must preload extra every C*K*K, not worth (46244 -> 53541)
-
-lenet conv2 (1x16x12x12):
-  manual unroll: 46757 cycles
-  use double acc: 43981 cycles, halves number of loads, double spillage
+- Multiple accs reduces number of loads by reusing data
+- Reduce data instances to reduce spill (v32float -> v16float: 43981 -> 40796)
 */
 #ifdef __X86SIM__
 #define GET_WVEC(wp, zstart) \
-  wvec = *(v8float*) wp;
+  wvec = fpshuffle(*(v8float*) wp, 0, 0x00043210);
 #else
 #define GET_WVEC(wp, zstart) \
   wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
@@ -144,8 +142,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
   PROFILE_HEADER;
   printf("Running Conv5x5ReluBCHW<%d, %d, %d, %d, %d>\n", INP_W, OUT_W, B, C, M);
 
-  v16float data1 = null_v16float();
-  v16float data2 = null_v16float();
+  v16float data = null_v16float();
   v8float zeros = null_v8float();
   v8float wvec;
 
@@ -153,10 +150,10 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
   int zstart;
 
   // BHWM
-  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(1,) {
-    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(1,)  { // computes one output channel
-      for (int h = 0; h < OUT_W; h+=2) chess_prepare_for_pipelining chess_loop_range(1,)  {
-        for (int w = 0; w < OUT_W; w+=8) chess_prepare_for_pipelining chess_loop_range(1,)  { // computes 8 output channel pixels
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) { // computes one output channel
+      for (int h = 0; h < OUT_W; h+=2) {
+        for (int w = 0; w < OUT_W; w+=8) { // computes 8 output channel pixels
           
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           v8float acc2 = aie::broadcast<float, 8>(bias[m]);
@@ -166,84 +163,84 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
           // flatten to avoid pipelining this, TODO: compute multiple channels to allow pipelining
           for (int c = 0; c < C; c++) { // computes 8 partial products over 5x5 kernel
             GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            data1 = upd_w(data1, 0, window_readincr_v8(in));
-            data1 = upd_w(data1, 1, window_readincr_v8(in));
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            data2 = upd_w(data2, 0, window_readincr_v8(in));
-            data2 = upd_w(data2, 1, window_readincr_v8(in));
+            acc1 = fpmac(acc1, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc1 = fpmac(acc1, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc1 = fpmac(acc1, data, 4, 0x76543210, wvec, 4, 0x00000000);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            acc1 = fpmac(acc1, data1, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc1 = fpmac(acc1, data1, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc1 = fpmac(acc1, data1, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc1 = fpmac(acc1, data1, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc1 = fpmac(acc1, data1, 4, 0x76543210, wvec, 4, 0x00000000);
-            acc2 = fpmac(acc2, data2, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc2 = fpmac(acc2, data2, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc2 = fpmac(acc2, data2, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc2 = fpmac(acc2, data2, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc2 = fpmac(acc2, data2, 4, 0x76543210, wvec, 4, 0x00000000);
+            acc2 = fpmac(acc2, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc2 = fpmac(acc2, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc2 = fpmac(acc2, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc2 = fpmac(acc2, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc2 = fpmac(acc2, data, 4, 0x76543210, wvec, 4, 0x00000000);
             
             // print_fvec<float>((float*) &data, 16);
             // print_fvec<float>((float*) &data, 16);
             GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            data1 = upd_w(data1, 0, window_readincr_v8(in));
-            data1 = upd_w(data1, 1, window_readincr_v8(in));
+            acc1 = fpmac(acc1, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc1 = fpmac(acc1, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc1 = fpmac(acc1, data, 4, 0x76543210, wvec, 4, 0x00000000);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            acc1 = fpmac(acc1, data2, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc1 = fpmac(acc1, data2, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc1 = fpmac(acc1, data2, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc1 = fpmac(acc1, data2, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc1 = fpmac(acc1, data2, 4, 0x76543210, wvec, 4, 0x00000000);
-            acc2 = fpmac(acc2, data1, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc2 = fpmac(acc2, data1, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc2 = fpmac(acc2, data1, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc2 = fpmac(acc2, data1, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc2 = fpmac(acc2, data1, 4, 0x76543210, wvec, 4, 0x00000000);
+            acc2 = fpmac(acc2, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc2 = fpmac(acc2, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc2 = fpmac(acc2, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc2 = fpmac(acc2, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc2 = fpmac(acc2, data, 4, 0x76543210, wvec, 4, 0x00000000);
             
             GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            data2 = upd_w(data2, 0, window_readincr_v8(in));
-            data2 = upd_w(data2, 1, window_readincr_v8(in));
+            acc1 = fpmac(acc1, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc1 = fpmac(acc1, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc1 = fpmac(acc1, data, 4, 0x76543210, wvec, 4, 0x00000000);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            acc1 = fpmac(acc1, data1, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc1 = fpmac(acc1, data1, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc1 = fpmac(acc1, data1, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc1 = fpmac(acc1, data1, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc1 = fpmac(acc1, data1, 4, 0x76543210, wvec, 4, 0x00000000);
-            acc2 = fpmac(acc2, data2, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc2 = fpmac(acc2, data2, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc2 = fpmac(acc2, data2, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc2 = fpmac(acc2, data2, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc2 = fpmac(acc2, data2, 4, 0x76543210, wvec, 4, 0x00000000);
+            acc2 = fpmac(acc2, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc2 = fpmac(acc2, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc2 = fpmac(acc2, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc2 = fpmac(acc2, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc2 = fpmac(acc2, data, 4, 0x76543210, wvec, 4, 0x00000000);
             
             GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            data1 = upd_w(data1, 0, window_readincr_v8(in));
-            data1 = upd_w(data1, 1, window_readincr_v8(in));
+            acc1 = fpmac(acc1, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc1 = fpmac(acc1, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc1 = fpmac(acc1, data, 4, 0x76543210, wvec, 4, 0x00000000);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W-16);
-            acc1 = fpmac(acc1, data2, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc1 = fpmac(acc1, data2, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc1 = fpmac(acc1, data2, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc1 = fpmac(acc1, data2, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc1 = fpmac(acc1, data2, 4, 0x76543210, wvec, 4, 0x00000000);
-            acc2 = fpmac(acc2, data1, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc2 = fpmac(acc2, data1, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc2 = fpmac(acc2, data1, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc2 = fpmac(acc2, data1, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc2 = fpmac(acc2, data1, 4, 0x76543210, wvec, 4, 0x00000000);
+            acc2 = fpmac(acc2, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc2 = fpmac(acc2, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc2 = fpmac(acc2, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc2 = fpmac(acc2, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc2 = fpmac(acc2, data, 4, 0x76543210, wvec, 4, 0x00000000);
             
             GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            data2 = upd_w(data2, 0, window_readincr_v8(in));
-            data2 = upd_w(data2, 1, window_readincr_v8(in));
+            acc1 = fpmac(acc1, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc1 = fpmac(acc1, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc1 = fpmac(acc1, data, 4, 0x76543210, wvec, 4, 0x00000000);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_w(data, 1, window_readincr_v8(in));
             window_incr(in, INP_W*INP_W - 5*INP_W - 16);
-            acc1 = fpmac(acc1, data1, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc1 = fpmac(acc1, data1, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc1 = fpmac(acc1, data1, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc1 = fpmac(acc1, data1, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc1 = fpmac(acc1, data1, 4, 0x76543210, wvec, 4, 0x00000000);
-            acc2 = fpmac(acc2, data2, 0, 0x76543210, wvec, 0, 0x00000000);
-            acc2 = fpmac(acc2, data2, 1, 0x76543210, wvec, 1, 0x00000000);
-            acc2 = fpmac(acc2, data2, 2, 0x76543210, wvec, 2, 0x00000000);
-            acc2 = fpmac(acc2, data2, 3, 0x76543210, wvec, 3, 0x00000000);
-            acc2 = fpmac(acc2, data2, 4, 0x76543210, wvec, 4, 0x00000000);
+            acc2 = fpmac(acc2, data, 0, 0x76543210, wvec, 0, 0x00000000);
+            acc2 = fpmac(acc2, data, 1, 0x76543210, wvec, 1, 0x00000000);
+            acc2 = fpmac(acc2, data, 2, 0x76543210, wvec, 2, 0x00000000);
+            acc2 = fpmac(acc2, data, 3, 0x76543210, wvec, 3, 0x00000000);
+            acc2 = fpmac(acc2, data, 4, 0x76543210, wvec, 4, 0x00000000);
           }
           // printf("\n");
           window_incr(in, -C*INP_W*INP_W + 8); // data go channel -C, right 8
@@ -261,7 +258,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
         window_incr(out, OUT_W);
 
       } // H
-      // chess_separator_scheduler(1);
+      // chess_separator_scheduler(1); // uncomment if compiler cannot detect out dependency
       window_incr(in, -OUT_W*INP_W); // go up OUT_W
     } // M
   } // B
