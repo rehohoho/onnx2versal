@@ -1,5 +1,5 @@
-#ifndef __GRAPH_H__
-#define __GRAPH_H__
+#ifndef __GEMM_GRAPH_H_
+#define __GEMM_GRAPH_H_
 
 #include <adf.h>
 #include "gemm.h"
@@ -21,7 +21,6 @@ class GemmReluScalarGraph : public adf::graph {
   private:
     adf::kernel gemms[CHUNK_COUNT];
     adf::kernel concat;
-    std::string id;
     adf::relative_coordinate tileOffsets[8] = {
       {.col_offset = -1, .row_offset = -1},
       {.col_offset = 0, .row_offset = -1},
@@ -34,18 +33,14 @@ class GemmReluScalarGraph : public adf::graph {
     };
 
   public:
-    adf::input_plio plins[CONCAT_NLANES];
-    adf::output_plio plout[1];
+    adf::port<input> pin[CONCAT_NLANES];
+    adf::port<output> pout[1];
 
-    GemmReluScalarGraph(
-      const std::string& id,
+    // constructor fails with INTERNAL ERROR: 'Linting::CheckKernel::check': the number of argument types and the number of ports are inconsistent
+    void init(
       std::vector<float> weights,
-      std::vector<float> bias,
-      const std::string& INP_TXT,
-      const std::string& EMPTY_TXT,
-      const std::string& OUT_TXT = "gemm_out.txt"
+      std::vector<float> bias
     ) { 
-      this->id = id;
 
       concat = adf::kernel::create(concat8_scalar<CHUNK_COUNT, NCHUNK, NCHUNK, N>);
       adf::source(concat) = "concat.cc";
@@ -75,16 +70,53 @@ class GemmReluScalarGraph : public adf::graph {
         adf::location<adf::buffer>(gemms[i].in[0]) = {adf::offset(0x5000), adf::offset(0x6000)};
       }
 
+      for (int i = 0; i < CONCAT_NLANES; i++) {
+        if (i < CHUNK_COUNT) {
+          adf::connect<adf::window<M*K*4>> (pin[i], gemms[i].in[0]);
+          adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat.in[i]);
+        } else {
+          adf::connect<adf::window<4>> (pin[i], concat.in[i]);
+        }
+      }
+
+      adf::connect<adf::window<M*N*4>> (concat.out[0], pout[0]);
+    }
+
+};
+
+
+template <int NCHUNK, int M, int K, int N>
+class GemmReluScalarGraphTest : public adf::graph {
+
+  private:
+    static const int N_PLINS = CONCAT_NLANES;
+    static const int N_PLOUTS = 1;
+
+  public:
+    adf::input_plio plin[CONCAT_NLANES];
+    adf::output_plio plout[1];
+    GemmReluScalarGraph<NCHUNK, M, K, N> g;
+
+    GemmReluScalarGraphTest(
+      const std::string& id,
+      std::vector<float> weights,
+      std::vector<float> bias,
+      const std::string& INP_TXT,
+      const std::string& EMPTY_TXT,
+      const std::string& OUT_TXT = "gemm_out.txt"
+    ) { 
+      g.init(weights, bias);
+
 #ifdef EXTERNAL_IO
 #define SET_PLIN(i, TXT_PATH) { \
       std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input"; \
-      plins[i] = adf::input_plio::create(plio_name, adf::plio_64_bits); }
+      plin[i] = adf::input_plio::create(plio_name, adf::plio_64_bits); }
       
       plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", adf::plio_64_bits);
 #else
 #define SET_PLIN(i, TXT_PATH) { \
       std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input"; \
-      plins[i] = adf::input_plio::create(plio_name, adf::plio_64_bits, TXT_PATH); }
+      plin[i] = adf::input_plio::create(plio_name, adf::plio_64_bits, TXT_PATH); }
 
       plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", adf::plio_64_bits, OUT_TXT);
 #endif
@@ -92,18 +124,16 @@ class GemmReluScalarGraph : public adf::graph {
       for (int i = 0; i < CONCAT_NLANES; i++) {
         if (i < CHUNK_COUNT) {
           SET_PLIN(i, INP_TXT);
-          adf::connect<adf::window<M*K*4>> (plins[i].out[0], gemms[i].in[0]);
-          adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat.in[i]);
+          adf::connect<adf::window<M*K*4>> (plin[i].out[0], g.pin[i]);
         } else {
           SET_PLIN(i, EMPTY_TXT);
-          adf::connect<adf::window<4>> (plins[i].out[0], concat.in[i]);
+          adf::connect<adf::window<4>> (plin[i].out[0], g.pin[i]);
         }
       }
-
-      adf::connect<adf::window<M*N*4>> (concat.out[0], plout[0].in[0]);
+      adf::connect<adf::window<M*N*4>> (g.pout[0], plout[0].in[0]);
     }
 
 };
 
 
-#endif // __GRAPH_H__
+#endif // __GEMM_GRAPH_H_
