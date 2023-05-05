@@ -20,24 +20,25 @@ help::
 	@echo  " OPTIONS:"
 	@echo  " Use the make recipes with required values for options mentioned below-"
 	@echo  "    TARGET             sw_emu (default) | hw_emu | hw,  build target"
-	@echo  "    EXTIO              true (default) | false,          traffic gen usage"
+	@echo  "    EXTIO              1 (default) | 0,          traffic gen usage"
 	@echo  "    NET_INSTS          1 (default) | 5 | 50"
 	@echo  "    PL_FREQ            250Mhz (default),                HLS kernel frequencies"
 	@echo  "    ITER_CNT           8 (default),                     design iteration count"
 	@echo  "    EN_TRACE           0 (default) | 1,                 enable profiling .ini (hw)"
+	@echo  "    IS_TEST            0 (default) | 1,                 if python script throw error"
 	@echo  ""
 	@echo  " Runs in x86simulator / x86 threads. Functional only, no profiling."
-	@echo  "  TARGET=sw_emu EXTIO=false GRAPH=lenet make graph aiesim"
-	@echo  "  TARGET=sw_emu EXTIO=false GRAPH=lenet make graph kernels xsa application package run_emu"
-	@echo  "  TARGET=sw_emu EXTIO=true GRAPH=lenet make graph aiesim"
-	@echo  "  TARGET=sw_emu EXTIO=true GRAPH=lenet make graph kernels xsa application package run_emu"
+	@echo  "  TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=lenet make graph aiesim"
+	@echo  "  TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=lenet make graph kernels xsa application package run_emu"
+	@echo  "  TARGET=sw_emu EXTIO=1 GRAPH=lenet make graph aiesim"
+	@echo  "  TARGET=sw_emu EXTIO=1 GRAPH=lenet make graph kernels xsa application package run_emu"
 	@echo  "  TARGET=sw_emu make clean clean_reports clean_xpe"
 	@echo  ""
 	@echo  " Runs in aiesimulator / QEMU. Profiling ok."
-	@echo  "  TARGET=hw_emu EXTIO=false GRAPH=lenet make graph aiesim_profile"
-	@echo  "  TARGET=hw_emu EXTIO=false GRAPH=lenet make graph kernels xsa application package run_emu"
-	@echo  "  TARGET=hw_emu EXTIO=true GRAPH=lenet make graph aiesim_profile"
-	@echo  "  TARGET=hw_emu EXTIO=true GRAPH=lenet make graph kernels xsa application package run_emu"
+	@echo  "  TARGET=hw_emu EXTIO=0 TEST=1 GRAPH=lenet make graph aiesim_profile"
+	@echo  "  TARGET=hw_emu EXTIO=0 TEST=1 GRAPH=lenet make graph kernels xsa application package run_emu"
+	@echo  "  TARGET=hw_emu EXTIO=1 GRAPH=lenet make graph aiesim_profile"
+	@echo  "  TARGET=hw_emu EXTIO=1 GRAPH=lenet make graph kernels xsa application package run_emu"
 	@echo  "  TARGET=hw_emu make clean clean_reports clean_xpe"
 	@echo  ""
 	@echo  " Other build options: aiesim_profile, vcd, run, all, report_metrics"
@@ -52,8 +53,9 @@ print-%  : ; @echo $* = $($*)
 #   hw    : Hardware Run
 # =========================================================
 TARGET ?= sw_emu
-EXTIO ?= true
+EXTIO ?= 1
 GRAPH ?= lenet
+IS_TEST ?= 0
 
 # =========================================================
 # No of Instances can be set as:
@@ -118,41 +120,6 @@ EMBEDDED_EXEC_SCRIPT := run_script.sh
 
 WORK_DIR := Work
 
-###########################################################
-# Variable Definitions...
-#
-# ==========================================================
-# Below are the names for SDF graph, application executable,
-# kernel executables, and xsa
-# ==========================================================
-
-# =========================================================
-# Kernel Source Files repository
-# =========================================================
-
-# =========================================================
-# Graph Source files repository
-# ========================================================
-
-# =========================================================
-# Application Source Files repository
-# =========================================================
-
-# =========================================================
-# AIE Compiler Global Settings and Include Libraries
-# =========================================================
-# =========================================================
-# Application Compiler and Linker Flags
-# =========================================================
-
-# =========================================================
-# Kernel Compiler and Linker Flags
-# ========================================================
-
-# =========================================================
-# Packaging Flags
-# ========================================================
-
 # =========================================================
 # Step 1. Kernel XO File Generation
 # ========================================================
@@ -177,7 +144,7 @@ VPP_FLAGS := --platform $(PLATFORM) \
 
 DATAMOVER_KERNEL_SRC := $(PL_SRC_REPO)/datamover/$(DATAMOVER_KERNEL_TOP).cpp
 
-ifeq ($(EXTIO), true)
+ifeq ($(EXTIO), 1)
 	KERNEL_XOS := $(XILINX_VITIS)/data/emulation/XO/sim_ipc_axis_master_$(TRAFFICGEN_WIDTH).xo \
 								$(XILINX_VITIS)/data/emulation/XO/sim_ipc_axis_slave_$(TRAFFICGEN_WIDTH).xo
 else
@@ -226,7 +193,7 @@ AIE_FLAGS := -include=$(AIE_SRC_REPO) \
 ifeq ($(TARGET), sw_emu)
 	AIE_FLAGS += --target=x86sim --Xpreproc=-O0
 endif
-ifeq ($(EXTIO), true)
+ifeq ($(EXTIO), 1)
 	AIE_FLAGS += --Xpreproc=-DEXTERNAL_IO
 endif
 #AIE_FLAGS += --test-iterations=100 
@@ -254,41 +221,41 @@ AIESIM_REPORT_DIR := $(BLD_REPORTS_DIR)/aiesimulator_output
 TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_$(GRAPH).py
 
 aiesim: graph
-ifeq ($(EXTIO), false)
+ifeq ($(EXTIO), 0)
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR); \
-	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO) -err $(IS_TEST) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_check.log
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) -err $(IS_TEST) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO) -err $(IS_TEST) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_check.log
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) -err $(IS_TEST) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 endif
 
 aiesim_profile: graph
-ifeq ($(EXTIO), false)
+ifeq ($(EXTIO), 0)
 ifeq ($(TARGET), sw_emu)
 	@echo "sw_emu does not support profiling, requires hw | hw_emu"
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) -err $(IS_TEST) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
@@ -297,7 +264,7 @@ else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) -err $(IS_TEST) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 endif
 
@@ -329,7 +296,7 @@ VPP_LINK_FLAGS := --clock.defaultTolerance 0.001 \
                   --advanced.param compiler.userPostSysLinkOverlayTcl=$(DIRECTIVES_REPO)/noc_qos.tcl \
                   --vivado.prop run.synth_1.STEPS.SYNTH_DESIGN.ARGS.CONTROL_SET_OPT_THRESHOLD=16
 
-ifeq ($(EXTIO), true)
+ifeq ($(EXTIO), 1)
 	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/mul_etg.cfg
 else
 	VPP_LINK_FLAGS += --clock.freqHz $(VPP_CLOCK_FREQ):$(DATAMOVER_KERNEL_TOP)_0 \
@@ -388,7 +355,7 @@ GCC_INC_FLAGS := -I$(XILINX_VITIS)/aietools/include/ \
 GCC_INC_LIB := -ladf_api_xrt \
                -lxrt_coreutil 
 
-ifeq ($(EXTIO), true)
+ifeq ($(EXTIO), 1)
 GCC_FLAGS += -DEXTERNAL_IO
 endif
 
@@ -475,7 +442,7 @@ $(EMBEDDED_PACKAGE_OUT): $(PROFILING_CONFIGS_REPO)/* $(EXEC_SCRIPTS_REPO)/* $(AL
 run_emu:
 ifeq ($(TARGET),hw_emu)
 
-ifeq ($(EXTIO), true)
+ifeq ($(EXTIO), 1)
 	mkdir -p $(BLD_REPORTS_DIR)/aiesimulator_output; \
 	cd $(EMBEDDED_PACKAGE_OUT); \
 	python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(BLD_REPORTS_DIR)/aiesimulator_output 2>&1 | tee embedded_run_trafficgen.log & \
@@ -487,7 +454,7 @@ endif
 
 else # sw_emu
 
-ifeq ($(EXTIO), true)
+ifeq ($(EXTIO), 1)
 	mkdir -p $(BLD_REPORTS_DIR)/x86simulator_output; \
 	cd $(BUILD_TARGET_DIR); \
 	export XILINX_XRT=$(XILINX_X86_XRT); \
@@ -549,3 +516,14 @@ clean_reports:
 #Clean_all xpes...
 clean_xpe:
 	rm -rf $(XPE_REPO)
+
+
+TEST_COUNT := 0
+# $(eval TEST_COUNT := $(shell expr $(TEST_COUNT) + 1 ))
+test:
+	TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=concat make clean_reports graph aiesim; \
+	TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=conv make clean_reports graph aiesim; \
+	TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=convchunk make clean_reports graph aiesim; \
+	TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=gemm make clean_reports graph aiesim; \
+	TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=pool make clean_reports graph aiesim; \
+	TARGET=sw_emu EXTIO=0 TEST=1 GRAPH=transpose make clean_reports graph aiesim
