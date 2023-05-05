@@ -3,12 +3,12 @@
 
 
 template <int B, int H, int W, int C>
-void bhwc2bchw_scalar(
+void TransposeScalarBHWC2BCHW<B, H, W, C>::filter(
 	input_window<float>* in,      // BHWC (1x4x4x16)
   output_window<float>* out     // BCHW (1x16x4x4)
 ) {
   PROFILE_HEADER;
-  printf("Running bhwc2bchw_scalar<%d, %d, %d, %d>", B, H, W, C);
+  printf("Running TransposeScalarBHWC2BCHW::filter<%d, %d, %d, %d>\n", B, H, W, C);
 
   for (int b = 0; b < B; b++) {
     for (int h = 0; h < H; h++) {
