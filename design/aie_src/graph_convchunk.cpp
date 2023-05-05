@@ -23,12 +23,7 @@ class ConvReluChunkGraphTest : public adf::graph {
       const std::string& EMPTY_TXT,
       const std::string& OUT_TXT = "conv_out.txt"
     ) { 
-      g.init(weights, bias);
-#ifdef EXTERNAL_IO
-#define TXT_ARG(TXT_PATH) 
-#else
-#define TXT_ARG(TXT_PATH) TXT_PATH
-#endif
+      g.construct(weights, bias);
       for (int i = 0; i < CONCAT_NLANES; i++) {
         std::string plio_name = "plin"+std::to_string(i)+"_conv"+id+"_input";
         if (i < CHUNK_COUNT) {

@@ -6,6 +6,12 @@
 // for 16384B (note 32768B DDR per AIE)
 #define MAX_FLOAT_PARAMS 4096
 
+#ifdef EXTERNAL_IO
+#define TXT_ARG(TXT_PATH) 
+#else
+#define TXT_ARG(TXT_PATH) TXT_PATH
+#endif
+
 #define adfCheck(stmt, log_name)          \
   do {                                    \
     adf::return_code ret = stmt;          \

@@ -22,12 +22,7 @@ class ConvReluGraphTest : public adf::graph {
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "conv_out.txt"
     ) { 
-      g.init(weights, bias);
-#ifdef EXTERNAL_IO
-#define TXT_ARG(TXT_PATH) 
-#else
-#define TXT_ARG(TXT_PATH) TXT_PATH
-#endif
+      g.construct(weights, bias);
       plin[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits, TXT_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits, TXT_ARG(OUT_TXT));
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (plin[0].out[0], g.pin[0]);

@@ -37,7 +37,7 @@ class GemmReluChunkGraph : public adf::graph {
     adf::port<output> pout[1];
 
     // constructor fails with INTERNAL ERROR: 'Linting::CheckKernel::check': the number of argument types and the number of ports are inconsistent
-    void init(
+    void construct(
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
