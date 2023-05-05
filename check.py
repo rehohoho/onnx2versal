@@ -18,12 +18,21 @@ def load_txt(filepath: str):
   return np.array(data)
 
 
-def check(filepath1: str,
-          filepath2: str):
+def is_file_match(filepath1: str,
+                  filepath2: str,
+                  is_throw_err: int):
   arr1 = load_txt(filepath1)
   arr2 = load_txt(filepath2)
+  
   if arr1.shape == arr2.shape:
     print(f"TEST (shape): OK!")
+    if np.allclose(arr1, arr2, rtol=1e-03, atol=1e-05):
+      print(f"TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)")
+      return True
+    else:
+      print(f"TEST (tolerance): FAILED! (rtol=1e-03, atol=1e-05)")
+      if is_throw_err == 0: import ipdb;ipdb.set_trace()
+  
   else:
     print(f"WARNING: arr1 shape {arr1.shape}, arr2 shape {arr2.shape}")
     minSize = min(arr1.size, arr2.size)
@@ -31,13 +40,9 @@ def check(filepath1: str,
       print(f"TEST (tolerance): first {minSize} OK! (rtol=1e-03, atol=1e-05)")
     else:
       print(f"TEST (tolerance): first {minSize} FAILED! (rtol=1e-03, atol=1e-05)")
-      import ipdb;ipdb.set_trace()
-  
-  if np.allclose(arr1, arr2, rtol=1e-03, atol=1e-05):
-    print(f"TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)")
-  else:
-    print(f"TEST (tolerance): FAILED! (rtol=1e-03, atol=1e-05)")
-    import ipdb;ipdb.set_trace()
+      if is_throw_err == 0: import ipdb;ipdb.set_trace()
+
+  return False
 
 
 if __name__ == "__main__":
@@ -45,11 +50,14 @@ if __name__ == "__main__":
                                    description="Compare diff between two files.")
   parser.add_argument("-f1")
   parser.add_argument("-f2")
+  parser.add_argument("-err", type=int)
   args = parser.parse_args()
+
+  pass_count = 0
 
   if args.f1 and args.f2 and os.path.isfile(args.f1) and os.path.isfile(args.f2):
     print(f"Checking {args.f1} against {args.f2}")
-    check(args.f1, args.f2)
+    pass_count += is_file_match(args.f1, args.f2, args.err)
   else:
     if args.f1 and args.f2 and os.path.isdir(args.f1) and os.path.isdir(args.f2):
       DATA_DIR = args.f1
@@ -57,8 +65,14 @@ if __name__ == "__main__":
     
     print(f"Checking directories {DATA_DIR} and {OUT_DIR}")
     filenames = set(os.listdir(DATA_DIR)).intersection(os.listdir(OUT_DIR))
+
     for i, fn in enumerate(filenames):
       print(f"Checking {i+1}/{len(filenames)}: {fn}")
-      check(
-        os.path.join(DATA_DIR, fn), 
-        os.path.join(OUT_DIR, fn))
+      pass_count += is_file_match(os.path.join(DATA_DIR, fn), 
+                                  os.path.join(OUT_DIR, fn), 
+                                  args.err)
+  
+  if args.err == 1:
+    assert(pass_count == len(filenames)), f"{pass_count} / {len(filenames)} tests passed."
+  else:
+    print(f"{pass_count} / {len(filenames)} tests passed.")
