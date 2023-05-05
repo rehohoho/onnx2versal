@@ -30,23 +30,21 @@ class MaxpoolGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-char pool1_input[]  = "lenet_mnist__2___pool1_MaxPool___relu1_Relu_output_0__1x24x24x6.txt";
-char pool1_output[] = "lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x12x12x6.txt";
-char pool2_input[]  = "lenet_mnist__5___pool2_MaxPool___relu2_Relu_output_0__1x8x8x16.txt";
-char pool2_output[] = "lenet_mnist__5___pool2_MaxPool___pool2_MaxPool_output_0__1x4x4x16.txt";
-MaxpoolGraphTest<MaxpoolScalarBHWC, 24, 12, 1, 6> pool1("1", pool1_input, pool1_output);
-MaxpoolGraphTest<MaxpoolScalarBHWC, 8, 4, 1, 16> pool2("2", pool2_input, pool2_output);
+MaxpoolGraphTest<MaxpoolScalarBHWC, 24, 12, 1, 6> scalar(
+  "scalar", "pool_in.txt", "pool_out_MaxpoolScalarBHWC.txt");
+MaxpoolGraphTest<MaxpoolScalarBHWC, 24, 12, 1, 6> scalar_rand(
+  "scalar_rand", "pool_in_rand.txt", "pool_out_MaxpoolScalarBHWC_rand.txt");
 
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
-	adfCheck(pool1.init(), "init pool1");
-  adfCheck(pool1.run(1), "run pool1");
-	adfCheck(pool1.end(), "end pool1");
+	adfCheck(scalar.init(), "init scalar");
+  adfCheck(scalar.run(1), "run scalar");
+	adfCheck(scalar.end(), "end scalar");
 
-  adfCheck(pool2.init(), "init pool2");
-  adfCheck(pool2.run(1), "run pool2");
-	adfCheck(pool2.end(), "end pool2");
+  adfCheck(scalar_rand.init(), "init scalar_rand");
+  adfCheck(scalar_rand.run(1), "run scalar_rand");
+	adfCheck(scalar_rand.end(), "end scalar_rand");
   return 0;
 }
 #endif
@@ -55,14 +53,13 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
 	
-	adfCheck(pool1.init(), "init pool1");
-  get_graph_throughput_by_port(pool1, "plout[0]", pool1.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
-	adfCheck(pool1.end(), "end pool1");
+	adfCheck(scalar.init(), "init scalar");
+  get_graph_throughput_by_port(scalar, "plout[0]", scalar.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+	adfCheck(scalar.end(), "end scalar");
 
-  adfCheck(pool2.init(), "init pool2");
-  get_graph_throughput_by_port(pool2, "plout[0]", pool2.plout[0], 1*4*4*16, sizeof(float32), ITER_CNT);
-	adfCheck(pool2.end(), "end pool2");
-
+  adfCheck(scalar_rand.init(), "init scalar_rand");
+  get_graph_throughput_by_port(scalar_rand, "plout[0]", scalar_rand.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+	adfCheck(scalar_rand.end(), "end scalar_rand");
   return 0;
 }
 #endif
