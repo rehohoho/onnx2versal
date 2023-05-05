@@ -4,13 +4,16 @@
 #define ITER_CNT 1
 
 
-template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+template <template<int, int, int, int> class CONCAT,
+  int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatGraphTest : public adf::graph {
+
+  private:
+    ConcatGraph<CONCAT, LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE> g;
 
   public:
     adf::input_plio plin[NLANES];
     adf::output_plio plout[1];
-    ConcatGraph<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE> g;
 
     ConcatGraphTest(
       const std::string& id,
@@ -50,7 +53,7 @@ class ConcatGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-ConcatGraphTest<5, 8, 8, 4*8+4> concat1("1",
+ConcatGraphTest<ConcatScalar, 5, 8, 8, 4*8+4> concat1("1",
   "concat_in.txt", // INP0_TXT
   "concat_in.txt", // INP1_TXT
   "concat_in.txt", // INP2_TXT
@@ -62,7 +65,7 @@ ConcatGraphTest<5, 8, 8, 4*8+4> concat1("1",
   "concat1_out.txt"// OUT_TXT
 );
 
-ConcatGraphTest<5, 8, 4, 4*4+2> concat2("2",
+ConcatGraphTest<ConcatScalar, 5, 8, 4, 4*4+2> concat2("2",
   "concat_in.txt", // INP0_TXT
   "concat_in.txt", // INP1_TXT
   "concat_in.txt", // INP2_TXT

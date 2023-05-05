@@ -6,7 +6,8 @@
 #define NLANES 8
 
 
-template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+template <template<int, int, int, int> class CONCAT,
+  int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatGraph : public adf::graph {
 
   private:
@@ -17,7 +18,7 @@ class ConcatGraph : public adf::graph {
     adf::port<output> pout[1];
 
     void construct() { 
-      k[0] = adf::kernel::create(concat8_scalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>);
+      k[0] = adf::kernel::create_object<CONCAT<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>>();
       adf::source(k[0]) = "concat.cc";
       adf::runtime<ratio>(k[0]) = 0.6;
 

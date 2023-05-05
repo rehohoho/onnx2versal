@@ -30,7 +30,7 @@ lenet fc2: 349 cycles
 lenet fc3: 91 cycles
 */
 template <int NLANES, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void concat8_scalar(
+void ConcatScalar<NLANES, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
