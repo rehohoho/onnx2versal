@@ -1,5 +1,5 @@
-#ifndef __GRAPH_H__
-#define __GRAPH_H__
+#ifndef __CONV_GRAPH_H__
+#define __CONV_GRAPH_H__
 
 #include <adf.h>
 #include "conv.h"
@@ -8,7 +8,7 @@
 
 template <template<int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluTemplateGraph : public adf::graph {
+class ConvReluGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -38,7 +38,7 @@ class ConvReluTemplateGraph : public adf::graph {
 
 template <template<int, int, int, int, int, int> class CONV, int IS_BCHW,
   int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluTemplateChunkGraph : public adf::graph {
+class ConvReluChunkGraph : public adf::graph {
 
   private:
     adf::kernel convs[CHUNK_COUNT];
@@ -90,4 +90,4 @@ class ConvReluTemplateChunkGraph : public adf::graph {
 };
 
 
-#endif // __GRAPH_H__
+#endif // __CONV_GRAPH_H__
