@@ -31,21 +31,21 @@ class TransposeGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> scalar(
-  "scalar", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW.txt");
-TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> scalar_rand(
-  "scalar_rand", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW_rand.txt");
+TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> fpscalar(
+  "fpscalar", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW.txt");
+TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> fpscalar_rand(
+  "fpscalar_rand", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW_rand.txt");
 
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
-  adfCheck(scalar.init(), "init scalar");
-  adfCheck(scalar.run(1), "run scalar");
-	adfCheck(scalar.end(), "end scalar");
+  adfCheck(fpscalar.init(), "init fpscalar");
+  adfCheck(fpscalar.run(1), "run fpscalar");
+	adfCheck(fpscalar.end(), "end fpscalar");
 
-  adfCheck(scalar_rand.init(), "init scalar_rand");
-  adfCheck(scalar_rand.run(1), "run scalar_rand");
-	adfCheck(scalar_rand.end(), "end scalar_rand");
+  adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
+  adfCheck(fpscalar_rand.run(1), "run fpscalar_rand");
+	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
   return 0;
 }
 #endif
@@ -53,13 +53,13 @@ int main(int argc, char ** argv) {
 
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
-  adfCheck(scalar.init(), "init scalar");
-  get_graph_throughput_by_port(scalar, "plout[0]", scalar.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
-	adfCheck(scalar.end(), "end scalar");
+  adfCheck(fpscalar.init(), "init fpscalar");
+  get_graph_throughput_by_port(fpscalar, "plout[0]", fpscalar.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+	adfCheck(fpscalar.end(), "end fpscalar");
 
-  adfCheck(scalar_rand.init(), "init scalar_rand");
-  get_graph_throughput_by_port(scalar_rand, "plout[0]", scalar_rand.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
-	adfCheck(scalar_rand.end(), "end scalar_rand");
+  adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
+  get_graph_throughput_by_port(fpscalar_rand, "plout[0]", fpscalar_rand.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
   return 0;
 }
 #endif
