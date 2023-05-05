@@ -42,7 +42,7 @@ class GemmReluChunkGraph : public adf::graph {
       std::vector<float> bias
     ) { 
 
-      concat = adf::kernel::create(concat8_scalar<CHUNK_COUNT, NCHUNK, NCHUNK, N>);
+      concat = adf::kernel::create_object<ConcatScalar<CHUNK_COUNT, NCHUNK, NCHUNK, N>>();
       adf::source(concat) = "concat.cc";
       adf::runtime<ratio>(concat) = 0.6;
 

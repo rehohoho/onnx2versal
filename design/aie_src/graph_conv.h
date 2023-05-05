@@ -53,9 +53,9 @@ class ConvReluChunkGraph : public adf::graph {
       std::vector<float> bias
     ) { 
       if (IS_BCHW) {
-        concat = adf::kernel::create(concat8_scalar<CHUNK_COUNT, B*MCHUNK*OUT_W*OUT_W, MCHUNK*OUT_W*OUT_W, M*OUT_W*OUT_W>);
+        concat = adf::kernel::create_object<ConcatScalar<CHUNK_COUNT, B*MCHUNK*OUT_W*OUT_W, MCHUNK*OUT_W*OUT_W, M*OUT_W*OUT_W>>();
       } else {
-        concat = adf::kernel::create(concat8_scalar<CHUNK_COUNT, B*OUT_W*OUT_W*MCHUNK, MCHUNK, M>);
+        concat = adf::kernel::create_object<ConcatScalar<CHUNK_COUNT, B*OUT_W*OUT_W*MCHUNK, MCHUNK, M>>();
       }
       adf::source(concat) = "concat.cc";
       adf::runtime<ratio>(concat) = 0.6;
