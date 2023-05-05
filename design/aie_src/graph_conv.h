@@ -6,8 +6,9 @@
 #include "concat.h"
 
 
-template <int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluScalarBhwcGraph : public adf::graph {
+template <template<int, int, int, int, int, int> class CONV, 
+  int INP_W, int OUT_W, int B, int C, int M, int K>
+class ConvReluTemplateGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -20,7 +21,7 @@ class ConvReluScalarBhwcGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
-      k[0] = adf::kernel::create_object<ConvReluScalarBHWC<INP_W, OUT_W, B, C, M, K>>(weights, bias);
+      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
 
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
@@ -29,32 +30,6 @@ class ConvReluScalarBhwcGraph : public adf::graph {
     }
 
 };
-
-
-template <int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluScalarBchwGraph : public adf::graph {
-
-  private:
-    adf::kernel k[1];
-
-  public:
-    adf::port<input> pin[1];
-    adf::port<output> pout[1];
-    
-    void init(
-      std::vector<float> weights,
-      std::vector<float> bias
-    ) { 
-      k[0] = adf::kernel::create_object<ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K>>(weights, bias);
-      adf::source(k[0]) = "conv.cc";
-
-      adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], pout[0]);
-      adf::runtime<ratio>(k[0]) = 0.6;
-    }
-
-};
-
 
 
 #define CHUNK_COUNT   M / MCHUNK + 1
@@ -137,44 +112,5 @@ class ConvReluScalarBhwcChunkGraph : public adf::graph {
 
 };
 
-
-template <int INP_W, int OUT_W, int B, int C, int M, int K>
-class ConvReluVectorBchwGraph : public adf::graph {
-
-  private:
-    adf::kernel k[1];
-    std::string id;
-
-  public:
-    adf::input_plio plins[1];
-    adf::output_plio plouts[1];
-
-    ConvReluVectorBchwGraph(
-      const std::string& id,
-      std::vector<float> weights,
-      std::vector<float> bias,
-      const std::string& INP_TXT,
-      const std::string& OUT_TXT = "conv_out.txt"
-    ) { 
-      this->id = id;
-
-      k[0] = adf::kernel::create_object<Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>>(weights, bias);
-      adf::source(k[0]) = "conv.cc";
-
-#ifdef EXTERNAL_IO
-      plins[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits);
-      plouts[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits);
-#else
-      plins[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits, INP_TXT);
-      plouts[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits, OUT_TXT);
-#endif
-      
-      adf::connect<adf::window<B*INP_W*INP_W*C*4>> (plins[0].out[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], plouts[0].in[0]);
-
-      adf::runtime<ratio>(k[0]) = 0.6;
-    }
-
-};
 
 #endif // __GRAPH_H__

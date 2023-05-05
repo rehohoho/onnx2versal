@@ -14,7 +14,7 @@ void ConvReluScalarBHWC<INP_W, OUT_W, B, C, M, K>::filter(
   output_window<float>* out     // BHWM (1x24x24x6)
 ) {
   PROFILE_HEADER;
-  printf("Running conv_relu_scalar<%d, %d, %d, %d, %d, %d>", INP_W, OUT_W, B, C, M, K);
+  printf("Running conv_relu_scalar<%d, %d, %d, %d, %d, %d>\n", INP_W, OUT_W, B, C, M, K);
 
   int weightIdx = 0;
 
@@ -59,7 +59,7 @@ void ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K>::filter(
   output_window<float>* out     // BMHW (1x6x24x24)
 ) {
   PROFILE_HEADER;
-  printf("Running conv_relu_scalar<%d, %d, %d, %d, %d, %d>", INP_W, OUT_W, B, C, M, K);
+  printf("Running conv_relu_scalar<%d, %d, %d, %d, %d, %d>\n", INP_W, OUT_W, B, C, M, K);
 
   int weightIdx = 0;
 
@@ -79,14 +79,11 @@ void ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K>::filter(
                 float a = window_readincr(in);
                 res += a * weights[weightIdx];
                 weightIdx++;
-                // if (w == 0) printf("%f ", a);
               }
               window_incr(in, -K+INP_W); // go left K, down 1
-              // if (w == 0) printf("\n");
             }
             window_incr(in, -K*INP_W + INP_W*INP_W); // go up K, channel 1
           }
-          // if (w == 0) printf("\n");
 
           if (res < 0) res = 0;
           window_writeincr(out, res);
@@ -119,6 +116,7 @@ for (i = 0; i < 8; i++)
 in[(k*row)+i:(k*row)+i+8] * weights[k*K+i], 0<=i<=K
 
 Reference performance: Lenet Conv2 Tutorial (1x16x12x12 int8) example with matmul ~2k cycles
+Theoretical limit: 16*6*5*5*8*8 / 4 = 38400 cycles
 - Note zstart must be a compile time constant
 - Using conditionals ~2x loop time, so shuffle down to handle %4 vs %5
 - Loop order BMHW seems faster since H and W > M
@@ -134,8 +132,8 @@ Reference performance: Lenet Conv2 Tutorial (1x16x12x12 int8) example with matmu
   wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
 #endif
 
-template <int INP_W, int OUT_W, int B, int C, int M>
-void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
+template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused>
+void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
@@ -180,8 +178,6 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
             acc2 = fpmac(acc2, data, 3, 0x76543210, wvec, 3, 0x00000000);
             acc2 = fpmac(acc2, data, 4, 0x76543210, wvec, 4, 0x00000000);
             
-            // print_fvec<float>((float*) &data, 16);
-            // print_fvec<float>((float*) &data, 16);
             GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
             acc1 = fpmac(acc1, data, 0, 0x76543210, wvec, 0, 0x00000000);
             acc1 = fpmac(acc1, data, 1, 0x76543210, wvec, 1, 0x00000000);
@@ -242,7 +238,6 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M>::filter(
             acc2 = fpmac(acc2, data, 3, 0x76543210, wvec, 3, 0x00000000);
             acc2 = fpmac(acc2, data, 4, 0x76543210, wvec, 4, 0x00000000);
           }
-          // printf("\n");
           window_incr(in, -C*INP_W*INP_W + 8); // data go channel -C, right 8
                     
           acc1 = fpmax(acc1, zeros, 0, 0x76543210);

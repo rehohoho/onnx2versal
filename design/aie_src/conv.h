@@ -59,7 +59,7 @@ class ConvReluScalarBCHW {
 };
 
 
-template <int INP_W, int OUT_W, int B, int C, int M>
+template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused>
 class Conv5x5ReluBCHW {
 
   private:
