@@ -15,8 +15,8 @@ Chunks NxK weight params into ~16384B chunks by N dimension
 Assumes weight <=16384B, bias <=4096B, input <=4096B per chunk
 Places a maximum of 3x3 tiles, 8 gemm tiles surrounding a concat tile (max AIE DMA input = 8)
 */
-template <int NCHUNK, int M, int K, int N>
-class GemmReluScalarGraph : public adf::graph {
+template <template<int, int, int> class GEMM, int NCHUNK, int M, int K, int N>
+class GemmReluChunkGraph : public adf::graph {
 
   private:
     adf::kernel gemms[CHUNK_COUNT];
@@ -55,7 +55,7 @@ class GemmReluScalarGraph : public adf::graph {
         wChunk.resize(NCHUNK*K, 0);
         bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+chunkSize);
         bChunk.resize(NCHUNK, 0);
-        gemms[i] = adf::kernel::create_object<GemmReluScalar<M, K, NCHUNK>>(wChunk, bChunk);
+        gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK>>(wChunk, bChunk);
         adf::source(gemms[i]) = "gemm.cc";
         adf::runtime<ratio>(gemms[i]) = 0.6;
 
