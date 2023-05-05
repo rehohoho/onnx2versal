@@ -5,12 +5,12 @@
 
 
 template <int INP_W, int OUT_W, int B, int C>
-void maxpool_scalar(
+void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   output_window<float>* out     // BPQC (1x24x24x6)
 ) {
   PROFILE_HEADER;
-  printf("Running maxpool_scalar<%d, %d, %d, %d>", INP_W, OUT_W, B, C);
+  printf("Running MaxpoolScalarBHWC::filter<%d, %d, %d, %d>\n", INP_W, OUT_W, B, C);
 
   const int K = INP_W / OUT_W;
 
