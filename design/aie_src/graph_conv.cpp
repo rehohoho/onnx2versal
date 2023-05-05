@@ -35,6 +35,37 @@ class ConvReluScalarBhwcGraphTest : public adf::graph {
 };
 
 
+template <int INP_W, int OUT_W, int B, int C, int M, int K>
+class ConvReluScalarBchwGraphTest : public adf::graph {
+
+  private:
+    ConvReluScalarBchwGraph<INP_W, OUT_W, B, C, M, K> g;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[1];
+
+    ConvReluScalarBchwGraphTest(
+      const std::string& id,
+      std::vector<float> weights,
+      std::vector<float> bias,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT = "conv_out.txt"
+    ) { 
+      g.init(weights, bias);
+#ifdef EXTERNAL_IO
+      plin[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits);
+      plout[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits);
+#else
+      plin[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits, INP_TXT);
+      plout[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits, OUT_TXT);
+#endif
+      adf::connect<adf::window<B*INP_W*INP_W*C*4>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (g.pout[0], plout[0].in[0]);
+    }
+};
+
+
 // instance to be compiled and used in host within xclbin
 // char empty_input[]  = "empty.txt";
 
@@ -55,9 +86,9 @@ ConvReluVectorBchwGraph<28, 24, 1, 1, 6, 5> conv1_vector(
   "1", conv1_weight, conv1_bias, conv1_input, conv1_output);
 ConvReluVectorBchwGraph<12, 8, 1, 6, 16, 5> conv2_vec(
   "2vec", conv2_weight, conv2_bias, conv2_input, "lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8_vec.txt");
-ConvReluScalarBchwGraph<12, 8, 1, 6, 16, 5> conv2(
+ConvReluScalarBchwGraphTest<12, 8, 1, 6, 16, 5> conv2(
   "2", conv2_weight, conv2_bias, conv2_input, conv2_output);
-ConvReluScalarBchwGraph<12, 8, 1, 6, 16, 5> conv_bchw(
+ConvReluScalarBchwGraphTest<12, 8, 1, 6, 16, 5> conv_bchw(
   "bchw", test_weights, test_bias, "conv_in.txt", "conv_bchw_sout.txt");
 ConvReluScalarBhwcGraphTest<12, 8, 1, 6, 16, 5> conv_bhwc(
   "bhwc", test_weights, test_bias, "conv_in.txt", "conv_bhwc_sout.txt");
