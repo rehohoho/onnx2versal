@@ -31,19 +31,21 @@ class TransposeGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-char transpose1_input[]  = "lenet_mnist__13___Reshape___pool2_MaxPool_output_0__1x4x4x16.txt";
-char transpose1_output[] = "lenet_mnist__13___Reshape___Reshape_output_0__1x256.txt";
-TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> transpose1(
-  "1", transpose1_input, transpose1_output);
+TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> scalar(
+  "scalar", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW.txt");
+TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> scalar_rand(
+  "scalar_rand", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW_rand.txt");
 
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
-	
-  adfCheck(transpose1.init(), "init transpose1");
-  adfCheck(transpose1.run(1), "run transpose1");
-	adfCheck(transpose1.end(), "end transpose1");
+  adfCheck(scalar.init(), "init scalar");
+  adfCheck(scalar.run(1), "run scalar");
+	adfCheck(scalar.end(), "end scalar");
 
+  adfCheck(scalar_rand.init(), "init scalar_rand");
+  adfCheck(scalar_rand.run(1), "run scalar_rand");
+	adfCheck(scalar_rand.end(), "end scalar_rand");
   return 0;
 }
 #endif
@@ -51,11 +53,13 @@ int main(int argc, char ** argv) {
 
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
-	
-	adfCheck(transpose1.init(), "init transpose1");
-  get_graph_throughput_by_port(transpose1, "plout[0]", transpose1.plout[0], 1*4*4*16, sizeof(float32), ITER_CNT);
-	adfCheck(transpose1.end(), "end transpose1");
+  adfCheck(scalar.init(), "init scalar");
+  get_graph_throughput_by_port(scalar, "plout[0]", scalar.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+	adfCheck(scalar.end(), "end scalar");
 
+  adfCheck(scalar_rand.init(), "init scalar_rand");
+  get_graph_throughput_by_port(scalar_rand, "plout[0]", scalar_rand.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+	adfCheck(scalar_rand.end(), "end scalar_rand");
   return 0;
 }
 #endif
