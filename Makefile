@@ -101,15 +101,15 @@ EXEC_SCRIPTS_REPO      := $(DESIGN_REPO)/exec_scripts
 VIVADO_METRICS_SCRIPTS_REPO := $(DESIGN_REPO)/vivado_metrics_scripts
 
 BASE_BLD_DIR     	:= $(PROJECT_REPO)/build
-INSTS_BLD_DIR     := $(BASE_BLD_DIR)/net_x$(NET_INSTS)
+INSTS_BLD_DIR     := $(BASE_BLD_DIR)/$(GRAPH)_x$(NET_INSTS)
 BUILD_TARGET_DIR  := $(INSTS_BLD_DIR)/$(TARGET)
 
 REPORTS_REPO := $(PROJECT_REPO)/reports_dir
-BLD_REPORTS_DIR := $(REPORTS_REPO)/net_x$(NET_INSTS)/$(TARGET)
+BLD_REPORTS_DIR := $(REPORTS_REPO)/$(GRAPH)_x$(NET_INSTS)/$(TARGET)
 
 XPE_REPO         := $(PROJECT_REPO)/xpe_dir
-BLD_XPE_DIR      := $(XPE_REPO)/net_x$(NET_INSTS)
-VCD_FILE_NAME    := net_x$(NET_INSTS)
+BLD_XPE_DIR      := $(XPE_REPO)/$(GRAPH)_x$(NET_INSTS)
+VCD_FILE_NAME    := $(GRAPH)_x$(NET_INSTS)
 BLD_TGT_VCD_FILE := $(BUILD_TARGET_DIR)/$(VCD_FILE_NAME).vcd
 XPE_FILE         := $(BLD_XPE_DIR)/graph_$(VCD_FILE_NAME).xpe
 
@@ -220,7 +220,7 @@ AIE_FLAGS := -include=$(AIE_SRC_REPO) \
 						 --log-level=5 \
 						 --pl-freq=500 \
 						 --dataflow \
-						 --stacksize=1024 \
+						 --stacksize=2048 \
 						 --heapsize=2048 \
 						 --workdir=$(WORK_DIR)
 ifeq ($(TARGET), sw_emu)
@@ -259,24 +259,24 @@ ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR); \
-	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO)
+	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_check.log
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	x86simulator $(AIE_SIM_FLAGS) -o=$(X86SIM_REPORT_DIR) & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_filetraffic.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO)
+	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_check.log
 else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 endif
 
@@ -288,7 +288,7 @@ else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
@@ -297,7 +297,7 @@ else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) --profile -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO)
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
 endif
 endif
 
@@ -322,7 +322,7 @@ $(BLD_TGT_VCD_FILE):
 # This step links the graph executable (tx_chain.o) and 
 # the kernels into a xsa file. 
 # Outputs: in build/[hw_emu | hw]/ directory
-APP_OBJ_NAME := net_aie
+APP_OBJ_NAME := $(GRAPH)_aie
 XSA := vck190_$(APP_OBJ_NAME).xsa
 
 VPP_LINK_FLAGS := --clock.defaultTolerance 0.001 \
@@ -369,7 +369,7 @@ $(BUILD_TARGET_DIR)/$(XSA):$(KERNEL_XOS) $(LIBADF_A) $(SYSTEM_CONFIGS_REPO)/*
 #	  net_app.o 
 # 	net_xrt.elf
 APP_ELF 				:= $(APP_OBJ_NAME)_xrt.elf
-APP_SRC_CPP 	  := $(HOST_APP_SRC_REPO)/net_aie_app.cpp
+APP_SRC_CPP 	  := $(HOST_APP_SRC_REPO)/$(GRAPH)_aie_app.cpp
 AIE_CONTROL_CPP := $(BUILD_TARGET_DIR)/$(WORK_DIR)/ps/c_rts/aie_control_xrt.cpp
 
 GCC_FLAGS := -O \
