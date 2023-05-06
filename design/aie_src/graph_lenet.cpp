@@ -47,7 +47,7 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
 	adfCheck(lenet.init(), "init lenet");
-  get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*10, sizeof(float32), ITER_CNT);
+  get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*10, sizeof(float), ITER_CNT);
 	adfCheck(lenet.end(), "end lenet");
   return 0;
 }
