@@ -1,9 +1,9 @@
 import numpy as np
 np.random.seed(0)
 
-C = 6
-W = 12
-M = 8
+C = 2
+W = 28
+M = 2
 K = 5
 inp = np.arange(C*W*W).reshape(-1, 2)
 weights = np.arange(M*C*K*K).flatten().tolist()

@@ -116,13 +116,15 @@ for (i = 0; i < 8; i++)
 in[(k*row)+i:(k*row)+i+8] * weights[k*K+i], 0<=i<=K
 
 Reference performance: Lenet Conv2 Tutorial (1x16x12x12 int8) example with matmul ~2k cycles
-Theoretical limit: 16*6*5*5*8*8 / 4 = 38400 cycles
+Theoretical limit: (16*6*5*5*8*8 + 16*8*8) / 4 = 38656 cycles
 - Note zstart must be a compile time constant
 - Using conditionals ~2x loop time, so shuffle down to handle %4 vs %5
 - Loop order BMHW seems faster since H and W > M
 - Unrolling is not useful, must preload extra every C*K*K, not worth (46244 -> 53541)
 - Multiple accs reduces number of loads by reusing data
 - Reduce data instances to reduce spill (v32float -> v16float: 43981 -> 40796)
+
+!! compiler does not detect dependencies across C-loop within W-loop for some C, M, K
 */
 #ifdef __X86SIM__
 #define GET_WVEC(wp, zstart) \
@@ -251,9 +253,8 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused>::filter(
         } // W
         window_incr(in, 2*INP_W-OUT_W/8*8); // go left OUT_W/8*8, go down 1
         window_incr(out, OUT_W);
-
+        chess_separator_scheduler(1); // uncomment if compiler cannot detect out dependency
       } // H
-      // chess_separator_scheduler(1); // uncomment if compiler cannot detect out dependency
       window_incr(in, -OUT_W*INP_W); // go up OUT_W
     } // M
   } // B
