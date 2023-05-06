@@ -5,10 +5,6 @@
 #include "gemm.h"
 #include "concat.h"
 
-#define CHUNK_COUNT   N / NCHUNK + 1
-#define NCUTCHUNK     N % NCHUNK
-#define CONCAT_NLANES 8
-
 
 /*
 Chunks NxK weight params into ~16384B chunks by N dimension
@@ -19,7 +15,7 @@ template <template<int, int, int> class GEMM, int NCHUNK, int M, int K, int N>
 class GemmReluChunkGraph : public adf::graph {
 
   private:
-    adf::kernel gemms[CHUNK_COUNT];
+    adf::kernel gemms[N / NCHUNK + 1];
     adf::kernel concat;
     adf::relative_coordinate tileOffsets[8] = {
       {.col_offset = -1, .row_offset = -1},
@@ -33,6 +29,10 @@ class GemmReluChunkGraph : public adf::graph {
     };
 
   public:
+    static const int CHUNK_COUNT = N / NCHUNK + 1;
+    static const int NCUTCHUNK = N % NCHUNK;
+    static const int CONCAT_NLANES = 8;
+    
     adf::port<input> pin[CONCAT_NLANES];
     adf::port<output> pout[1];
 
