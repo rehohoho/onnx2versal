@@ -16,7 +16,7 @@ class TransposeGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    void construct() { 
+    TransposeGraph() { 
       k[0] = adf::kernel::create_object<TRANSPOSE<B, H, W, C>>();
       adf::source(k[0]) = "transpose.cc";
       adf::runtime<ratio>(k[0]) = 0.6;

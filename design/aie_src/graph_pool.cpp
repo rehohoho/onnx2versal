@@ -20,7 +20,6 @@ class MaxpoolGraphTest : public adf::graph {
       const std::string& INP_TXT, 
       const std::string& OUT_TXT
     ) { 
-      g.construct();
       plin[0] = adf::input_plio::create("plin0_maxpool"+id+"_input", adf::plio_64_bits, TXT_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_maxpool"+id+"_output", adf::plio_64_bits, TXT_ARG(OUT_TXT));
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (plin[0].out[0], g.pin[0]);

@@ -27,7 +27,6 @@ class ConcatGraphTest : public adf::graph {
       const std::string& INP7_TXT,
       const std::string& OUT_TXT = "concat_out.txt"
     ) {
-      g.construct();
       plin[0] = adf::input_plio::create("plin0_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP0_TXT));
       plin[1] = adf::input_plio::create("plin1_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP1_TXT));
       plin[2] = adf::input_plio::create("plin2_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP2_TXT));

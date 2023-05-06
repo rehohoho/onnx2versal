@@ -23,8 +23,7 @@ class GemmReluChunkGraphTest : public adf::graph {
       const std::string& INP_TXT,
       const std::string& EMPTY_TXT,
       const std::string& OUT_TXT = "gemm_out.txt"
-    ) { 
-      g.construct(weights, bias);
+    ): g(weights, bias) { 
       for (int i = 0; i < PLIN_COUNT; i++) {
         std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input";
         if (i < CHUNK_COUNT) {

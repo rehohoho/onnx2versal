@@ -17,7 +17,7 @@ class MaxpoolGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    void construct() { 
+    MaxpoolGraph() { 
       k[0] = adf::kernel::create_object<POOL<INP_W, OUT_W, B, C>>();
       adf::source(k[0]) = "pool.cc";
       adf::runtime<ratio>(k[0]) = 0.6;

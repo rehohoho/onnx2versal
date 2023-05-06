@@ -17,7 +17,7 @@ class ConvReluGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    void construct(
+    ConvReluGraph(
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
@@ -48,7 +48,7 @@ class ConvReluChunkGraph : public adf::graph {
     adf::port<input> pin[CONCAT_NLANES];
     adf::port<output> pout[1];
 
-    void construct(
+    ConvReluChunkGraph(
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
