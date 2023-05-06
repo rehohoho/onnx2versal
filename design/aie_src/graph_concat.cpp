@@ -27,15 +27,15 @@ class ConcatGraphTest : public adf::graph {
       const std::string& INP7_TXT,
       const std::string& OUT_TXT = "concat_out.txt"
     ) {
-      plin[0] = adf::input_plio::create("plin0_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP0_TXT));
-      plin[1] = adf::input_plio::create("plin1_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP1_TXT));
-      plin[2] = adf::input_plio::create("plin2_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP2_TXT));
-      plin[3] = adf::input_plio::create("plin3_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP3_TXT));
-      plin[4] = adf::input_plio::create("plin4_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP4_TXT));
-      plin[5] = adf::input_plio::create("plin5_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP5_TXT));
-      plin[6] = adf::input_plio::create("plin6_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP6_TXT));
-      plin[7] = adf::input_plio::create("plin7_concat"+id+"_input", adf::plio_64_bits, TXT_ARG(INP7_TXT));
-      plout[0] = adf::output_plio::create("plout0_concat"+id+"_output", adf::plio_64_bits, TXT_ARG(OUT_TXT));
+      plin[0] = adf::input_plio::create("plin0_concat"+id+"_input", PLIO64_ARG(INP0_TXT));
+      plin[1] = adf::input_plio::create("plin1_concat"+id+"_input", PLIO64_ARG(INP1_TXT));
+      plin[2] = adf::input_plio::create("plin2_concat"+id+"_input", PLIO64_ARG(INP2_TXT));
+      plin[3] = adf::input_plio::create("plin3_concat"+id+"_input", PLIO64_ARG(INP3_TXT));
+      plin[4] = adf::input_plio::create("plin4_concat"+id+"_input", PLIO64_ARG(INP4_TXT));
+      plin[5] = adf::input_plio::create("plin5_concat"+id+"_input", PLIO64_ARG(INP5_TXT));
+      plin[6] = adf::input_plio::create("plin6_concat"+id+"_input", PLIO64_ARG(INP6_TXT));
+      plin[7] = adf::input_plio::create("plin7_concat"+id+"_input", PLIO64_ARG(INP7_TXT));
+      plout[0] = adf::output_plio::create("plout0_concat"+id+"_output", PLIO64_ARG(OUT_TXT));
 
       for (int i = 0; i < NLANES; i++) {  
         if (LCNT > i) {

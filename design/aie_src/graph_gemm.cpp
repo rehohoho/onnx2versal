@@ -27,14 +27,14 @@ class GemmReluChunkGraphTest : public adf::graph {
       for (int i = 0; i < PLIN_COUNT; i++) {
         std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input";
         if (i < CHUNK_COUNT) {
-          plin[i] = adf::input_plio::create(plio_name, adf::plio_64_bits, TXT_ARG(INP_TXT));
+          plin[i] = adf::input_plio::create(plio_name, PLIO64_ARG(INP_TXT));
           adf::connect<adf::window<M*K*4>> (plin[i].out[0], g.pin[i]);
         } else {
-          plin[i] = adf::input_plio::create(plio_name, adf::plio_64_bits, TXT_ARG(EMPTY_TXT));
+          plin[i] = adf::input_plio::create(plio_name, PLIO64_ARG(EMPTY_TXT));
           adf::connect<adf::window<4>> (plin[i].out[0], g.pin[i]);
         }
       }
-      plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", adf::plio_64_bits, TXT_ARG(OUT_TXT));
+      plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<M*N*4>> (g.pout[0], plout[0].in[0]);
     }
 

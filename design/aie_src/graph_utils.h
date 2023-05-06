@@ -7,9 +7,9 @@
 #define MAX_FLOAT_PARAMS 4096
 
 #ifdef EXTERNAL_IO
-#define TXT_ARG(TXT_PATH) 
+#define PLIO64_ARG(TXT_PATH) adf::plio_64_bits
 #else
-#define TXT_ARG(TXT_PATH) TXT_PATH
+#define PLIO64_ARG(TXT_PATH) adf::plio_64_bits, TXT_PATH
 #endif
 
 #define adfCheck(stmt, log_name)          \

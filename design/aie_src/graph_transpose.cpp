@@ -20,8 +20,8 @@ class TransposeGraphTest : public adf::graph {
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "transpose_out.txt"
     ) { 
-      plin[0] = adf::input_plio::create("plin0_transpose"+id+"_input", adf::plio_64_bits, TXT_ARG(INP_TXT));
-      plout[0] = adf::output_plio::create("plout0_transpose"+id+"_output", adf::plio_64_bits, TXT_ARG(OUT_TXT));
+      plin[0] = adf::input_plio::create("plin0_transpose"+id+"_input", PLIO64_ARG(INP_TXT));
+      plout[0] = adf::output_plio::create("plout0_transpose"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<B*H*W*C*4>> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::window<B*C*H*W*4>> (g.pout[0], plout[0].in[0]);
     }

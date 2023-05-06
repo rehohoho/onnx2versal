@@ -22,8 +22,8 @@ class ConvReluGraphTest : public adf::graph {
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "conv_out.txt"
     ): g(weights, bias) { 
-      plin[0] = adf::input_plio::create("plin0_conv"+id+"_input", adf::plio_64_bits, TXT_ARG(INP_TXT));
-      plout[0] = adf::output_plio::create("plout0_conv"+id+"_output", adf::plio_64_bits, TXT_ARG(OUT_TXT));
+      plin[0] = adf::input_plio::create("plin0_conv"+id+"_input", PLIO64_ARG(INP_TXT));
+      plout[0] = adf::output_plio::create("plout0_conv"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (g.pout[0], plout[0].in[0]);
     }

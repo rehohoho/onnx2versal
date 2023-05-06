@@ -80,8 +80,8 @@ class MnistLenetBhwcGraph : public adf::graph {
 
 #define SET_OPT_PLOUT(TXT_PATH, STMT, PLOUT_NAME) \
   if (!TXT_PATH.empty()) { \
-    std::string plout_name = "plout"+std::to_string(plout.size())+"_lenet"+id+"_"+PLOUT_NAME; \
-    adf::output_plio a = adf::output_plio::create(plout_name, TXT_ARG(TXT_PATH)); \
+    std::string plout_name = "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME; \
+    adf::output_plio a = adf::output_plio::create(plout_name, PLIO64_ARG(TXT_PATH)); \
     STMT; plout.push_back(a);} 
 
       // optional output
@@ -95,7 +95,7 @@ class MnistLenetBhwcGraph : public adf::graph {
 
       // input
       adf::input_plio _plin;
-      _plin = adf::input_plio::create("plin0_lenet"+id+"_input", adf::plio_64_bits, TXT_ARG(INPUT_TXT));
+      _plin = adf::input_plio::create("plin0_"+id+"_input", PLIO64_ARG(INPUT_TXT));
       adf::connect<adf::window<1*28*28*1*4>> (_plin.out[0], k0conv1.pin[0]);
       plin.push_back(_plin);
       
@@ -143,7 +143,7 @@ class MnistLenetBhwcGraph : public adf::graph {
       adf::connect<adf::window<1*10*4>> (k6gemm3.pout[0], k7argmax1.pin[0]);
       
       adf::output_plio a = adf::output_plio::create(
-        "plout"+std::to_string(plout.size())+"_"+id+"_argm19", TXT_ARG(OUT_LENET));
+        "plout"+std::to_string(plout.size())+"_"+id+"_argm19", PLIO64_ARG(OUT_LENET));
       plout.push_back(a);
       adf::connect<adf::window<1*10*4>> (k7argmax1.pout[0], a.in[0]);
     }
