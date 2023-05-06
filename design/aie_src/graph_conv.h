@@ -32,19 +32,19 @@ class ConvReluGraph : public adf::graph {
 };
 
 
-#define CHUNK_COUNT   M / MCHUNK + 1
-#define MCUTCHUNK     M % MCHUNK
-#define CONCAT_NLANES 8
-
 template <template<int, int, int, int, int, int> class CONV, int IS_BCHW,
   int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluChunkGraph : public adf::graph {
 
   private:
-    adf::kernel convs[CHUNK_COUNT];
+    adf::kernel convs[M / MCHUNK + 1];
     adf::kernel concat;
 
   public:
+    static const int CHUNK_COUNT = M / MCHUNK + 1;
+    static const int MCUTCHUNK = M % MCHUNK;
+    static const int CONCAT_NLANES = 8;
+
     adf::port<input> pin[CONCAT_NLANES];
     adf::port<output> pout[1];
 

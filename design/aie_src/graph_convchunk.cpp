@@ -10,9 +10,11 @@ class ConvReluChunkGraphTest : public adf::graph {
 
   private:
     ConvReluChunkGraph<CONV, IS_BCHW, MCHUNK, INP_W, OUT_W, B, C, M, K> g;
+    static const int PLIN_COUNT = ConvReluChunkGraph<CONV, IS_BCHW, MCHUNK, INP_W, OUT_W, B, C, M, K>::PLIN_COUNT;
+    static const int CHUNK_COUNT = ConvReluChunkGraph<CONV, IS_BCHW, MCHUNK, INP_W, OUT_W, B, C, M, K>::CHUNK_COUNT;
 
   public:
-    adf::input_plio plin[CONCAT_NLANES];
+    adf::input_plio plin[PLIN_COUNT];
     adf::output_plio plout[1];
 
     ConvReluChunkGraphTest(
@@ -24,7 +26,7 @@ class ConvReluChunkGraphTest : public adf::graph {
       const std::string& OUT_TXT = "conv_out.txt"
     ) { 
       g.construct(weights, bias);
-      for (int i = 0; i < CONCAT_NLANES; i++) {
+      for (int i = 0; i < PLIN_COUNT; i++) {
         std::string plio_name = "plin"+std::to_string(i)+"_conv"+id+"_input";
         if (i < CHUNK_COUNT) {
           plin[i] = adf::input_plio::create(plio_name, adf::plio_64_bits, TXT_ARG(INP_TXT));
