@@ -8,6 +8,19 @@
 #include "graph_utils.h"
 
 
+/*
+Profile cycles:
+Running Conv5x5ReluBCHW<28, 24, 1, 1, 6>: 21325
+Running MaxpoolScalarBCHW::filter<24, 12, 1, 6>: 11358
+Running Conv5x5ReluBCHW<12, 8, 1, 6, 16>: 41580
+Running MaxpoolScalarBCHW::filter<8, 4, 1, 16>: 3490
+Running 8x gemm_relu_scalar<1, 256, 16>: 8593
+Running concat8_scalar<8, 16, 16, 120>: 630
+Running 3x gemm_relu_scalar<1, 120, 34>: 8922
+Running concat8_scalar<3, 34, 34, 84>: 883
+Running 1x gemm_relu_scalar<1, 84, 48>: 9103
+Running concat8_scalar<1, 48, 48, 10>: 937
+*/
 template <
   template<int, int, int, int, int, int> class CONV,
   template<int, int, int, int> class POOL,

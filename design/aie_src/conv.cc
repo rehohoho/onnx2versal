@@ -125,6 +125,7 @@ Theoretical limit: (16*6*5*5*8*8 + 16*8*8) / 4 = 38656 cycles
 - Reduce data instances to reduce spill (v32float -> v16float: 43981 -> 40796)
 
 !! compiler does not detect dependencies across C-loop within W-loop for some C, M, K
+With chess_separator_scheduler, 40796 -> 41580
 */
 #ifdef __X86SIM__
 #define GET_WVEC(wp, zstart) \
