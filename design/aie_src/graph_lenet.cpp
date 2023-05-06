@@ -1,7 +1,6 @@
 #include "graph_lenet.h"
 #include "graph_utils.h"
 
-#define ITER_CNT 1
 
 
 // instance to be compiled and used in host within xclbin
@@ -27,17 +26,26 @@ char OUT_GEMM4[] = "lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.tx
 char OUT_GEMM5[] = "lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt";
 char OUT_GEMM6[] = "lenet_mnist__19___relu5_Relu__output__1x10.txt";
 
-MnistLenetBhwcGraph<Conv5x5ReluBCHW, MaxpoolScalarBCHW, GemmReluScalar> lenet (
+
+// no intermediate outputs for external traffic generator
+#ifdef EXTERNAL_IO
+MnistLenetBhwcGraph<Conv5x5ReluBCHW, MaxpoolScalarBCHW, GemmReluScalar, ArgmaxScalar> lenet (
+  "lenet", INPUT_TXT, EMPTY_TXT, 
+  conv1_weight, conv1_bias, conv2_weight, conv2_bias,
+  fc1_weight, fc1_bias, fc2_weight, fc2_bias, fc3_weight, fc3_bias);
+#else
+MnistLenetBhwcGraph<Conv5x5ReluBCHW, MaxpoolScalarBCHW, GemmReluScalar, ArgmaxScalar> lenet (
   "lenet", INPUT_TXT, EMPTY_TXT, 
   conv1_weight, conv1_bias, conv2_weight, conv2_bias,
   fc1_weight, fc1_bias, fc2_weight, fc2_bias, fc3_weight, fc3_bias,
   OUT_CONV0, OUT_POOL1, OUT_CONV2, OUT_POOL3, OUT_GEMM4, OUT_GEMM5, OUT_GEMM6);
+#endif
 
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
 	adfCheck(lenet.init(), "init lenet");
-  adfCheck(lenet.run(1), "run lenet");
+  adfCheck(lenet.run(ITER_CNT), "run lenet");
 	adfCheck(lenet.end(), "end lenet");
   return 0;
 }
