@@ -41,8 +41,8 @@ void ConcatScalar<NLANES, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
 	input_window<float>* in7,
   output_window<float>* out
 ) {
-  PROFILE_HEADER;
-  printf("Running concat8_scalar<%d, %d, %d, %d>\n", NLANES, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE);
+  PROFILE_HEADER(printf(
+    "Running concat8_scalar<%d, %d, %d, %d>\n", NLANES, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;

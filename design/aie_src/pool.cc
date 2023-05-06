@@ -12,8 +12,8 @@ void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
   input_window<float>* in,      // BHWC (1x24x24x6)
   output_window<float>* out     // BPQC (1x12x12x6)
 ) {
-  PROFILE_HEADER;
-  printf("Running MaxpoolScalarBHWC::filter<%d, %d, %d, %d>\n", INP_W, OUT_W, B, C);
+  PROFILE_HEADER(printf(
+    "Running MaxpoolScalarBHWC::filter<%d, %d, %d, %d>\n", INP_W, OUT_W, B, C));
 
   const int K = INP_W / OUT_W;
 
@@ -55,8 +55,8 @@ void MaxpoolScalarBCHW<INP_W, OUT_W, B, C>::filter(
   input_window<float>* in,      // BCHW (1x6x24x24)
   output_window<float>* out     // BCPQ (1x6x12x12)
 ) {
-  PROFILE_HEADER;
-  printf("Running MaxpoolScalarBCHW::filter<%d, %d, %d, %d>\n", INP_W, OUT_W, B, C);
+  PROFILE_HEADER(printf(
+    "Running MaxpoolScalarBCHW::filter<%d, %d, %d, %d>\n", INP_W, OUT_W, B, C));
 
   const int K = INP_W / OUT_W;
 

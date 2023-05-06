@@ -7,8 +7,8 @@ void ArgmaxScalar<WINDOW_SIZE, CHUNK_SIZE>::filter(
 	input_window<float>* in,
   output_window<float>* out
 ) {
-  PROFILE_HEADER;
-  printf("Running ArgmaxScalar<%d, %d>\n", WINDOW_SIZE, CHUNK_SIZE);
+  PROFILE_HEADER(printf(
+    "Running ArgmaxScalar<%d, %d>\n", WINDOW_SIZE, CHUNK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     float c = -std::numeric_limits<double>::infinity();
