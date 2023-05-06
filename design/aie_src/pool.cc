@@ -21,7 +21,7 @@ void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
     for (int h = 0; h < OUT_W; h++) {
       for (int w = 0; w < OUT_W; w++) {
 
-        float arr[C] = {-INFINITY};
+        float arr[C] = {-std::numeric_limits<double>::infinity()};
         for (int p = 0; p < K; p++) {
           for (int q = 0; q < K; q++) {
             for (int c = 0; c < C; c++) {
@@ -65,7 +65,7 @@ void MaxpoolScalarBCHW<INP_W, OUT_W, B, C>::filter(
       for (int h = 0; h < OUT_W; h++) {
         for (int w = 0; w < OUT_W; w++) {
 
-          float c = -INFINITY;
+          float c = -std::numeric_limits<double>::infinity();
           for (int p = 0; p < K; p++) {
             for (int q = 0; q < K; q++) {
               float a = window_readincr(in);
