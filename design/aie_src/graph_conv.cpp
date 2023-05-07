@@ -45,7 +45,7 @@ ConvReluGraphTest<ConvReluScalarBCHW, 28, 24, 1, 2, 2, 5> fpscalar_bchw_rand(
 ConvReluGraphTest<ConvReluScalarBHWC, 28, 24, 1, 2, 2, 5> fpscalar_bhwc(
   "fpscalar_bhwc", weights, bias, "conv_fpin.txt", "conv_fpout_ConvReluScalarBHWC.txt");
 ConvReluGraphTest<ConvReluScalarBHWC, 28, 24, 1, 2, 2, 5> fpscalar_bhwc_rand(
-  "fpscalar_bhwc_rand", weights_rand, bias, "conv_fpin_rand.txt", "conv_fpout_ConvReluScalarBHWC_rand.txt");
+  "fpscalar_bhwc_rand", weights_rand, bias_rand, "conv_fpin_rand.txt", "conv_fpout_ConvReluScalarBHWC_rand.txt");
 
 ConvReluGraphTest<Conv5x5ReluBCHW, 28, 24, 1, 2, 2, 5> fpvector_bchw(
   "fpvector_bchw", weights, bias, "conv_fpin.txt", "conv_fpout_Conv5x5ReluBCHW.txt");
