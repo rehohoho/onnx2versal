@@ -45,13 +45,12 @@ class MnistLenetBhwcGraph : public adf::graph {
     ArgmaxGraph<ARGMAX, 10, 10> k7argmax1;
 
   public:
-    std::vector<adf::input_plio> plin;   // variable empty inputs for chunkers
+    adf::input_plio plin[1];
     std::vector<adf::output_plio> plout; // intermediate outputs optional
 
     MnistLenetBhwcGraph(
       const std::string& id,
       const std::string& INPUT_TXT,
-      const std::string& EMPTY_TXT,
       std::vector<float> conv01w,
       std::vector<float> conv01b,
       std::vector<float> conv02w,
@@ -92,60 +91,28 @@ class MnistLenetBhwcGraph : public adf::graph {
       SET_OPT_PLOUT(OUT_GEMM4, adf::connect<adf::window<1*120*4>>     (k4gemm1.pout[0], a.in[0]), "gemm14");
       SET_OPT_PLOUT(OUT_GEMM5, adf::connect<adf::window<1*84*4>>      (k5gemm2.pout[0], a.in[0]), "gemm16");
       SET_OPT_PLOUT(OUT_GEMM6, adf::connect<adf::window<1*10*4>>      (k6gemm3.pout[0], a.in[0]), "gemm18");
+      adf::output_plio a = adf::output_plio::create(
+        "plout"+std::to_string(plout.size())+"_"+id+"_argm19", PLIO64_ARG(OUT_LENET));
+      plout.push_back(a);
+      adf::connect<adf::window<1*10*4>> (k7argmax1.pout[0], a.in[0]);
 
       // input
-      adf::input_plio _plin;
-      _plin = adf::input_plio::create("plin0_"+id+"_input", PLIO64_ARG(INPUT_TXT));
-      adf::connect<adf::window<1*28*28*1*4>> (_plin.out[0], k0conv1.pin[0]);
-      plin.push_back(_plin);
+      plin[0] = adf::input_plio::create("plin0_"+id+"_input", PLIO64_ARG(INPUT_TXT));
+      adf::connect<adf::window<1*28*28*1*4>> (plin[0].out[0], k0conv1.pin[0]);
       
       // interkernel
       adf::connect<adf::window<1*24*24*6*4>>  (k0conv1.pout[0], k1pool1.pin[0]);
       adf::connect<adf::window<1*12*12*6*4>>  (k1pool1.pout[0], k2conv2.pin[0]);
       adf::connect<adf::window<1*8*8*16*4>>   (k2conv2.pout[0], k3pool2.pin[0]);
 
-      for (int i = 0; i < Gemm1::CONCAT_NLANES; i++) {
-        if (i < Gemm1::CHUNK_COUNT) {
-          adf::connect<adf::window<1*256*4>> (k3pool2.pout[0], k4gemm1.pin[i]);
-        } else {
-          std::string plio_name = "plin"+std::to_string(plin.size())+"_lenet"+id+"_input";
-          printf("%s ", plio_name.c_str());
-          _plin = adf::input_plio::create(plio_name, adf::plio_64_bits, EMPTY_TXT);
-          adf::connect<adf::window<4>> (_plin.out[0], k4gemm1.pin[i]);
-          plin.push_back(_plin);
-        }
-      }
-
-      for (int i = 0; i < Gemm2::CONCAT_NLANES; i++) {
-        if (i < Gemm2::CHUNK_COUNT) {
-          adf::connect<adf::window<1*120*4>> (k4gemm1.pout[0], k5gemm2.pin[i]);
-        } else {
-          std::string plio_name = "plin"+std::to_string(plin.size())+"_lenet"+id+"_input";
-          printf("%s ", plio_name.c_str());
-          _plin = adf::input_plio::create(plio_name, adf::plio_64_bits, EMPTY_TXT);
-          adf::connect<adf::window<4>> (_plin.out[0], k5gemm2.pin[i]);
-          plin.push_back(_plin);
-        }
-      }
-
-      for (int i = 0; i < Gemm3::CONCAT_NLANES; i++) {
-        if (i < Gemm3::CHUNK_COUNT) {
-          adf::connect<adf::window<1*84*4>> (k5gemm2.pout[0], k6gemm3.pin[i]);
-        } else {
-          std::string plio_name = "plin"+std::to_string(plin.size())+"_lenet"+id+"_input";
-          printf("%s ", plio_name.c_str());
-          _plin = adf::input_plio::create(plio_name, adf::plio_64_bits, EMPTY_TXT);
-          adf::connect<adf::window<4>> (_plin.out[0], k6gemm3.pin[i]);
-          plin.push_back(_plin);
-        }
-      }
-
-      adf::connect<adf::window<1*10*4>> (k6gemm3.pout[0], k7argmax1.pin[0]);
+      for (int i = 0; i < Gemm1::CHUNK_COUNT; i++)
+        adf::connect<adf::window<1*256*4>> (k3pool2.pout[0], k4gemm1.pin[i]);
+      for (int i = 0; i < Gemm2::CHUNK_COUNT; i++)
+        adf::connect<adf::window<1*120*4>> (k4gemm1.pout[0], k5gemm2.pin[i]);
+      for (int i = 0; i < Gemm3::CHUNK_COUNT; i++)
+        adf::connect<adf::window<1*84*4>> (k5gemm2.pout[0], k6gemm3.pin[i]);
       
-      adf::output_plio a = adf::output_plio::create(
-        "plout"+std::to_string(plout.size())+"_"+id+"_argm19", PLIO64_ARG(OUT_LENET));
-      plout.push_back(a);
-      adf::connect<adf::window<1*10*4>> (k7argmax1.pout[0], a.in[0]);
+      adf::connect<adf::window<1*10*4>> (k6gemm3.pout[0], k7argmax1.pin[0]);
     }
 
 };
