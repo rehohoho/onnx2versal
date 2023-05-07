@@ -30,7 +30,7 @@ class GemmReluChunkGraph : public adf::graph {
     };
 
   public:
-    static const int CHUNK_COUNT = N / NCHUNK + 1;
+    static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
     ConcatScalarGraph<CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
     
