@@ -3,20 +3,21 @@
 
 #include <adf.h>
 #include "gemm.h"
-#include "concat.h"
+#include "graph_concat.h"
 
 
 /*
 Chunks NxK weight params into ~16384B chunks by N dimension
 Assumes weight <=16384B, bias <=4096B, input <=4096B per chunk
 Places a maximum of 3x3 tiles, 8 gemm tiles surrounding a concat tile (max AIE DMA input = 8)
+Constraint: CHUNK_COUNT = N/NCHUNK+1 <= 8
 */
 template <template<int, int, int> class GEMM, int NCHUNK, int M, int K, int N>
 class GemmReluChunkGraph : public adf::graph {
 
   private:
-    adf::kernel gemms[N / NCHUNK + 1];
-    adf::kernel concat;
+    static const int NCUTCHUNK = N % NCHUNK;
+
     adf::relative_coordinate tileOffsets[8] = {
       {.col_offset = -1, .row_offset = -1},
       {.col_offset = 0, .row_offset = -1},
@@ -30,10 +31,10 @@ class GemmReluChunkGraph : public adf::graph {
 
   public:
     static const int CHUNK_COUNT = N / NCHUNK + 1;
-    static const int NCUTCHUNK = N % NCHUNK;
-    static const int CONCAT_NLANES = 8;
+    adf::kernel gemms[CHUNK_COUNT];
+    ConcatScalarGraph<CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
     
-    adf::port<input> pin[CONCAT_NLANES];
+    adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];
 
     // constructor fails with INTERNAL ERROR: 'Linting::CheckKernel::check': the number of argument types and the number of ports are inconsistent
@@ -41,11 +42,6 @@ class GemmReluChunkGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
-
-      concat = adf::kernel::create_object<ConcatScalar<CHUNK_COUNT, NCHUNK, NCHUNK, N>>();
-      adf::source(concat) = "concat.cc";
-      adf::runtime<ratio>(concat) = 0.6;
-
       std::vector<float> wChunk;
       std::vector<float> bChunk;
 
@@ -59,7 +55,7 @@ class GemmReluChunkGraph : public adf::graph {
         adf::source(gemms[i]) = "gemm.cc";
         adf::runtime<ratio>(gemms[i]) = 0.6;
 
-        adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat) + 
+        adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
         adf::location_constraint tilePos = adf::location<adf::kernel>(gemms[i]);
         adf::location<adf::parameter>(gemms[i].param[0]) = tilePos; // weight (<= 16384B)
@@ -70,16 +66,12 @@ class GemmReluChunkGraph : public adf::graph {
         adf::location<adf::buffer>(gemms[i].in[0]) = {adf::offset(0x5000), adf::offset(0x6000)};
       }
 
-      for (int i = 0; i < CONCAT_NLANES; i++) {
-        if (i < CHUNK_COUNT) {
-          adf::connect<adf::window<M*K*4>> (pin[i], gemms[i].in[0]);
-          adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat.in[i]);
-        } else {
-          adf::connect<adf::window<4>> (pin[i], concat.in[i]);
-        }
+      for (int i = 0; i < CHUNK_COUNT; i++) {
+        adf::connect<adf::window<M*K*4>> (pin[i], gemms[i].in[0]);
+        adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat_g.pin[i]);
       }
 
-      adf::connect<adf::window<M*N*4>> (concat.out[0], pout[0]);
+      adf::connect<adf::window<M*N*4>> (concat_g.pout[0], pout[0]);
     }
 
 };

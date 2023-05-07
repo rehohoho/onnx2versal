@@ -8,10 +8,8 @@
 template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatScalarGraph : public adf::graph {
 
-  private:
-    adf::kernel k[1];
-
   public:
+    adf::kernel k[1];
     adf::port<input> pin[LCNT];
     adf::port<output> pout[1];
 
