@@ -4,47 +4,47 @@
 #define ITER_CNT 1
 
 
-template <template<int, int, int, int> class CONCAT,
-  int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-class ConcatGraphTest : public adf::graph {
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+class ConcatScalarGraphTest : public adf::graph {
 
   private:
-    ConcatGraph<CONCAT, LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE> g;
+    ConcatScalarGraph<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE> g;
 
   public:
-    adf::input_plio plin[NLANES];
+    adf::input_plio plin[LCNT];
     adf::output_plio plout[1];
 
-    ConcatGraphTest(
+    ConcatScalarGraphTest(
       const std::string& id,
-      const std::string& INP0_TXT,
-      const std::string& INP1_TXT,
-      const std::string& INP2_TXT,
-      const std::string& INP3_TXT,
-      const std::string& INP4_TXT,
-      const std::string& INP5_TXT,
-      const std::string& INP6_TXT,
-      const std::string& INP7_TXT,
-      const std::string& OUT_TXT = "concat_out.txt"
+      const std::string& OUT_TXT = "concat_out.txt",
+      const std::string& INP0_TXT = std::string(),
+      const std::string& INP1_TXT = std::string(),
+      const std::string& INP2_TXT = std::string(),
+      const std::string& INP3_TXT = std::string(),
+      const std::string& INP4_TXT = std::string(),
+      const std::string& INP5_TXT = std::string(),
+      const std::string& INP6_TXT = std::string(),
+      const std::string& INP7_TXT = std::string()
     ) {
-      plin[0] = adf::input_plio::create("plin0_concat"+id+"_input", PLIO64_ARG(INP0_TXT));
-      plin[1] = adf::input_plio::create("plin1_concat"+id+"_input", PLIO64_ARG(INP1_TXT));
-      plin[2] = adf::input_plio::create("plin2_concat"+id+"_input", PLIO64_ARG(INP2_TXT));
-      plin[3] = adf::input_plio::create("plin3_concat"+id+"_input", PLIO64_ARG(INP3_TXT));
-      plin[4] = adf::input_plio::create("plin4_concat"+id+"_input", PLIO64_ARG(INP4_TXT));
-      plin[5] = adf::input_plio::create("plin5_concat"+id+"_input", PLIO64_ARG(INP5_TXT));
-      plin[6] = adf::input_plio::create("plin6_concat"+id+"_input", PLIO64_ARG(INP6_TXT));
-      plin[7] = adf::input_plio::create("plin7_concat"+id+"_input", PLIO64_ARG(INP7_TXT));
-      plout[0] = adf::output_plio::create("plout0_concat"+id+"_output", PLIO64_ARG(OUT_TXT));
+#define SET_OPT_PLIN(TXT_PATH, i) \
+      if (i < LCNT) { \
+        std::string plin_name = "plin"+std::to_string(i)+"_concat_"+id+"_input"; \
+        plin[i] = adf::input_plio::create(plin_name, PLIO64_ARG(TXT_PATH));}
 
-      for (int i = 0; i < NLANES; i++) {  
-        if (LCNT > i) {
-          adf::connect<adf::window<WINDOW_SIZE*4>> (plin[i].out[0], g.pin[i]);
-        } else {
-          adf::connect<adf::window<4>> (plin[i].out[0], g.pin[i]);
-        }
-      }
+      SET_OPT_PLIN(INP0_TXT, 0);
+      SET_OPT_PLIN(INP1_TXT, 1);
+      SET_OPT_PLIN(INP2_TXT, 2);
+      SET_OPT_PLIN(INP3_TXT, 3);
+      SET_OPT_PLIN(INP4_TXT, 4);
+      SET_OPT_PLIN(INP5_TXT, 5);
+      SET_OPT_PLIN(INP6_TXT, 6);
+      SET_OPT_PLIN(INP7_TXT, 7);
+
+      for (int i = 0; i < LCNT; i++)
+        adf::connect<adf::window<WINDOW_SIZE*4>> (plin[i].out[0], g.pin[i]);
+      
       // BLOCK_SIZE <= WINDOW_SIZE
+      plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4>> (g.pout[0], plout[0].in[0]);
     }
 
@@ -52,20 +52,18 @@ class ConcatGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-ConcatGraphTest<ConcatScalar, 5, 8, 8, 4*8+4> fpscalar1("fpscalar1",
+ConcatScalarGraphTest<5, 8, 8, 4*8+4> fpscalar1(
+  "fpscalar1", "concat_fpout1_ConcatScalar.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
-  "concat_fpin.txt", "empty.txt",
-  "empty.txt", "empty.txt",
-  "concat_fpout1_ConcatScalar.txt"
+  "concat_fpin.txt"
 );
 
-ConcatGraphTest<ConcatScalar, 5, 8, 4, 4*4+2> fpscalar2("fpscalar2",
+ConcatScalarGraphTest<5, 8, 4, 4*4+2> fpscalar2(
+  "fpscalar2", "concat_fpout2_ConcatScalar.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
-  "concat_fpin.txt", "empty.txt",
-  "empty.txt", "empty.txt",
-  "concat_fpout2_ConcatScalar.txt"
+  "concat_fpin.txt"
 );
 
 
