@@ -39,6 +39,11 @@ MaxpoolGraphTest<MaxpoolScalarBCHW, 24, 12, 1, 6> fpscalar_bchw(
 MaxpoolGraphTest<MaxpoolScalarBCHW, 24, 12, 1, 6> fpscalar_bchw_rand(
   "fpscalar_bchw_rand", "pool_fpin_rand.txt", "pool_fpout_MaxpoolScalarBCHW_rand.txt");
 
+MaxpoolGraphTest<Maxpool2x2BCHW, 24, 12, 1, 6> fp2x2_bchw(
+  "fp2x2_bchw", "pool_fpin.txt", "pool_fpout_Maxpool2x2BCHW.txt");
+MaxpoolGraphTest<Maxpool2x2BCHW, 24, 12, 1, 6> fp2x2_bchw_rand(
+  "fp2x2_bchw_rand", "pool_fpin_rand.txt", "pool_fpout_Maxpool2x2BCHW_rand.txt");
+
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
@@ -57,6 +62,14 @@ int main(int argc, char ** argv) {
   adfCheck(fpscalar_bchw_rand.init(), "init fpscalar_bchw_rand");
   adfCheck(fpscalar_bchw_rand.run(1), "run fpscalar_bchw_rand");
 	adfCheck(fpscalar_bchw_rand.end(), "end fpscalar_bchw_rand");
+
+  adfCheck(fp2x2_bchw.init(), "init fp2x2_bchw");
+  adfCheck(fp2x2_bchw.run(1), "run fp2x2_bchw");
+	adfCheck(fp2x2_bchw.end(), "end fp2x2_bchw");
+
+  adfCheck(fp2x2_bchw_rand.init(), "init fp2x2_bchw_rand");
+  adfCheck(fp2x2_bchw_rand.run(1), "run fp2x2_bchw_rand");
+	adfCheck(fp2x2_bchw_rand.end(), "end fp2x2_bchw_rand");
   return 0;
 }
 #endif
@@ -65,20 +78,28 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
 	adfCheck(fpscalar_bhwc.init(), "init fpscalar_bhwc");
-  get_graph_throughput_by_port(fpscalar_bhwc, "plout[0]", fpscalar_bhwc.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+  get_graph_throughput_by_port(fpscalar_bhwc, "plout[0]", fpscalar_bhwc.plout[0], 1*12*12*6, sizeof(float_t), ITER_CNT);
 	adfCheck(fpscalar_bhwc.end(), "end fpscalar_bhwc");
 
   adfCheck(fpscalar_bhwc_rand.init(), "init fpscalar_bhwc_rand");
-  get_graph_throughput_by_port(fpscalar_bhwc_rand, "plout[0]", fpscalar_bhwc_rand.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+  get_graph_throughput_by_port(fpscalar_bhwc_rand, "plout[0]", fpscalar_bhwc_rand.plout[0], 1*12*12*6, sizeof(float_t), ITER_CNT);
 	adfCheck(fpscalar_bhwc_rand.end(), "end fpscalar_bhwc_rand");
 
   adfCheck(fpscalar_bchw.init(), "init fpscalar_bchw");
-  get_graph_throughput_by_port(fpscalar_bchw, "plout[0]", fpscalar_bchw.plout[0], 1*6*12*12, sizeof(float32), ITER_CNT);
+  get_graph_throughput_by_port(fpscalar_bchw, "plout[0]", fpscalar_bchw.plout[0], 1*6*12*12, sizeof(float_t), ITER_CNT);
 	adfCheck(fpscalar_bchw.end(), "end fpscalar_bchw");
 
   adfCheck(fpscalar_bchw_rand.init(), "init fpscalar_bchw_rand");
-  get_graph_throughput_by_port(fpscalar_bchw_rand, "plout[0]", fpscalar_bchw_rand.plout[0], 1*6*12*12, sizeof(float32), ITER_CNT);
+  get_graph_throughput_by_port(fpscalar_bchw_rand, "plout[0]", fpscalar_bchw_rand.plout[0], 1*6*12*12, sizeof(float_t), ITER_CNT);
 	adfCheck(fpscalar_bchw_rand.end(), "end fpscalar_bchw_rand");
+
+  adfCheck(fp2x2_bchw.init(), "init fp2x2_bchw");
+  get_graph_throughput_by_port(fp2x2_bchw, "plout[0]", fp2x2_bchw.plout[0], 1*6*12*12, sizeof(float_t), ITER_CNT);
+	adfCheck(fp2x2_bchw.end(), "end fp2x2_bchw");
+
+  adfCheck(fp2x2_bchw_rand.init(), "init fp2x2_bchw_rand");
+  get_graph_throughput_by_port(fp2x2_bchw_rand, "plout[0]", fp2x2_bchw_rand.plout[0], 1*6*12*12, sizeof(float_t), ITER_CNT);
+	adfCheck(fp2x2_bchw_rand.end(), "end fp2x2_bchw_rand");
   return 0;
 }
 #endif
