@@ -17,7 +17,6 @@ void mm2s(dinp_t* mem, hls::stream<dout_t>& s, int size) {
 	for(int i = 0; i < size; i++) {
 #pragma HLS PIPELINE II=1
 		dout_t x = mem[i];
-		std::cout << "mm2s: " << x << std::endl;
 		s.write(x);
 	}
 }

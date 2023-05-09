@@ -17,7 +17,6 @@ void s2mm(dinp_t* mem, hls::stream<dout_t>& s, int size) {
 	for(int i = 0; i < size; i++) {
 #pragma HLS PIPELINE II=1
 		dout_t x = s.read();
-		std::cout << "s2mm: " << x << std::endl;
 		mem[i] = x;
 	}
 }
