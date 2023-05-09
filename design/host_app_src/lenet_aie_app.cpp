@@ -10,15 +10,34 @@
 #include "adf/adf_api/XRTConfig.h"
 
 
-#define INPUT_SIZE      28*28*100
-#define OUTPUT_SIZE     1*100
 #define V_PER_LINE      2
-
 #define INPUT_FILENAME  "../../../data/mnist_test_data.txt"
-#define INPUT_LINES     INPUT_SIZE / V_PER_LINE
 #define GOLDEN_FILENAME "../../../data/mnist_test_label.txt"
 #define OUTPUT_FILENAME "mnist_test_label.txt"
-#define OUTPUT_LINES    OUTPUT_SIZE / V_PER_LINE
+
+#define INTER1_FILENAME "lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt"
+#define INTER2_FILENAME "lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt"
+#define INTER3_FILENAME "lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt"
+#define INTER4_FILENAME "lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt"
+#define INTER5_FILENAME "lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt"
+#define INTER6_FILENAME "lenet_mnist__19___relu5_Relu__output__1x10.txt"
+
+
+void write_arr_to_file(
+   const char* filename,
+   const float* bomapped,
+   const int bosize
+) {
+   std::ofstream file;
+   file.open(filename, std::ofstream::out);
+   if (!file) printf("Unable to open %s\n", filename);
+   for (int j = 0; j < bosize; j+=V_PER_LINE) {
+      for (int k = 0; k < V_PER_LINE; k++) {
+         file << bomapped[j+k] << " ";
+      }
+      file << std::endl;
+   }
+}
 
 
 static std::vector<char> load_xclbin(
@@ -55,11 +74,11 @@ int main(int argc, char ** argv) {
    if(argc == 3) {
       std::string iter = argv[2];
       iterCnt = stoi(iter);
-   } else {
-      iterCnt = NET_INSTS;
    }
-   printf("Iteration : %d...\n", iterCnt);
+   printf("Running %d iterations...\n", iterCnt);
 
+   const int inputSize = 28*28*iterCnt;
+   const int outputSize = 1*iterCnt;
 
    // Open device, load xclbin
    auto deviceIdx = xrt::device(0);
@@ -72,55 +91,123 @@ int main(int argc, char ** argv) {
 #ifndef EXTERNAL_IO
    // Allocate BOs (buffer objects) of requested size with appropriate flags
    // Memory map BOs into user's address space (DDR Memory)
-   size_t input_size_in_bytes = INPUT_SIZE * sizeof(float);
-   xrtBufferHandle in_bohdl = xrtBOAlloc(dhdl, input_size_in_bytes, 0, 0);
-   auto in_bomapped = reinterpret_cast<float*>(xrtBOMap(in_bohdl));
-   printf("Input memory virtual addr 0x%p\n", in_bomapped);
+   size_t input_size_in_bytes = inputSize * sizeof(float);
+   size_t output_size_in_bytes = outputSize * sizeof(float);
 
-   size_t output_size_in_bytes = OUTPUT_SIZE * sizeof(float);
+   xrtBufferHandle in_bohdl = xrtBOAlloc(dhdl, input_size_in_bytes, 0, 0);
    xrtBufferHandle out_bohdl = xrtBOAlloc(dhdl, output_size_in_bytes, 0, 0);
+
+   auto in_bomapped = reinterpret_cast<float*>(xrtBOMap(in_bohdl));
    auto out_bomapped = reinterpret_cast<float*>(xrtBOMap(out_bohdl));
+   
+   printf("Input memory virtual addr 0x%p\n", in_bomapped);
    printf("Output memory virtual addr 0x%p\n", out_bomapped);
 
-   
    // Read in data from file
    std::ifstream inp_file;
    inp_file.open(INPUT_FILENAME, std::ifstream::in);
    if (!inp_file) printf("Unable to open %s.\n", INPUT_FILENAME);
    float d;
-   for (int j = 0; j < INPUT_LINES; j++) {
+   for (int j = 0; j < inputSize; j+=V_PER_LINE) {
       for (int k = 0; k < V_PER_LINE; k++) {
          inp_file >> d;
-         in_bomapped[j*V_PER_LINE + k] = d;
+         in_bomapped[j+k] = d;
       }
    }
 
-   #ifdef __SYNCB0_ENABLE__
-      xrtBOSync(in_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, input_size_in_bytes, 0);
-      printf("xrtBOSync done.\n")
-   #endif
+#ifdef __SYNCB0_ENABLE__
+   xrtBOSync(in_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, input_size_in_bytes, 0);
+   printf("xrtBOSync done.\n")
+#endif
 
 
    // Create kernel handle, runtime handle, set args, start kernels
-   xrtKernelHandle s2mm_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_0}");
-   xrtRunHandle s2mm_rhdl = xrtRunOpen(s2mm_khdl); 
-   xrtRunSetArg(s2mm_rhdl, 0, out_bohdl);
-   xrtRunSetArg(s2mm_rhdl, 2, OUTPUT_SIZE);
-   xrtRunStart(s2mm_rhdl);
+   xrtKernelHandle in_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "mm2s:{mm2s_0}");
+   xrtKernelHandle out_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_0}");
+   xrtRunHandle in_rhdl = xrtRunOpen(in_khdl); 
+   xrtRunHandle out_rhdl = xrtRunOpen(out_khdl); 
+   
+   xrtRunSetArg(in_rhdl, 0, in_bohdl);
+   xrtRunSetArg(in_rhdl, 2, inputSize);
+   xrtRunSetArg(out_rhdl, 0, out_bohdl);
+   xrtRunSetArg(out_rhdl, 2, outputSize);
 
-   xrtKernelHandle mm2s_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "mm2s:{mm2s_0}");
-   xrtRunHandle mm2s_rhdl = xrtRunOpen(mm2s_khdl); 
-   xrtRunSetArg(mm2s_rhdl, 0, in_bohdl);
-   xrtRunSetArg(mm2s_rhdl, 2, INPUT_SIZE);
-   xrtRunStart(mm2s_rhdl);
+   xrtRunStart(in_rhdl);
+   xrtRunStart(out_rhdl);
+
+#ifdef DEBUG
+   size_t inter1_size = 1*6*24*24;
+   size_t inter2_size = 1*6*12*12;
+   size_t inter3_size = 1*16*8*8;
+   size_t inter4_size = 1*120;
+   size_t inter5_size = 1*84;
+   size_t inter6_size = 1*10;
+
+   xrtBufferHandle inter1_bohdl = xrtBOAlloc(dhdl, inter1_size * sizeof(float), 0, 0);
+   xrtBufferHandle inter2_bohdl = xrtBOAlloc(dhdl, inter2_size * sizeof(float), 0, 0);
+   xrtBufferHandle inter3_bohdl = xrtBOAlloc(dhdl, inter3_size * sizeof(float), 0, 0);
+   xrtBufferHandle inter4_bohdl = xrtBOAlloc(dhdl, inter4_size * sizeof(float), 0, 0);
+   xrtBufferHandle inter5_bohdl = xrtBOAlloc(dhdl, inter5_size * sizeof(float), 0, 0);
+   xrtBufferHandle inter6_bohdl = xrtBOAlloc(dhdl, inter6_size * sizeof(float), 0, 0);
+
+   auto inter1_bomapped = reinterpret_cast<float*>(xrtBOMap(inter1_bohdl));
+   auto inter2_bomapped = reinterpret_cast<float*>(xrtBOMap(inter2_bohdl));
+   auto inter3_bomapped = reinterpret_cast<float*>(xrtBOMap(inter3_bohdl));
+   auto inter4_bomapped = reinterpret_cast<float*>(xrtBOMap(inter4_bohdl));
+   auto inter5_bomapped = reinterpret_cast<float*>(xrtBOMap(inter5_bohdl));
+   auto inter6_bomapped = reinterpret_cast<float*>(xrtBOMap(inter6_bohdl));
+
+   printf("Inter1 memory virtual addr 0x%p\n", inter1_bomapped);
+   printf("Inter2 memory virtual addr 0x%p\n", inter2_bomapped);
+   printf("Inter3 memory virtual addr 0x%p\n", inter3_bomapped);
+   printf("Inter4 memory virtual addr 0x%p\n", inter4_bomapped);
+   printf("Inter5 memory virtual addr 0x%p\n", inter5_bomapped);
+   printf("Inter6 memory virtual addr 0x%p\n", inter6_bomapped);
+
+   xrtKernelHandle inter1_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_1}");
+   xrtKernelHandle inter2_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_2}");
+   xrtKernelHandle inter3_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_3}");
+   xrtKernelHandle inter4_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_4}");
+   xrtKernelHandle inter5_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_5}");
+   xrtKernelHandle inter6_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_6}");
+
+   xrtRunHandle inter1_rhdl = xrtRunOpen(inter1_khdl);
+   xrtRunHandle inter2_rhdl = xrtRunOpen(inter2_khdl);
+   xrtRunHandle inter3_rhdl = xrtRunOpen(inter3_khdl);
+   xrtRunHandle inter4_rhdl = xrtRunOpen(inter4_khdl);
+   xrtRunHandle inter5_rhdl = xrtRunOpen(inter5_khdl);
+   xrtRunHandle inter6_rhdl = xrtRunOpen(inter6_khdl);
+
+   xrtRunSetArg(inter1_rhdl, 0, inter1_bohdl);
+   xrtRunSetArg(inter1_rhdl, 2, inter1_size);
+   xrtRunSetArg(inter2_rhdl, 0, inter2_bohdl);
+   xrtRunSetArg(inter2_rhdl, 2, inter2_size);
+   xrtRunSetArg(inter3_rhdl, 0, inter3_bohdl);
+   xrtRunSetArg(inter3_rhdl, 2, inter3_size);
+   xrtRunSetArg(inter4_rhdl, 0, inter4_bohdl);
+   xrtRunSetArg(inter4_rhdl, 2, inter4_size);
+   xrtRunSetArg(inter5_rhdl, 0, inter5_bohdl);
+   xrtRunSetArg(inter5_rhdl, 2, inter5_size);
+   xrtRunSetArg(inter6_rhdl, 0, inter6_bohdl);
+   xrtRunSetArg(inter6_rhdl, 2, inter6_size);
+
+   xrtRunStart(inter1_rhdl);
+   xrtRunStart(inter2_rhdl);
+   xrtRunStart(inter3_rhdl);
+   xrtRunStart(inter4_rhdl);
+   xrtRunStart(inter5_rhdl);
+   xrtRunStart(inter6_rhdl);
+#endif
+
 #endif
    
+
    // Graph execution for AIE
    try {
       adfCheck(lenet.init(), "init lenet");
-      adfCheck(lenet.run(ITER_CNT), "run lenet");
+      adfCheck(lenet.run(iterCnt), "run lenet");
       adfCheck(lenet.end(), "end lenet");
-      // get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*8, sizeof(float_t), ITER_CNT);
+      // get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*8, sizeof(float_t), iterCnt);
    }
    catch (const std::system_error& ex) {
       xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);
@@ -129,27 +216,83 @@ int main(int argc, char ** argv) {
       auto err_str = error.to_string();
       std::cout << timestamp << " error code:" << errCode << " Error:" << err_str << std::endl;
    }
+
    
 #ifndef EXTERNAL_IO
-   
    // Wait for Kernel execution to end, close runtime and kernel handlers
    printf("Waiting for dma hls to complete...\n");
    
-   auto s2mm_state = xrtRunWait(s2mm_rhdl);
-   printf("s2mm completed with status (%d)\n", s2mm_state);
-   xrtRunClose(s2mm_rhdl); // xrtRunOpen
-   xrtKernelClose(s2mm_khdl); // xrtPLKernelOpen
+   auto in_state = xrtRunWait(in_rhdl);
+   auto out_state = xrtRunWait(out_rhdl);
    
-   auto mm2s_state = xrtRunWait(mm2s_rhdl);
-   printf("mm2s completed with status (%d)\n", mm2s_state);
-   xrtRunClose(mm2s_rhdl);
-   xrtKernelClose(mm2s_khdl);
+   printf("mm2s completed with status (%d)\n", in_state);
+   printf("s2mm completed with status (%d)\n", out_state);
+   
+   xrtRunClose(in_rhdl); // xrtRunOpen
+   xrtRunClose(out_rhdl);
+   
+   xrtKernelClose(in_khdl); // xrtPLKernelOpen
+   xrtKernelClose(out_khdl);
    
    printf("Closed runtime handlers and kernel handlers...\n");
 
-   #ifdef __SYNCB0_ENABLE__
+#ifdef __SYNCB0_ENABLE__
       xrtBOSync(out_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, output_size_in_bytes, 0);
-   #endif
+#endif
+
+
+#ifdef DEBUG
+   auto inter1_state = xrtRunWait(inter1_rhdl);
+   auto inter2_state = xrtRunWait(inter2_rhdl);
+   auto inter3_state = xrtRunWait(inter3_rhdl);
+   auto inter4_state = xrtRunWait(inter4_rhdl);
+   auto inter5_state = xrtRunWait(inter5_rhdl);
+   auto inter6_state = xrtRunWait(inter6_rhdl);
+
+   printf("inter1 completed with status (%d)\n", inter1_state);
+   printf("inter2 completed with status (%d)\n", inter2_state);
+   printf("inter3 completed with status (%d)\n", inter3_state);
+   printf("inter4 completed with status (%d)\n", inter4_state);
+   printf("inter5 completed with status (%d)\n", inter5_state);
+   printf("inter6 completed with status (%d)\n", inter6_state);
+
+   xrtRunClose(inter1_rhdl);
+   xrtRunClose(inter2_rhdl);
+   xrtRunClose(inter3_rhdl);
+   xrtRunClose(inter4_rhdl);
+   xrtRunClose(inter5_rhdl);
+   xrtRunClose(inter6_rhdl);
+   
+   xrtKernelClose(inter1_khdl);
+   xrtKernelClose(inter2_khdl);
+   xrtKernelClose(inter3_khdl);
+   xrtKernelClose(inter4_khdl);
+   xrtKernelClose(inter5_khdl);
+   xrtKernelClose(inter6_khdl);
+
+#ifdef __SYNCB0_ENABLE__
+   xrtBOSync(inter1_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter1_size * sizeof(float), 0);
+   xrtBOSync(inter2_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter2_size * sizeof(float), 0);
+   xrtBOSync(inter3_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter3_size * sizeof(float), 0);
+   xrtBOSync(inter4_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter4_size * sizeof(float), 0);
+   xrtBOSync(inter5_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter5_size * sizeof(float), 0);
+   xrtBOSync(inter6_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter6_size * sizeof(float), 0);
+#endif
+
+   write_arr_to_file(INTER1_FILENAME, inter1_bomapped, inter1_size);
+   write_arr_to_file(INTER2_FILENAME, inter2_bomapped, inter2_size);
+   write_arr_to_file(INTER3_FILENAME, inter3_bomapped, inter3_size);
+   write_arr_to_file(INTER4_FILENAME, inter4_bomapped, inter4_size);
+   write_arr_to_file(INTER5_FILENAME, inter5_bomapped, inter5_size);
+   write_arr_to_file(INTER6_FILENAME, inter6_bomapped, inter6_size);
+
+   xrtBOFree(inter1_bohdl);
+   xrtBOFree(inter2_bohdl);
+   xrtBOFree(inter3_bohdl);
+   xrtBOFree(inter4_bohdl);
+   xrtBOFree(inter5_bohdl);
+   xrtBOFree(inter6_bohdl);
+#endif
    
    
    // Write and check outputs
@@ -162,12 +305,12 @@ int main(int argc, char ** argv) {
 
    float g;
    int match = 0;
-   for (int j = 0; j < OUTPUT_LINES; j++) {
+   for (int j = 0; j < outputSize; j+=V_PER_LINE) {
       for (int k = 0; k < V_PER_LINE; k++) {
          chk_file >> g;
-         if (g != out_bomapped[j*V_PER_LINE + k]) 
+         if (g != out_bomapped[j+k]) 
             match = 1;
-         oup_file << out_bomapped[j*V_PER_LINE + k] << " ";
+         oup_file << out_bomapped[j+k] << " ";
       }
       oup_file << std::endl;
    }
