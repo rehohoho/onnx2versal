@@ -129,12 +129,14 @@ WORK_DIR := Work
 #	dma_hls.[hw_emu | hw].xo.compile_summary  
 #	v++_dma_hls.[hw_emu | hw].log
 #	_x
-DATAMOVER_KERNEL_TOP := dma_hls
-DATAMOVER_KERNEL_XO  := $(DATAMOVER_KERNEL_TOP).$(TARGET)
+KERNEL1 := s2mm
+KERNEL2 := mm2s
+KERNEL1_XO  := $(KERNEL1).$(TARGET)
+KERNEL2_XO  := $(KERNEL2).$(TARGET)
+KERNEL1_SRC := $(PL_SRC_REPO)/float_s2mm.cpp
+KERNEL2_SRC := $(PL_SRC_REPO)/float_mm2s.cpp
 
 TRAFFICGEN_WIDTH := 32
-
-DATAMOVER_KERNEL_VPP_FLAGS := --hls.clock $(VPP_CLOCK_FREQ):$(DATAMOVER_KERNEL_TOP)
 
 VPP_FLAGS := --platform $(PLATFORM) \
 					   --save-temps \
@@ -142,23 +144,23 @@ VPP_FLAGS := --platform $(PLATFORM) \
 					   --verbose \
 					   -g
 
-DATAMOVER_KERNEL_SRC := $(PL_SRC_REPO)/datamover/$(DATAMOVER_KERNEL_TOP).cpp
-
 ifeq ($(EXTIO), 1)
 	KERNEL_XOS := $(XILINX_VITIS)/data/emulation/XO/sim_ipc_axis_master_$(TRAFFICGEN_WIDTH).xo \
 								$(XILINX_VITIS)/data/emulation/XO/sim_ipc_axis_slave_$(TRAFFICGEN_WIDTH).xo
 else
-	KERNEL_XOS := $(BUILD_TARGET_DIR)/$(DATAMOVER_KERNEL_XO).xo
+	KERNEL_XOS := $(BUILD_TARGET_DIR)/$(KERNEL1_XO).xo \
+							  $(BUILD_TARGET_DIR)/$(KERNEL2_XO).xo
 endif
 
 kernels: $(KERNEL_XOS)
 
-$(BUILD_TARGET_DIR)/$(DATAMOVER_KERNEL_XO).xo:
-	mkdir -p $(BUILD_TARGET_DIR); \
-	cd $(BUILD_TARGET_DIR); \
-	v++ --target $(TARGET) $(DATAMOVER_KERNEL_VPP_FLAGS) \
-		$(VPP_FLAGS) -c -k $(DATAMOVER_KERNEL_TOP) \
-		$(DATAMOVER_KERNEL_SRC) -o $@
+$(BUILD_TARGET_DIR)/$(KERNEL1_XO).xo:
+	mkdir -p $(BUILD_TARGET_DIR); cd $(BUILD_TARGET_DIR); \
+	v++ --target $(TARGET) $(VPP_FLAGS) -c --hls.clock $(VPP_CLOCK_FREQ):$(KERNEL1) -k $(KERNEL1) $(KERNEL1_SRC) -o $@
+
+$(BUILD_TARGET_DIR)/$(KERNEL2_XO).xo:
+	mkdir -p $(BUILD_TARGET_DIR); cd $(BUILD_TARGET_DIR); \
+	v++ --target $(TARGET) $(VPP_FLAGS) -c --hls.clock $(VPP_CLOCK_FREQ):$(KERNEL2) -k $(KERNEL2) $(KERNEL2_SRC) -o $@
 
 # =========================================================
 # Step 2. AI Engine SDF Graph File and Work/ Directory 
@@ -289,23 +291,24 @@ $(BLD_TGT_VCD_FILE):
 # This step links the graph executable (tx_chain.o) and 
 # the kernels into a xsa file. 
 # Outputs: in build/[hw_emu | hw]/ directory
-APP_OBJ_NAME := $(GRAPH)_aie
-XSA := vck190_$(APP_OBJ_NAME).xsa
+XSA := vck190_$(GRAPH)_aie.xsa
 
 VPP_LINK_FLAGS := --clock.defaultTolerance 0.001 \
                   --advanced.param compiler.userPostSysLinkOverlayTcl=$(DIRECTIVES_REPO)/noc_qos.tcl \
                   --vivado.prop run.synth_1.STEPS.SYNTH_DESIGN.ARGS.CONTROL_SET_OPT_THRESHOLD=16
 
 ifeq ($(EXTIO), 1)
-	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/mul_etg.cfg
+	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_x$(NET_INSTS)_xtg.cfg
 else
-	VPP_LINK_FLAGS += --clock.freqHz $(VPP_CLOCK_FREQ):$(DATAMOVER_KERNEL_TOP)_0 \
-										--config $(SYSTEM_CONFIGS_REPO)/mul.cfg
+	VPP_LINK_FLAGS += --clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL1)_0 \
+										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL2)_0 \
+										--config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_x$(NET_INSTS).cfg
 endif
 
 ifeq ($(EN_TRACE),1)
    ifeq ($(TARGET),hw)
-      VPP_LINK_FLAGS += --profile.data $(DATAMOVER_KERNEL_TOP):all:all \
+      VPP_LINK_FLAGS += --profile.data $(KERNEL1):all:all \
+                        --profile.data $(KERNEL2):all:all \
                         --profile.trace_memory DDR
    endif
 endif
@@ -335,6 +338,7 @@ $(BUILD_TARGET_DIR)/$(XSA):$(KERNEL_XOS) $(LIBADF_A) $(SYSTEM_CONFIGS_REPO)/*
 # 	aie_control.o
 #	  net_app.o 
 # 	net_xrt.elf
+APP_OBJ_NAME 		:= $(GRAPH)_aie
 APP_ELF 				:= $(APP_OBJ_NAME)_xrt.elf
 APP_SRC_CPP 	  := $(HOST_APP_SRC_REPO)/$(GRAPH)_aie_app.cpp
 AIE_CONTROL_CPP := $(BUILD_TARGET_DIR)/$(WORK_DIR)/ps/c_rts/aie_control_xrt.cpp
@@ -464,7 +468,13 @@ ifeq ($(EXTIO), 1)
 	python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(BLD_REPORTS_DIR)/x86simulator_output 2>&1 | tee embedded_run_trafficgen.log; \
 	unset LD_LIBRARY_PATH
 else
-	@echo "sw_emu without EXTIO is not possible since kernel requires hw | hw_emu"
+	mkdir -p $(BLD_REPORTS_DIR)/x86simulator_output; \
+	cd $(BUILD_TARGET_DIR); \
+	export XILINX_XRT=$(XILINX_X86_XRT); \
+	export XCL_EMULATION_MODE=sw_emu; \
+	export LD_LIBRARY_PATH=${XILINX_X86_XRT}/lib; \
+	./$(APP_ELF) a.xclbin 2>&1 | tee embedded_run.log; \
+	unset LD_LIBRARY_PATH
 endif
 
 endif
