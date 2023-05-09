@@ -72,7 +72,4 @@ if __name__ == "__main__":
                                   os.path.join(OUT_DIR, fn), 
                                   args.err)
   
-  if args.err == 1:
-    assert(pass_count == len(filenames)), f"{pass_count} / {len(filenames)} tests passed."
-  else:
-    print(f"{pass_count} / {len(filenames)} tests passed.")
+  assert(pass_count == len(filenames)), f"{pass_count} / {len(filenames)} tests passed."
