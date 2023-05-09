@@ -2,7 +2,6 @@
 #define ARGMAX_H_
 
 #include <adf.h>
-#include "aie_api/aie.hpp"
 
 
 template <int WINDOW_SIZE, int CHUNK_SIZE>

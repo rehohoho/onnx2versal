@@ -2,7 +2,6 @@
 #define CONV_H_
 
 #include <adf.h>
-#include "aie_api/aie.hpp"
 
 
 template <int INP_W, int OUT_W, int B, int C, int M, int K>

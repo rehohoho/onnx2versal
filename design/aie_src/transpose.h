@@ -2,7 +2,6 @@
 #define TRANSPOSE_H_
 
 #include <adf.h>
-#include "aie_api/aie.hpp"
 
 
 template <int B, int H, int W, int C>

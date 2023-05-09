@@ -1,7 +1,7 @@
 #ifndef __KERNEL_UTILS_H__
 #define __KERNEL_UTILS_H__
 
-#include <adf/x86sim/x86simDebug.h>
+#include "aie_api/aie.hpp"
 
 #ifdef EXTERNAL_IO
 #define PROFILE_HEADER(stmt)

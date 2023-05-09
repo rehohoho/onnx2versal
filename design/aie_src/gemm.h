@@ -2,7 +2,6 @@
 #define GEMM_H_
 
 #include <adf.h>
-#include "aie_api/aie.hpp"
 
 
 // xA^T + b as per torch,nn.Linear
