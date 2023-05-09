@@ -68,11 +68,11 @@ ConcatScalarGraphTest<5, 8, 4, 4*4+2> fpscalar2(
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
   adfCheck(fpscalar1.init(), "init fpscalar1");
-  adfCheck(fpscalar1.run(1), "run fpscalar1");
+  adfCheck(fpscalar1.run(ITER_CNT), "run fpscalar1");
 	adfCheck(fpscalar1.end(), "end fpscalar1");
 
   adfCheck(fpscalar2.init(), "init fpscalar2");
-  adfCheck(fpscalar2.run(1), "run fpscalar2");
+  adfCheck(fpscalar2.run(ITER_CNT), "run fpscalar2");
 	adfCheck(fpscalar2.end(), "end fpscalar2");
   return 0;
 }

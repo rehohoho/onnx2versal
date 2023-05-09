@@ -32,7 +32,7 @@ IdentityGraphTest<IdentityScalar, 8> fpscalar(
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
   adfCheck(fpscalar.init(), "init fpscalar");
-  adfCheck(fpscalar.run(1), "run fpscalar");
+  adfCheck(fpscalar.run(ITER_CNT), "run fpscalar");
 	adfCheck(fpscalar.end(), "end fpscalar");
   return 0;
 }

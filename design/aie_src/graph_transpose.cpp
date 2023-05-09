@@ -37,11 +37,11 @@ TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> fpscalar_rand(
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
   adfCheck(fpscalar.init(), "init fpscalar");
-  adfCheck(fpscalar.run(1), "run fpscalar");
+  adfCheck(fpscalar.run(ITER_CNT), "run fpscalar");
 	adfCheck(fpscalar.end(), "end fpscalar");
 
   adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
-  adfCheck(fpscalar_rand.run(1), "run fpscalar_rand");
+  adfCheck(fpscalar_rand.run(ITER_CNT), "run fpscalar_rand");
 	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
   return 0;
 }

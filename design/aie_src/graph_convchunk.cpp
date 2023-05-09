@@ -58,24 +58,24 @@ ConvReluChunkGraphTest<Conv5x5ReluBCHW, 1, mchunk, 28, 24, 1, 2, 2, 5> fpvector_
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
   adfCheck(fpscalar_bchw.init(), "init fpscalar_bchw");
-  adfCheck(fpscalar_bchw.run(1), "run fpscalar_bchw");
+  adfCheck(fpscalar_bchw.run(ITER_CNT), "run fpscalar_bchw");
 	adfCheck(fpscalar_bchw.end(), "end fpscalar_bchw");
   adfCheck(fpscalar_bchw_rand.init(), "init fpscalar_bchw_rand");
-  adfCheck(fpscalar_bchw_rand.run(1), "run fpscalar_bchw_rand");
+  adfCheck(fpscalar_bchw_rand.run(ITER_CNT), "run fpscalar_bchw_rand");
 	adfCheck(fpscalar_bchw_rand.end(), "end fpscalar_bchw_rand");
 
   adfCheck(fpscalar_bhwc.init(), "init fpscalar_bhwc");
-  adfCheck(fpscalar_bhwc.run(1), "run fpscalar_bhwc");
+  adfCheck(fpscalar_bhwc.run(ITER_CNT), "run fpscalar_bhwc");
 	adfCheck(fpscalar_bhwc.end(), "end fpscalar_bhwc");
   adfCheck(fpscalar_bhwc_rand.init(), "init fpscalar_bhwc_rand");
-  adfCheck(fpscalar_bhwc_rand.run(1), "run fpscalar_bhwc_rand");
+  adfCheck(fpscalar_bhwc_rand.run(ITER_CNT), "run fpscalar_bhwc_rand");
 	adfCheck(fpscalar_bhwc_rand.end(), "end fpscalar_bhwc_rand");
 
   adfCheck(fpvector_bchw.init(), "init fpvector_bchw");
-  adfCheck(fpvector_bchw.run(1), "run fpvector_bchw");
+  adfCheck(fpvector_bchw.run(ITER_CNT), "run fpvector_bchw");
 	adfCheck(fpvector_bchw.end(), "end fpvector_bchw");
   adfCheck(fpvector_bchw_rand.init(), "init fpvector_bchw_rand");
-  adfCheck(fpvector_bchw_rand.run(1), "run fpvector_bchw_rand");
+  adfCheck(fpvector_bchw_rand.run(ITER_CNT), "run fpvector_bchw_rand");
 	adfCheck(fpvector_bchw_rand.end(), "end fpvector_bchw_rand");
   return 0;
 }

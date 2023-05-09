@@ -46,27 +46,27 @@ MaxpoolGraphTest<Maxpool2x2BCHW, 24, 12, 1, 6> fp2x2_bchw_rand(
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
 	adfCheck(fpscalar_bhwc.init(), "init fpscalar_bhwc");
-  adfCheck(fpscalar_bhwc.run(1), "run fpscalar_bhwc");
+  adfCheck(fpscalar_bhwc.run(ITER_CNT), "run fpscalar_bhwc");
 	adfCheck(fpscalar_bhwc.end(), "end fpscalar_bhwc");
 
   adfCheck(fpscalar_bhwc_rand.init(), "init fpscalar_bhwc_rand");
-  adfCheck(fpscalar_bhwc_rand.run(1), "run fpscalar_bhwc_rand");
+  adfCheck(fpscalar_bhwc_rand.run(ITER_CNT), "run fpscalar_bhwc_rand");
 	adfCheck(fpscalar_bhwc_rand.end(), "end fpscalar_bhwc_rand");
 
   adfCheck(fpscalar_bchw.init(), "init fpscalar_bchw");
-  adfCheck(fpscalar_bchw.run(1), "run fpscalar_bchw");
+  adfCheck(fpscalar_bchw.run(ITER_CNT), "run fpscalar_bchw");
 	adfCheck(fpscalar_bchw.end(), "end fpscalar_bchw");
 
   adfCheck(fpscalar_bchw_rand.init(), "init fpscalar_bchw_rand");
-  adfCheck(fpscalar_bchw_rand.run(1), "run fpscalar_bchw_rand");
+  adfCheck(fpscalar_bchw_rand.run(ITER_CNT), "run fpscalar_bchw_rand");
 	adfCheck(fpscalar_bchw_rand.end(), "end fpscalar_bchw_rand");
 
   adfCheck(fp2x2_bchw.init(), "init fp2x2_bchw");
-  adfCheck(fp2x2_bchw.run(1), "run fp2x2_bchw");
+  adfCheck(fp2x2_bchw.run(ITER_CNT), "run fp2x2_bchw");
 	adfCheck(fp2x2_bchw.end(), "end fp2x2_bchw");
 
   adfCheck(fp2x2_bchw_rand.init(), "init fp2x2_bchw_rand");
-  adfCheck(fp2x2_bchw_rand.run(1), "run fp2x2_bchw_rand");
+  adfCheck(fp2x2_bchw_rand.run(ITER_CNT), "run fp2x2_bchw_rand");
 	adfCheck(fp2x2_bchw_rand.end(), "end fp2x2_bchw_rand");
   return 0;
 }
