@@ -458,7 +458,7 @@ ifeq ($(EXTIO), 1)
 	export XILINX_XRT=$(XILINX_X86_XRT); \
 	export XCL_EMULATION_MODE=sw_emu; \
 	export LD_LIBRARY_PATH=${XILINX_X86_XRT}/lib; \
-	./$(APP_ELF) a.xclbin 2>&1 | tee $(X86SIM_REPORT_DIR)/embedded_run.log & \
+	./$(APP_ELF) a.xclbin $(ITER_CNT) $(DATA_REPO) $(X86SIM_REPORT_DIR) 2>&1 | tee $(X86SIM_REPORT_DIR)/embedded_run.log & \
 	python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee embedded_run_trafficgen.log; \
 	unset LD_LIBRARY_PATH
 else
@@ -467,7 +467,7 @@ else
 	export XILINX_XRT=$(XILINX_X86_XRT); \
 	export XCL_EMULATION_MODE=sw_emu; \
 	export LD_LIBRARY_PATH=${XILINX_X86_XRT}/lib; \
-	./$(APP_ELF) a.xclbin $(ITER_CNT) 2>&1 | tee $(X86SIM_REPORT_DIR)/embedded_run.log; \
+	./$(APP_ELF) a.xclbin $(ITER_CNT) $(DATA_REPO) $(X86SIM_REPORT_DIR) 2>&1 | tee $(X86SIM_REPORT_DIR)/embedded_run.log; \
 	unset LD_LIBRARY_PATH
 endif
 

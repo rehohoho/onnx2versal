@@ -11,8 +11,8 @@
 
 
 #define V_PER_LINE      2
-#define INPUT_FILENAME  "../../../data/mnist_test_data.txt"
-#define GOLDEN_FILENAME "../../../data/mnist_test_label.txt"
+#define INPUT_FILENAME  "mnist_test_data.txt"
+#define GOLDEN_FILENAME "mnist_test_label.txt"
 #define OUTPUT_FILENAME "mnist_test_label.txt"
 
 #define INTER1_FILENAME "lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt"
@@ -24,13 +24,13 @@
 
 
 void write_arr_to_file(
-   const char* filename,
+   const std::string& filename,
    const float* bomapped,
-   const int bosize
+   const size_t bosize
 ) {
    std::ofstream file;
    file.open(filename, std::ofstream::out);
-   if (!file) printf("Unable to open %s\n", filename);
+   if (!file) printf("Unable to open %s\n", filename.c_str());
    for (int j = 0; j < bosize; j+=V_PER_LINE) {
       for (int k = 0; k < V_PER_LINE; k++) {
          file << bomapped[j+k] << " ";
@@ -65,25 +65,26 @@ static std::vector<char> load_xclbin(
 
 int main(int argc, char ** argv) {
    // Parse args
-   if((argc < 2) || (argc > 3)) {
-      std::cout << "Usage: " << argv[0] <<" <xclbin>" << "iteration count(optional)" << std::endl;
+   if(argc != 5) {
+      std::cout << "Usage: " << argv[0] <<" <xclbin>" << " <iter_cnt>" << " <data_dir>" << " <out_dir>" << std::endl;
       return EXIT_FAILURE;
    }
-   const char* xclbinFilename = argv[1];
-   int16_t iterCnt = 0;
-   if(argc == 3) {
-      std::string iter = argv[2];
-      iterCnt = stoi(iter);
-   }
-   printf("Running %d iterations...\n", iterCnt);
+   const char* xclbin_path = argv[1];
+   const int iter_cnt = atoi(argv[2]);
+   std::string data_dir = argv[3];
+   data_dir.append("/");
+   std::string out_dir = argv[4];
+   out_dir.append("/");
+   printf("\nConfig:\nxclbin: %s\niter_cnt: %d\ndata_dir: %s\nout_dir: %s\n\n", 
+      xclbin_path, iter_cnt, data_dir.c_str(), out_dir.c_str());
 
-   const int inputSize = 28*28*iterCnt;
-   const int outputSize = 1*iterCnt;
+   const int input_size = 28*28*iter_cnt;
+   const int output_size = 1*iter_cnt;
 
    // Open device, load xclbin
    auto deviceIdx = xrt::device(0);
    auto dhdl = xrtDeviceOpen(0);
-   auto xclbin = load_xclbin(dhdl, xclbinFilename);
+   auto xclbin = load_xclbin(dhdl, xclbin_path);
    auto top = reinterpret_cast<const axlf*>(xclbin.data());
    adf::registerXRT(dhdl, top->m_header.uuid);
 
@@ -91,8 +92,8 @@ int main(int argc, char ** argv) {
 #ifndef EXTERNAL_IO
    // Allocate BOs (buffer objects) of requested size with appropriate flags
    // Memory map BOs into user's address space (DDR Memory)
-   size_t input_size_in_bytes = inputSize * sizeof(float);
-   size_t output_size_in_bytes = outputSize * sizeof(float);
+   size_t input_size_in_bytes = input_size * sizeof(float);
+   size_t output_size_in_bytes = output_size * sizeof(float);
 
    xrtBufferHandle in_bohdl = xrtBOAlloc(dhdl, input_size_in_bytes, 0, 0);
    xrtBufferHandle out_bohdl = xrtBOAlloc(dhdl, output_size_in_bytes, 0, 0);
@@ -105,10 +106,10 @@ int main(int argc, char ** argv) {
 
    // Read in data from file
    std::ifstream inp_file;
-   inp_file.open(INPUT_FILENAME, std::ifstream::in);
-   if (!inp_file) printf("Unable to open %s.\n", INPUT_FILENAME);
+   inp_file.open(data_dir+INPUT_FILENAME, std::ifstream::in);
+   if (!inp_file) printf("Unable to open %s.\n", (data_dir+INPUT_FILENAME).c_str());
    float d;
-   for (int j = 0; j < inputSize; j+=V_PER_LINE) {
+   for (int j = 0; j < input_size; j+=V_PER_LINE) {
       for (int k = 0; k < V_PER_LINE; k++) {
          inp_file >> d;
          in_bomapped[j+k] = d;
@@ -128,9 +129,9 @@ int main(int argc, char ** argv) {
    xrtRunHandle out_rhdl = xrtRunOpen(out_khdl); 
    
    xrtRunSetArg(in_rhdl, 0, in_bohdl);
-   xrtRunSetArg(in_rhdl, 2, inputSize);
+   xrtRunSetArg(in_rhdl, 2, input_size);
    xrtRunSetArg(out_rhdl, 0, out_bohdl);
-   xrtRunSetArg(out_rhdl, 2, outputSize);
+   xrtRunSetArg(out_rhdl, 2, output_size);
 
    xrtRunStart(in_rhdl);
    xrtRunStart(out_rhdl);
@@ -205,9 +206,9 @@ int main(int argc, char ** argv) {
    // Graph execution for AIE
    try {
       adfCheck(lenet.init(), "init lenet");
-      adfCheck(lenet.run(iterCnt), "run lenet");
+      adfCheck(lenet.run(iter_cnt), "run lenet");
       adfCheck(lenet.end(), "end lenet");
-      // get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*8, sizeof(float_t), iterCnt);
+      // get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*8, sizeof(float_t), iter_cnt);
    }
    catch (const std::system_error& ex) {
       xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);
@@ -279,12 +280,12 @@ int main(int argc, char ** argv) {
    xrtBOSync(inter6_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter6_size * sizeof(float), 0);
 #endif
 
-   write_arr_to_file(INTER1_FILENAME, inter1_bomapped, inter1_size);
-   write_arr_to_file(INTER2_FILENAME, inter2_bomapped, inter2_size);
-   write_arr_to_file(INTER3_FILENAME, inter3_bomapped, inter3_size);
-   write_arr_to_file(INTER4_FILENAME, inter4_bomapped, inter4_size);
-   write_arr_to_file(INTER5_FILENAME, inter5_bomapped, inter5_size);
-   write_arr_to_file(INTER6_FILENAME, inter6_bomapped, inter6_size);
+   write_arr_to_file(out_dir+INTER1_FILENAME, inter1_bomapped, inter1_size);
+   write_arr_to_file(out_dir+INTER2_FILENAME, inter2_bomapped, inter2_size);
+   write_arr_to_file(out_dir+INTER3_FILENAME, inter3_bomapped, inter3_size);
+   write_arr_to_file(out_dir+INTER4_FILENAME, inter4_bomapped, inter4_size);
+   write_arr_to_file(out_dir+INTER5_FILENAME, inter5_bomapped, inter5_size);
+   write_arr_to_file(out_dir+INTER6_FILENAME, inter6_bomapped, inter6_size);
 
    xrtBOFree(inter1_bohdl);
    xrtBOFree(inter2_bohdl);
@@ -297,15 +298,15 @@ int main(int argc, char ** argv) {
    
    // Write and check outputs
    std::ofstream oup_file;
-   oup_file.open(OUTPUT_FILENAME, std::ofstream::out);
-   if (!oup_file) printf("Unable to open %s\n", OUTPUT_FILENAME);
+   oup_file.open(out_dir+OUTPUT_FILENAME, std::ofstream::out);
+   if (!oup_file) printf("Unable to open %s\n", (out_dir+OUTPUT_FILENAME).c_str());
    std::ifstream chk_file;
-   chk_file.open(GOLDEN_FILENAME, std::ifstream::in);
-   if (!chk_file) printf("Unable to open %s.\n", GOLDEN_FILENAME);
+   chk_file.open(data_dir+GOLDEN_FILENAME, std::ifstream::in);
+   if (!chk_file) printf("Unable to open %s.\n", (data_dir+GOLDEN_FILENAME).c_str());
 
    float g;
    int match = 0;
-   for (int j = 0; j < outputSize; j+=V_PER_LINE) {
+   for (int j = 0; j < output_size; j+=V_PER_LINE) {
       for (int k = 0; k < V_PER_LINE; k++) {
          chk_file >> g;
          if (g != out_bomapped[j+k]) 
