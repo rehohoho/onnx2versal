@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <fstream>
-#include <string>
-#include <cstring>
-
-#include "input.h"
-#include "golden.h"
 
 #include "graph_lenet.cpp"
 
@@ -17,28 +9,24 @@
 
 #include "adf/adf_api/XRTConfig.h"
 
-//Control Offsets for DMA HLS
-#define MEM_RD_OFFSET  0x10
-#define MEM_WR_OFFSET  0x1C
-#define SIZE_RD_OFFSET 0x28
-#define SIZE_WR_OFFSET 0x30
-#define CTRL_OFFSET    0x00
 
-#define NO_IMAGES 100
-#define WORD_LENGTH 2
-#define INPUT_SIZE  (0x80 * NO_IMAGES)
-#define OUTPUT_SIZE (0x10 * NO_IMAGES)
-#define OUT_IMAGE_LENGTH  32
-//#define INPUT_SIZE_128b (INPUT_SIZE / 2)
-//#define OUTPUT_SIZE_128b (OUTPUT_SIZE / 2)
+#define INPUT_SIZE      28*28*100
+#define OUTPUT_SIZE     1*100
+#define V_PER_LINE      2
 
-// load_xclbin function is used to read in xclbin file
-static std::vector<char>
-load_xclbin(xrtDeviceHandle device, const std::string &fnm)
-{
-   if (fnm.empty()) {
+#define INPUT_FILENAME  "../../../data/mnist_test_data.txt"
+#define INPUT_LINES     INPUT_SIZE / V_PER_LINE
+#define GOLDEN_FILENAME "../../../data/mnist_test_label.txt"
+#define OUTPUT_FILENAME "mnist_test_label.txt"
+#define OUTPUT_LINES    OUTPUT_SIZE / V_PER_LINE
+
+
+static std::vector<char> load_xclbin(
+   xrtDeviceHandle device, 
+   const std::string &fnm
+) {
+   if (fnm.empty())
       throw std::runtime_error("No xclbin specified");
-   }
    
    // load bit stream
    std::ifstream stream(fnm);
@@ -50,90 +38,89 @@ load_xclbin(xrtDeviceHandle device, const std::string &fnm)
    stream.read(header.data(),size);
    
    auto top = reinterpret_cast<const axlf*>(header.data());
-   if (xrtDeviceLoadXclbin(device, top)) {
+   if (xrtDeviceLoadXclbin(device, top))
       throw std::runtime_error("Bitstream download failed");
-   }
    
    return header;
 }
 
-int main(int argc, char ** argv)
-{
-   size_t input_size_in_bytes = INPUT_SIZE * sizeof(uint32_t)* WORD_LENGTH;
-   size_t output_size_in_bytes = OUTPUT_SIZE * sizeof(uint32_t)* WORD_LENGTH;
-   
-   //////////////////////////////////////////
-   // Open xclbin
-   //////////////////////////////////////////
-   
+int main(int argc, char ** argv) {
+   // Parse args
    if((argc < 2) || (argc > 3)) {
       std::cout << "Usage: " << argv[0] <<" <xclbin>" << "iteration count(optional)" << std::endl;
       return EXIT_FAILURE;
    }
-   
    const char* xclbinFilename = argv[1];
-   
    int16_t iterCnt = 0;
    if(argc == 3) {
       std::string iter = argv[2];
       iterCnt = stoi(iter);
-   }
-   else {
+   } else {
       iterCnt = NET_INSTS;
    }
-   
    printf("Iteration : %d...\n", iterCnt);
 
+
+   // Open device, load xclbin
    auto deviceIdx = xrt::device(0);
    auto dhdl = xrtDeviceOpen(0);
    auto xclbin = load_xclbin(dhdl, xclbinFilename);
    auto top = reinterpret_cast<const axlf*>(xclbin.data());
+   adf::registerXRT(dhdl, top->m_header.uuid);
+
 
 #ifndef EXTERNAL_IO
-   //Allocate BOs (buffer objects) of requested size with appropriate flags
-   //Memory map BOs into user's address space (DDR Memory)
+   // Allocate BOs (buffer objects) of requested size with appropriate flags
+   // Memory map BOs into user's address space (DDR Memory)
+   size_t input_size_in_bytes = INPUT_SIZE * sizeof(float);
    xrtBufferHandle in_bohdl = xrtBOAlloc(dhdl, input_size_in_bytes, 0, 0);
-   auto in_bomapped = reinterpret_cast<uint32_t*>(xrtBOMap(in_bohdl));
-   
-   //Set the input mapped region needs to have the same data as the input_pl. 
-   memcpy(in_bomapped, input_pl, input_size_in_bytes);
+   auto in_bomapped = reinterpret_cast<float*>(xrtBOMap(in_bohdl));
    printf("Input memory virtual addr 0x%p\n", in_bomapped);
-   
-   xrtBufferHandle out_bohdl = xrtBOAlloc(dhdl, output_size_in_bytes, 0, 0);
-   auto out_bomapped = reinterpret_cast<uint32_t*>(xrtBOMap(out_bohdl));
-   printf("Output memory virtual addr 0x%p\n", out_bomapped);
-   
-   //open PL kernels and obtain handles
-   xrtKernelHandle dmahls_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "dma_hls:{dma_hls_0}");
-   
-   //Create a kernel handle to start DMA HLS pl kernel
-   //Set the DMA HLS arguments (input buffer handle, output
-   //buffer handle, input size and output size) 
-   // 0,1,4,5 are port number on the IP.
-   xrtRunHandle dmahls_rhdl = xrtRunOpen(dmahls_khdl); 
-   int rval = xrtRunSetArg(dmahls_rhdl, 0, in_bohdl);
-   rval     = xrtRunSetArg(dmahls_rhdl, 1, out_bohdl);
-   rval     = xrtRunSetArg(dmahls_rhdl, 4, INPUT_SIZE);
-   rval     = xrtRunSetArg(dmahls_rhdl, 5, OUTPUT_SIZE);
-   rval     = xrtRunSetArg(dmahls_rhdl, 6, iterCnt);
 
-   //Start the DMA HLS kernel
-   //Moving data from DDR to AI Engine  
-   xrtRunStart(dmahls_rhdl);
-   printf("Run Datamover\n");
+   size_t output_size_in_bytes = OUTPUT_SIZE * sizeof(float);
+   xrtBufferHandle out_bohdl = xrtBOAlloc(dhdl, output_size_in_bytes, 0, 0);
+   auto out_bomapped = reinterpret_cast<float*>(xrtBOMap(out_bohdl));
+   printf("Output memory virtual addr 0x%p\n", out_bomapped);
+
+   
+   // Read in data from file
+   std::ifstream inp_file;
+   inp_file.open(INPUT_FILENAME, std::ifstream::in);
+   if (!inp_file) printf("Unable to open %s.\n", INPUT_FILENAME);
+   float d;
+   for (int j = 0; j < INPUT_LINES; j++) {
+      for (int k = 0; k < V_PER_LINE; k++) {
+         inp_file >> d;
+         in_bomapped[j*V_PER_LINE + k] = d;
+      }
+   }
+
+   #ifdef __SYNCB0_ENABLE__
+      xrtBOSync(in_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, input_size_in_bytes, 0);
+      printf("xrtBOSync done.\n")
+   #endif
+
+
+   // Create kernel handle, runtime handle, set args, start kernels
+   xrtKernelHandle s2mm_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{s2mm_0}");
+   xrtRunHandle s2mm_rhdl = xrtRunOpen(s2mm_khdl); 
+   xrtRunSetArg(s2mm_rhdl, 0, out_bohdl);
+   xrtRunSetArg(s2mm_rhdl, 2, OUTPUT_SIZE);
+   xrtRunStart(s2mm_rhdl);
+
+   xrtKernelHandle mm2s_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "mm2s:{mm2s_0}");
+   xrtRunHandle mm2s_rhdl = xrtRunOpen(mm2s_khdl); 
+   xrtRunSetArg(mm2s_rhdl, 0, in_bohdl);
+   xrtRunSetArg(mm2s_rhdl, 2, INPUT_SIZE);
+   xrtRunStart(mm2s_rhdl);
 #endif
    
-   //////////////////////////////////////////
-   // graph execution for AIE
-   //////////////////////////////////////////
-   
-   adf::registerXRT(dhdl, top->m_header.uuid);
-   adf::return_code ret;
-
+   // Graph execution for AIE
    try {
-      adfCheck(lenet.init(), "init graph");
-  get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*10, sizeof(float), ITER_CNT);
-      adfCheck(lenet.end(), "end graph");
+      adfCheck(lenet.init(), "init lenet");
+      adfCheck(lenet.run(ITER_CNT), "run lenet");
+      adfCheck(lenet.end(), "end lenet");
+      // get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*8, sizeof(float_t), ITER_CNT);
    }
    catch (const std::system_error& ex) {
       xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);
@@ -144,61 +131,59 @@ int main(int argc, char ** argv)
    }
    
 #ifndef EXTERNAL_IO
-   //Wait for DMA HLS execution to finish
+   
+   // Wait for Kernel execution to end, close runtime and kernel handlers
    printf("Waiting for dma hls to complete...\n");
-   auto state = xrtRunWait(dmahls_rhdl);
-   std::cout << "Datamover completed with status(" << state << ")\n";
    
-   //Close the run handles obtained by in xrtRunOpen() 
-   xrtRunClose(dmahls_rhdl);
+   auto s2mm_state = xrtRunWait(s2mm_rhdl);
+   printf("s2mm completed with status (%d)\n", s2mm_state);
+   xrtRunClose(s2mm_rhdl); // xrtRunOpen
+   xrtKernelClose(s2mm_khdl); // xrtPLKernelOpen
    
-   //Close opened kernel handles obtained from xrtPLKernelOpen()
-   xrtKernelClose(dmahls_khdl);
+   auto mm2s_state = xrtRunWait(mm2s_rhdl);
+   printf("mm2s completed with status (%d)\n", mm2s_state);
+   xrtRunClose(mm2s_rhdl);
+   xrtKernelClose(mm2s_khdl);
+   
+   printf("Closed runtime handlers and kernel handlers...\n");
 
-   printf("Closed dma hls kernel...\n");
+   #ifdef __SYNCB0_ENABLE__
+      xrtBOSync(out_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, output_size_in_bytes, 0);
+   #endif
    
-   //Compare data in out_bomapped to golden data in golden.h
-   int errCnt = 0;
-   int errFlag = 0;
-   int out_count = 0;
-   int image_count = 0;
    
-   printf("Comparing output with golden\n");
-   for(int i = 0; i < OUTPUT_SIZE * WORD_LENGTH; i++) {
-       if( out_bomapped[i] == int32golden[i] ) {
-           errFlag = errFlag || 0;
-           ++out_count;
-       } else {
-           errFlag = errFlag || 1;
-           printf("Error found in sample 0x%X != to the golden 0x%X\n", out_bomapped[i], int32golden[i] );
-           ++errCnt;
-       }
-       if ( (out_count == OUT_IMAGE_LENGTH) ) {
-           if (!errFlag) {
-               printf("Pass for image %d \n", image_count);
-               ++image_count;
-               out_count = 0;
-               errFlag = 0;
-           } else {
-               printf("Fail for image %d \n", image_count);
-               ++image_count;
-               out_count = 0;
-               errFlag = 0;
-           }
-       }
+   // Write and check outputs
+   std::ofstream oup_file;
+   oup_file.open(OUTPUT_FILENAME, std::ofstream::out);
+   if (!oup_file) printf("Unable to open %s\n", OUTPUT_FILENAME);
+   std::ifstream chk_file;
+   chk_file.open(GOLDEN_FILENAME, std::ifstream::in);
+   if (!chk_file) printf("Unable to open %s.\n", GOLDEN_FILENAME);
+
+   float g;
+   int match = 0;
+   for (int j = 0; j < OUTPUT_LINES; j++) {
+      for (int k = 0; k < V_PER_LINE; k++) {
+         chk_file >> g;
+         if (g != out_bomapped[j*V_PER_LINE + k]) 
+            match = 1;
+         oup_file << out_bomapped[j*V_PER_LINE + k] << " ";
+      }
+      oup_file << std::endl;
    }
+
    
    //Release allocated resources
-   std::cout << "Releasing remaining XRT objects...\n";
    xrtBOFree(in_bohdl);
    xrtBOFree(out_bohdl);
+   printf("Released I/O buffer objects.\n");
 #endif
    
    xrtDeviceClose(dhdl);
    
 #ifndef EXTERNAL_IO
-   std::cout << "TEST " << (errCnt ? "FAILED" : "PASSED") << std::endl;
-   return (errCnt ? EXIT_FAILURE :  EXIT_SUCCESS);
+   std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
+   return (match ? EXIT_FAILURE :  EXIT_SUCCESS);
 #else
    return 0;
 #endif
