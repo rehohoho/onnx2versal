@@ -57,12 +57,10 @@ int main(int argc, char ** argv) {
       return EXIT_FAILURE;
    }
    const char* xclbinFilename = argv[1];
-   int16_t iterCnt = 0;
+   int16_t iterCnt = 1;
    if(argc == 3) {
       std::string iter = argv[2];
       iterCnt = stoi(iter);
-   } else {
-      iterCnt = NET_INSTS;
    }
    printf("Iteration : %d...\n", iterCnt);
 
@@ -123,6 +121,7 @@ int main(int argc, char ** argv) {
    xrtRunStart(mm2s_rhdl);
 #endif
    
+
    // Graph execution for AIE
    try {
       adfCheck(fpscalar.init(), "init fpscalar");
@@ -138,8 +137,8 @@ int main(int argc, char ** argv) {
       std::cout << timestamp << " error code:" << errCode << " Error:" << err_str << std::endl;
    }
    
-#ifndef EXTERNAL_IO
    
+#ifndef EXTERNAL_IO
    // Wait for Kernel execution to end, close runtime and kernel handlers
    printf("Waiting for dma hls to complete...\n");
    
