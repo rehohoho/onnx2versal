@@ -3,10 +3,7 @@
 
 #include "aie_api/aie.hpp"
 
-#ifdef EXTERNAL_IO
-#define PROFILE_HEADER(stmt)
-#define PROFILE_FOOTER 
-#else
+#ifdef DEBUG
 #define PROFILE_HEADER(stmt) \
   stmt; \
   unsigned cycle_num[2]; \
@@ -15,6 +12,9 @@
 #define PROFILE_FOOTER \
   cycle_num[1] = tile.cycles(); \
   printf("start = %d,end = %d,total = %d\n", cycle_num[0], cycle_num[1], cycle_num[1] - cycle_num[0]);
+#else
+#define PROFILE_HEADER(stmt)
+#define PROFILE_FOOTER 
 #endif
 
 template<typename VECTYPE>
