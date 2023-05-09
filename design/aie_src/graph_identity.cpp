@@ -1,8 +1,6 @@
 #include "graph_identity.h"
 #include "graph_utils.h"
 
-#define ITER_CNT 1
-
 
 template <template<int> class IDENTITY, int N>
 class IdentityGraphTest : public adf::graph {
@@ -44,7 +42,7 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
   adfCheck(fpscalar.init(), "init fpscalar");
-  get_graph_throughput_by_port(fpscalar, "plout[0]", fpscalar.plout[0], 1*8*8*8, sizeof(float_t), ITER_CNT);
+  get_graph_throughput_by_port(fpscalar, "plout[0]", fpscalar.plout[0], 1*8, sizeof(float), ITER_CNT);
 	adfCheck(fpscalar.end(), "end fpscalar");
   return 0;
 }

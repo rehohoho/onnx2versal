@@ -1,8 +1,6 @@
 #include "graph_argmax.h"
 #include "graph_utils.h"
 
-#define ITER_CNT 1
-
 
 template <template<int, int> class ARGMAX, int WINDOW_SIZE, int CHUNK_SIZE>
 class ArgmaxGraphTest : public adf::graph {

@@ -1,8 +1,6 @@
 #include "graph_concat.h"
 #include "graph_utils.h"
 
-#define ITER_CNT 1
-
 
 template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatScalarGraphTest : public adf::graph {

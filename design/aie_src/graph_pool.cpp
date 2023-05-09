@@ -1,8 +1,6 @@
 #include "graph_pool.h"
 #include "graph_utils.h"
 
-#define ITER_CNT 1
-
 
 template <template<int, int, int, int> class POOL,
   int INP_W, int OUT_W, int B, int C>

@@ -1,8 +1,6 @@
 #include "graph_transpose.h"
 #include "graph_utils.h"
 
-#define ITER_CNT 1
-
 
 template <template<int, int, int, int> class TRANSPOSE, 
   int B, int H, int W, int C>

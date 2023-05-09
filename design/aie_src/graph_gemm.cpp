@@ -1,8 +1,6 @@
 #include "graph_gemm.h"
 #include "graph_utils.h"
 
-#define ITER_CNT 1
-
 
 template <template<int, int, int> class GEMM, int NCHUNK, int M, int K, int N>
 class GemmReluChunkGraphTest : public adf::graph {
