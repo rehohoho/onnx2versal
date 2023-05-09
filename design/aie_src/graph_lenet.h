@@ -11,16 +11,17 @@
 
 /*
 Profile cycles:
-Running Conv5x5ReluBCHW<28, 24, 1, 1, 6>: 21325
-Running MaxpoolScalarBCHW::filter<24, 12, 1, 6>: 11358
-Running Conv5x5ReluBCHW<12, 8, 1, 6, 16>: 41580
-Running MaxpoolScalarBCHW::filter<8, 4, 1, 16>: 3490
+Running Conv5x5ReluBCHW<28, 24, 1, 1, 6>: 21271
+Running Maxpool2x2BCHW::filter<24, 12, 1, 6>: 901
+Running Conv5x5ReluBCHW<12, 8, 1, 6, 16>: 41524
+Running Maxpool2x2BCHW::filter<8, 4, 1, 16>: 291
 Running 8x gemm_relu_scalar<1, 256, 16>: 8593
 Running concat8_scalar<8, 16, 16, 120>: 630
 Running 3x gemm_relu_scalar<1, 120, 34>: 8922
 Running concat8_scalar<3, 34, 34, 84>: 883
 Running 1x gemm_relu_scalar<1, 84, 48>: 9103
 Running concat8_scalar<1, 48, 48, 10>: 937
+start = 97105,end = 97241,total = 136
 */
 template <
   template<int, int, int, int, int, int> class CONV,
@@ -28,7 +29,7 @@ template <
   template<int, int, int> class GEMM,
   template<int, int> class ARGMAX
 >
-class MnistLenetBhwcGraph : public adf::graph {
+class MnistLenetBchwGraph : public adf::graph {
 
   private:
     typedef GemmReluChunkGraph<GEMM, MAX_FLOAT_PARAMS/256, 1, 256, 120> Gemm1;
@@ -48,9 +49,10 @@ class MnistLenetBhwcGraph : public adf::graph {
     adf::input_plio plin[1];
     std::vector<adf::output_plio> plout; // intermediate outputs optional
 
-    MnistLenetBhwcGraph(
+    MnistLenetBchwGraph(
       const std::string& id,
       const std::string& INPUT_TXT,
+      const std::string& OUTPUT_TXT,
       std::vector<float> conv01w,
       std::vector<float> conv01b,
       std::vector<float> conv02w,
@@ -67,8 +69,7 @@ class MnistLenetBhwcGraph : public adf::graph {
       const std::string& OUT_POOL3 = std::string(),
       const std::string& OUT_GEMM4 = std::string(),
       const std::string& OUT_GEMM5 = std::string(),
-      const std::string& OUT_GEMM6 = std::string(),
-      const std::string& OUT_LENET = "lenet_out.txt"
+      const std::string& OUT_GEMM6 = std::string()
     ): 
       k0conv1(conv01w, conv01b), 
       k2conv2(conv02w, conv02b),
@@ -76,14 +77,18 @@ class MnistLenetBhwcGraph : public adf::graph {
       k5gemm2(gemm16w, gemm16b),
       k6gemm3(gemm18w, gemm18b)
     { 
+      // plout[0] is mandatory output
+      adf::output_plio a = adf::output_plio::create("plout0_"+id+"_argm19", PLIO64_ARG(OUTPUT_TXT));
+      plout.push_back(a);
+      adf::connect<adf::window<1*10*4>> (k7argmax1.pout[0], a.in[0]);
 
 #define SET_OPT_PLOUT(TXT_PATH, STMT, PLOUT_NAME) \
-  if (!TXT_PATH.empty()) { \
-    std::string plout_name = "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME; \
-    adf::output_plio a = adf::output_plio::create(plout_name, PLIO64_ARG(TXT_PATH)); \
-    STMT; plout.push_back(a);} 
+      if (!TXT_PATH.empty()) { \
+        std::string plout_name = "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME; \
+        adf::output_plio a = adf::output_plio::create(plout_name, PLIO64_ARG(TXT_PATH)); \
+        STMT; plout.push_back(a);} 
 
-      // optional output
+      // plout[1] onwards optional output
       SET_OPT_PLOUT(OUT_CONV0, adf::connect<adf::window<1*24*24*6*4>> (k0conv1.pout[0], a.in[0]), "conv00");
       SET_OPT_PLOUT(OUT_POOL1, adf::connect<adf::window<1*12*12*6*4>> (k1pool1.pout[0], a.in[0]), "pool01");
       SET_OPT_PLOUT(OUT_CONV2, adf::connect<adf::window<1*8*8*16*4>>  (k2conv2.pout[0], a.in[0]), "conv02");
@@ -91,12 +96,8 @@ class MnistLenetBhwcGraph : public adf::graph {
       SET_OPT_PLOUT(OUT_GEMM4, adf::connect<adf::window<1*120*4>>     (k4gemm1.pout[0], a.in[0]), "gemm14");
       SET_OPT_PLOUT(OUT_GEMM5, adf::connect<adf::window<1*84*4>>      (k5gemm2.pout[0], a.in[0]), "gemm16");
       SET_OPT_PLOUT(OUT_GEMM6, adf::connect<adf::window<1*10*4>>      (k6gemm3.pout[0], a.in[0]), "gemm18");
-      adf::output_plio a = adf::output_plio::create(
-        "plout"+std::to_string(plout.size())+"_"+id+"_argm19", PLIO64_ARG(OUT_LENET));
-      plout.push_back(a);
-      adf::connect<adf::window<1*10*4>> (k7argmax1.pout[0], a.in[0]);
 
-      // input
+      // plin[0] mandatory input
       plin[0] = adf::input_plio::create("plin0_"+id+"_input", PLIO64_ARG(INPUT_TXT));
       adf::connect<adf::window<1*28*28*1*4>> (plin[0].out[0], k0conv1.pin[0]);
       
