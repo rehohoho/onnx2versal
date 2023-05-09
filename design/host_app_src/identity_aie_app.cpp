@@ -10,8 +10,14 @@
 #include "adf/adf_api/XRTConfig.h"
 
 
-#define INPUT_SIZE   8 * ITER_CNT
-#define OUTPUT_SIZE  8 * ITER_CNT
+#define INPUT_SIZE      8 * ITER_CNT
+#define OUTPUT_SIZE     8 * ITER_CNT
+#define INPUT_FILENAME  "../../../data/concat_fpin.txt"
+#define INPUT_LINES     4
+#define GOLDEN_FILENAME "../../../data/concat_fpin.txt"
+#define OUTPUT_FILENAME "iden_fpout_IdentityScalar.txt"
+#define OUTPUT_LINES    4
+#define V_PER_LINE      2
 
 
 void fill_input_pl(float input_pl[]) {
@@ -70,28 +76,32 @@ int main(int argc, char ** argv) {
 
 
 #ifndef EXTERNAL_IO
-   // Generate inputs
-   float input_pl[INPUT_SIZE];
-   fill_input_pl(input_pl);
-   size_t input_size_in_bytes = INPUT_SIZE * sizeof(float);
-   size_t output_size_in_bytes = OUTPUT_SIZE * sizeof(float);
-
-
    // Allocate BOs (buffer objects) of requested size with appropriate flags
    // Memory map BOs into user's address space (DDR Memory)
+   size_t input_size_in_bytes = INPUT_SIZE * sizeof(float);
    xrtBufferHandle in_bohdl = xrtBOAlloc(dhdl, input_size_in_bytes, 0, 0);
    auto in_bomapped = reinterpret_cast<float*>(xrtBOMap(in_bohdl));
-   memcpy(in_bomapped, input_pl, input_size_in_bytes); // set input mapped region to same data as input pl
    printf("Input memory virtual addr 0x%p\n", in_bomapped);
 
+   size_t output_size_in_bytes = OUTPUT_SIZE * sizeof(float);
    xrtBufferHandle out_bohdl = xrtBOAlloc(dhdl, output_size_in_bytes, 0, 0);
    auto out_bomapped = reinterpret_cast<float*>(xrtBOMap(out_bohdl));
    printf("Output memory virtual addr 0x%p\n", out_bomapped);
 
    
    // Read in data from file
-   // std::ifstream inp_file;
-   // inp_file.open("data/concat_in.txt", std::ifstream::in);
+   std::ifstream inp_file;
+   inp_file.open(INPUT_FILENAME, std::ifstream::in);
+   if (!inp_file) printf("Unable to open %s.\n", INPUT_FILENAME);
+   float d;
+   for (int i = 0; i < ITER_CNT; i++) {
+      for (int j = 0; j < INPUT_LINES; j++) {
+         for (int k = 0; k < V_PER_LINE; k++) {
+            inp_file >> d;
+            in_bomapped[i*INPUT_LINES*V_PER_LINE + j*V_PER_LINE + k] = d;
+         }
+      }
+   }
 
    #ifdef __SYNCB0_ENABLE__
       xrtBOSync(in_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, input_size_in_bytes, 0);
@@ -150,18 +160,27 @@ int main(int argc, char ** argv) {
    #endif
    
    
-   // Check outputs
-   int errCnt = 0;
-   int errFlag = 0;
-   for (int i = 0; i < OUTPUT_SIZE; i++) {
-      if (out_bomapped[i] != in_bomapped[i]) {
-         errFlag = errFlag || 1;
-         ++errCnt;
-         printf("Error: out_bomapped[%d] %f != in_bomapped[%d] %f\n", 
-            i, out_bomapped[i], i, in_bomapped[i]);
+   // Write and check outputs
+   std::ofstream oup_file;
+   oup_file.open(OUTPUT_FILENAME, std::ofstream::out);
+   if (!oup_file) printf("Unable to open %s\n", OUTPUT_FILENAME);
+   std::ifstream chk_file;
+   chk_file.open(GOLDEN_FILENAME, std::ifstream::in);
+   if (!chk_file) printf("Unable to open %s.\n", GOLDEN_FILENAME);
+
+   float g;
+   int match = 0;
+   for (int i = 0; i < ITER_CNT; i++) {
+      for (int j = 0; j < OUTPUT_LINES; j++) {
+         for (int k = 0; k < V_PER_LINE; k++) {
+            chk_file >> g;
+            if (g != out_bomapped[i*OUTPUT_LINES*V_PER_LINE + j*V_PER_LINE + k]) 
+               match = 1;
+            oup_file << out_bomapped[i*OUTPUT_LINES*V_PER_LINE + j*V_PER_LINE + k] << " ";
+         }
+         oup_file << std::endl;
       }
    }
-   printf("\n");
 
    
    //Release allocated resources
@@ -173,8 +192,8 @@ int main(int argc, char ** argv) {
    xrtDeviceClose(dhdl);
    
 #ifndef EXTERNAL_IO
-   std::cout << "TEST " << (errCnt ? "FAILED" : "PASSED") << std::endl;
-   return (errCnt ? EXIT_FAILURE :  EXIT_SUCCESS);
+   std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
+   return (match ? EXIT_FAILURE :  EXIT_SUCCESS);
 #else
    return 0;
 #endif
