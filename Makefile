@@ -23,10 +23,10 @@ help::
 	@echo  "    EXTIO              1 (default) | 0,          traffic gen usage"
 	@echo  "    ITER_CNT           1 (default),              number of run iterations, independent in x86sim, aiesim, emu"
 	@echo  "    EN_TRACE           0 (default) | 1,          enable profiling .ini (hw)"
-	@echo  "    DEBUG              0 (default) | 1,          if enable verbose logging, output intermediates"
+	@echo  "    LOG_PROFILE        0 (default) | 1,          if enable verbose logging, output intermediates"
 	@echo  ""
 	@echo  " Runs in x86simulator / x86 threads. Functional only, no profiling."
-	@echo  "  TARGET=sw_emu EXTIO=0 DEBUG=1 GRAPH=lenet make graph aiesim"
+	@echo  "  TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph aiesim"
 	@echo  "  TARGET=sw_emu EXTIO=0 GRAPH=lenet make graph aiesim"
 	@echo  "  TARGET=sw_emu EXTIO=0 GRAPH=lenet make graph kernels xsa application package run_emu"
 	@echo  "  TARGET=sw_emu EXTIO=1 GRAPH=lenet make graph aiesim"
@@ -54,7 +54,7 @@ print-%  : ; @echo $* = $($*)
 TARGET ?= sw_emu
 EXTIO ?= 1
 GRAPH ?= lenet
-DEBUG ?= 0
+LOG_PROFILE ?= 0
 ITER_CNT ?= 1
 EN_TRACE ?= 0
 
@@ -172,8 +172,8 @@ endif
 ifeq ($(EXTIO), 1)
 	AIE_FLAGS += --Xpreproc=-DEXTERNAL_IO
 endif
-ifeq ($(DEBUG), 1)
-	AIE_FLAGS += --Xpreproc=-DDEBUG
+ifeq ($(LOG_PROFILE), 1)
+	AIE_FLAGS += --Xpreproc=-DLOG_PROFILE
 endif
 #AIE_FLAGS += --test-iterations=100 
 #AIE_FLAGS += --Xmapper=BufferOptLevel9
@@ -279,8 +279,8 @@ VPP_LINK_FLAGS := --clock.defaultTolerance 0.001 \
                   --advanced.param compiler.userPostSysLinkOverlayTcl=$(DIRECTIVES_REPO)/noc_qos.tcl \
                   --vivado.prop run.synth_1.STEPS.SYNTH_DESIGN.ARGS.CONTROL_SET_OPT_THRESHOLD=16
 
-ifeq ($(DEBUG), 1)
-	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_debug.cfg
+ifeq ($(LOG_PROFILE), 1)
+	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_log_profile.cfg
 
 else
 
@@ -349,8 +349,8 @@ GCC_INC_LIB := -ladf_api_xrt \
 ifeq ($(EXTIO), 1)
 GCC_FLAGS += -DEXTERNAL_IO
 endif
-ifeq ($(DEBUG), 1)
-GCC_FLAGS += -DDEBUG
+ifeq ($(LOG_PROFILE), 1)
+GCC_FLAGS += -DLOG_PROFILE
 endif
 
 ifeq ($(TARGET), sw_emu)

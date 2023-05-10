@@ -26,12 +26,10 @@ void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
           for (int q = 0; q < K; q++) {
             for (int c = 0; c < C; c++) {
               float a = window_readincr(in);
-              // if (c == 0) printf("%f ", a);
               arr[c] = (arr[c] < a) ? a : arr[c];
             }
           }
           window_incr(in, C*(-K+INP_W)); // go back K, go down 1
-          // printf("\n");
         }
         
         for (int c = 0; c < C; c++)

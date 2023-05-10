@@ -135,7 +135,7 @@ int main(int argc, char ** argv) {
    xrtRunStart(in_rhdl);
    xrtRunStart(out_rhdl);
 
-#ifdef DEBUG
+#ifdef LOG_PROFILE
    size_t inter1_size = 1*6*24*24;
    size_t inter2_size = 1*6*12*12;
    size_t inter3_size = 1*16*8*8;
@@ -240,7 +240,7 @@ int main(int argc, char ** argv) {
 #endif
 
 
-#ifdef DEBUG
+#ifdef LOG_PROFILE
    auto inter1_state = xrtRunWait(inter1_rhdl);
    auto inter2_state = xrtRunWait(inter2_rhdl);
    auto inter3_state = xrtRunWait(inter3_rhdl);
