@@ -6,6 +6,32 @@
 #include "graph_concat.h"
 
 
+template <template<int, int, int> class GEMM, int M, int K, int N>
+class GemmReluGraph : public adf::graph {
+
+  private:
+    adf::kernel k[1];
+
+  public:
+    adf::port<input> pin[1];
+    adf::port<output> pout[1];
+
+    GemmReluGraph(
+      std::vector<float> weights,
+      std::vector<float> bias
+    ) { 
+      // bias.resize(bias.size() + (8 - bias.size() % 8) % 8, 0); // ensure divisible by 8
+      k[0] = adf::kernel::create_object<GEMM<M, K, N>>(weights, bias);
+      adf::source(k[0]) = "gemm.cc";
+
+      adf::connect<adf::window<M*K*4>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
+      adf::runtime<ratio>(k[0]) = 0.6;
+    }
+
+};
+
+
 /*
 Chunks NxK weight params into ~16384B chunks by N dimension
 Assumes weight <=16384B, bias <=4096B, input <=4096B per chunk
