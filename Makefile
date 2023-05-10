@@ -86,20 +86,12 @@ PROFILING_CONFIGS_REPO := $(DESIGN_REPO)/profiling_configs
 EXEC_SCRIPTS_REPO      := $(DESIGN_REPO)/exec_scripts
 VIVADO_METRICS_SCRIPTS_REPO := $(DESIGN_REPO)/vivado_metrics_scripts
 
-BASE_BLD_DIR     	:= $(PROJECT_REPO)/build
-INSTS_BLD_DIR     := $(BASE_BLD_DIR)/$(GRAPH)
-BUILD_TARGET_DIR  := $(INSTS_BLD_DIR)/$(TARGET)
+BUILD_TARGET_DIR  := $(PROJECT_REPO)/build/$(GRAPH)/$(TARGET)
 
 REPORTS_REPO := $(PROJECT_REPO)/reports_dir
 BLD_REPORTS_DIR := $(REPORTS_REPO)/$(GRAPH)/$(TARGET)
 
 XPE_REPO         := $(PROJECT_REPO)/xpe_dir
-BLD_XPE_DIR      := $(XPE_REPO)/$(GRAPH)
-BLD_TGT_VCD_FILE := $(BUILD_TARGET_DIR)/$(GRAPH).vcd
-XPE_FILE         := $(BLD_XPE_DIR)/$(GRAPH).xpe
-
-EMBEDDED_PACKAGE_OUT := $(BUILD_TARGET_DIR)/package
-EMBEDDED_EXEC_SCRIPT := run_script.sh
 
 WORK_DIR := Work
 
@@ -255,6 +247,11 @@ else
 endif
 endif
 
+
+BLD_XPE_DIR      := $(XPE_REPO)/$(GRAPH)
+BLD_TGT_VCD_FILE := $(BUILD_TARGET_DIR)/$(GRAPH).vcd
+XPE_FILE         := $(BLD_XPE_DIR)/$(GRAPH).xpe
+
 vcd: graph $(XPE_FILE)
 
 # xpe file generation...
@@ -393,6 +390,9 @@ $(BUILD_TARGET_DIR)/$(APP_ELF): $(HOST_APP_SRC)/* $(LIBADF_A)
 # 	package/ directory
 # 	v++.package_summary
 # 	v++_package.log 
+EMBEDDED_PACKAGE_OUT := $(BUILD_TARGET_DIR)/package
+EMBEDDED_EXEC_SCRIPT := run_script.sh
+
 PKG_FLAGS := -t $(TARGET) \
              --save-temps \
              --temp_dir $(BUILD_TARGET_DIR)/_x \
@@ -410,7 +410,9 @@ PKG_FLAGS += --package.rootfs $(COMMON_IMAGE_VERSAL)/rootfs.ext4 \
              --package.out_dir $(EMBEDDED_PACKAGE_OUT) \
              --package.image_format=ext4 \
              --package.sd_file $(BUILD_TARGET_DIR)/$(APP_ELF) \
-             --package.sd_file $(EXEC_SCRIPTS_REPO)/$(EMBEDDED_EXEC_SCRIPT)
+             --package.sd_file $(EXEC_SCRIPTS_REPO)/$(EMBEDDED_EXEC_SCRIPT) \
+						 --package.sd_file $(PROJECT_REPO)/check.py \
+						 --package.sd_dir $(DATA_REPO)
 endif
 
 ifeq ($(EN_TRACE),1)
