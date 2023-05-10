@@ -86,7 +86,6 @@ int main(int argc, char ** argv) {
    auto dhdl = xrtDeviceOpen(0);
    auto xclbin = load_xclbin(dhdl, xclbin_path);
    auto top = reinterpret_cast<const axlf*>(xclbin.data());
-   adf::registerXRT(dhdl, top->m_header.uuid);
 
 
 #ifndef EXTERNAL_IO
@@ -201,14 +200,13 @@ int main(int argc, char ** argv) {
 #endif
 
 #endif
-   
 
    // Graph execution for AIE
+   adf::registerXRT(dhdl, top->m_header.uuid);
    try {
       adfCheck(lenet.init(), "init lenet");
-      adfCheck(lenet.run(iter_cnt), "run lenet");
+      get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
       adfCheck(lenet.end(), "end lenet");
-      // get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*8, sizeof(float_t), iter_cnt);
    }
    catch (const std::system_error& ex) {
       xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);
@@ -294,7 +292,7 @@ int main(int argc, char ** argv) {
    xrtBOFree(inter5_bohdl);
    xrtBOFree(inter6_bohdl);
 #endif
-   
+
    
    // Write and check outputs
    std::ofstream oup_file;
@@ -322,7 +320,7 @@ int main(int argc, char ** argv) {
    xrtBOFree(out_bohdl);
    printf("Released I/O buffer objects.\n");
 #endif
-   
+
    xrtDeviceClose(dhdl);
    
 #ifndef EXTERNAL_IO
