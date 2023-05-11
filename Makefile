@@ -197,7 +197,11 @@ AIE_SIM_FLAGS := --pkg-dir=$(BUILD_TARGET_DIR)/$(WORK_DIR)/ \
 X86SIM_REPORT_DIR := $(BLD_REPORTS_DIR)/x86simulator_output
 AIESIM_REPORT_DIR := $(BLD_REPORTS_DIR)/aiesimulator_output
 
+ifeq ($(LOG_PROFILE), 1)
+TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_$(GRAPH)_logprofile.py
+else
 TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_$(GRAPH).py
+endif
 
 aiesim: graph
 ifeq ($(EXTIO), 0)
@@ -281,11 +285,6 @@ VPP_LINK_FLAGS := --clock.defaultTolerance 0.001 \
 
 ifeq ($(LOG_PROFILE), 1)
 	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_log_profile.cfg
-
-else
-
-ifeq ($(EXTIO), 1)
-	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_xtg.cfg
 else
 	VPP_LINK_FLAGS += --clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL1)_0 \
 										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL2)_0 \
@@ -346,9 +345,6 @@ GCC_INC_FLAGS := -I$(XILINX_VITIS)/aietools/include/ \
 GCC_INC_LIB := -ladf_api_xrt \
                -lxrt_coreutil 
 
-ifeq ($(EXTIO), 1)
-GCC_FLAGS += -DEXTERNAL_IO
-endif
 ifeq ($(LOG_PROFILE), 1)
 GCC_FLAGS += -DLOG_PROFILE
 endif
@@ -441,35 +437,16 @@ $(EMBEDDED_PACKAGE_OUT): $(PROFILING_CONFIGS_REPO)/* $(EXEC_SCRIPTS_REPO)/*
 # instructions in the README.md
 run_emu:
 ifeq ($(TARGET),hw_emu)
-
-ifeq ($(EXTIO), 1)
-	mkdir -p $(AIESIM_REPORT_DIR); \
-	cd $(EMBEDDED_PACKAGE_OUT); \
-	python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee embedded_run_trafficgen.log & \
-	./launch_hw_emu.sh -run-app $(EMBEDDED_EXEC_SCRIPT) -no-reboot | tee $(AIESIM_REPORT_DIR)/embedded_run.log
-else
 	cd $(EMBEDDED_PACKAGE_OUT); \
 	./launch_hw_emu.sh -run-app $(EMBEDDED_EXEC_SCRIPT) -no-reboot | tee $(AIESIM_REPORT_DIR)/embedded_run.log
-endif
-
 else # sw_emu
-
-ifeq ($(EXTIO), 1)
-	mkdir -p $(X86SIM_REPORT_DIR); \
-	cd $(BUILD_TARGET_DIR); \
-	export XILINX_XRT=$(XILINX_X86_XRT); \
-	export XCL_EMULATION_MODE=sw_emu; \
-	export LD_LIBRARY_PATH=${XILINX_X86_XRT}/lib; \
-	./$(APP_ELF) a.xclbin $(ITER_CNT) $(DATA_REPO) $(X86SIM_REPORT_DIR) 2>&1 | tee $(X86SIM_REPORT_DIR)/embedded_run.log & \
-	python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(X86SIM_REPORT_DIR) 2>&1 | tee embedded_run_trafficgen.log; \
-	unset LD_LIBRARY_PATH
-else
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	export XILINX_XRT=$(XILINX_X86_XRT); \
 	export XCL_EMULATION_MODE=sw_emu; \
 	export LD_LIBRARY_PATH=${XILINX_X86_XRT}/lib; \
 	./$(APP_ELF) a.xclbin $(ITER_CNT) $(DATA_REPO) $(X86SIM_REPORT_DIR) 2>&1 | tee $(X86SIM_REPORT_DIR)/embedded_run.log; \
+	python3 $(PROJECT_REPO)/check.py -f1=$(X86SIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(X86SIM_REPORT_DIR)/x86sim_check.log; \
 	unset LD_LIBRARY_PATH
 endif
 
