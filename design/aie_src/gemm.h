@@ -10,7 +10,7 @@ class GemmReluScalarMKNK {
   
   private:
     alignas(32) float (&weights)[NCHUNK*K]; // NCHUNKxK (120x256)
-    alignas(32) float (&bias)[NCHUNK];      // NCHUNK   (120/?)
+    alignas(32) float (&bias)[NCHUNK];      // NCHUNK   (120)
   
   public:
     GemmReluScalarMKNK (
@@ -20,7 +20,7 @@ class GemmReluScalarMKNK {
 
     void filter(
       input_window<float>* in,      // MxK       (1x256)
-      output_window<float>* out     // MxNCHUNK  (1x120/?)
+      output_window<float>* out     // MxNCHUNK  (1x120)
     );
     
     static void registerKernelClass() {
@@ -35,18 +35,19 @@ template <int M, int K, int NCHUNK>
 class GemmReluScalarMKKN {
   
   private:
-    alignas(32) float (&weights)[NCHUNK*K]; // KxNCHUNK (256x120)
-    alignas(32) float (&bias)[NCHUNK];      // NCHUNK   (120/?)
+    static const int NCHUNK_RND = (NCHUNK + 3)/4*4;
+    alignas(32) float (&weights)[NCHUNK_RND*K]; // KxNCHUNK (256x120)
+    alignas(32) float (&bias)[NCHUNK];          // NCHUNK   (120)
   
   public:
     GemmReluScalarMKKN (
-      float (&w)[NCHUNK*K],
+      float (&w)[NCHUNK_RND*K],
       float (&b)[NCHUNK]
     ): weights(w), bias(b) {};
 
     void filter(
       input_window<float>* in,      // MxK       (1x256)
-      output_window<float>* out     // MxNCHUNK  (1x120/?)
+      output_window<float>* out     // MxNCHUNK  (1x120)
     );
     
     static void registerKernelClass() {
@@ -57,22 +58,26 @@ class GemmReluScalarMKKN {
 };
 
 
+/*
+Expects N%4=0, K%4=0, pad accordingly
+*/
 template <int M, int K, int NCHUNK>
 class GemmReluMKKN {
   
   private:
-    alignas(32) float (&weights)[NCHUNK*K]; // KxNCHUNK (256x120)
-    alignas(32) float (&bias)[NCHUNK];      // NCHUNK   (120/?)
+    static const int NCHUNK_RND = (NCHUNK + 3)/4*4;
+    alignas(32) float (&weights)[NCHUNK_RND*K]; // KxNCHUNK (256x120)
+    alignas(32) float (&bias)[NCHUNK];          // NCHUNK   (120)
   
   public:
     GemmReluMKKN (
-      float (&w)[NCHUNK*K],
+      float (&w)[NCHUNK_RND*K],
       float (&b)[NCHUNK]
     ): weights(w), bias(b) {};
 
     void filter(
       input_window<float>* in,      // MxK       (1x256)
-      output_window<float>* out     // MxNCHUNK  (1x120/?)
+      output_window<float>* out     // MxNCHUNK  (1x120)
     );
     
     static void registerKernelClass() {

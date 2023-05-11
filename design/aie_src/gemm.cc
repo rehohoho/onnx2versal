@@ -42,6 +42,9 @@ void GemmReluScalarMKNK<M, K, NCHUNK>::filter(
 }
 
 
+/*
+1899 cycles (1x84 * 84x10)
+*/
 template <int M, int K, int NCHUNK>
 void GemmReluScalarMKKN<M, K, NCHUNK>::filter(
 	input_window<float>* in,      // MxK  (1x256)   inputs
@@ -60,7 +63,7 @@ void GemmReluScalarMKKN<M, K, NCHUNK>::filter(
       for (int k = 0; k < K; k++) {
         float a = window_readincr(in);
         float b = weights[weightIdx];
-        weightIdx += NCHUNK;
+        weightIdx += NCHUNK_RND;
         res += a * b;
       }    
       if (res < 0) res = 0;
@@ -92,9 +95,9 @@ a0a1a7 b00 b01 b07 b08 b09 b0f
        b70 b71 b77 b77 b79 b7f
 
 a0 * b00 b01 ... b07
-393 cycles
+393 cycles (1x84 * 84x10)
 */
-template <int M, int K, int NCHUNK> // K%4=0, N%8=0
+template <int M, int K, int NCHUNK> // K%4=0, N%4=0
 void GemmReluMKKN<M, K, NCHUNK>::filter(
 	input_window<float>* in,      // MxK  (1x256)   inputs
                                 // KxN  (256x120) weights
@@ -117,27 +120,17 @@ void GemmReluMKKN<M, K, NCHUNK>::filter(
 
       for (int k = 0; k < K; k+=4) {
         matA = *(v8float *) a_ptr;
-        // print_fvec<float>((float *) &matA, 8);
-        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
-        // print_fvec<float>((float *) &matB, 8);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK_RND;
         acc1 = fpmac(acc1, matA, 0, 0x00000000, matB, 0, 0x76543210);
-        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
-        // print_fvec<float>((float *) &matB, 8);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK_RND;
         acc1 = fpmac(acc1, matA, 1, 0x00000000, matB, 0, 0x76543210);
-        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
-        // print_fvec<float>((float *) &matB, 8);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK_RND;
         acc1 = fpmac(acc1, matA, 2, 0x00000000, matB, 0, 0x76543210);
-        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
-        // print_fvec<float>((float *) &matB, 8);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK_RND;
         acc1 = fpmac(acc1, matA, 3, 0x00000000, matB, 0, 0x76543210);
         a_ptr += 4;
-        // printf("\n");
       }
-      // printf("\n");
-
       acc1 = fpmax(acc1, zeros, 0, 0x76543210);
-      // print_fvec<float>((float *) &acc1, 8);
-      // printf("\n");
 
       if (NCHUNK - j < 8) {
         float *acc_ptr = (float *) &acc1;
@@ -148,10 +141,10 @@ void GemmReluMKKN<M, K, NCHUNK>::filter(
         window_writeincr(out, acc1);
       }
 
-      w_ptr += -K*NCHUNK + 8;
+      w_ptr += -K*NCHUNK_RND + 8;
       a_ptr -= K;
     }
-    w_ptr -= NCHUNK;
+    w_ptr -= NCHUNK_RND;
     a_ptr += K;
     
   }
