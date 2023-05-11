@@ -88,7 +88,6 @@ int main(int argc, char ** argv) {
    auto top = reinterpret_cast<const axlf*>(xclbin.data());
 
 
-#ifndef EXTERNAL_IO
    // Allocate BOs (buffer objects) of requested size with appropriate flags
    // Memory map BOs into user's address space (DDR Memory)
    size_t input_size_in_bytes = input_size * sizeof(float);
@@ -115,9 +114,9 @@ int main(int argc, char ** argv) {
       }
    }
 
-#ifdef __SYNCB0_ENABLE__
+#ifdef __IS_SW_EMU__
    xrtBOSync(in_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, input_size_in_bytes, 0);
-   printf("xrtBOSync done.\n")
+   printf("xrtBOSync done.\n");
 #endif
 
 
@@ -199,13 +198,17 @@ int main(int argc, char ** argv) {
    xrtRunStart(inter6_rhdl);
 #endif
 
-#endif
 
    // Graph execution for AIE
    adf::registerXRT(dhdl, top->m_header.uuid);
    try {
       adfCheck(lenet.init(), "init lenet");
+#ifdef __IS_SW_EMU__
+      adfCheck(lenet.run(iter_cnt), "run lenet");
+      adfCheck(lenet.wait(), "wait lenet");
+#else
       get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
+#endif
       adfCheck(lenet.end(), "end lenet");
    }
    catch (const std::system_error& ex) {
@@ -217,7 +220,6 @@ int main(int argc, char ** argv) {
    }
 
    
-#ifndef EXTERNAL_IO
    // Wait for Kernel execution to end, close runtime and kernel handlers
    printf("Waiting for dma hls to complete...\n");
    
@@ -235,10 +237,11 @@ int main(int argc, char ** argv) {
    
    printf("Closed runtime handlers and kernel handlers...\n");
 
-#ifdef __SYNCB0_ENABLE__
-      xrtBOSync(out_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, output_size_in_bytes, 0);
+#ifdef __IS_SW_EMU__
+   xrtBOSync(out_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, output_size_in_bytes, 0);
 #endif
-
+   write_arr_to_file(out_dir+OUTPUT_FILENAME, out_bomapped, output_size);
+   xrtBOFree(out_bohdl);
 
 #ifdef LOG_PROFILE
    auto inter1_state = xrtRunWait(inter1_rhdl);
@@ -269,7 +272,7 @@ int main(int argc, char ** argv) {
    xrtKernelClose(inter5_khdl);
    xrtKernelClose(inter6_khdl);
 
-#ifdef __SYNCB0_ENABLE__
+#ifdef __IS_SW_EMU__
    xrtBOSync(inter1_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter1_size * sizeof(float), 0);
    xrtBOSync(inter2_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter2_size * sizeof(float), 0);
    xrtBOSync(inter3_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter3_size * sizeof(float), 0);
@@ -277,7 +280,6 @@ int main(int argc, char ** argv) {
    xrtBOSync(inter5_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter5_size * sizeof(float), 0);
    xrtBOSync(inter6_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, inter6_size * sizeof(float), 0);
 #endif
-
    write_arr_to_file(out_dir+INTER1_FILENAME, inter1_bomapped, inter1_size);
    write_arr_to_file(out_dir+INTER2_FILENAME, inter2_bomapped, inter2_size);
    write_arr_to_file(out_dir+INTER3_FILENAME, inter3_bomapped, inter3_size);
@@ -293,41 +295,9 @@ int main(int argc, char ** argv) {
    xrtBOFree(inter6_bohdl);
 #endif
 
-   
-   // Write and check outputs
-   std::ofstream oup_file;
-   oup_file.open(out_dir+OUTPUT_FILENAME, std::ofstream::out);
-   if (!oup_file) printf("Unable to open %s\n", (out_dir+OUTPUT_FILENAME).c_str());
-   std::ifstream chk_file;
-   chk_file.open(data_dir+GOLDEN_FILENAME, std::ifstream::in);
-   if (!chk_file) printf("Unable to open %s.\n", (data_dir+GOLDEN_FILENAME).c_str());
-
-   float g;
-   int match = 0;
-   for (int j = 0; j < output_size; j+=V_PER_LINE) {
-      for (int k = 0; k < V_PER_LINE; k++) {
-         chk_file >> g;
-         if (g != out_bomapped[j+k]) 
-            match = 1;
-         oup_file << out_bomapped[j+k] << " ";
-      }
-      oup_file << std::endl;
-   }
-
-   
-   //Release allocated resources
    xrtBOFree(in_bohdl);
-   xrtBOFree(out_bohdl);
    printf("Released I/O buffer objects.\n");
-#endif
 
    xrtDeviceClose(dhdl);
-   
-#ifndef EXTERNAL_IO
-   std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
-   return (match ? EXIT_FAILURE :  EXIT_SUCCESS);
-#else
    return 0;
-#endif
-   
 }

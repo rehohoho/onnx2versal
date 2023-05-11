@@ -36,8 +36,8 @@ def generate_txt(loader: DataLoader,
     if data.shape[0] >= data_count:
       break
   
-  np.savetxt(output_data_path, data.numpy().reshape(data.shape[0], -1), fmt="%.7g")
-  np.savetxt(output_label_path, labels.numpy().reshape(data.shape[0], -1), fmt="%.7g")
+  np.savetxt(output_data_path, data.numpy().reshape(-1, 2), fmt="%.7g")
+  np.savetxt(output_label_path, labels.numpy().reshape(-1, 2), fmt="%.7g")
 
 
 def to_numpy(tensor):
@@ -73,6 +73,19 @@ def get_tensor(name: str,
     return output_tensors[name]
   else:
     raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
+
+
+def process_gemm_weights(weights: np.ndarray):
+  """Expects NxK weights as per PyTorch
+  Returns KxN weights, with N padded so N%4=0
+  """
+  weights = weights.transpose(1,0)
+  K, N = weights.shape
+  n_pad = (4 - N%4) % 4
+  if n_pad != 0:
+    print(f"Padding Gemm weights {K, N} to {K, N+n_pad}")
+    weights = np.pad(weights, ((0,0),(0,n_pad)), "constant", constant_values=0)
+  return weights
 
 
 if __name__ == '__main__':
@@ -133,12 +146,14 @@ if __name__ == '__main__':
       key = f"__{name}_{get_shape_str(tensor)}"
       out_dict[key] = " ".join(str(i) for i in tensor.flatten().tolist())
       
+      out_name = name.replace("/", "_").replace(".", "_")
+      out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__{out_name}__{get_shape_str(tensor)}.txt"
+
       # if tensor.ndim == 4:
       #   tensor = tensor.transpose(0, 2, 3, 1) # BCHW to BHWC
       if "Gemm" in node_name and "weight" in name:
-        tensor = tensor.transpose(1, 0)
-      out_name = name.replace("/", "_").replace(".", "_")
-      out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__{out_name}__{get_shape_str(tensor)}.txt"
+        tensor = process_gemm_weights(tensor)
+        import ipdb;ipdb.set_trace()
       
       if "weight" in name or "bias" in name:
         tensor_list = tensor.flatten().tolist()

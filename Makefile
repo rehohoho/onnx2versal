@@ -291,8 +291,6 @@ else
 										--config $(SYSTEM_CONFIGS_REPO)/$(GRAPH).cfg
 endif
 
-endif
-
 ifeq ($(EN_TRACE),1)
    ifeq ($(TARGET),hw)
       VPP_LINK_FLAGS += --profile.data $(KERNEL1):all:all \
@@ -310,11 +308,14 @@ endif
 #VPP_LINK_FLAGS += --vivado.impl.jobs 20
 
 xsa: kernels graph $(BUILD_TARGET_DIR)/$(XSA)
-
+ifeq ($(EXTIO), 1)
+	@echo "EXTIO not supported for system tests. Host code is traffic generator."
+else
 $(BUILD_TARGET_DIR)/$(XSA):$(KERNEL_XOS) $(LIBADF_A) $(SYSTEM_CONFIGS_REPO)/*
 	cd $(BUILD_TARGET_DIR);	\
 	v++ -l $(VPP_FLAGS) $(VPP_LINK_FLAGS) -t $(TARGET) -o $@ \
 		    $(KERNEL_XOS) $(LIBADF_A)
+endif
 
 # =========================================================
 # Step 4. A72 Application Executable File Generation
@@ -351,7 +352,7 @@ endif
 
 ifeq ($(TARGET), sw_emu)
 CXX := g++
-GCC_FLAGS += -D__SYNCBO_ENABLE__
+GCC_FLAGS += -D__IS_SW_EMU__
 GCC_INC_FLAGS += -I${XILINX_X86_XRT}/include
 GCC_INC_LIB += -L${XILINX_X86_XRT}/lib \
 								-L$(XILINX_VITIS)/aietools/lib/lnx64.o \
@@ -368,12 +369,15 @@ GCC_INC_LIB += -L$(SDKTARGETSYSROOT)/usr/lib \
 endif
 
 application: graph $(BUILD_TARGET_DIR)/$(APP_ELF)
-
+ifeq ($(EXTIO), 1)
+	@echo "EXTIO not supported for system tests. Host code is traffic generator."
+else
 $(BUILD_TARGET_DIR)/$(APP_ELF): $(HOST_APP_SRC)/* $(LIBADF_A)
 	@rm -rf $(BUILD_TARGET_DIR)/app_control.o $(BUILD_TARGET_DIR)/$(APP_OBJ_NAME)_app.o $(BUILD_TARGET_DIR)/$(APP_ELF)
 	$(CXX) $(GCC_FLAGS) $(GCC_INC_FLAGS) $(AIE_CONTROL_CPP) -o $(BUILD_TARGET_DIR)/app_control.o
 	$(CXX) $(GCC_FLAGS) $(GCC_INC_FLAGS) $(APP_SRC_CPP) -o $(BUILD_TARGET_DIR)/$(APP_OBJ_NAME)_app.o $(GCC_INC_LIB)
 	$(CXX) $(BUILD_TARGET_DIR)/app_control.o $(BUILD_TARGET_DIR)/$(APP_OBJ_NAME)_app.o $(GCC_INC_LIB) -o $(BUILD_TARGET_DIR)/$(APP_ELF)
+endif
 
 # =========================================================
 # Step 5. Package Generation  
@@ -422,12 +426,15 @@ ifdef XRT_ROOT
 endif
 
 package: application xsa $(EMBEDDED_PACKAGE_OUT)
-
+ifeq ($(EXTIO), 1)
+	@echo "EXTIO not supported for system tests. Host code is traffic generator."
+else
 $(EMBEDDED_PACKAGE_OUT): $(PROFILING_CONFIGS_REPO)/* $(EXEC_SCRIPTS_REPO)/*
 	rm -rf $(EMBEDDED_PACKAGE_OUT)
 	cd $(BUILD_TARGET_DIR);	\
 	v++ -p $(PKG_FLAGS)
 	#cp -rf $(EMBEDDED_PACKAGE_OUT) $(EMBEDDED_PACKAGE_OUT)_backup
+endif
 
 # =========================================================
 # Step 6. Run Hardware Emulation 
@@ -436,6 +443,10 @@ $(EMBEDDED_PACKAGE_OUT): $(PROFILING_CONFIGS_REPO)/* $(EXEC_SCRIPTS_REPO)/*
 # If the target is for HW, you'll have to follow the
 # instructions in the README.md
 run_emu:
+ifeq ($(EXTIO), 1)
+	@echo "EXTIO not supported for system tests. Host code is traffic generator."
+else
+
 ifeq ($(TARGET),hw_emu)
 	cd $(EMBEDDED_PACKAGE_OUT); \
 	./launch_hw_emu.sh -run-app $(EMBEDDED_EXEC_SCRIPT) -no-reboot | tee $(AIESIM_REPORT_DIR)/embedded_run.log

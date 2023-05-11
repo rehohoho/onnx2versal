@@ -73,7 +73,6 @@ int main(int argc, char ** argv) {
    adf::registerXRT(dhdl, top->m_header.uuid);
 
 
-#ifndef EXTERNAL_IO
    // Allocate BOs (buffer objects) of requested size with appropriate flags
    // Memory map BOs into user's address space (DDR Memory)
    size_t input_size_in_bytes = INPUT_SIZE * sizeof(float);
@@ -101,7 +100,7 @@ int main(int argc, char ** argv) {
       }
    }
 
-   #ifdef __SYNCB0_ENABLE__
+   #ifdef __IS_SW_EMU__
       xrtBOSync(in_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, input_size_in_bytes, 0);
       printf("xrtBOSync done.\n")
    #endif
@@ -119,7 +118,6 @@ int main(int argc, char ** argv) {
    xrtRunSetArg(mm2s_rhdl, 0, in_bohdl);
    xrtRunSetArg(mm2s_rhdl, 2, INPUT_SIZE);
    xrtRunStart(mm2s_rhdl);
-#endif
    
 
    // Graph execution for AIE
@@ -138,7 +136,6 @@ int main(int argc, char ** argv) {
    }
    
    
-#ifndef EXTERNAL_IO
    // Wait for Kernel execution to end, close runtime and kernel handlers
    printf("Waiting for dma hls to complete...\n");
    
@@ -154,7 +151,7 @@ int main(int argc, char ** argv) {
    
    printf("Closed runtime handlers and kernel handlers...\n");
 
-   #ifdef __SYNCB0_ENABLE__
+   #ifdef __IS_SW_EMU__
       xrtBOSync(out_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, output_size_in_bytes, 0);
    #endif
    
@@ -186,15 +183,11 @@ int main(int argc, char ** argv) {
    xrtBOFree(in_bohdl);
    xrtBOFree(out_bohdl);
    printf("Released I/O buffer objects.\n");
-#endif
    
    xrtDeviceClose(dhdl);
    
-#ifndef EXTERNAL_IO
    std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
    return (match ? EXIT_FAILURE :  EXIT_SUCCESS);
-#else
    return 0;
-#endif
    
 }
