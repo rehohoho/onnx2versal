@@ -72,3 +72,90 @@ void GemmReluScalarMKKN<M, K, NCHUNK>::filter(
 
   PROFILE_FOOTER;
 }
+
+
+/*
+Using:
+v8float fpmac (v8float        acc,
+		           v16float       xbuf,
+               int  	        xstart,
+               unsigned int  	xoffs,
+               v8float  	    zbuf, 
+               int  	        zstart, !! compile time constant if zbuf !!
+               unsigned int  	zoffs)
+
+for (i = 0; i < 8; i++)
+  ret[i] = acc[i] + xbuf[xstart + xoffs[i]] * zbuf[zstart + zoffs[i]]
+
+a0a1a7 b00 b01 b07 b08 b09 b0f
+       b10 b11 b17 b17 b19 b1f
+       b70 b71 b77 b77 b79 b7f
+
+a0 * b00 b01 ... b07
+393 cycles
+*/
+template <int M, int K, int NCHUNK> // K%4=0, N%8=0
+void GemmReluMKKN<M, K, NCHUNK>::filter(
+	input_window<float>* in,      // MxK  (1x256)   inputs
+                                // KxN  (256x120) weights
+  output_window<float>* out     // MxN  (1x120)   outputs
+) {
+  PROFILE_HEADER(printf(
+    "Running GemmReluMKKN<%d, %d, %d>\n", M, K, NCHUNK));
+
+  float *a_ptr = (float *) in->ptr;
+  float *w_ptr = (float *) weights;
+  float *b_ptr = (float *) bias;
+  v8float zeros = null_v8float();
+  v8float matA = undef_v8float();
+  v8float matB = undef_v8float();
+
+  for (int i = 0; i < M; i++) {
+    for (int j = 0; j < NCHUNK; j+=8) { // fpmac accsize 8
+
+      v8float acc1 = *(v8float *) (b_ptr + j);
+
+      for (int k = 0; k < K; k+=4) {
+        matA = *(v8float *) a_ptr;
+        // print_fvec<float>((float *) &matA, 8);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
+        // print_fvec<float>((float *) &matB, 8);
+        acc1 = fpmac(acc1, matA, 0, 0x00000000, matB, 0, 0x76543210);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
+        // print_fvec<float>((float *) &matB, 8);
+        acc1 = fpmac(acc1, matA, 1, 0x00000000, matB, 0, 0x76543210);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
+        // print_fvec<float>((float *) &matB, 8);
+        acc1 = fpmac(acc1, matA, 2, 0x00000000, matB, 0, 0x76543210);
+        matB = *(v8float *) w_ptr; w_ptr += NCHUNK;
+        // print_fvec<float>((float *) &matB, 8);
+        acc1 = fpmac(acc1, matA, 3, 0x00000000, matB, 0, 0x76543210);
+        a_ptr += 4;
+        // printf("\n");
+      }
+      // printf("\n");
+
+      acc1 = fpmax(acc1, zeros, 0, 0x76543210);
+      // print_fvec<float>((float *) &acc1, 8);
+      // printf("\n");
+
+      if (NCHUNK - j < 8) {
+        float *acc_ptr = (float *) &acc1;
+        for (int i = 0; i < NCHUNK - j; i++) {
+          window_writeincr(out, acc_ptr[i]);
+        }
+      } else {
+        window_writeincr(out, acc1);
+      }
+
+      w_ptr += -K*NCHUNK + 8;
+      a_ptr -= K;
+    }
+    w_ptr -= NCHUNK;
+    a_ptr += K;
+    
+  }
+  
+
+  PROFILE_FOOTER;
+}

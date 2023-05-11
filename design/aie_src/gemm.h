@@ -57,4 +57,30 @@ class GemmReluScalarMKKN {
 };
 
 
+template <int M, int K, int NCHUNK>
+class GemmReluMKKN {
+  
+  private:
+    alignas(32) float (&weights)[NCHUNK*K]; // KxNCHUNK (256x120)
+    alignas(32) float (&bias)[NCHUNK];      // NCHUNK   (120/?)
+  
+  public:
+    GemmReluMKKN (
+      float (&w)[NCHUNK*K],
+      float (&b)[NCHUNK]
+    ): weights(w), bias(b) {};
+
+    void filter(
+      input_window<float>* in,      // MxK       (1x256)
+      output_window<float>* out     // MxNCHUNK  (1x120/?)
+    );
+    
+    static void registerKernelClass() {
+      REGISTER_FUNCTION(GemmReluMKKN::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+    };
+};
+
+
 #endif // GEMM_H_
