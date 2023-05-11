@@ -2,7 +2,7 @@ import numpy as np
 np.random.seed(0)
 
 M = 1
-K = 84
+K = 86
 N = 10
 PAD = (4 - N%4) % 4
 
