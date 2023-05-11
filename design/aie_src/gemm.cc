@@ -146,17 +146,19 @@ void GemmReluMKKN<M, K, NCHUNK>::filter(
         MAC_ROW(6);
         MAC_ROW(7);
       }
-      if (k+4 < K) {
+      if (k+4 <= K) {
         matA = *(v8float *) a_ptr; a_ptr += 4;
         MAC_ROW(0);
         MAC_ROW(1);
         MAC_ROW(2);
         MAC_ROW(3);
+        k+=4;
       }
-      if (k+2 < K) {
+      if (k+2 <= K) {
         matA = *(v8float *) a_ptr; a_ptr += 2;
         MAC_ROW(0);
         MAC_ROW(1);
+        k+=2;
       }
       acc1 = fpmax(acc1, zeros, 0, 0x76543210);
       acc2 = fpmax(acc2, zeros, 0, 0x76543210);
