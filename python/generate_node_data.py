@@ -14,17 +14,14 @@ import onnxruntime
 from google.protobuf.json_format import MessageToDict
 
 
-def generate_txt(is_train: bool,
+def generate_txt(loader: DataLoader,
                  data_count: int,
-                 data_path: str,
                  output_data_path: str,
                  output_label_path: str):
-  dataset = mnist.MNIST(root=data_path, train=is_train, transform=ToTensor(), download=True)
-  loader = DataLoader(dataset, batch_size=1)
   data = None
   labels = None
 
-  print(f"Generating MNIST txt for train={is_train}")
+  print(f"Generating MNIST txt for {data_count} data points")
   for x, y in loader:
     if data is None:
       data = x
@@ -92,12 +89,13 @@ if __name__ == '__main__':
   OUTPUT_IMAGE = False
   N_PER_ROW = 2 # bitwidth of 64, float32
 
-  if not os.path.exists(TEST_DATA_TXT) or not os.path.exists(TEST_LABEL_TXT):
-    generate_txt(is_train=False, data_count=TXT_DATA_COUNT, data_path=DATA_PATH, 
-                output_data_path=TEST_DATA_TXT, output_label_path=TEST_LABEL_TXT)
+  dataset = mnist.MNIST(root=DATA_PATH, train=False, transform=ToTensor(), download=True)
+  loader = DataLoader(dataset, batch_size=1)
 
-  data = np.loadtxt(TEST_DATA_TXT)
-  label = np.loadtxt(TEST_LABEL_TXT)
+  if not os.path.exists(TEST_DATA_TXT) or not os.path.exists(TEST_LABEL_TXT):
+    generate_txt(loader=loader, data_count=TXT_DATA_COUNT, output_data_path=TEST_DATA_TXT, output_label_path=TEST_LABEL_TXT)
+
+  data, label = next(iter(loader))
   model_pkl = torch.load(PKL_PATH)
   
   # PyTorch
@@ -135,15 +133,26 @@ if __name__ == '__main__':
       key = f"__{name}_{get_shape_str(tensor)}"
       out_dict[key] = " ".join(str(i) for i in tensor.flatten().tolist())
       
-      if tensor.ndim == 4:
-        tensor = tensor.transpose(0, 2, 3, 1) # BCHW to BHWC
+      # if tensor.ndim == 4:
+      #   tensor = tensor.transpose(0, 2, 3, 1) # BCHW to BHWC
+      if "Gemm" in node_name and "weight" in name:
+        tensor = tensor.transpose(1, 0)
       out_name = name.replace("/", "_").replace(".", "_")
       out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__{out_name}__{get_shape_str(tensor)}.txt"
       
-      if tensor.size >= N_PER_ROW:
-        np.savetxt(out_txt_path, tensor.reshape(-1, N_PER_ROW))
+      if "weight" in name or "bias" in name:
+        tensor_list = tensor.flatten().tolist()
+        if str(tensor.dtype) == "float32":
+          tmp = f"std::vector<float> {out_name} {{{str(tensor_list)[1:-2]}}};"
+          with open(out_txt_path, "w") as f:
+            f.write(tmp)
+        else:
+          raise ValueError(f"Unsupported type for {name}, {tensor.dtype}.")
       else:
-        np.savetxt(out_txt_path, tensor.flatten())
+        if tensor.size >= N_PER_ROW:
+          np.savetxt(out_txt_path, tensor.reshape(-1, N_PER_ROW))
+        else:
+          np.savetxt(out_txt_path, tensor.flatten())
       print(f"Exported node: {node_name}; I/O name: {name}; to {out_txt_path}")
     
     if OUTPUT_JSON:
