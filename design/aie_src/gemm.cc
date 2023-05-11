@@ -98,13 +98,14 @@ a0 * b00 b01 ... b07
 
 1x84 * 84x10:
   single acc/fpmac: 393 cycles, no fpmac interleaving
-  upd_w > load v16 from pointer, allow interleaving: 406 -> 698
-  interleaving loads: 406 -> 365
+  upd_w v8 better than load v16 from pointer, allows interleaving: 406 -> 698
+  interleaving ops: 406 -> 365
+  kstep=4 to 8: 365 -> 339
 
 Typically K > N for downsampling, M=1 if each net does an instance
 If chunking by N, for N%16=0, K<=128, for N%8=0, K<=256
 */
-template <int M, int K, int NCHUNK> // K%4=0, N%16=0
+template <int M, int K, int NCHUNK> // K%2=0, N%16=0 (pad to vector readable is ok)
 void GemmReluMKKN<M, K, NCHUNK>::filter(
 	input_window<float>* in,      // MxK  (1x256)   inputs
                                 // KxN  (256x120) weights
@@ -119,43 +120,46 @@ void GemmReluMKKN<M, K, NCHUNK>::filter(
   v8float zeros = null_v8float();
   v8float matA = undef_v8float();
   v16float matB = null_v16float();
+  const int KREM = K%8;
+
+#define MAC_ROW(matA_i) \
+  matB = upd_w(matB, 0, *(v8float*) w_ptr); \
+  acc1 = fpmac(acc1, matB, 0, 0x76543210, matA, matA_i, 0x00000000); \
+  matB = upd_w(matB, 1, *(v8float*) (w_ptr + 8)); w_ptr += NCHUNK_RND; \
+  acc2 = fpmac(acc2, matB, 8, 0x76543210, matA, matA_i, 0x00000000);
 
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < NCHUNK; j+=16) { // fpmac accsize 8, do 2
 
       v8float acc1 = *(v8float *) (b_ptr + j);
       v8float acc2 = *(v8float *) (b_ptr + j + 8);
+      int k = 0;
 
-      for (int k = 0; k < K; k+=4) {
+      for (k = 0; k < K-7; k+=8) {
+        matA = *(v8float *) a_ptr; a_ptr += 8;
+        MAC_ROW(0);
+        MAC_ROW(1);
+        MAC_ROW(2);
+        MAC_ROW(3);
+        MAC_ROW(4);
+        MAC_ROW(5);
+        MAC_ROW(6);
+        MAC_ROW(7);
+      }
+      if (k+4 < K) {
         matA = *(v8float *) a_ptr; a_ptr += 4;
-        matB = upd_w(matB, 0, *(v8float*) w_ptr);
-        acc1 = fpmac(acc1, matB, 0, 0x76543210, matA, 0, 0x00000000);
-        matB = upd_w(matB, 1, *(v8float*) (w_ptr + 8)); w_ptr += NCHUNK_RND;
-        // print_fvec<float>((float *) &matB, 16);
-        acc2 = fpmac(acc2, matB, 8, 0x76543210, matA, 0, 0x00000000);
-        matB = upd_w(matB, 0, *(v8float*) w_ptr);
-        acc1 = fpmac(acc1, matB, 0, 0x76543210, matA, 1, 0x00000000);
-        matB = upd_w(matB, 1, *(v8float*) (w_ptr + 8)); w_ptr += NCHUNK_RND;
-        // print_fvec<float>((float *) &matB, 16);
-        acc2 = fpmac(acc2, matB, 8, 0x76543210, matA, 1, 0x00000000);
-        matB = upd_w(matB, 0, *(v8float*) w_ptr);
-        acc1 = fpmac(acc1, matB, 0, 0x76543210, matA, 2, 0x00000000);
-        matB = upd_w(matB, 1, *(v8float*) (w_ptr + 8)); w_ptr += NCHUNK_RND;
-        // print_fvec<float>((float *) &matB, 16);
-        acc2 = fpmac(acc2, matB, 8, 0x76543210, matA, 2, 0x00000000);
-        matB = upd_w(matB, 0, *(v8float*) w_ptr);
-        acc1 = fpmac(acc1, matB, 0, 0x76543210, matA, 3, 0x00000000);
-        matB = upd_w(matB, 1, *(v8float*) (w_ptr + 8)); w_ptr += NCHUNK_RND;
-        // print_fvec<float>((float *) &matB, 16);
-        acc2 = fpmac(acc2, matB, 8, 0x76543210, matA, 3, 0x00000000);
-        // printf("\n");
+        MAC_ROW(0);
+        MAC_ROW(1);
+        MAC_ROW(2);
+        MAC_ROW(3);
+      }
+      if (k+2 < K) {
+        matA = *(v8float *) a_ptr; a_ptr += 2;
+        MAC_ROW(0);
+        MAC_ROW(1);
       }
       acc1 = fpmax(acc1, zeros, 0, 0x76543210);
       acc2 = fpmax(acc2, zeros, 0, 0x76543210);
-      // printf("\n");
-      // print_fvec<float>((float *) &acc1, 8);
-      // print_fvec<float>((float *) &acc2, 8);
-      // printf("\n");
 
       if (NCHUNK - j < 8) {
         float *acc_ptr = (float *) &acc1;
@@ -180,7 +184,6 @@ void GemmReluMKKN<M, K, NCHUNK>::filter(
     a_ptr += K;
     
   }
-  
 
   PROFILE_FOOTER;
 }
