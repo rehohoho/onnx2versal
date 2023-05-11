@@ -25,7 +25,6 @@ def is_file_match(filepath1: str,
   arr2 = load_txt(filepath2)
   
   if arr1.shape == arr2.shape:
-    print(f"TEST (shape): OK!")
     if np.allclose(arr1, arr2, rtol=1e-03, atol=1e-05):
       print(f"TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)")
       return True
