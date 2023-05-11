@@ -20,7 +20,6 @@ class GemmReluGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
-      // bias.resize(bias.size() + (8 - bias.size() % 8) % 8, 0); // ensure divisible by 8
       k[0] = adf::kernel::create_object<GEMM<M, K, N>>(weights, bias);
       adf::source(k[0]) = "gemm.cc";
 

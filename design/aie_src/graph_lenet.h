@@ -32,9 +32,9 @@ template <
 class MnistLenetBchwGraph : public adf::graph {
 
   private:
-    typedef GemmReluChunkGraph<GEMM, MAX_FLOAT_PARAMS/256, 1, 256, 120> Gemm1;
-    typedef GemmReluChunkGraph<GEMM, MAX_FLOAT_PARAMS/120, 1, 120, 84> Gemm2;
-    typedef GemmReluChunkGraph<GEMM, MAX_FLOAT_PARAMS/84, 1, 84, 10> Gemm3;
+    typedef GemmReluMkknChunkGraph<GEMM, MAX_FLOAT_PARAMS/256/4*4, 1, 256, 120> Gemm1;
+    typedef GemmReluMkknChunkGraph<GEMM, MAX_FLOAT_PARAMS/120/4*4, 1, 120, 84> Gemm2;
+    typedef GemmReluMkknChunkGraph<GEMM, MAX_FLOAT_PARAMS/84/4*4, 1, 84, 10> Gemm3;
 
     ConvReluGraph<CONV, 28, 24, 1, 1, 6, 5> k0conv1;
     MaxpoolGraph<POOL, 24, 12, 1, 6> k1pool1;
