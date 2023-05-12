@@ -45,13 +45,15 @@ LOG_PROFILE: 0|1  whether to stdout profile logs and output intermediates
 
 ## Run x86sim graph (~1 min compile)
 For graph test, ITER_CNT (default 1) is used in compilation
-* Analyze graph compilation after compile: `vitis_analyzer build/lenet/sw_emu/Work/graph_lenet.aiecompile_summary`
-* Clean build: `TARGET=sw_emu GRAPH=lenet make clean`
+* Analyze graph compilation after compile: <br />
+`vitis_analyzer build/lenet/sw_emu/Work/graph_lenet.aiecompile_summary`
+* Clean build: <br />
+`TARGET=sw_emu GRAPH=lenet make clean`
 
 
 <details><summary>
-<b>Compile-time file input, output intermediate results:</b>
-<pre><code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make clean_reports graph aiesim</code></pre>
+<b>Compile-time file input, output intermediate results:</b><br />
+<code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make clean_reports graph aiesim</code>
 </summary>
 
 ```
@@ -92,7 +94,7 @@ reports_dir/
 
 <details><summary>
 <b>External traffic generator, output prediction only:</b><br />
-<pre><code>TARGET=sw_emu EXTIO=1 LOG_PROFILE=0 GRAPH=lenet make clean_reports graph aiesim ITER_CNT=100</code></pre>
+<code>TARGET=sw_emu EXTIO=1 LOG_PROFILE=0 GRAPH=lenet make clean_reports graph aiesim ITER_CNT=100</code>
 </summary>
 
 ```
@@ -140,7 +142,7 @@ reports_dir/
 
 <details><summary>
 <b>External traffic generator, output intermediate results:</b><br />
-<pre><code>TARGET=sw_emu EXTIO=1 LOG_PROFILE=1 GRAPH=lenet make clean_reports graph aiesim</code></pre>
+<code>TARGET=sw_emu EXTIO=1 LOG_PROFILE=1 GRAPH=lenet make clean_reports graph aiesim</code>
 </summary>
 
 ```
@@ -182,16 +184,18 @@ reports_dir/
 
 
 
-## Run x86sim system (~2 min compile, the XSA linking step man...)
+## Run x86sim system (~2 min compile)
 For system test, ITER_CNT is an argument into host app.
-* Analyze system compilation after compile: `vitis_analyzer build/lenet/sw_emu/vck190_lenet_aie.xsa.link_summary`
-* Clean build: `TARGET=sw_emu GRAPH=lenet make clean`
+* Analyze system compilation after compile: <br /> 
+`vitis_analyzer build/lenet/sw_emu/vck190_lenet_aie.xsa.link_summary`
+* Clean build: <br />
+`TARGET=sw_emu GRAPH=lenet make clean`
 
 
 <details><summary>
 <b>Test system with x86 AIE, sysC PL, x86 PS, prediction only:</b><br />
-<pre><code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make graph kernels xsa application package
-TARGET=sw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean_reports run_emu ITER_CNT=100</code></pre>
+<code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make graph kernels xsa application package</code><br />
+<code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean_reports run_emu ITER_CNT=100</code>
 </summary>
 
 ```
@@ -242,9 +246,9 @@ reports_dir/
 
 <details><summary>
 <b>Test system with x86 AIE, sysC PL, x86 PS, output intermediates:</b><br />
-This fails mnist_test_label.txt check since only 1 iteration is done, should pass intermediate tests
-<pre><code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph kernels xsa application package
-TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make clean_reports run_emu ITER_CNT=1 </code></pre>
+This fails mnist_test_label.txt check since only 1 iteration is done, should pass intermediate tests<br />
+<code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph kernels xsa application package</code><br />
+<code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make clean_reports run_emu ITER_CNT=1</code>
 </summary>
 
 ```
@@ -291,14 +295,17 @@ files:
 
 ## Run sysC graph (~4.5 min compile, ~8 min run)
 Only can output maximum of 6-7 intermediates since AIE only has 8 cascade lines. aiesim_profile allows printf and timing.
-* Analyze graph compilation after compile: `vitis_analyzer build/lenet/hw_emu/Work/graph_lenet.aiecompile_summary`
-* Analyze profiled info after run (includes graph analysis): `vitis_analyzer reports_dir/lenet/hw_emu/aiesimulator_output/default.aierun_summary`
-* Clean build: `TARGET=hw_emu GRAPH=lenet make clean`
+* Analyze graph compilation after compile: <br />
+`vitis_analyzer build/lenet/hw_emu/Work/graph_lenet.aiecompile_summary`
+* Analyze profiled info after run (includes graph analysis): <br />
+`vitis_analyzer reports_dir/lenet/hw_emu/aiesimulator_output/default.aierun_summary`
+* Clean build: <br />
+`TARGET=hw_emu GRAPH=lenet make clean`
 
 
 <details><summary>
 <b>Test the graph with SysC, outputs intermediate results:</b><br />
-<pre><code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph clean_reports aiesim_profile</code></pre>
+<code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph clean_reports aiesim_profile</code>
 </summary>
 
 ```
@@ -405,7 +412,7 @@ reports_dir/
 
 <details><summary>
 <b>Test the graph with SysC, outputs prediction, use external traffic generator:</b><br />
-<pre><code>TARGET=hw_emu EXTIO=1 LOG_PROFILE=1 GRAPH=lenet make graph clean_reports aiesim_profile</code></pre>
+<code>TARGET=hw_emu EXTIO=1 LOG_PROFILE=1 GRAPH=lenet make graph clean_reports aiesim_profile</code>
 </summary>
 
 ```
@@ -540,15 +547,18 @@ reports_dir/
 
 
 ## Run sysC system (~15min compile, ~30min run)
-* Analyze system compilation after compile: `vitis_analyzer build/lenet/hw_emu/vck190_lenet_aie.xsa.link_summary`
-* Analyze profiled info after run (includes system analysis): `vitis_analyzer reports_dir/lenet/hw_emu/aiesimulator_output/default.aierun_summary`
-* Clean build: `TARGET=hw_emu GRAPH=lenet make clean`
+* Analyze system compilation after compile: <br />
+`vitis_analyzer build/lenet/hw_emu/vck190_lenet_aie.xsa.link_summary`
+* Analyze profiled info after run (includes system analysis): <br />
+`vitis_analyzer reports_dir/lenet/hw_emu/aiesimulator_output/default.aierun_summary`
+* Clean build: <br />
+`TARGET=hw_emu GRAPH=lenet make clean`
 
 
 <details><summary>
 <b>Test system with SysC AIE, SysC PL, SysC NoC, SysC DDR, QEMU PS:</b><br />
-<pre><code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean graph kernels xsa application package
-TARGET=hw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean_reports run_emu ITER_CNT=1</code></pre>
+<code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean graph kernels xsa application package</code><br />
+<code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean_reports run_emu ITER_CNT=1</code>
 </summary>
 
 ```
@@ -567,8 +577,8 @@ files:
 
 <details><summary>
 <b>Test system with SysC AIE, SysC PL, SysC NoC, SysC DDR, QEMU PS:</b><br />
-<pre><code>TARGET=hw EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean graph kernels xsa application package
-sudo dd if=build/lenet/hw_emu/package/sd_card.img of=/dev/mmcblk0 conv=fsync status=progress</code></pre>
+<code>TARGET=hw EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean graph kernels xsa application package</code><br />
+<code>sudo dd if=build/lenet/hw_emu/package/sd_card.img of=/dev/mmcblk0 conv=fsync status=progress</code>
 </summary>
 
 ```
