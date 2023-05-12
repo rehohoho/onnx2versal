@@ -24,24 +24,15 @@ void GemmReluScalarGmemParamMKNK<M, K, N>::filter(
 
       if (res < 0) res = 0;
       window_writeincr(out, res);
+      window_incr(in, -K); // repeat same in row for next j
     }
     window_incr(in, K); // next row
-    window_incr(out, 1); // next row
   }
 
   PROFILE_FOOTER;
 }
 
 
-/*
-xA^T + b as per torch,nn.Linear
-8581 cycles for lenet fc1 (broke in 8 sections)
-4488 cycles for lenet fc2 (broke in 4 sections)
-1956 cycles for lenet fc3
-MxK * NxK
-weights[N*K] (120x256)
-bias[N]      (120)
-*/
 template <int M, int K, int NCHUNK>
 void GemmReluScalarMKNK<M, K, NCHUNK>::filter(
 	input_window<float>* in,      // MxK  (1x256)
@@ -73,9 +64,6 @@ void GemmReluScalarMKNK<M, K, NCHUNK>::filter(
 }
 
 
-/*
-1899 cycles (1x84 * 84x10)
-*/
 template <int M, int K, int NCHUNK>
 void GemmReluScalarMKKN<M, K, NCHUNK>::filter(
 	input_window<float>* in,      // MxK  (1x256)   inputs
