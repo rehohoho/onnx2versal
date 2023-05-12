@@ -18,17 +18,11 @@ if __name__ == "__main__":
     ("plin2_concat1_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
     ("plin3_concat1_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
     ("plin4_concat1_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
-    ("plin5_concat1_input", f"{args.input_dir}/empty.txt", 64, "float32"),
-    ("plin6_concat1_input", f"{args.input_dir}/empty.txt", 64, "float32"),
-    ("plin7_concat1_input", f"{args.input_dir}/empty.txt", 64, "float32"),
     ("plin0_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
     ("plin1_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
     ("plin2_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
     ("plin3_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
     ("plin4_concat2_input", f"{args.input_dir}/concat_in.txt", 64, "float32"),
-    ("plin5_concat2_input", f"{args.input_dir}/empty.txt", 64, "float32"),
-    ("plin6_concat2_input", f"{args.input_dir}/empty.txt", 64, "float32"),
-    ("plin7_concat2_input", f"{args.input_dir}/empty.txt", 64, "float32"),
   ]
 
   slave_list = [
