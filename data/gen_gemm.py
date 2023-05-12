@@ -34,7 +34,7 @@ print("weights_mknk_rand\n", weights_mknk_rand.flatten().tolist(), "\n\n\n")
 print("weights_mkkn_rand\n", weights_mkkn_rand.flatten().tolist(), "\n\n\n")
 print("bias_rand\n", bias_rand.flatten().tolist(), "\n\n\n")
 
-# result for arange
+# result for mknk
 res_mknk = np.matmul(inp.reshape(1,86), weights_mknk.reshape(10,86).T) + bias
 res_mknk_rand = np.matmul(inp_rand.reshape(1,86), weights_mknk_rand.reshape(10,86).T) + bias_rand
 np.savetxt("gemm_fpout_GemmReluScalarMKNK.txt", res_mknk.reshape(-1, 2))
@@ -42,7 +42,7 @@ np.savetxt("gemm_fpout_GemmReluScalarMKNK_rand.txt", res_mknk_rand.reshape(-1, 2
 np.savetxt("gemm_fpout_GemmReluScalarGmemParamMKNK.txt", res_mknk.reshape(-1, 2))
 np.savetxt("gemm_fpout_GemmReluScalarGmemParamMKNK_rand.txt", res_mknk_rand.reshape(-1, 2))
 
-# result for random
+# result for mkkn
 res_mkkn = np.matmul(inp.reshape(1,86), weights_mknk.reshape(86,10)) + bias
 res_mkkn_rand = np.matmul(inp_rand.reshape(1,86), weights_mknk_rand.reshape(86,10)) + bias_rand
 np.savetxt("gemm_fpout_GemmReluScalarMKKN.txt", res_mkkn.reshape(-1, 2))
