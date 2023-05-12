@@ -14,8 +14,8 @@ weights_mkkn = np.pad(weights_mknk.reshape(K, N),
 bias = np.ones(N)
 
 np.savetxt("gemm_fpin.txt", inp.reshape(-1, 2))
-np.savetxt("gemm_weights_mknk.txt", weights_mknk.reshape(-1, 2))
-np.savetxt("gemm_bias.txt", bias.reshape(-1, 2))
+np.savetxt("gemm_fpweights_mknk.txt", weights_mknk.reshape(-1, 2))
+np.savetxt("gemm_fpbias.txt", bias.reshape(-1, 2))
 print("weights_mknk\n", weights_mknk.flatten().tolist(), "\n\n\n")
 print("weights_mkkn\n", weights_mkkn.flatten().tolist(), "\n\n\n")
 print("bias\n", bias.flatten().tolist(), "\n\n\n")
@@ -28,8 +28,8 @@ weights_mkkn_rand = np.pad(weights_mknk_rand.reshape(K, N),
 bias_rand = np.random.random(N)
 
 np.savetxt("gemm_fpin_rand.txt", inp_rand.reshape(-1, 2))
-np.savetxt("gemm_weights_mknk_rand.txt", weights_mknk_rand.reshape(-1, 2))
-np.savetxt("gemm_bias_rand.txt", bias_rand.reshape(-1, 2))
+np.savetxt("gemm_fpweights_mknk_rand.txt", weights_mknk_rand.reshape(-1, 2))
+np.savetxt("gemm_fpbias_rand.txt", bias_rand.reshape(-1, 2))
 print("weights_mknk_rand\n", weights_mknk_rand.flatten().tolist(), "\n\n\n")
 print("weights_mkkn_rand\n", weights_mkkn_rand.flatten().tolist(), "\n\n\n")
 print("bias_rand\n", bias_rand.flatten().tolist(), "\n\n\n")
