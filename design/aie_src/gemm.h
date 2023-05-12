@@ -4,6 +4,21 @@
 #include <adf.h>
 
 
+template <int M, int K, int NCHUNK>
+class GemmReluScalarGmemParamMKNK {
+  public:
+    void filter(
+      input_window<float>* in,      // MxK  (1x256)
+      input_window<float>* weight,  // NxK  (120x256)
+      input_window<float>* bias,    // N    (120)
+      output_window<float>* out     // MxN  (1x120)
+    );
+    static void registerKernelClass() {
+      REGISTER_FUNCTION(GemmReluScalarGmemParamMKNK::filter);
+    };
+};
+
+
 // xA^T + b as per torch,nn.Linear
 template <int M, int K, int NCHUNK>
 class GemmReluScalarMKNK {
