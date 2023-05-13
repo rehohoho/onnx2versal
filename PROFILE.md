@@ -39,19 +39,3 @@ Pool:
 Running MaxpoolScalarBHWC::filter<24, 12, 1, 6> total = 7673
 Running MaxpoolScalarBCHW::filter<24, 12, 1, 6> total = 11302
 Running Maxpool2x2BCHW::filter<24, 12, 1, 6> total = 901
-
-
-Concat:
-ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>
-ConcatVector<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>: CHUNK_SIZE%8=0, BLOCK_SIZE%4=0
-Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE, outputs size of WINDOW_SIZE / CHUNK_SIZE * BLOCK_SIZE
-  LCNT:         number of lanes to concat
-  WINDOW_SIZE:  size of window for each lane
-  CHUNK_SIZE:   size of chunk from each lanes per iteration
-  BLOCK_SIZE:   size of concatenated chunks per iteration
-
-    Running ConcatScalar<64, 16, 52>::filter5, total = 650
-    Running ConcatVector<64, 16, 52>::filter5, total = 232
-
-Implementation notes:
-  Using virtual function instead of macro has big overhead: 163 -> 1047
