@@ -64,7 +64,10 @@ class ConvReluGmemParamGraph : public adf::graph {
 };
 
 
-template <template<int, int, int, int, int, int> class CONV, int IS_BCHW, int IS_KPAD,
+template <
+  template<int, int, int, int, int, int> class CONV, 
+  template<int, int, int, int> class CONCAT, 
+  int IS_BCHW, int IS_KPAD,
   int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluChunkGraph : public adf::graph {
 
@@ -88,7 +91,9 @@ class ConvReluChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (M + MCHUNK - 1) / MCHUNK; // ceiling
     adf::kernel convs[CHUNK_COUNT];
-    ConcatScalarGraph<CHUNK_COUNT, B*MCHUNK*OUT_W*OUT_W, CONCAT_CHUNK, CONCAT_BLOCK> concat_g;
+    // breaks if CONCAT_CHUNK%8!=0 CONCAT_BLOCK%4!=0
+    // std::conditional results in error in graph hierarchy algorithm
+    ConcatGraph<CONCAT, CHUNK_COUNT, B*MCHUNK*OUT_W*OUT_W, CONCAT_CHUNK, CONCAT_BLOCK> concat_g;
 
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];

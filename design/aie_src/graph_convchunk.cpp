@@ -2,13 +2,16 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int> class CONV, int IS_BCHW, int IS_KPAD,
+template <
+  template<int, int, int, int, int, int> class CONV, 
+  template<int, int, int, int> class CONCAT, 
+  int IS_BCHW, int IS_KPAD,
   int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluChunkGraphTest : public adf::graph {
 
   private:
-    ConvReluChunkGraph<CONV, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K> g;
-    static const int CHUNK_COUNT = ConvReluChunkGraph<CONV, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K>::CHUNK_COUNT;
+    ConvReluChunkGraph<CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K> g;
+    static const int CHUNK_COUNT = ConvReluChunkGraph<CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K>::CHUNK_COUNT;
 
   public:
     adf::input_plio plin[CHUNK_COUNT];
@@ -43,32 +46,32 @@ std::vector<float> fpweights_rand_pad {0.35798393686119634, 0.4351419865163296, 
 std::vector<float> fpbias_rand {0.5666693393630345, 0.4768013639288602, 0.6218823913943651, 0.528741511699448};
 
 // BCHW
-ConvReluChunkGraphTest<ConvReluScalarBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW(
+ConvReluChunkGraphTest<ConvReluScalarBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "conv_fpout_ConvReluScalarBCHW.txt");
-ConvReluChunkGraphTest<ConvReluScalarBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW_rand(
+ConvReluChunkGraphTest<ConvReluScalarBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW_rand(
   "convReluScalarBCHW_rand", fpweights_rand, fpbias_rand, 
   "conv_fpin_rand.txt", "conv_fpout_ConvReluScalarBCHW_rand.txt");
 
-ConvReluChunkGraphTest<Conv5x5ReluBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW(
+ConvReluChunkGraphTest<Conv5x5ReluBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW(
   "conv5x5ReluBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "conv_fpout_Conv5x5ReluBCHW.txt");
-ConvReluChunkGraphTest<Conv5x5ReluBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW_rand(
+ConvReluChunkGraphTest<Conv5x5ReluBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW_rand(
   "conv5x5ReluBCHW_rand", fpweights_rand, fpbias_rand, 
   "conv_fpin_rand.txt", "conv_fpout_Conv5x5ReluBCHW_rand.txt");
 
-ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, 1, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5on8ReluBCHW(
+ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, ConcatVector, 1, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "conv_fpout_Conv5x5on8ReluBCHW.txt");
-ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, 1, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5on8ReluBCHW_rand(
+ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, ConcatVector, 1, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5on8ReluBCHW_rand(
   "conv5x5on8ReluBCHW_rand", fpweights_rand_pad, fpbias_rand, 
   "conv_fpin_rand.txt", "conv_fpout_Conv5x5on8ReluBCHW_rand.txt");
 
-// BHWC
-ConvReluChunkGraphTest<ConvReluScalarBHWC, 0, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC(
+// BHWC, ConcatVector requires CONCAT_BLOCK=M%4=0
+ConvReluChunkGraphTest<ConvReluScalarBHWC, ConcatScalar, 0, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC(
   "convReluScalarBHWC", fpweights, fpbias, 
   "conv_fpin.txt", "conv_fpout_ConvReluScalarBHWC.txt");
-ConvReluChunkGraphTest<ConvReluScalarBHWC, 0, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC_rand(
+ConvReluChunkGraphTest<ConvReluScalarBHWC, ConcatScalar, 0, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC_rand(
   "convReluScalarBHWC_rand", fpweights_rand, fpbias_rand, 
   "conv_fpin_rand.txt", "conv_fpout_ConvReluScalarBHWC_rand.txt");
 
