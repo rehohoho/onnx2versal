@@ -51,15 +51,15 @@ class ConcatGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-ConcatGraphTest<ConcatScalar, 5, 8, 8, 4*8+4> fpscalar1(
-  "fpscalar1", "concat_fpout1_ConcatScalar.txt",
+ConcatGraphTest<ConcatScalar, 5, 64, 16, 52> concatScalar(
+  "concatScalar", "concat_fpout_ConcatScalar.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt"
 );
 
-ConcatGraphTest<ConcatScalar, 5, 8, 4, 4*4+2> fpscalar2(
-  "fpscalar2", "concat_fpout2_ConcatScalar.txt",
+ConcatGraphTest<ConcatVector, 5, 64, 16, 52> concatVector(
+  "concatVector", "concat_fpout_ConcatVector.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt"
@@ -68,13 +68,13 @@ ConcatGraphTest<ConcatScalar, 5, 8, 4, 4*4+2> fpscalar2(
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
-  adfCheck(fpscalar1.init(), "init fpscalar1");
-  adfCheck(fpscalar1.run(ITER_CNT), "run fpscalar1");
-	adfCheck(fpscalar1.end(), "end fpscalar1");
+  adfCheck(concatScalar.init(), "init concatScalar");
+  adfCheck(concatScalar.run(ITER_CNT), "run concatScalar");
+	adfCheck(concatScalar.end(), "end concatScalar");
 
-  adfCheck(fpscalar2.init(), "init fpscalar2");
-  adfCheck(fpscalar2.run(ITER_CNT), "run fpscalar2");
-	adfCheck(fpscalar2.end(), "end fpscalar2");
+  adfCheck(concatVector.init(), "init concatVector");
+  adfCheck(concatVector.run(ITER_CNT), "run concatVector");
+	adfCheck(concatVector.end(), "end concatVector");
   return 0;
 }
 #endif
@@ -82,13 +82,13 @@ int main(int argc, char ** argv) {
 
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
-	adfCheck(fpscalar1.init(), "init fpscalar1");
-  get_graph_throughput_by_port(fpscalar1, "plout[0]", fpscalar1.plout[0], 36, sizeof(float), ITER_CNT);
-	adfCheck(fpscalar1.end(), "end fpscalar1");
+	adfCheck(concatScalar.init(), "init concatScalar");
+  get_graph_throughput_by_port(concatScalar, "plout[0]", concatScalar.plout[0], 36, sizeof(float), ITER_CNT);
+	adfCheck(concatScalar.end(), "end concatScalar");
 
-  adfCheck(fpscalar2.init(), "init fpscalar2");
-  get_graph_throughput_by_port(fpscalar2, "plout[0]", fpscalar2.plout[0], 36, sizeof(float), ITER_CNT);
-	adfCheck(fpscalar2.end(), "end fpscalar2");
+  adfCheck(concatVector.init(), "init concatVector");
+  get_graph_throughput_by_port(concatVector, "plout[0]", concatVector.plout[0], 36, sizeof(float), ITER_CNT);
+	adfCheck(concatVector.end(), "end concatVector");
   return 0;
 }
 #endif
