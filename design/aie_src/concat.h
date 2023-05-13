@@ -6,7 +6,7 @@
 
 /**
  * @ingroup Concat 
- * @brief Scalar implementation, 650 cycles
+ * @brief Scalar implementation, ConcatScalar<5, 64, 16, 52> takes 650 cycles
  */
 template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatScalar {
@@ -95,7 +95,7 @@ class ConcatScalar {
 
 /**
  * @ingroup Concat 
- * @brief Vector implementation, 232 cycles. Expects CHUNK_SIZE%8=0, BLOCK_SIZE%4=0`
+ * @brief Vector implementation, ConcatVector<5, 64, 16, 52> takes 232 cycles. Expects CHUNK_SIZE%8=0, BLOCK_SIZE%4=0
  */
 template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatVector {

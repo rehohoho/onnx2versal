@@ -5,6 +5,22 @@
 #include "argmax.h"
 
 
+/**
+ * @defgroup Argmax
+ * 
+ * @brief Argmax over chunks of CHUNK_SIZE in WINDOW_SIZE vector
+ * 
+ * @tparam ARGMAX       Argmax Kernel
+ * @tparam WINDOW_SIZE	size of window
+ * @tparam CHUNK_SIZE		size of chunk per iteration
+ * 
+ * @connections
+ * @connect{pin[1], WINDOW_SIZE*4}
+ * @connect{pout[1], WINDOW_SIZE/CHUNK_SIZE*4}
+ * @endconnections
+ * 
+ * @{
+ */
 template <template<int, int> class ARGMAX, int WINDOW_SIZE, int CHUNK_SIZE>
 class ArgmaxGraph : public adf::graph {
 
@@ -26,6 +42,7 @@ class ArgmaxGraph : public adf::graph {
     }
 
 };
+/** @} */
 
 
 #endif // __ARGMAX_GRAPH_H__

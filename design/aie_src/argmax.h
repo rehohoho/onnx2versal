@@ -4,6 +4,10 @@
 #include <adf.h>
 
 
+/**
+ * @ingroup Argmax
+ * @brief Scalar implementation, ArgmaxScalar<100, 10> takes 1063 cycles
+ */
 template <int WINDOW_SIZE, int CHUNK_SIZE>
 class ArgmaxScalar {
 	public:
