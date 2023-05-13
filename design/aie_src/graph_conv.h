@@ -64,11 +64,12 @@ class ConvReluGmemParamGraph : public adf::graph {
 };
 
 
-template <template<int, int, int, int, int, int> class CONV, int IS_BCHW,
+template <template<int, int, int, int, int, int> class CONV, int IS_BCHW, int IS_KPAD,
   int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluChunkGraph : public adf::graph {
 
   private:
+    static const int K2 = (IS_KPAD) ? (K+7)/8*8 : K;
     static const int MCUTCHUNK = M % MCHUNK;
     static const int CONCAT_CHUNK = (IS_BCHW) ? MCHUNK*OUT_W*OUT_W : MCHUNK;
     static const int CONCAT_BLOCK = (IS_BCHW) ? M*OUT_W*OUT_W : M;
@@ -101,9 +102,9 @@ class ConvReluChunkGraph : public adf::graph {
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
         int chunkSize = (i*MCHUNK + MCHUNK > M) ? MCUTCHUNK : MCHUNK;
-        wChunk = std::vector<float>(weights.begin()+i*MCHUNK*K*K*C, 
-                                    weights.begin()+(i*MCHUNK+chunkSize)*K*K*C); 
-        wChunk.resize(MCHUNK*K*K*C, 0);
+        wChunk = std::vector<float>(weights.begin()+i*MCHUNK*K*K2*C, 
+                                    weights.begin()+(i*MCHUNK+chunkSize)*K*K2*C); 
+        wChunk.resize(MCHUNK*K*K2*C, 0);
         bChunk = std::vector<float>(bias.begin()+i*MCHUNK, bias.begin()+i*MCHUNK+chunkSize);
         bChunk.resize(MCHUNK, 0);
 

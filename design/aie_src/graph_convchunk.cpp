@@ -2,13 +2,13 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int> class CONV, int IS_BCHW,
+template <template<int, int, int, int, int, int> class CONV, int IS_BCHW, int IS_KPAD,
   int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluChunkGraphTest : public adf::graph {
 
   private:
-    ConvReluChunkGraph<CONV, IS_BCHW, MCHUNK, INP_W, OUT_W, B, C, M, K> g;
-    static const int CHUNK_COUNT = ConvReluChunkGraph<CONV, IS_BCHW, MCHUNK, INP_W, OUT_W, B, C, M, K>::CHUNK_COUNT;
+    ConvReluChunkGraph<CONV, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K> g;
+    static const int CHUNK_COUNT = ConvReluChunkGraph<CONV, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K>::CHUNK_COUNT;
 
   public:
     adf::input_plio plin[CHUNK_COUNT];
@@ -43,25 +43,32 @@ std::vector<float> fpweights_rand_pad {0.35798393686119634, 0.4351419865163296, 
 std::vector<float> fpbias_rand {0.5666693393630345, 0.4768013639288602, 0.6218823913943651, 0.528741511699448};
 
 // BCHW
-ConvReluChunkGraphTest<ConvReluScalarBCHW, 1, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW(
+ConvReluChunkGraphTest<ConvReluScalarBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "conv_fpout_ConvReluScalarBCHW.txt");
-ConvReluChunkGraphTest<ConvReluScalarBCHW, 1, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW_rand(
+ConvReluChunkGraphTest<ConvReluScalarBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBCHW_rand(
   "convReluScalarBCHW_rand", fpweights_rand, fpbias_rand, 
   "conv_fpin_rand.txt", "conv_fpout_ConvReluScalarBCHW_rand.txt");
 
-ConvReluChunkGraphTest<Conv5x5ReluBCHW, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW(
+ConvReluChunkGraphTest<Conv5x5ReluBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW(
   "conv5x5ReluBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "conv_fpout_Conv5x5ReluBCHW.txt");
-ConvReluChunkGraphTest<Conv5x5ReluBCHW, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW_rand(
+ConvReluChunkGraphTest<Conv5x5ReluBCHW, 1, 0, mchunk, 28, 24, 1, 2, 4, 5> conv5x5ReluBCHW_rand(
   "conv5x5ReluBCHW_rand", fpweights_rand, fpbias_rand, 
   "conv_fpin_rand.txt", "conv_fpout_Conv5x5ReluBCHW_rand.txt");
 
+ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, 1, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5on8ReluBCHW(
+  "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
+  "conv_fpin.txt", "conv_fpout_Conv5x5on8ReluBCHW.txt");
+ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, 1, 1, mchunk, 28, 24, 1, 2, 4, 5> conv5x5on8ReluBCHW_rand(
+  "conv5x5on8ReluBCHW_rand", fpweights_rand_pad, fpbias_rand, 
+  "conv_fpin_rand.txt", "conv_fpout_Conv5x5on8ReluBCHW_rand.txt");
+
 // BHWC
-ConvReluChunkGraphTest<ConvReluScalarBHWC, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC(
+ConvReluChunkGraphTest<ConvReluScalarBHWC, 0, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC(
   "convReluScalarBHWC", fpweights, fpbias, 
   "conv_fpin.txt", "conv_fpout_ConvReluScalarBHWC.txt");
-ConvReluChunkGraphTest<ConvReluScalarBHWC, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC_rand(
+ConvReluChunkGraphTest<ConvReluScalarBHWC, 0, 0, mchunk, 28, 24, 1, 2, 4, 5> convReluScalarBHWC_rand(
   "convReluScalarBHWC_rand", fpweights_rand, fpbias_rand, 
   "conv_fpin_rand.txt", "conv_fpout_ConvReluScalarBHWC_rand.txt");
 
@@ -81,6 +88,13 @@ int main(int argc, char ** argv) {
   adfCheck(conv5x5ReluBCHW_rand.init(), "init conv5x5ReluBCHW_rand");
   adfCheck(conv5x5ReluBCHW_rand.run(ITER_CNT), "run conv5x5ReluBCHW_rand");
 	adfCheck(conv5x5ReluBCHW_rand.end(), "end conv5x5ReluBCHW_rand");
+
+  adfCheck(conv5x5on8ReluBCHW.init(), "init conv5x5on8ReluBCHW");
+  adfCheck(conv5x5on8ReluBCHW.run(ITER_CNT), "run conv5x5on8ReluBCHW");
+	adfCheck(conv5x5on8ReluBCHW.end(), "end conv5x5on8ReluBCHW");
+  adfCheck(conv5x5on8ReluBCHW_rand.init(), "init conv5x5on8ReluBCHW_rand");
+  adfCheck(conv5x5on8ReluBCHW_rand.run(ITER_CNT), "run conv5x5on8ReluBCHW_rand");
+	adfCheck(conv5x5on8ReluBCHW_rand.end(), "end conv5x5on8ReluBCHW_rand");
 
   adfCheck(convReluScalarBHWC.init(), "init convReluScalarBHWC");
   adfCheck(convReluScalarBHWC.run(ITER_CNT), "run convReluScalarBHWC");
@@ -108,6 +122,13 @@ int main(int argc, char ** argv) {
   adfCheck(conv5x5ReluBCHW_rand.init(), "init conv5x5ReluBCHW_rand");
   get_graph_throughput_by_port(conv5x5ReluBCHW_rand, "plout[0]", conv5x5ReluBCHW_rand.plout[0], 1*8*8*8, sizeof(float_t), ITER_CNT);
 	adfCheck(conv5x5ReluBCHW_rand.end(), "end conv5x5ReluBCHW_rand");
+
+  adfCheck(conv5x5on8ReluBCHW.init(), "init conv5x5on8ReluBCHW");
+  get_graph_throughput_by_port(conv5x5on8ReluBCHW, "plout[0]", conv5x5on8ReluBCHW.plout[0], 1*8*8*8, sizeof(float_t), ITER_CNT);
+	adfCheck(conv5x5on8ReluBCHW.end(), "end conv5x5on8ReluBCHW");
+  adfCheck(conv5x5on8ReluBCHW_rand.init(), "init conv5x5on8ReluBCHW_rand");
+  get_graph_throughput_by_port(conv5x5on8ReluBCHW_rand, "plout[0]", conv5x5on8ReluBCHW_rand.plout[0], 1*8*8*8, sizeof(float_t), ITER_CNT);
+	adfCheck(conv5x5on8ReluBCHW_rand.end(), "end conv5x5on8ReluBCHW_rand");
 
   adfCheck(convReluScalarBHWC.init(), "init convReluScalarBHWC");
   get_graph_throughput_by_port(convReluScalarBHWC, "plout[0]", convReluScalarBHWC.plout[0], 1*8*8*8, sizeof(float_t), ITER_CNT);

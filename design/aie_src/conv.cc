@@ -305,6 +305,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused>::filter(
 
 
 // Assumes OUT_W%8=0
+// Compute constrained, no point using extra v8float acc to utilize data[12:16]
 template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused>
 void Conv5x5on8ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused>::filter(
 	input_window<float>* in,      // BCHW
