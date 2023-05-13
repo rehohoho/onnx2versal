@@ -4,9 +4,6 @@
 #include <adf.h>
 
 
-/*
-Function overhead is a very bad idea 163 -> 1047
-*/
 template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatScalar {
 	public:
