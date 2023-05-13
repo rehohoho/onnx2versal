@@ -62,27 +62,31 @@ Assumes weight <=16384B, bias <=4096B, input <=4096B per chunk
 Places a maximum of 3x3 tiles, 8 gemm tiles surrounding a concat tile (max AIE DMA input = 8)
 Constraint: CHUNK_COUNT = N/NCHUNK+1 <= 8
 */
-template <template<int, int, int> class GEMM, int NCHUNK, int M, int K, int N>
+template <
+  template<int, int, int> class GEMM, 
+  template<int, int, int, int> class CONCAT, 
+  int NCHUNK, int M, int K, int N>
 class GemmReluMknkChunkGraph : public adf::graph {
 
   private:
     static const int NCUTCHUNK = N % NCHUNK;
 
     adf::relative_coordinate tileOffsets[8] = {
-      {.col_offset = -1, .row_offset = -1},
-      {.col_offset = 0, .row_offset = -1},
-      {.col_offset = 1, .row_offset = -1},
-      {.col_offset = -1, .row_offset = 0},
+      {.col_offset = -1, .row_offset = 0}, // left, right
       {.col_offset = 1, .row_offset = 0},
-      {.col_offset = -1, .row_offset = 1},
+      {.col_offset = -1, .row_offset = 1}, // bottom row
       {.col_offset = 0, .row_offset = 1},
       {.col_offset = 1, .row_offset = 1},
+      {.col_offset = -1, .row_offset = -1}, // top row
+      {.col_offset = 0, .row_offset = -1},
+      {.col_offset = 1, .row_offset = -1},
     };
 
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    ConcatScalarGraph<CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
+    // breaks if NCHUNK%8!=0 N%4!=0
+    ConcatGraph<CONCAT, CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];
@@ -130,26 +134,30 @@ class GemmReluMknkChunkGraph : public adf::graph {
 Assumes weight is KxN_RND
 Assumes NCHUNK is vector readable (128-bit chunks)
 */
-template <template<int, int, int> class GEMM, int NCHUNK, int M, int K, int N>
+template <
+  template<int, int, int> class GEMM, 
+  template<int, int, int, int> class CONCAT, 
+  int NCHUNK, int M, int K, int N>
 class GemmReluMkknChunkGraph : public adf::graph {
 
   private:
     static const int N_RND = (N + 3)/4*4;
     adf::relative_coordinate tileOffsets[8] = {
-      {.col_offset = -1, .row_offset = -1},
-      {.col_offset = 0, .row_offset = -1},
-      {.col_offset = 1, .row_offset = -1},
-      {.col_offset = -1, .row_offset = 0},
+      {.col_offset = -1, .row_offset = 0}, // left, right
       {.col_offset = 1, .row_offset = 0},
-      {.col_offset = -1, .row_offset = 1},
+      {.col_offset = -1, .row_offset = 1}, // bottom row
       {.col_offset = 0, .row_offset = 1},
       {.col_offset = 1, .row_offset = 1},
+      {.col_offset = -1, .row_offset = -1}, // top row
+      {.col_offset = 0, .row_offset = -1},
+      {.col_offset = 1, .row_offset = -1},
     };
 
   public:
     static const int CHUNK_COUNT = (N_RND + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    ConcatScalarGraph<CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
+    // breaks if NCHUNK%8!=0 N%4!=0
+    ConcatGraph<CONCAT, CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];
