@@ -2,17 +2,18 @@
 #include "graph_utils.h"
 
 
-template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-class ConcatScalarGraphTest : public adf::graph {
+template <template<int, int, int, int> class CONCAT,
+  int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+class ConcatGraphTest : public adf::graph {
 
   private:
-    ConcatScalarGraph<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE> g;
+    ConcatGraph<CONCAT, LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE> g;
 
   public:
     adf::input_plio plin[LCNT];
     adf::output_plio plout[1];
 
-    ConcatScalarGraphTest(
+    ConcatGraphTest(
       const std::string& id,
       const std::string& OUT_TXT = "concat_out.txt",
       const std::string& INP0_TXT = std::string(),
@@ -50,14 +51,14 @@ class ConcatScalarGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-ConcatScalarGraphTest<5, 8, 8, 4*8+4> fpscalar1(
+ConcatGraphTest<ConcatScalar, 5, 8, 8, 4*8+4> fpscalar1(
   "fpscalar1", "concat_fpout1_ConcatScalar.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt"
 );
 
-ConcatScalarGraphTest<5, 8, 4, 4*4+2> fpscalar2(
+ConcatGraphTest<ConcatScalar, 5, 8, 4, 4*4+2> fpscalar2(
   "fpscalar2", "concat_fpout2_ConcatScalar.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
