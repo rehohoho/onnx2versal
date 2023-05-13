@@ -5,7 +5,7 @@ np.random.seed(0)
 
 C = 2
 W = 28
-M = 2
+M = 4
 K = 5
 PAD = (8 - K%8) % 8
 
@@ -48,6 +48,8 @@ np.savetxt("conv_fpout_ConvReluScalarBCHW.txt", res_bchw.reshape(-1, 2))
 np.savetxt("conv_fpout_ConvReluScalarBCHW_rand.txt", res_bchw_rand.reshape(-1, 2))
 np.savetxt("conv_fpout_Conv5x5ReluBCHW.txt", res_bchw.reshape(-1, 2))
 np.savetxt("conv_fpout_Conv5x5ReluBCHW_rand.txt", res_bchw_rand.reshape(-1, 2))
+np.savetxt("conv_fpout_Conv5x5on8ReluBCHW.txt", res_bchw.reshape(-1, 2))
+np.savetxt("conv_fpout_Conv5x5on8ReluBCHW_rand.txt", res_bchw_rand.reshape(-1, 2))
 
 # result for bhwc
 res_bhwc = torch.nn.functional.conv2d(
