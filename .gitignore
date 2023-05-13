@@ -26,3 +26,6 @@ data/MNIST
 *.onnx
 data/mnist_*.txt
 data/lenet_mnist*.txt
+
+# docs
+docs/
