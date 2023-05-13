@@ -28,8 +28,8 @@ lenet fc1: 294 cycles
 lenet fc2: 349 cycles
 lenet fc3: 91 cycles
 */
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat8Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter8(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -41,7 +41,7 @@ void Concat8Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat8Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running Concat8Scalar<%d, %d, %d>::filter8\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
@@ -58,8 +58,8 @@ void Concat8Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   PROFILE_FOOTER;
 }
 
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat7Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter7(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -70,7 +70,7 @@ void Concat7Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat8Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running Concat8Scalar<%d, %d, %d>::filter7\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
@@ -86,8 +86,8 @@ void Concat7Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   PROFILE_FOOTER;
 }
 
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat6Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter6(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -97,7 +97,7 @@ void Concat6Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat8Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running Concat8Scalar<%d, %d, %d>::filter6\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
@@ -112,8 +112,8 @@ void Concat6Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   PROFILE_FOOTER;
 }
 
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat5Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter5(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -122,7 +122,7 @@ void Concat5Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat5Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running ConcatScalar<%d, %d, %d>::filter5\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
@@ -136,8 +136,8 @@ void Concat5Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   PROFILE_FOOTER;
 }
 
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat4Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter4(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -145,7 +145,7 @@ void Concat4Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat5Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running ConcatScalar<%d, %d, %d>::filter4\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
@@ -158,15 +158,15 @@ void Concat4Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   PROFILE_FOOTER;
 }
 
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat3Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter3(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat3Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running ConcatScalar<%d, %d, %d>::filter3\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
@@ -178,14 +178,14 @@ void Concat3Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   PROFILE_FOOTER;
 }
 
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat2Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter2(
 	input_window<float>* in0,
 	input_window<float>* in1,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat3Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running ConcatScalar<%d, %d, %d>::filter2\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
@@ -196,13 +196,13 @@ void Concat2Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
   PROFILE_FOOTER;
 }
 
-template <int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
-void Concat1Scalar<WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter(
+template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+void ConcatScalar<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>::filter1(
 	input_window<float>* in0,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running Concat1Scalar<%d, %d, %d>\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
+    "Running ConcatScalar<%d, %d, %d>::filter1\n", WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE));
 
   for (int i = 0; i < WINDOW_SIZE; i+=CHUNK_SIZE) {
     int blockIdx = 0;
