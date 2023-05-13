@@ -27,6 +27,12 @@ class ConvReluGraph : public adf::graph {
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], pout[0]);
       adf::runtime<ratio>(k[0]) = 0.6;
+
+      adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
+      adf::location<adf::parameter>(k[0].param[0]) = tilePos; // weight (<= 16384B)
+      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0x0000);
+      adf::location<adf::parameter>(k[0].param[1]) = tilePos; // bias   (<= 4096B)
+      adf::location<adf::parameter>(k[0].param[1]) = adf::offset(0x4000); 
     }
 
 };
@@ -67,9 +73,19 @@ class ConvReluChunkGraph : public adf::graph {
     static const int CONCAT_CHUNK = (IS_BCHW) ? MCHUNK*OUT_W*OUT_W : MCHUNK;
     static const int CONCAT_BLOCK = (IS_BCHW) ? M*OUT_W*OUT_W : M;
 
+    adf::relative_coordinate tileOffsets[8] = {
+      {.col_offset = -1, .row_offset = 0}, // left, right
+      {.col_offset = 1, .row_offset = 0},
+      {.col_offset = -1, .row_offset = 1}, // bottom row
+      {.col_offset = 0, .row_offset = 1},
+      {.col_offset = 1, .row_offset = 1},
+      {.col_offset = -1, .row_offset = -1}, // top row
+      {.col_offset = 0, .row_offset = -1},
+      {.col_offset = 1, .row_offset = -1},
+    };
+
   public:
     static const int CHUNK_COUNT = (M + MCHUNK - 1) / MCHUNK; // ceiling
-    
     adf::kernel convs[CHUNK_COUNT];
     ConcatScalarGraph<CHUNK_COUNT, B*MCHUNK*OUT_W*OUT_W, CONCAT_CHUNK, CONCAT_BLOCK> concat_g;
 
@@ -95,6 +111,15 @@ class ConvReluChunkGraph : public adf::graph {
           wChunk, bChunk);
         adf::source(convs[i]) = "conv.cc";
         adf::runtime<ratio>(convs[i]) = 0.6;
+        
+        adf::location<adf::kernel>(convs[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
+          adf::relative_offset(tileOffsets[i]);
+        adf::location_constraint tilePos = adf::location<adf::kernel>(convs[i]);
+        adf::location<adf::parameter>(convs[i].param[0]) = tilePos; // weight (<= 16384B)
+        adf::location<adf::parameter>(convs[i].param[0]) = adf::offset(0x0000);
+        adf::location<adf::parameter>(convs[i].param[1]) = tilePos; // bias   (<= 4096B)
+        adf::location<adf::parameter>(convs[i].param[1]) = adf::offset(0x4000); 
+        // input window and output window can be much larger
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
