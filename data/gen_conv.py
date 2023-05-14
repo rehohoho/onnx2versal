@@ -3,9 +3,9 @@ import torch
 
 np.random.seed(0)
 
-C = 2
+C = 1 # loop dependency missed issue occurs at C=1
 W = 28
-M = 4
+M = 6
 K = 5
 PAD = (8 - K%8) % 8
 
