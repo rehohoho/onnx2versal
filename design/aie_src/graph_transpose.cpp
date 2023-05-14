@@ -51,11 +51,11 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
   adfCheck(fpscalar.init(), "init fpscalar");
-  get_graph_throughput_by_port(fpscalar, "plout[0]", fpscalar.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+  get_graph_throughput_by_port(fpscalar, "plout[0]", fpscalar.plout[0], 1*4*4*16, sizeof(float_t), ITER_CNT);
 	adfCheck(fpscalar.end(), "end fpscalar");
 
   adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
-  get_graph_throughput_by_port(fpscalar_rand, "plout[0]", fpscalar_rand.plout[0], 1*12*12*6, sizeof(float32), ITER_CNT);
+  get_graph_throughput_by_port(fpscalar_rand, "plout[0]", fpscalar_rand.plout[0], 1*4*4*16, sizeof(float_t), ITER_CNT);
 	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
   return 0;
 }

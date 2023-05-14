@@ -5,6 +5,28 @@
 #include "transpose.h"
 
 
+/**
+ * @defgroup Transpose
+ * 
+ * @brief Transpose function, BHWC->BCHW tentatively
+ * 
+ * @tparam TRANSPOSE  Transpose Kernel
+ * @tparam B          batch size
+ * @tparam H          height
+ * @tparam W          width
+ * @tparam C          input channels
+ * 
+ * @connections
+ * @connect{pin[1], B*H*W*C*4}
+ * @connect{pout[1], B*H*W*C*4}
+ * @endconnections
+ * 
+ * @{
+ */
+
+/**
+ * @brief Single instance graph
+ */
 template <template<int, int, int, int> class TRANSPOSE, 
   int B, int H, int W, int C>
 class TransposeGraph : public adf::graph {
@@ -26,6 +48,7 @@ class TransposeGraph : public adf::graph {
     }
 
 };
+/** @} */
 
 
 #endif // __TRANSPOSE_GRAPH_H__
