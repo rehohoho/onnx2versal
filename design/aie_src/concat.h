@@ -4,8 +4,15 @@
 #include <adf.h>
 
 
+/** 
+ * @defgroup ConcatKernels
+ * @ingroup Concat
+ * 
+ * @{
+ */
+
+
 /**
- * @ingroup Concat 
  * @brief Scalar implementation, ConcatScalar<5, 64, 16, 52> takes 650 cycles
  */
 template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
@@ -94,9 +101,8 @@ class ConcatScalar {
 
 
 /**
- * @ingroup Concat 
- * @brief Vector implementation, ConcatVector<5, 64, 16, 52> takes 232 cycles. 
- * @attention Expects CHUNK_SIZE%8=0, BLOCK_SIZE%4=0
+ * @brief Vector implementation, Requires CHUNK_SIZE%8=0, BLOCK_SIZE%4=0.
+ * ConcatVector<5, 64, 16, 52> takes 232 cycles.
  */
 template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatVector {
@@ -181,6 +187,7 @@ class ConcatVector {
 			}
 		}
 };
+/** @}*/
 
 
 #endif // CONCAT_H_

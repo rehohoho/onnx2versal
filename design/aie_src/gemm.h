@@ -22,7 +22,7 @@
 
 
 /**
- * @brief Scalar implementation for BHWC, streams weights and biases, 
+ * @brief Scalar implementation for MK*NK, streams weights and biases, 
  * GemmReluScalarGmemParamMKNK<1, 86, 10> total = 19223
  */
 template <int M, int K, int NCHUNK>
