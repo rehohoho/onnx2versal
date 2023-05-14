@@ -3,7 +3,17 @@
 
 #include <adf.h>
 
+/** 
+ * @defgroup IdentityKernels
+ * @ingroup Identity
+ * 
+ * @{
+ */
 
+/**
+ * @brief Scalar implementation,
+ * IdentityScalar<8> total = 35
+ */
 template <int N>
 class IdentityScalar {
   public:
@@ -15,6 +25,7 @@ class IdentityScalar {
       REGISTER_FUNCTION(IdentityScalar::filter);
     }
 };
+/** @}*/
 
 
 #endif // IDENTITY_H_

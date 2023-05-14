@@ -5,6 +5,25 @@
 #include "identity.h"
 
 
+/**
+ * @defgroup Identity
+ * 
+ * @brief Identity function, output=input
+ * 
+ * @tparam IDENTITY Identity Kernel
+ * @tparam N        size of input and output
+ * 
+ * @connections
+ * @connect{pin[1], N*4}
+ * @connect{pout[1], N*4}
+ * @endconnections
+ * 
+ * @{
+ */
+
+/**
+ * @brief Single instance graph
+ */
 template <template<int> class IDENTITY, int N>
 class IdentityGraph : public adf::graph {
 
@@ -25,6 +44,7 @@ class IdentityGraph : public adf::graph {
     }
 
 };
+/** @} */
 
 
 #endif // __IDENTITY_GRAPH_H__
