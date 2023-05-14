@@ -9,32 +9,54 @@
 #include "graph_utils.h"
 
 
-/*
-Profile cycles:
-Running Conv5x5ReluBCHW<28, 24, 1, 1, 6>: 21271
-Running Maxpool2x2BCHW::filter<24, 12, 1, 6>: 901
-Running Conv5x5ReluBCHW<12, 8, 1, 6, 16>: 41524
-Running Maxpool2x2BCHW::filter<8, 4, 1, 16>: 291
-Running 8x gemm_relu_scalar<1, 256, 16>: 8593
-Running concat8_scalar<8, 16, 16, 120>: 630
-Running 3x gemm_relu_scalar<1, 120, 34>: 8922
-Running concat8_scalar<3, 34, 34, 84>: 883
-Running 1x gemm_relu_scalar<1, 84, 48>: 9103
-Running concat8_scalar<1, 48, 48, 10>: 937
-start = 97105,end = 97241,total = 136
-*/
+/**
+ * @defgroup Lenet
+ * 
+ * @tparam CONV   Conv2D Kernel
+ * @tparam POOL   Pool2D Kernel
+ * @tparam GEMM   Gemm Kernel
+ * @tparam ARGMAX Argmax Kernel
+ * @tparam CONCAT Concat Kernel
+ * 
+ * @{
+ */
+
+/**
+ * @brief Lenet on Mnist dataset, assumes BCHW format
+ * 
+ * @details
+ * Profile information
+ * - Running Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16665
+ * - Running Maxpool2x2BCHW::filter<24, 12, 1, 6> total = 901
+ * - Running Conv5x5on8ReluBCHW<12, 8, 1, 6, 16> total = 25952
+ * - Running Maxpool2x2BCHW::filter<8, 4, 1, 16> total = 291
+ * - Running 8x GemmReluMKKN<1, 256, 16> total = 906
+ * - Running ConcatVector<8, 16, 16, 120>::filter8 total = 126
+ * - Running 3x GemmReluMKKN<1, 120, 32> total = 888
+ * - Running ConcatVector<3, 32, 32, 84>::filter3 total = 73
+ * - Running GemmReluMKKN<1, 84, 48> total = 973
+ * - Running ConcatVector<1, 48, 48, 10>::filter7 total = 41
+ * - Running ArgmaxScalar<10, 10> total = 136
+ * 
+
+ * 
+ * @connections
+ * @connect{pin[1], 1*1*28*28*4}
+ * @connect{pout[?], ?}
+ * @endconnections
+ */
 template <
   template<int, int, int, int, int, int> class CONV,
   template<int, int, int, int> class POOL,
   template<int, int, int> class GEMM,
-  template<int, int> class ARGMAX
->
+  template<int, int> class ARGMAX,
+  template<int, int, int, int> class CONCAT>
 class MnistLenetBchwGraph : public adf::graph {
 
   private:
-    typedef GemmReluMkknChunkGraph<GEMM, MAX_FLOAT_PARAMS/256/4*4, 1, 256, 120> Gemm1;
-    typedef GemmReluMkknChunkGraph<GEMM, MAX_FLOAT_PARAMS/120/4*4, 1, 120, 84> Gemm2;
-    typedef GemmReluMkknChunkGraph<GEMM, MAX_FLOAT_PARAMS/84/4*4, 1, 84, 10> Gemm3;
+    typedef GemmReluMkknChunkGraph<GEMM, ConcatVector, MAX_FLOAT_PARAMS/256/4*4, 1, 256, 120> Gemm1;
+    typedef GemmReluMkknChunkGraph<GEMM, ConcatVector, MAX_FLOAT_PARAMS/120/4*4, 1, 120, 84> Gemm2;
+    typedef GemmReluMkknChunkGraph<GEMM, ConcatVector, MAX_FLOAT_PARAMS/84/4*4, 1, 84, 10> Gemm3;
 
     ConvReluGraph<CONV, 28, 24, 1, 1, 6, 5> k0conv1;
     MaxpoolGraph<POOL, 24, 12, 1, 6> k1pool1;
@@ -117,6 +139,7 @@ class MnistLenetBchwGraph : public adf::graph {
     }
 
 };
+/** @} */
 
 
 #endif // __GRAPH_H__
