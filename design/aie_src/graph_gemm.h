@@ -6,6 +6,34 @@
 #include "graph_concat.h"
 
 
+/**
+ * @defgroup Gemm
+ * 
+ * @brief xA^T + b as per torch.nn.Linear. Applies general matrix multiply:
+ * output(MxN) = input(MxK) * weights(KxN) + bias(N)
+ * 
+ * @details
+ * - std::conditional for kernel/graph typedef results in error in graph hierarchy algorithm
+ * 
+ * @tparam GEMM     Gemm Kernel
+ * @tparam CONCAT   Concat Kernel (if multiinstance)
+ * @tparam NCHUNK   chunk size for N (if multiinstance)
+ * @tparam M        number of rows of input matrix
+ * @tparam K        number of cols / number of rows of weight matrix
+ * @tparam N        number of cols of weight matrix / size of bias vector
+ * 
+ * @connections
+ * @connect{pin[1], M*K*4}
+ * @connect{pout[1], M*N*4}
+ * @endconnections
+ * 
+ * @{
+ */
+
+/**
+ * @brief Single instance graph that stores weights and biases
+ * Max size = 16384 and 4096 bytes respectively
+ */
 template <template<int, int, int> class GEMM, int M, int K, int N>
 class GemmReluGraph : public adf::graph {
 
@@ -31,6 +59,9 @@ class GemmReluGraph : public adf::graph {
 };
 
 
+/**
+ * @brief Single instance graph that streams weights and biases, significantly slower.
+ */
 template <template<int, int, int> class GEMM, int M, int K, int N>
 class GemmReluGmemParamGraph : public adf::graph {
 
@@ -56,12 +87,14 @@ class GemmReluGmemParamGraph : public adf::graph {
 };
 
 
-/*
-Chunks NxK weight params into ~16384B chunks by N dimension
-Assumes weight <=16384B, bias <=4096B, input <=4096B per chunk
-Places a maximum of 3x3 tiles, 8 gemm tiles surrounding a concat tile (max AIE DMA input = 8)
-Constraint: CHUNK_COUNT = N/NCHUNK+1 <= 8
-*/
+/**
+ * @brief Multiinstance graph for MxK times NxK that stores weights and biases
+ * Chunks NxK weights by N dimension into NCHUNK chunks.
+ * Each instance has max size = 16384 and 4096 bytes respectively.
+ * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
+ * 
+ * @attention Weight should be is NxK, where NCHUNK%8=0 and N%4=0
+ */
 template <
   template<int, int, int> class GEMM, 
   template<int, int, int, int> class CONCAT, 
@@ -85,7 +118,6 @@ class GemmReluMknkChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    // breaks if NCHUNK%8!=0 N%4!=0
     ConcatGraph<CONCAT, CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
@@ -130,10 +162,14 @@ class GemmReluMknkChunkGraph : public adf::graph {
 };
 
 
-/*
-Assumes weight is KxN_RND
-Assumes NCHUNK is vector readable (128-bit chunks)
-*/
+/**
+ * @brief Multiinstance graph for MxK times KxN that stores weights and biases
+ * Chunks KxN weights by N dimension into NCHUNK chunks.
+ * Each instance has max size = 16384 and 4096 bytes respectively.
+ * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
+ * 
+ * @attention Weight should be is KxN_RND, where NCHUNK%8=0 and N%4=0
+ */
 template <
   template<int, int, int> class GEMM, 
   template<int, int, int, int> class CONCAT, 
@@ -156,7 +192,6 @@ class GemmReluMkknChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (N_RND + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    // breaks if NCHUNK%8!=0 N%4!=0
     ConcatGraph<CONCAT, CHUNK_COUNT, NCHUNK, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
@@ -204,6 +239,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
     }
 
 };
+/** @} */
 
 
 #endif // __GEMM_GRAPH_H_

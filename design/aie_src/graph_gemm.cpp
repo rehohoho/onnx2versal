@@ -70,67 +70,67 @@ std::vector<float> fpweights_mkkn_rand {0.5232480534666997, 0.09394051075844168,
 std::vector<float> fpbias {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 std::vector<float> fpbias_rand {0.7186263903411519, 0.33597754234025523, 0.727771273214418, 0.8151993953143135, 0.21766284345773845, 0.9738186968459833, 0.16235794791266678, 0.29084090665674256, 0.17979529083354162, 0.34550565635633446};
 
-GemmReluGraphTest<GemmReluScalarMKNK, 1, 86, 10> fpscalar_mknk(
-  "fpscalar_mknk", fpweights_mknk, fpbias, 
+GemmReluGraphTest<GemmReluScalarMKNK, 1, 86, 10> gemmReluScalarMKNK(
+  "gemmReluScalarMKNK", fpweights_mknk, fpbias, 
   "gemm_fpin.txt", "gemm_fpout_GemmReluScalarMKNK.txt");
-GemmReluGraphTest<GemmReluScalarMKNK, 1, 86, 10> fpscalar_mknk_rand(
-  "fpscalar_mknk_rand", fpweights_mknk_rand, fpbias_rand, 
+GemmReluGraphTest<GemmReluScalarMKNK, 1, 86, 10> gemmReluScalarMKNK_rand(
+  "gemmReluScalarMKNK_rand", fpweights_mknk_rand, fpbias_rand, 
   "gemm_fpin_rand.txt", "gemm_fpout_GemmReluScalarMKNK_rand.txt");
 
-GemmReluGraphTest<GemmReluScalarMKKN, 1, 86, 10> fpscalar_mkkn(
-  "fpscalar_mkkn", fpweights_mkkn, fpbias, "gemm_fpin.txt", "gemm_fpout_GemmReluScalarMKKN.txt");
-GemmReluGraphTest<GemmReluScalarMKKN, 1, 86, 10> fpscalar_mkkn_rand(
-  "fpscalar_mkkn_rand", fpweights_mkkn_rand, fpbias_rand, 
+GemmReluGraphTest<GemmReluScalarMKKN, 1, 86, 10> gemmReluScalarMKKN(
+  "gemmReluScalarMKKN", fpweights_mkkn, fpbias, "gemm_fpin.txt", "gemm_fpout_GemmReluScalarMKKN.txt");
+GemmReluGraphTest<GemmReluScalarMKKN, 1, 86, 10> gemmReluScalarMKKN_rand(
+  "gemmReluScalarMKKN_rand", fpweights_mkkn_rand, fpbias_rand, 
   "gemm_fpin_rand.txt", "gemm_fpout_GemmReluScalarMKKN_rand.txt");
 
-GemmReluGraphTest<GemmReluMKKN, 1, 86, 10> fpvector_mkkn(
-  "fpvector_mkkn", fpweights_mkkn, fpbias, 
+GemmReluGraphTest<GemmReluMKKN, 1, 86, 10> gemmReluMKKN(
+  "gemmReluMKKN", fpweights_mkkn, fpbias, 
   "gemm_fpin.txt", "gemm_fpout_GemmReluMKKN.txt");
-GemmReluGraphTest<GemmReluMKKN, 1, 86, 10> fpvector_mkkn_rand(
-  "fpvector_mkkn_rand", fpweights_mkkn_rand, fpbias_rand, 
+GemmReluGraphTest<GemmReluMKKN, 1, 86, 10> gemmReluMKKN_rand(
+  "gemmReluMKKN_rand", fpweights_mkkn_rand, fpbias_rand, 
   "gemm_fpin_rand.txt", "gemm_fpout_GemmReluMKKN_rand.txt");
 
-GemmReluGmemParamGraphTest<GemmReluScalarGmemParamMKNK, 1, 86, 10> fpscalar_gmemparam_mknk(
-  "fpscalar_gmemparam_mknk", "gemm_fpweights_mknk.txt", "gemm_fpbias.txt", 
+GemmReluGmemParamGraphTest<GemmReluScalarGmemParamMKNK, 1, 86, 10> gemmReluScalarGmemParamMKNK(
+  "gemmReluScalarGmemParamMKNK", "gemm_fpweights_mknk.txt", "gemm_fpbias.txt", 
   "gemm_fpin.txt", "gemm_fpout_GemmReluScalarGmemParamMKNK.txt");
-GemmReluGmemParamGraphTest<GemmReluScalarGmemParamMKNK, 1, 86, 10> fpscalar_gmemparam_mknk_rand(
-  "fpscalar_gmemparam_mknk_rand", "gemm_fpweights_mknk_rand.txt", "gemm_fpbias_rand.txt", 
+GemmReluGmemParamGraphTest<GemmReluScalarGmemParamMKNK, 1, 86, 10> gemmReluScalarGmemParamMKNK_rand(
+  "gemmReluScalarGmemParamMKNK_rand", "gemm_fpweights_mknk_rand.txt", "gemm_fpbias_rand.txt", 
   "gemm_fpin_rand.txt", "gemm_fpout_GemmReluScalarGmemParamMKNK_rand.txt");
 
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
-  adfCheck(fpscalar_mknk.init(), "init fpscalar_mknk");
-  adfCheck(fpscalar_mknk.run(ITER_CNT), "run fpscalar_mknk");
-	adfCheck(fpscalar_mknk.end(), "end fpscalar_mknk");
+  adfCheck(gemmReluScalarMKNK.init(), "init gemmReluScalarMKNK");
+  adfCheck(gemmReluScalarMKNK.run(ITER_CNT), "run gemmReluScalarMKNK");
+	adfCheck(gemmReluScalarMKNK.end(), "end gemmReluScalarMKNK");
 
-  adfCheck(fpscalar_mknk_rand.init(), "init fpscalar_mknk_rand");
-  adfCheck(fpscalar_mknk_rand.run(ITER_CNT), "run fpscalar_mknk_rand");
-	adfCheck(fpscalar_mknk_rand.end(), "end fpscalar_mknk_rand");
+  adfCheck(gemmReluScalarMKNK_rand.init(), "init gemmReluScalarMKNK_rand");
+  adfCheck(gemmReluScalarMKNK_rand.run(ITER_CNT), "run gemmReluScalarMKNK_rand");
+	adfCheck(gemmReluScalarMKNK_rand.end(), "end gemmReluScalarMKNK_rand");
 
-  adfCheck(fpscalar_mkkn.init(), "init fpscalar_mkkn");
-  adfCheck(fpscalar_mkkn.run(ITER_CNT), "run fpscalar_mkkn");
-	adfCheck(fpscalar_mkkn.end(), "end fpscalar_mkkn");
+  adfCheck(gemmReluScalarMKKN.init(), "init gemmReluScalarMKKN");
+  adfCheck(gemmReluScalarMKKN.run(ITER_CNT), "run gemmReluScalarMKKN");
+	adfCheck(gemmReluScalarMKKN.end(), "end gemmReluScalarMKKN");
 
-  adfCheck(fpscalar_mkkn_rand.init(), "init fpscalar_mkkn_rand");
-  adfCheck(fpscalar_mkkn_rand.run(ITER_CNT), "run fpscalar_mkkn_rand");
-	adfCheck(fpscalar_mkkn_rand.end(), "end fpscalar_mkkn_rand");
+  adfCheck(gemmReluScalarMKKN_rand.init(), "init gemmReluScalarMKKN_rand");
+  adfCheck(gemmReluScalarMKKN_rand.run(ITER_CNT), "run gemmReluScalarMKKN_rand");
+	adfCheck(gemmReluScalarMKKN_rand.end(), "end gemmReluScalarMKKN_rand");
 
-  adfCheck(fpvector_mkkn.init(), "init fpvector_mkkn");
-  adfCheck(fpvector_mkkn.run(ITER_CNT), "run fpvector_mkkn");
-	adfCheck(fpvector_mkkn.end(), "end fpvector_mkkn");
+  adfCheck(gemmReluMKKN.init(), "init gemmReluMKKN");
+  adfCheck(gemmReluMKKN.run(ITER_CNT), "run gemmReluMKKN");
+	adfCheck(gemmReluMKKN.end(), "end gemmReluMKKN");
 
-  adfCheck(fpvector_mkkn_rand.init(), "init fpvector_mkkn_rand");
-  adfCheck(fpvector_mkkn_rand.run(ITER_CNT), "run fpvector_mkkn_rand");
-	adfCheck(fpvector_mkkn_rand.end(), "end fpvector_mkkn_rand");
+  adfCheck(gemmReluMKKN_rand.init(), "init gemmReluMKKN_rand");
+  adfCheck(gemmReluMKKN_rand.run(ITER_CNT), "run gemmReluMKKN_rand");
+	adfCheck(gemmReluMKKN_rand.end(), "end gemmReluMKKN_rand");
 
-  adfCheck(fpscalar_gmemparam_mknk.init(), "init fpscalar_gmemparam_mknk");
-  adfCheck(fpscalar_gmemparam_mknk.run(ITER_CNT), "run fpscalar_gmemparam_mknk");
-	adfCheck(fpscalar_gmemparam_mknk.end(), "end fpscalar_gmemparam_mknk");
+  adfCheck(gemmReluScalarGmemParamMKNK.init(), "init gemmReluScalarGmemParamMKNK");
+  adfCheck(gemmReluScalarGmemParamMKNK.run(ITER_CNT), "run gemmReluScalarGmemParamMKNK");
+	adfCheck(gemmReluScalarGmemParamMKNK.end(), "end gemmReluScalarGmemParamMKNK");
 
-  adfCheck(fpscalar_gmemparam_mknk_rand.init(), "init fpscalar_gmemparam_mknk_rand");
-  adfCheck(fpscalar_gmemparam_mknk_rand.run(ITER_CNT), "run fpscalar_gmemparam_mknk_rand");
-	adfCheck(fpscalar_gmemparam_mknk_rand.end(), "end fpscalar_gmemparam_mknk_rand");
+  adfCheck(gemmReluScalarGmemParamMKNK_rand.init(), "init gemmReluScalarGmemParamMKNK_rand");
+  adfCheck(gemmReluScalarGmemParamMKNK_rand.run(ITER_CNT), "run gemmReluScalarGmemParamMKNK_rand");
+	adfCheck(gemmReluScalarGmemParamMKNK_rand.end(), "end gemmReluScalarGmemParamMKNK_rand");
   return 0;
 }
 #endif
@@ -138,37 +138,37 @@ int main(int argc, char ** argv) {
 
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
-  adfCheck(fpscalar_mknk.init(), "init fpscalar_mknk");
-  get_graph_throughput_by_port(fpscalar_mknk, "plout[0]", fpscalar_mknk.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpscalar_mknk.end(), "end fpscalar_mknk");
+  adfCheck(gemmReluScalarMKNK.init(), "init gemmReluScalarMKNK");
+  get_graph_throughput_by_port(gemmReluScalarMKNK, "plout[0]", gemmReluScalarMKNK.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluScalarMKNK.end(), "end gemmReluScalarMKNK");
 
-  adfCheck(fpscalar_mknk_rand.init(), "init fpscalar_mknk_rand");
-  get_graph_throughput_by_port(fpscalar_mknk_rand, "plout[0]", fpscalar_mknk_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpscalar_mknk_rand.end(), "end fpscalar_mknk_rand");
+  adfCheck(gemmReluScalarMKNK_rand.init(), "init gemmReluScalarMKNK_rand");
+  get_graph_throughput_by_port(gemmReluScalarMKNK_rand, "plout[0]", gemmReluScalarMKNK_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluScalarMKNK_rand.end(), "end gemmReluScalarMKNK_rand");
 
-  adfCheck(fpscalar_mkkn.init(), "init fpscalar_mkkn");
-  get_graph_throughput_by_port(fpscalar_mkkn, "plout[0]", fpscalar_mkkn.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpscalar_mkkn.end(), "end fpscalar_mkkn");
+  adfCheck(gemmReluScalarMKKN.init(), "init gemmReluScalarMKKN");
+  get_graph_throughput_by_port(gemmReluScalarMKKN, "plout[0]", gemmReluScalarMKKN.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluScalarMKKN.end(), "end gemmReluScalarMKKN");
 
-  adfCheck(fpscalar_mkkn_rand.init(), "init fpscalar_mkkn_rand");
-  get_graph_throughput_by_port(fpscalar_mkkn_rand, "plout[0]", fpscalar_mkkn_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpscalar_mkkn_rand.end(), "end fpscalar_mkkn_rand");
+  adfCheck(gemmReluScalarMKKN_rand.init(), "init gemmReluScalarMKKN_rand");
+  get_graph_throughput_by_port(gemmReluScalarMKKN_rand, "plout[0]", gemmReluScalarMKKN_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluScalarMKKN_rand.end(), "end gemmReluScalarMKKN_rand");
 
-  adfCheck(fpvector_mkkn.init(), "init fpvector_mkkn");
-  get_graph_throughput_by_port(fpvector_mkkn, "plout[0]", fpvector_mkkn.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpvector_mkkn.end(), "end fpvector_mkkn");
+  adfCheck(gemmReluMKKN.init(), "init gemmReluMKKN");
+  get_graph_throughput_by_port(gemmReluMKKN, "plout[0]", gemmReluMKKN.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluMKKN.end(), "end gemmReluMKKN");
 
-  adfCheck(fpvector_mkkn_rand.init(), "init fpvector_mkkn_rand");
-  get_graph_throughput_by_port(fpvector_mkkn_rand, "plout[0]", fpvector_mkkn_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpvector_mkkn_rand.end(), "end fpvector_mkkn_rand");
+  adfCheck(gemmReluMKKN_rand.init(), "init gemmReluMKKN_rand");
+  get_graph_throughput_by_port(gemmReluMKKN_rand, "plout[0]", gemmReluMKKN_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluMKKN_rand.end(), "end gemmReluMKKN_rand");
   
-  adfCheck(fpscalar_gmemparam_mknk.init(), "init fpscalar_gmemparam_mknk");
-  get_graph_throughput_by_port(fpscalar_gmemparam_mknk, "plout[0]", fpscalar_gmemparam_mknk.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpscalar_gmemparam_mknk.end(), "end fpscalar_gmemparam_mknk");
+  adfCheck(gemmReluScalarGmemParamMKNK.init(), "init gemmReluScalarGmemParamMKNK");
+  get_graph_throughput_by_port(gemmReluScalarGmemParamMKNK, "plout[0]", gemmReluScalarGmemParamMKNK.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluScalarGmemParamMKNK.end(), "end gemmReluScalarGmemParamMKNK");
 
-  adfCheck(fpscalar_gmemparam_mknk_rand.init(), "init fpscalar_gmemparam_mknk_rand");
-  get_graph_throughput_by_port(fpscalar_gmemparam_mknk_rand, "plout[0]", fpscalar_gmemparam_mknk_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
-	adfCheck(fpscalar_gmemparam_mknk_rand.end(), "end fpscalar_gmemparam_mknk_rand");
+  adfCheck(gemmReluScalarGmemParamMKNK_rand.init(), "init gemmReluScalarGmemParamMKNK_rand");
+  get_graph_throughput_by_port(gemmReluScalarGmemParamMKNK_rand, "plout[0]", gemmReluScalarGmemParamMKNK_rand.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+	adfCheck(gemmReluScalarGmemParamMKNK_rand.end(), "end gemmReluScalarGmemParamMKNK_rand");
   return 0;
 }
 #endif
