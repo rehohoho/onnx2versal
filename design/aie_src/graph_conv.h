@@ -17,9 +17,10 @@
  * - std::conditional for kernel/graph typedef results in error in graph hierarchy algorithm
  * 
  * @tparam CONV     Conv2D Kernel
- * @tparam CONCAT   Concat Kernel (for multiinstance)
- * @tparam IS_BCHW  if BCHW or BHWC, affects concatenation
- * @tparam is_KPAD  if kernel weights are padded, affects chunking
+ * @tparam CONCAT   Concat Kernel (if multiinstance)
+ * @tparam IS_BCHW  if BCHW or BHWC, affects concatenation (if multiinstance)
+ * @tparam IS_KPAD  if kernel weights are padded, affects chunking (if multiinstance)
+ * @tparam MCHUNK   M chunk size (if multiinstance)
  * @tparam INP_W    input width/height
  * @tparam OUT_W    output width/height, = INP_W - K/2
  * @tparam B        batch size
@@ -32,13 +33,12 @@
  * @connect{pout[1], B*M*OUT_W*OUT_W*4}
  * @endconnections
  * 
- * @attention ConcatVector breaks if CONCAT_CHUNK%8!=0 CONCAT_BLOCK%4!=0
- * 
  * @{
  */
 
 /**
- * @brief Single instance graph, stores weights and biases, max size = 16384 and 4096 bytes respectively
+ * @brief Single instance graph that stores weights and biases
+ * Max size = 16384 and 4096 bytes respectively
  */
 template <template<int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K>
@@ -73,7 +73,7 @@ class ConvReluGraph : public adf::graph {
 
 
 /**
- * @brief Single instance graph, streams weights and biases, significantly slower.
+ * @brief Single instance graph that streams weights and biases, significantly slower.
  */
 template <template<int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K>
@@ -102,7 +102,15 @@ class ConvReluGmemParamGraph : public adf::graph {
 
 
 /**
- * @brief Multiinstance graph, stores weights and biases, max size = 16384 and 4096 bytes respectively
+ * @brief Multiinstance graph that stores weights and biases. 
+ * Chunks MCKK weights by M dimension into MCHUNK chunks.
+ * Each instance has max size = 16384 and 4096 bytes respectively.
+ * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
+ * 
+ * @attention 
+ * - If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0
+ * - If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0
+ * 
  */
 template <
   template<int, int, int, int, int, int> class CONV, 

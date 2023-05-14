@@ -21,6 +21,10 @@
  * 
  * @{
  */
+
+/**
+ * @brief Single instance graph
+ */
 template <template<int, int> class ARGMAX, int WINDOW_SIZE, int CHUNK_SIZE>
 class ArgmaxGraph : public adf::graph {
 

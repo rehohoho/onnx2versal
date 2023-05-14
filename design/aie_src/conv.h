@@ -13,20 +13,19 @@
  *  - Lenet Conv2 Tutorial (1x16x12x12 int8) example with matmul ~2k cycles
  *  - Theoretical limit: (16*6*5*5*8*8 + 16*8*8) / 4 = 38656 cycles
  * 
- * For non-padded
+ * Design notes for non-padded weights
  * - Note zstart must be a compile time constant
  * - Using conditionals ~2x loop time, so shuffle down to handle %4 vs %5
  * - Compiler does not detect dependencies across C-loop within W-loop for some C, M, K
  * - With chess_separator_scheduler, 40796 -> 41580
  * 
- * Design decisions
+ * Design notes
  *  - Compute constrained, no point using extra v8float acc to utilize data[12:16]
  *  - Loop order BMHW seems faster since H and W > M
  *  - Multiple accs reduces number of loads by reusing data
  *  - Unrolling is not useful, must preload extra every C*K*K, not worth (46244 -> 53541)
  *  - Reduce data instances to reduce spill (v32float -> v16float: 43981 -> 40796)
  * 
- * @attention Vector versions assume OUT_W%8=0
  * @{
  */
 
@@ -112,7 +111,7 @@ class ConvReluScalarBCHW {
 
 
 /**
- * @brief Vector implementation for 5x5 BCHW, stores weights and biases,
+ * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
  * Conv5x5ReluBCHW<28, 24, 1, 1, 6> total = 21271 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused>
@@ -144,7 +143,7 @@ class Conv5x5ReluBCHW {
 
 
 /**
- * @brief Vector implementation for 5x5 BCHW, stores weights and biases,
+ * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
  * Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16737 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused>
