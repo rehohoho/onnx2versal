@@ -265,7 +265,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused>::filter(
         } // W
         window_incr(in, 2*INP_W-OUT_W/8*8); // go left OUT_W/8*8, go down 1
         window_incr(out, OUT_W);
-        chess_separator_scheduler(1); // uncomment if compiler cannot detect out dependency
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -OUT_W*INP_W); // go up OUT_W
     } // M
@@ -388,6 +388,7 @@ void Conv5x5on8ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused>::filter(
         } // W
         window_incr(in, 2*INP_W-OUT_W/8*8); // go left OUT_W/8*8, go down 1
         window_incr(out, OUT_W);
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -OUT_W*INP_W); // go up OUT_W
       wvec += C*5;

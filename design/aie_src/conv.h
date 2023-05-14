@@ -32,7 +32,7 @@
 
 /**
  * @brief Scalar implementation for BHWC, streams weights and biases, 
- * ConvReluScalarGmemParamBHWC<28, 24, 1, 2, 2, 5> total = 1382714 cycles
+ * ConvReluScalarGmemParamBHWC<28, 24, 1, 1, 6, 5> total = 2207545
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluScalarGmemParamBHWC {
@@ -51,7 +51,7 @@ class ConvReluScalarGmemParamBHWC {
 
 /**
  * @brief Scalar implementation for BHWC, stores weights and biases,
- * ConvReluScalarBHWC<28, 24, 1, 2, 2, 5> total = 144244 cycles
+ * ConvReluScalarBHWC<28, 24, 1, 1, 6, 5> total = 242765 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluScalarBHWC {
@@ -82,7 +82,7 @@ class ConvReluScalarBHWC {
 
 /**
  * @brief Scalar implementation for BCHW, stores weights and biases,
- * ConvReluScalarBCHW<28, 24, 1, 2, 2, 5> total = 148375 cycles
+ * ConvReluScalarBCHW<28, 24, 1, 1, 6, 5> total = 236147 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluScalarBCHW {
@@ -113,7 +113,7 @@ class ConvReluScalarBCHW {
 
 /**
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases,
- * Conv5x5ReluBCHW<28, 24, 1, 2, 2> total = 16241 cycles
+ * Conv5x5ReluBCHW<28, 24, 1, 1, 6> total = 21271 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused>
 class Conv5x5ReluBCHW {
@@ -145,7 +145,7 @@ class Conv5x5ReluBCHW {
 
 /**
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases,
- * Conv5x5on8ReluBCHW<28, 24, 1, 2, 2> total = 10687 cycles
+ * Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16737 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused>
 class Conv5x5on8ReluBCHW {
