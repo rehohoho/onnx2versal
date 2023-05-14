@@ -4,6 +4,27 @@
 #include <adf.h>
 
 
+/** 
+ * @defgroup GemmKernels
+ * @ingroup Gemm
+ * 
+ * @details 
+ * Design notes
+ * - Single acc/fpmac: 393 cycles, no fpmac interleaving
+ * - upd_w v8 better than load v16 from pointer, allows interleaving: 406 -> 698
+ * - interleaving ops: 406 -> 365
+ * - kstep=4 to 8: 365 -> 339
+ * - Typically K > N for downsampling, M=1 if each net does an instance
+ * - If chunking by N, for N%16=0, K<=128, for N%8=0, K<=256
+ * 
+ * @{
+ */
+
+
+/**
+ * @brief Scalar implementation for BHWC, streams weights and biases, 
+ * GemmReluScalarGmemParamMKNK<1, 86, 10> total = 19223
+ */
 template <int M, int K, int NCHUNK>
 class GemmReluScalarGmemParamMKNK {
   public:
@@ -19,6 +40,10 @@ class GemmReluScalarGmemParamMKNK {
 };
 
 
+/**
+ * @brief Scalar implementation for MK*NK, stores weights and biases,
+ * Running GemmReluScalarMKNK<1, 86, 10> total = 1939
+ */
 // xA^T + b as per torch,nn.Linear
 template <int M, int K, int NCHUNK>
 class GemmReluScalarMKNK {
@@ -46,6 +71,10 @@ class GemmReluScalarMKNK {
 };
 
 
+/**
+ * @brief Scalar implementation for MK*KN, stores weights and biases,
+ * GemmReluScalarMKKN<1, 86, 10> total = 1939
+ */
 template <int M, int K, int NCHUNK>
 class GemmReluScalarMKKN {
   
@@ -73,9 +102,11 @@ class GemmReluScalarMKKN {
 };
 
 
-/*
-Expects N%4=0, K%4=0, pad accordingly
-*/
+
+/**
+ * @brief Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%16=0
+ * GemmReluMKKN<1, 86, 10> total = 366
+ */
 template <int M, int K, int NCHUNK>
 class GemmReluMKKN {
   
@@ -101,6 +132,7 @@ class GemmReluMKKN {
       REGISTER_PARAMETER(bias);
     };
 };
+/** @}*/
 
 
 #endif // GEMM_H_

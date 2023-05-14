@@ -96,35 +96,7 @@ void GemmReluScalarMKKN<M, K, NCHUNK>::filter(
 }
 
 
-/*
-Using:
-v8float fpmac (v8float        acc,
-		           v16float       xbuf,
-               int  	        xstart,
-               unsigned int  	xoffs,
-               v8float  	    zbuf, 
-               int  	        zstart, !! compile time constant if zbuf !!
-               unsigned int  	zoffs)
-
-for (i = 0; i < 8; i++)
-  ret[i] = acc[i] + xbuf[xstart + xoffs[i]] * zbuf[zstart + zoffs[i]]
-
-a0a1a7 b00 b01 b07 b08 b09 b0f
-       b10 b11 b17 b17 b19 b1f
-       b70 b71 b77 b77 b79 b7f
-
-a0 * b00 b01 ... b07
-
-1x84 * 84x10:
-  single acc/fpmac: 393 cycles, no fpmac interleaving
-  upd_w v8 better than load v16 from pointer, allows interleaving: 406 -> 698
-  interleaving ops: 406 -> 365
-  kstep=4 to 8: 365 -> 339
-
-Typically K > N for downsampling, M=1 if each net does an instance
-If chunking by N, for N%16=0, K<=128, for N%8=0, K<=256
-*/
-template <int M, int K, int NCHUNK> // K%2=0, N%16=0 (pad to vector readable is ok)
+template <int M, int K, int NCHUNK>
 void GemmReluMKKN<M, K, NCHUNK>::filter(
 	input_window<float>* in,      // MxK  (1x256)   inputs
                                 // KxN  (256x120) weights
@@ -148,15 +120,15 @@ void GemmReluMKKN<M, K, NCHUNK>::filter(
   acc2 = fpmac(acc2, matB, 8, 0x76543210, matA, matA_i, 0x00000000);
 
   for (int i = 0; i < M; i++) {
-    for (int j = 0; j < NCHUNK; j+=16) { // fpmac accsize 8, do 2
+    for (int j = 0; j < NCHUNK; j+=16) { // v16float output per iter
 
       v8float acc1 = *(v8float *) (b_ptr + j);
       v8float acc2 = *(v8float *) (b_ptr + j + 8);
       int k = 0;
 
-      for (k = 0; k < K-7; k+=8) {
+      for (k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[:16]
         matA = *(v8float *) a_ptr; a_ptr += 8;
-        MAC_ROW(0);
+        MAC_ROW(0); // += input[0]*weight[:16]
         MAC_ROW(1);
         MAC_ROW(2);
         MAC_ROW(3);
