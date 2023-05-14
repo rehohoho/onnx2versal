@@ -6,6 +6,40 @@
 #include "graph_concat.h"
 
 
+/**
+ * @defgroup Conv2D
+ * 
+ * @brief 2D convolution on H, W dimensions of BCHW/BHWC using kernels MCKK. Each
+ * c-th KxK kernel is applied on C dimension. This is done over M iterations to yield
+ * MxHxW per instance. This is done over B iterations to yield B batches.
+ * 
+ * @details
+ * - std::conditional for kernel/graph typedef results in error in graph hierarchy algorithm
+ * 
+ * @tparam CONV     Conv2D Kernel
+ * @tparam CONCAT   Concat Kernel (for multiinstance)
+ * @tparam IS_BCHW  if BCHW or BHWC, affects concatenation
+ * @tparam is_KPAD  if kernel weights are padded, affects chunking
+ * @tparam INP_W    input width/height
+ * @tparam OUT_W    output width/height, = INP_W - K/2
+ * @tparam B        batch size
+ * @tparam C        input channels
+ * @tparam M        output channels
+ * @tparam K        kernel width
+ * 
+ * @connections
+ * @connect{pin[1], B*C*INP_W*INP_W*4}
+ * @connect{pout[1], B*M*OUT_W*OUT_W*4}
+ * @endconnections
+ * 
+ * @attention ConcatVector breaks if CONCAT_CHUNK%8!=0 CONCAT_BLOCK%4!=0
+ * 
+ * @{
+ */
+
+/**
+ * @brief Single instance graph, stores weights and biases, max size = 16384 and 4096 bytes respectively
+ */
 template <template<int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluGraph : public adf::graph {
@@ -38,6 +72,9 @@ class ConvReluGraph : public adf::graph {
 };
 
 
+/**
+ * @brief Single instance graph, streams weights and biases, significantly slower.
+ */
 template <template<int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K>
 class ConvReluGmemParamGraph : public adf::graph {
@@ -64,6 +101,9 @@ class ConvReluGmemParamGraph : public adf::graph {
 };
 
 
+/**
+ * @brief Multiinstance graph, stores weights and biases, max size = 16384 and 4096 bytes respectively
+ */
 template <
   template<int, int, int, int, int, int> class CONV, 
   template<int, int, int, int> class CONCAT, 
@@ -91,8 +131,6 @@ class ConvReluChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (M + MCHUNK - 1) / MCHUNK; // ceiling
     adf::kernel convs[CHUNK_COUNT];
-    // breaks if CONCAT_CHUNK%8!=0 CONCAT_BLOCK%4!=0
-    // std::conditional results in error in graph hierarchy algorithm
     ConcatGraph<CONCAT, CHUNK_COUNT, B*MCHUNK*OUT_W*OUT_W, CONCAT_CHUNK, CONCAT_BLOCK> concat_g;
 
     adf::port<input> pin[CHUNK_COUNT];
@@ -135,6 +173,7 @@ class ConvReluChunkGraph : public adf::graph {
       adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (concat_g.pout[0], pout[0]);
     }
 };
+/** @} */
 
 
 #endif // __CONV_GRAPH_H__
