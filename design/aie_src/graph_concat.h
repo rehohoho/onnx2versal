@@ -24,6 +24,9 @@
  * @connect{pin[LCNT], WINDOW_SIZE*4}
  * @connect{pout[1], WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4}
  * @endconnections
+ * 
+ * @attention ConcatVector breaks if CONCAT_CHUNK%8!=0 CONCAT_BLOCK%4!=0
+ * 
  * @{
  */
 
