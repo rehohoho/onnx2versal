@@ -4,9 +4,6 @@
 #include "kernel_utils.h"
 
 
-/*
-Assumes INP_W divisible by K
-*/
 template <int INP_W, int OUT_W, int B, int C>
 void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
   input_window<float>* in,      // BHWC (1x24x24x6)
@@ -45,9 +42,6 @@ void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
 }
 
 
-/*
-Assumes INP_W divisible by K
-*/
 template <int INP_W, int OUT_W, int B, int C>
 void MaxpoolScalarBCHW<INP_W, OUT_W, B, C>::filter(
   input_window<float>* in,      // BCHW (1x6x24x24)
@@ -84,19 +78,6 @@ void MaxpoolScalarBCHW<INP_W, OUT_W, B, C>::filter(
 }
 
 
-/*
-Assumes INP_W divisible by K
-Assumes OUT_W divisible by 8
-
-Only up to 64 floats in vector registers
-1) 2x v16float, 1x fpmax
-2) 4x v8float, 2x fpmax
-
-Definitely bandwidth limited
-- 2 accs will blow the 64-float vector regs (901 -> 1330 cycles)
-- Using window_incr instead of pointers (901 -> 988 cycles)
-- Concat adds additional computation (901 -> 1468 cycles)
-*/
 template <int INP_W, int OUT_W, int B, int C>
 void Maxpool2x2BCHW<INP_W, OUT_W, B, C>::filter(
   input_window<float>* in_window,      // BCHW (1x6x24x24)

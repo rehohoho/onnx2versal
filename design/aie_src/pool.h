@@ -4,6 +4,27 @@
 #include <adf.h>
 
 
+/** 
+ * @defgroup Pool2DKernels
+ * @ingroup Pool2D
+ * 
+ * @details
+ * Design Notes
+ * - Only up to 64 floats in vector registers
+ * - Definitely bandwidth limited
+ * - 2 accs will blow the 64-float vector regs (901 -> 1330 cycles)
+ * - Using window_incr instead of pointers (901 -> 988 cycles)
+ * - Concat adds additional computation (901 -> 1468 cycles)
+ * 
+ * @attention All kernels assume INP_W divisible by OUT_W
+ * 
+ * @{
+ */
+
+/**
+ * @brief Scalar implementation for BHWC.
+ * MaxpoolScalarBHWC::filter<24, 12, 1, 6> total = 7673
+ */
 template <int INP_W, int OUT_W, int B, int C>
 class MaxpoolScalarBHWC {
   public:
@@ -17,6 +38,10 @@ class MaxpoolScalarBHWC {
 };
 
 
+/**
+ * @brief Scalar implementation for BHWC.
+ * MaxpoolScalarBCHW::filter<24, 12, 1, 6> total = 11302
+ */
 template <int INP_W, int OUT_W, int B, int C>
 class MaxpoolScalarBCHW {
   public:
@@ -30,6 +55,11 @@ class MaxpoolScalarBCHW {
 };
 
 
+/**
+ * @brief Vector implementation for BCHW with 2x2 kernel.
+ * Requires OUT_W%8=0.
+ * Maxpool2x2BCHW::filter<24, 12, 1, 6> total = 901
+ */
 template <int INP_W, int OUT_W, int B, int C>
 class Maxpool2x2BCHW {
   public:
@@ -41,6 +71,7 @@ class Maxpool2x2BCHW {
       REGISTER_FUNCTION(Maxpool2x2BCHW::filter);
     }
 };
+/** @}*/
 
 
 #endif // POOL_H_

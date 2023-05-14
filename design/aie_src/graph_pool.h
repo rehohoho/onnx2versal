@@ -5,6 +5,28 @@
 #include "pool.h"
 
 
+/**
+ * @defgroup Pool2D
+ * 
+ * @brief Pool2D function on BCHW, yielding BCH'W', where H'=H/factor, W'=W/factor
+ * 
+ * @tparam POOL     Pool Kernel
+ * @tparam INP_W    input width/height
+ * @tparam OUT_W    output width/height, = INP_W - K/2
+ * @tparam B        batch size
+ * @tparam C        input channels
+ * 
+ * @connections
+ * @connect{pin[1], B*C*INP_W*INP_W*4}
+ * @connect{pout[1], B*C*OUT_W*OUT_W*4}
+ * @endconnections
+ * 
+ * @{
+ */
+
+/**
+ * @brief Single instance graph
+ */
 template <template<int, int, int, int> class POOL,
   int INP_W, int OUT_W, int B, int C>
 class MaxpoolGraph : public adf::graph {
@@ -27,6 +49,7 @@ class MaxpoolGraph : public adf::graph {
     }
 
 };
+/** @} */
 
 
 #endif // __POOL_GRAPH_H__
