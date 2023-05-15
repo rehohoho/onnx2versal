@@ -280,3 +280,130 @@ class CppGenerator:
       
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")
+
+  def get_includes(self) -> str:
+    include_list = set(i.get_include_line() for i in self.op_list)
+    return "\n".join(include_list)
+  
+  def get_kernels(self) -> str:
+    return "    " + "\n".join(i.get_kernel_line() for i in self.op_list).replace("\n", "\n    ")
+
+  def get_args(self) -> str:
+    args = [f"const std::string& {opname}_out" for opname in self.modelout_2_adfport.values()]
+    args += [i.get_arg_line() for i in self.op_list]
+    args += [f"const std::string& {op.name}_out = std::string()" for op in self.op_list if op.name not in self.modelout_2_adfport.values()]
+    args = [i for i in args if i != ""]
+    return "      " + ",\n".join(args).replace("\n", "\n      ")
+  
+  def get_initlist(self) -> str:
+    initlists = [i.get_initlist_line() for i in self.op_list]
+    initlists = [i for i in initlists if i != ""]
+    return "      " + ",\n".join(initlists).replace("\n", "\n      ")
+  
+  def get_plouts(self) -> str:
+    plouts = [
+      f'adf::output_plio a = adf::output_plio::create("plout0_"+id+"_{opname}", PLIO64_ARG({opname}_out));\n' + \
+      f"plout.push_back(a);\n" + \
+      f"adf::connect<> ({opname}.pout[0], a.in[0]);"
+      for opname in self.modelout_2_adfport.values()
+    ]
+    return "      " + "\n".join(plouts).replace("\n", "\n      ")
+  
+  def get_optional_plouts(self) -> str:
+    optplouts = [
+      f'SET_OPT_PLOUT({op.name}_out, adf::connect<> ({op.name}.pout[0], a.in[0]), "{op.name}");'
+      for op in self.op_list if op.name not in self.modelout_2_adfport.values()]
+    return "      " + "\n".join(optplouts).replace("\n", "\n      ")
+  
+  def get_interkernel_connects(self) -> str:
+    return "      " + "\n".join(self.adf_connects).replace("\n", "\n      ")
+  
+  def get_weights(self) -> str:
+    weights = [i.get_weight_line() for i in self.op_list]
+    weights = [i for i in weights if i != ""]
+    return "\n".join(weights)
+  
+  def get_callargs(self) -> str:
+    args = ['"input.txt"']
+    args += [f'"{opname}_goldenout.txt"' for opname in self.modelout_2_adfport.values()]
+    args += [i.get_callarg_line() for i in self.op_list]
+    args += [f'"{op.name}_goldenout.txt"' for op in self.op_list if op.name not in self.modelout_2_adfport.values()]
+    args = [i for i in args if i != ""]
+    return "  " + ",\n".join(args).replace("\n", "\n  ")
+  
+  def generate_raw(self):
+    return f""" 
+#include <adf.h>
+{self.get_includes()}
+#include "graph_utils.h"
+
+
+class MyGraph : public adf::graph {{
+
+  private:
+{self.get_kernels()}
+
+  public:
+    adf::input_plio plin[1];
+    std::vector<adf::output_plio> plout; // intermediate outputs optional
+
+    MyGraph(
+      const std::string& id,
+      const std::string& INPUT_TXT,
+{self.get_args()}
+    ): 
+{self.get_initlist()}
+    {{ 
+      // plin[0] mandatory input
+      plin[0] = adf::input_plio::create("plin0_"+id+"_input", PLIO64_ARG(INPUT_TXT));
+      
+      // mandatory output
+{self.get_plouts()}
+
+#define SET_OPT_PLOUT(TXT_PATH, STMT, PLOUT_NAME) \\
+      if (!TXT_PATH.empty()) {{ \\
+        std::string plout_name = "plout"+std::to_string(plout.size())+"_"+id+"_"+PLOUT_NAME; \\
+        adf::output_plio a = adf::output_plio::create(plout_name, PLIO64_ARG(TXT_PATH)); \\
+        STMT; plout.push_back(a);}} 
+
+      // optional output
+{self.get_optional_plouts()}
+
+      // interkernel
+{self.get_interkernel_connects()}
+      
+    }}
+}};
+
+{self.get_weights()}
+
+// Unable to map 8 or more outputs on hardware since <= 8 cascade lines
+MyGraph myGraph (
+  "myGraph",
+{self.get_callargs()}
+);
+
+
+#ifdef __X86SIM__
+int main(int argc, char ** argv) {{
+	adfCheck(myGraph.init(), "init myGraph");
+  adfCheck(myGraph.run(ITER_CNT), "run myGraph");
+	adfCheck(myGraph.end(), "end myGraph");
+  return 0;
+}}
+#endif
+
+
+#ifdef __AIESIM__
+int main(int argc, char ** argv) {{
+	adfCheck(myGraph.init(), "init myGraph");
+  get_graph_throughput_by_port(myGraph, "plout[0]", myGraph.plout[0], 1*10, sizeof(float), ITER_CNT);
+	adfCheck(myGraph.end(), "end myGraph");
+  return 0;
+}}
+#endif
+"""
+  
+  def generate_cpp(self):
+    with open("../design/aie_src/graph_gen.cpp", "w") as f:
+      f.write(self.generate_raw())
