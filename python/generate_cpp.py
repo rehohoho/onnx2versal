@@ -145,3 +145,23 @@ class GemmOp(OpParser):
   
   def get_callarg_line(self) -> str:
     return f"{self.name}_w, {self.name}_b"
+
+
+class PoolOp(OpParser):
+  include_file: str = "graph_pool.h"
+  
+  def register_params(self, 
+                      tinput: np.ndarray, 
+                      toutput: np.ndarray):
+    inB, inC, inH, inW = tinput.shape
+    outB, outC, outH, outW = toutput.shape
+    
+    assert inH == inW and outH == outW and inC == outC and inB == outB
+
+    self.INP_W = inH
+    self.OUT_W = outH
+    self.B = inB
+    self.C = inC
+  
+  def get_kernel_line(self) -> str:
+    return f"MaxpoolGraph<Maxpool2x2BCHW,{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
