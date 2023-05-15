@@ -75,6 +75,18 @@ def get_tensor(name: str,
     raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
 
 
+def process_conv_weights(weights: np.ndarray):
+  """Expects MxCxKxK weights as per PyTorch
+  Returns MxCxKxK' weights, with K' padded so K'%8=0
+  """
+  M, C, K, K = weights.shape
+  k_pad = (8 - K%8) % 8
+  if k_pad != 0:
+    print(f"Padding Conv weights {M, C, K, K} to {M, C, K, K+k_pad}")
+    weights = np.pad(weights, ((0,0),(0,0),(0,0),(0,k_pad)), "constant", constant_values=0)
+  return weights
+
+
 def process_gemm_weights(weights: np.ndarray):
   """Expects NxK weights as per PyTorch
   Returns KxN weights, with N padded so N%4=0
@@ -153,7 +165,9 @@ if __name__ == '__main__':
       #   tensor = tensor.transpose(0, 2, 3, 1) # BCHW to BHWC
       if "Gemm" in node_name and "weight" in name:
         tensor = process_gemm_weights(tensor)
-        import ipdb;ipdb.set_trace()
+      
+      if "Conv" in node_name and "weight" in name:
+        tensor = process_conv_weights(tensor)
       
       if "weight" in name or "bias" in name:
         tensor_list = tensor.flatten().tolist()
