@@ -193,3 +193,90 @@ class CppGenerator:
     self.initializers: Mapping[str, np.ndarray] = {
       init.name: init for init in model.graph.initializer}
     self.output_tensors: Mapping[str, np.ndarray] = output_tensors
+  
+  def get_tensor(self, name: str):
+    if name == "input":
+      return self.input_tensor
+    elif name in self.initializers:
+      return numpy_helper.to_array(self.initializers[name])
+    elif name in self.output_tensors:
+      return self.output_tensors[name]
+    else:
+      raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
+    
+  # assumes nodes are in topological sorted order
+  def parse(self):
+    for i, node in enumerate(self.nodes):
+      
+      if node.op_type == "Conv":
+        if self.nodes[i+1].op_type != "Relu": # lookahead
+          raise NotImplementedError("No relu found after Conv, no valid implementation.")
+        print(f"WARNING: fusing Conv+Relu")
+
+        onnx_out_name = self.nodes[i+1].output[0]
+        tinput = self.get_tensor(node.input[0])
+        tweight = self.get_tensor(node.input[1])
+        tbias = self.get_tensor(node.input[2])
+        toutput = self.get_tensor(onnx_out_name)
+        
+        op = ConvOp(f"kconv{i}")
+        op.save_output(toutput)
+        op.register_params(tinput, tweight, tbias, toutput)
+        op.register_weights(tweight, tbias)
+        self.op_list.append(op)
+
+        self.adf_connects.append(
+          f"adf::connect<> ({self.nodeout_2_adfport[node.input[0]]}, {op.name}.pin[0]);")
+        self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
+        if onnx_out_name in self.modelout_2_adfport:
+          self.modelout_2_adfport[onnx_out_name] = op.name
+      
+      elif node.op_type == "Relu":
+        # handled by fusing with previous
+        continue
+      
+      elif node.op_type == "MaxPool":
+        onnx_out_name = node.output[0]
+        tinput = self.get_tensor(node.input[0])
+        toutput = self.get_tensor(onnx_out_name)
+        op = PoolOp(f"kpool{i}")
+        op.save_output(toutput)
+        op.register_params(tinput, toutput)
+        self.op_list.append(op)
+
+        self.adf_connects.append(
+          f"adf::connect<> ({self.nodeout_2_adfport[node.input[0]]}, {op.name}.pin[0]);")
+        self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
+        if onnx_out_name in self.modelout_2_adfport:
+          self.modelout_2_adfport[onnx_out_name] = op.name
+
+      elif node.op_type == "Gemm":
+        if self.nodes[i+1].op_type != "Relu": # lookahead
+          raise NotImplementedError("No relu found after Gemm, no valid implementation.")
+        onnx_out_name = self.nodes[i+1].output[0]
+        tinput = self.get_tensor(node.input[0])
+        tweight = self.get_tensor(node.input[1])
+        tbias = self.get_tensor(node.input[2])
+        toutput = self.get_tensor(onnx_out_name)
+        op = GemmOp(f"kgemm{i}")
+        op.save_output(toutput)
+        op.register_params(tinput, tweight, tbias, toutput)
+        op.register_weights(tweight, tbias)
+        self.op_list.append(op)
+
+        self.adf_connects.append(
+          f"for (int i = 0; i < {op.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
+          f"  adf::connect<> ({self.nodeout_2_adfport[node.input[0]]}, {op.name}.pin[i]);")
+        self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
+        if onnx_out_name in self.modelout_2_adfport:
+          self.modelout_2_adfport[onnx_out_name] = op.name
+        
+      elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
+        print(f"WARNING: {node.op_type} not implemented, skipping...")
+        if len(node.output[0]) != 0 and \
+          np.all(self.get_tensor(node.output[0]).flatten() == toutput.flatten()):
+          print(f"Found matching output {node.output[0]} and {op.name} output")
+          self.nodeout_2_adfport[node.output[0]] = f"{op.name}.pout[0]"
+      
+      else:
+        raise ValueError(f"Unexpected op_type {node.op_type}")
