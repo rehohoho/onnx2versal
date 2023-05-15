@@ -165,3 +165,31 @@ class PoolOp(OpParser):
   
   def get_kernel_line(self) -> str:
     return f"MaxpoolGraph<Maxpool2x2BCHW,{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
+
+
+class CppGenerator:
+
+  def __init__(self,
+               onnx_path: str,
+               input_tensor: np.ndarray,
+               output_tensors: Mapping[str, np.ndarray]):
+    self.op_list: List[OpParser] = []
+    self.nodeout_2_adfport: Mapping[str, OpParser] = {}
+    self.adf_connects: List[str] = []
+    
+    model = onnx.load(onnx_path)
+    self.nodes = model.graph.node
+    
+    # save input
+    np.savetxt(f"../data/input.txt", input_tensor.reshape(-1, 2))
+    
+    # register node output and model outputs
+    for i, model_input in enumerate(model.graph.input):
+      self.nodeout_2_adfport[model_input.name] = f"plin[{i}].out[0]"
+    self.modelout_2_adfport = {i.name: None for i in model.graph.output}
+
+    # store I/O tensors and model parameters
+    self.input_tensor: np.ndarray = input_tensor
+    self.initializers: Mapping[str, np.ndarray] = {
+      init.name: init for init in model.graph.initializer}
+    self.output_tensors: Mapping[str, np.ndarray] = output_tensors
