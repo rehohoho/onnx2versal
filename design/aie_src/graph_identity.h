@@ -13,16 +13,16 @@
  * @tparam IDENTITY Identity Kernel
  * @tparam N        size of input and output
  * 
- * @connections
- * @connect{pin[1], N*4}
- * @connect{pout[1], N*4}
- * @endconnections
- * 
  * @{
  */
 
 /**
  * @brief Single instance graph
+ * 
+ * @connections
+ * @connect{pin[0], N*4}
+ * @connect{pout[0], N*4}
+ * @endconnections
  */
 template <template<int> class IDENTITY, int N>
 class IdentityGraph : public adf::graph {

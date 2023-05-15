@@ -28,17 +28,17 @@
  * @tparam M        output channels
  * @tparam K        kernel width
  * 
- * @connections
- * @connect{pin[1], B*C*INP_W*INP_W*4}
- * @connect{pout[1], B*M*OUT_W*OUT_W*4}
- * @endconnections
- * 
  * @{
  */
 
 /**
  * @brief Single instance graph that stores weights and biases
  * Max size = 16384 and 4096 bytes respectively
+ * 
+ * @connections
+ * @connect{pin[0], B*C*INP_W*INP_W*4}
+ * @connect{pout[0], B*M*OUT_W*OUT_W*4}
+ * @endconnections
  */
 template <template<int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K>
@@ -74,6 +74,13 @@ class ConvReluGraph : public adf::graph {
 
 /**
  * @brief Single instance graph that streams weights and biases, significantly slower.
+ * 
+ * @connections
+ * @connect{pin[0], B*C*INP_W*INP_W*4}
+ * @connect{pin[1], M*K*K*C*4}
+ * @connect{pin[2], M*4}
+ * @connect{pout[0], B*M*OUT_W*OUT_W*4}
+ * @endconnections
  */
 template <template<int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K>
@@ -111,6 +118,10 @@ class ConvReluGmemParamGraph : public adf::graph {
  * - If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0
  * - If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0
  * 
+ * @connections
+ * @connect{pin[0:CHUNK_COUNT], B*C*INP_W*INP_W*4}
+ * @connect{pout[0], B*M*OUT_W*OUT_W*4}
+ * @endconnections
  */
 template <
   template<int, int, int, int, int, int> class CONV, 

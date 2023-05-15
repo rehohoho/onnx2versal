@@ -16,16 +16,16 @@
  * @tparam B        batch size
  * @tparam C        input channels
  * 
- * @connections
- * @connect{pin[1], B*C*INP_W*INP_W*4}
- * @connect{pout[1], B*C*OUT_W*OUT_W*4}
- * @endconnections
- * 
  * @{
  */
 
 /**
  * @brief Single instance graph
+ * 
+ * @connections
+ * @connect{pin[0], B*C*INP_W*INP_W*4}
+ * @connect{pout[0], B*C*OUT_W*OUT_W*4}
+ * @endconnections
  */
 template <template<int, int, int, int> class POOL,
   int INP_W, int OUT_W, int B, int C>

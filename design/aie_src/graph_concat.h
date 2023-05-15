@@ -20,11 +20,6 @@
  * @tparam CHUNK_SIZE		size of chunk from each lanes per iteration
  * @tparam BLOCK_SIZE		size of concatenated chunks per iteration
  * 
- * @connections
- * @connect{pin[LCNT], WINDOW_SIZE*4}
- * @connect{pout[1], WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4}
- * @endconnections
- * 
  * @attention ConcatVector breaks if CONCAT_CHUNK%8!=0 CONCAT_BLOCK%4!=0
  * 
  * @{
@@ -32,6 +27,11 @@
 
 /**
  * @brief Graph wrapper for arbitrary concat kernel implementation and lanes
+ * 
+ * @connections
+ * @connect{pin[0:LCNT], WINDOW_SIZE*4}
+ * @connect{pout[0], WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4}
+ * @endconnections
  */
 template <template<int, int, int, int> class CONCAT,
   int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>

@@ -22,17 +22,17 @@
  * @tparam K        number of cols / number of rows of weight matrix
  * @tparam N        number of cols of weight matrix / size of bias vector
  * 
- * @connections
- * @connect{pin[1], M*K*4}
- * @connect{pout[1], M*N*4}
- * @endconnections
- * 
  * @{
  */
 
 /**
  * @brief Single instance graph that stores weights and biases
  * Max size = 16384 and 4096 bytes respectively
+ * 
+ * @connections
+ * @connect{pin[0], M*K*4}
+ * @connect{pout[0], M*N*4}
+ * @endconnections
  */
 template <template<int, int, int> class GEMM, int M, int K, int N>
 class GemmReluGraph : public adf::graph {
@@ -61,6 +61,13 @@ class GemmReluGraph : public adf::graph {
 
 /**
  * @brief Single instance graph that streams weights and biases, significantly slower.
+ * 
+ * @connections
+ * @connect{pin[0], M*K*4}
+ * @connect{pin[1], K*N*4}
+ * @connect{pin[2], N*4}
+ * @connect{pout[0], M*N*4}
+ * @endconnections
  */
 template <template<int, int, int> class GEMM, int M, int K, int N>
 class GemmReluGmemParamGraph : public adf::graph {
@@ -94,6 +101,11 @@ class GemmReluGmemParamGraph : public adf::graph {
  * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
  * 
  * @attention Weight should be is NxK, where NCHUNK%8=0 and N%4=0
+ * 
+ * @connections
+ * @connect{pin[0:CHUNK_COUNT], M*K*4}
+ * @connect{pout[0], M*N*4}
+ * @endconnections
  */
 template <
   template<int, int, int> class GEMM, 

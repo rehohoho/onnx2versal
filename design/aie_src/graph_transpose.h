@@ -16,16 +16,16 @@
  * @tparam W          width
  * @tparam C          input channels
  * 
- * @connections
- * @connect{pin[1], B*H*W*C*4}
- * @connect{pout[1], B*H*W*C*4}
- * @endconnections
- * 
  * @{
  */
 
 /**
  * @brief Single instance graph
+ * 
+ * @connections
+ * @connect{pin[0], B*H*W*C*4}
+ * @connect{pout[0], B*H*W*C*4}
+ * @endconnections
  */
 template <template<int, int, int, int> class TRANSPOSE, 
   int B, int H, int W, int C>
