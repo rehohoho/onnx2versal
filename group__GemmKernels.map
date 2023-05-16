@@ -1,0 +1,4 @@
+<map id="GemmKernels" name="GemmKernels">
+<area shape="rect" id="node1" href="$group__Gemm.html" title="xA^T + b as per torch.nn.Linear. Applies general matrix multiply: output(MxN) = input(MxK) * weights(..." alt="" coords="5,5,66,31"/>
+<area shape="rect" id="node2" title=" " alt="" coords="114,5,218,31"/>
+</map>

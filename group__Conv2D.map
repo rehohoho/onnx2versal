@@ -1,0 +1,4 @@
+<map id="Conv2D" name="Conv2D">
+<area shape="rect" id="node1" title="2D convolution on H, W dimensions of BCHW/BHWC using kernels MCKK. Each c&#45;th KxK kernel is applied on..." alt="" coords="5,5,73,31"/>
+<area shape="rect" id="node2" href="$group__Conv2DKernels.html" title=" " alt="" coords="121,5,232,31"/>
+</map>
