@@ -86,7 +86,8 @@ if __name__ == '__main__':
                               output_tensors=output_tensors, 
                               is_output_all=IS_OUTPUT_ALL_NODES)
   cppGenerator.parse()
-  cppGenerator.generate_cpp()
+  cppGenerator.generate_cpp_graph()
+  cppGenerator.generate_xtg_python()
 
   # Generate end-to-end data
   generate_txt(loader=loader, 
