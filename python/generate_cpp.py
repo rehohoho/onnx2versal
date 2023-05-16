@@ -172,7 +172,9 @@ class CppGenerator:
   def __init__(self,
                onnx_path: str,
                input_tensor: np.ndarray,
-               output_tensors: Mapping[str, np.ndarray]):
+               output_tensors: Mapping[str, np.ndarray],
+               is_output_all: bool = False):
+    self.is_output_all = is_output_all
     self.op_list: List[OpParser] = []
     self.nodeout_2_adfport: Mapping[str, OpParser] = {}
     self.adf_connects: List[str] = []
@@ -233,8 +235,8 @@ class CppGenerator:
       
       elif node.op_type == "Relu":
         # handled by fusing with previous
-        continue
-      
+        pass
+            
       elif node.op_type == "MaxPool":
         onnx_out_name = node.output[0]
         tinput = self.get_tensor(node.input[0])
@@ -280,6 +282,20 @@ class CppGenerator:
       
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")
+
+      if self.is_output_all:
+        for ioname in [*node.input, *node.output]:
+          tensor = self.get_tensor(ioname)
+          tensor_shapestr = "x".join(str(dim) for dim in tensor.shape)
+          out_path = f"{i}__{node.name}__{ioname}__{tensor_shapestr}.txt".replace("/", "_")
+          if "weight" in ioname or "bias" in ioname:
+            out_name = ioname.replace("/", "_").replace(".", "_")
+            tmp = f"std::vector<float> {out_name} {{{str(tensor.flatten().tolist())[1:-2]}}};"
+            with open(out_path, "w") as f: f.write(tmp)
+          else:
+            if tensor.size > 2: tensor = tensor.reshape(-1, 2)
+            else: tensor = tensor.reshape(-1)
+            np.savetxt(out_path, tensor)
 
   def get_includes(self) -> str:
     include_list = set(i.get_include_line() for i in self.op_list)

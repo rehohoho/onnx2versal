@@ -13,6 +13,8 @@ from onnx import numpy_helper
 import onnxruntime
 from google.protobuf.json_format import MessageToDict
 
+from generate_cpp import CppGenerator
+
 
 def generate_txt(loader: DataLoader,
                  data_count: int,
@@ -142,54 +144,8 @@ if __name__ == '__main__':
   print("Exported model has been tested with ONNXRuntime, and the result looks good!")
 
   # generate graph info
-  model = onnx.load(ONNX_PATH)
-  nodes = model.graph.node
-  initializers = {init.name: init for init in model.graph.initializer}
   output_tensors = {outname: out for outname, out in zip(output_names, ort_outs)}
 
-  res = []
-  node = nodes[0]
-  for i, node in enumerate(nodes):
-    node_name = node.name.replace("/", "_").replace(".", "_")
-    out_dict = MessageToDict(node)
-    for name in out_dict.get("input", []) + out_dict.get("output", []):
-      tensor = get_tensor(name, input_tensor, initializers, output_tensors)
-      
-      key = f"__{name}_{get_shape_str(tensor)}"
-      out_dict[key] = " ".join(str(i) for i in tensor.flatten().tolist())
-      
-      out_name = name.replace("/", "_").replace(".", "_")
-      out_txt_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}__{out_name}__{get_shape_str(tensor)}.txt"
-
-      # if tensor.ndim == 4:
-      #   tensor = tensor.transpose(0, 2, 3, 1) # BCHW to BHWC
-      if "Gemm" in node_name and "weight" in name:
-        tensor = process_gemm_weights(tensor)
-      
-      if "Conv" in node_name and "weight" in name:
-        tensor = process_conv_weights(tensor)
-      
-      if "weight" in name or "bias" in name:
-        tensor_list = tensor.flatten().tolist()
-        if str(tensor.dtype) == "float32":
-          tmp = f"std::vector<float> {out_name} {{{str(tensor_list)[1:-2]}}};"
-          with open(out_txt_path, "w") as f:
-            f.write(tmp)
-        else:
-          raise ValueError(f"Unsupported type for {name}, {tensor.dtype}.")
-      else:
-        if tensor.size >= N_PER_ROW:
-          np.savetxt(out_txt_path, tensor.reshape(-1, N_PER_ROW))
-        else:
-          np.savetxt(out_txt_path, tensor.flatten())
-      print(f"Exported node: {node_name}; I/O name: {name}; to {out_txt_path}")
-    
-    if OUTPUT_JSON:
-      out_json_path = f"{INTER_TXT_PREFIX}__{i}__{node_name}.json"
-      with open(out_json_path, "w") as f:
-        json.dump(out_dict, f)  
-      print(f"Exported intermediate node {node.name} to {out_json_path}")
-
-  if OUTPUT_IMAGE:
-    from torchvision.utils import save_image
-    save_image(input_tensor, "input_tensor.png")
+  cppGenerator = CppGenerator(ONNX_PATH, input_tensor.numpy(), output_tensors)
+  cppGenerator.parse()
+  cppGenerator.generate_cpp()
