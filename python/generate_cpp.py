@@ -506,13 +506,12 @@ int main(int argc, char ** argv) {{
       for i, op in enumerate(self.modelout_2_op.values())
     ]
     if is_output_inter:
-      n_out = len(self.modelout_2_op)
-      slaves += [
-        f'("plout{n_out+j}_myGraph_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", ' + \
-        f'64, "{str(op.dtype)}", {op.out_size})'
-        for j, op in enumerate(self.op_list) if op not in self.modelout_2_op.values()
-      ]
-
+      i = len(self.modelout_2_op)
+      for op in self.op_list:
+        if op in self.modelout_2_op.values(): continue
+        slaves.append(
+          f'("plout{i}_myGraph_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", 64, "{str(op.dtype)}", {op.out_size})')
+        i += 1
     return "    " + ",\n".join(slaves).replace("\n", "\n    ")
   
   def generate_xtg_python_str(self, is_output_inter: bool):
@@ -578,11 +577,11 @@ if __name__ == "__main__":
       for i, op in enumerate(self.modelout_2_op.values())
     ]
     if is_output_inter:
-      n_out = len(self.modelout_2_op)
-      out_scs += [
-        f"stream_connect=ai_engine_0.plout{n_out+j}_myGraph_{op.name}:s2mm_{n_out+j}.s"
-        for j, op in enumerate(self.op_list) if op not in self.modelout_2_op.values()
-      ]
+      i = len(self.modelout_2_op)
+      for op in self.op_list:
+        if op in self.modelout_2_op.values(): continue
+        out_scs.append(f"stream_connect=ai_engine_0.plout{i}_myGraph_{op.name}:s2mm_{i}.s")
+        i += 1
     return "\n".join(out_scs)  
   
   def generate_cfg_str(self, is_output_inter: bool):
