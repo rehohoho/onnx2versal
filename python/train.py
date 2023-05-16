@@ -8,16 +8,18 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import mnist
 from torchvision.transforms import ToTensor
 import torch.onnx
+import onnxruntime
 
 from model import Lenet
 
 
 if __name__ == "__main__":
   BATCH_SIZE = 256
-  ALL_EPOCH = 10
+  ALL_EPOCH = 1
   DATA_PATH = "../data"
   MODEL_PATH = "../models"
 
+  # Setup data, model, optimizer, loss_fn
   device = "cuda" if torch.cuda.is_available() else "cpu"
   train_dataset = mnist.MNIST(root=DATA_PATH, train=True, transform=ToTensor(), download=True)
   test_dataset = mnist.MNIST(root=DATA_PATH, train=False, transform=ToTensor(), download=True)
@@ -28,6 +30,7 @@ if __name__ == "__main__":
   loss_fn = CrossEntropyLoss()
   prev_acc = 0
 
+  # Train
   for current_epoch in range(ALL_EPOCH):
     model.train()
     for idx, (train_x, train_label) in enumerate(train_loader):
@@ -64,15 +67,27 @@ if __name__ == "__main__":
   
   print("Model finished training")
 
+  # ONNX export
   torch.onnx.export(
-    model,                      # model being run
-    test_x,                     # model input (or a tuple for multiple inputs)
-    f"{MODEL_PATH}/lenet_mnist.onnx", # where to save the model (can be a file or file-like object)
-    export_params=True,         # store the trained parameter weights inside the model file
-    # opset_version=10,         # the ONNX version to export the model to
-    # do_constant_folding=True, # whether to execute constant folding for optimization
-    input_names = ["input"],    # the model's input names
-    output_names = ["output"],  # the model's output names
+    model,                            # model being run
+    test_x,                           # model input (or a tuple for multiple inputs)
+    f"{MODEL_PATH}/lenet_mnist.onnx", # where to save the model
+    export_params=True,               # store the trained parameter weights in model file
+    do_constant_folding=True,         # whether to execute constant folding for optimization
+    input_names = ["input"],          # model's input names
+    output_names = ["output"],        # model's output names
     dynamic_axes={"input" : {0 : "batch_size"},    # variable length axes
                   "output" : {0 : "batch_size"}})
   print("Converted to onnx")
+
+  # Compare ONNX Runtime and PyTorch results
+  data, label = next(iter(test_loader))
+  input_tensor = data[0].unsqueeze(0)
+  torch_out = model.forward(input_tensor)
+
+  ort_session = onnxruntime.InferenceSession(f"{MODEL_PATH}/lenet_mnist.onnx")
+  ort_inputs = {ort_session.get_inputs()[0].name: input_tensor.numpy()}
+  ort_outs = ort_session.run(None, ort_inputs)
+
+  np.testing.assert_allclose(torch_out.detach().numpy(), ort_outs[-1], rtol=1e-03, atol=1e-05)
+  print("Exported model has been tested with ONNXRuntime, and the result looks good!")
