@@ -110,13 +110,11 @@ class ConvReluGmemParamGraph : public adf::graph {
 
 /**
  * @brief Multiinstance graph that stores weights and biases. 
+ * If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. 
+ * If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0. 
  * Chunks MCKK weights by M dimension into MCHUNK chunks.
  * Each instance has max size = 16384 and 4096 bytes respectively.
  * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
- * 
- * @attention 
- * - If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0
- * - If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0
  * 
  * @connections
  * @connect{pin[0:CHUNK_COUNT], B*C*INP_W*INP_W*4}

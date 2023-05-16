@@ -95,12 +95,11 @@ class GemmReluGmemParamGraph : public adf::graph {
 
 
 /**
- * @brief Multiinstance graph for MxK times NxK that stores weights and biases
+ * @brief Multiinstance graph for MxK times NxK that stores weights and biases.
+ * Requires NxK weight, NCHUNK%8=0 and N%4=0
  * Chunks NxK weights by N dimension into NCHUNK chunks.
  * Each instance has max size = 16384 and 4096 bytes respectively.
  * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
- * 
- * @attention Weight should be is NxK, where NCHUNK%8=0 and N%4=0
  * 
  * @connections
  * @connect{pin[0:CHUNK_COUNT], M*K*4}
@@ -176,11 +175,10 @@ class GemmReluMknkChunkGraph : public adf::graph {
 
 /**
  * @brief Multiinstance graph for MxK times KxN that stores weights and biases
+ * Requires KxN_RND weight, NCHUNK%8=0, N%4=0
  * Chunks KxN weights by N dimension into NCHUNK chunks.
  * Each instance has max size = 16384 and 4096 bytes respectively.
  * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
- * 
- * @attention Weight should be is KxN_RND, where NCHUNK%8=0 and N%4=0
  */
 template <
   template<int, int, int> class GEMM, 

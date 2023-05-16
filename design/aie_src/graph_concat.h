@@ -20,8 +20,6 @@
  * @tparam CHUNK_SIZE		size of chunk from each lanes per iteration
  * @tparam BLOCK_SIZE		size of concatenated chunks per iteration
  * 
- * @attention ConcatVector breaks if CONCAT_CHUNK%8!=0 CONCAT_BLOCK%4!=0
- * 
  * @{
  */
 

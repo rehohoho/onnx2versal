@@ -104,7 +104,7 @@ class GemmReluScalarMKKN {
 
 
 /**
- * @brief Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%16=0
+ * @brief Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%4=0
  * GemmReluMKKN<1, 86, 10> total = 366
  */
 template <int M, int K, int NCHUNK>

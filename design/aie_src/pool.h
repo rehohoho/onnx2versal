@@ -15,8 +15,7 @@
  * - 2 accs will blow the 64-float vector regs (901 -> 1330 cycles)
  * - Using window_incr instead of pointers (901 -> 988 cycles)
  * - Concat adds additional computation (901 -> 1468 cycles)
- * 
- * @attention All kernels assume INP_W divisible by OUT_W
+ * - All kernels assume INP_W divisible by OUT_W
  * 
  * @{
  */
