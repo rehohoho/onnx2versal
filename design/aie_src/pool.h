@@ -56,7 +56,7 @@ class MaxpoolScalarBCHW {
 
 /**
  * @brief Vector implementation for BCHW with 2x2 kernel.
- * Requires OUT_W%8=0.
+ * Requires OUT_W%4=0.
  * Maxpool2x2BCHW::filter<24, 12, 1, 6> total = 901
  */
 template <int INP_W, int OUT_W, int B, int C>

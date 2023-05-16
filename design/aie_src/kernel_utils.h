@@ -3,7 +3,7 @@
 
 #include "aie_api/aie.hpp"
 
-#ifdef LOG_PROFILE
+#ifdef __LOG_VERBOSE__
 #define PROFILE_HEADER(stmt) \
   stmt; \
   unsigned cycle_num[2]; \

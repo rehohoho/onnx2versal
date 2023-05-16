@@ -134,7 +134,7 @@ int main(int argc, char ** argv) {
    xrtRunStart(in_rhdl);
    xrtRunStart(out_rhdl);
 
-#ifdef LOG_PROFILE
+#ifdef __OUTPUT_INTER__
    size_t inter1_size = 1*6*24*24;
    size_t inter2_size = 1*6*12*12;
    size_t inter3_size = 1*16*8*8;
@@ -243,7 +243,7 @@ int main(int argc, char ** argv) {
    write_arr_to_file(out_dir+OUTPUT_FILENAME, out_bomapped, output_size);
    xrtBOFree(out_bohdl);
 
-#ifdef LOG_PROFILE
+#ifdef __OUTPUT_INTER__
    auto inter1_state = xrtRunWait(inter1_rhdl);
    auto inter2_state = xrtRunWait(inter2_rhdl);
    auto inter3_state = xrtRunWait(inter3_rhdl);

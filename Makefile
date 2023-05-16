@@ -19,15 +19,17 @@ help::
 	@echo  ""
 	@echo  " OPTIONS:"
 	@echo  " Use the make recipes with required values for options mentioned below-"
-	@echo  "    TARGET             sw_emu (default) | hw_emu | hw,  build target"
-	@echo  "    EXTIO              1 (default) | 0,          traffic gen usage"
-	@echo  "    ITER_CNT           1 (default),              number of run iterations, independent in x86sim, aiesim, emu"
-	@echo  "    EN_TRACE           0 (default) | 1,          enable profiling .ini (hw)"
-	@echo  "    LOG_PROFILE        0 (default) | 1,          if enable verbose logging, output intermediates"
+	@echo  "    TARGET      sw_emu(default)|hw_emu|hw, build target"
+	@echo  "    GRAPH       lenet (default),           target graph as per design/aie_src/graph_[].cpp"
+	@echo  "    EXTIO       0 (default) | 1,           traffic gen usage"
+	@echo  "    DLOG	      1 (default) | 0,           if enable verbose logging"
+	@echo  "    DOUT	      1 (default) | 0,           if enable output intermediates"
+	@echo  "    ITER_CNT    1 (default),               number of run iterations, independent in x86sim, aiesim, emu"
+	@echo  "    EN_TRACE    0 (default) | 1,           enable profiling .ini (hw)"
 	@echo  ""
 	@echo  " Runs in x86simulator / x86 threads. Functional only, no profiling."
-	@echo  "  TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph aiesim"
-	@echo  "  TARGET=sw_emu EXTIO=0 GRAPH=lenet make graph aiesim"
+	@echo  "  TARGET=sw_emu GRAPH=lenet make graph aiesim"
+	@echo  "  TARGET=sw_emu GRAPH=lenet EXTIO=1 make graph aiesim"
 	@echo  "  TARGET=sw_emu EXTIO=0 GRAPH=lenet make graph kernels xsa application package run_emu"
 	@echo  "  TARGET=sw_emu EXTIO=1 GRAPH=lenet make graph aiesim"
 	@echo  "  TARGET=sw_emu EXTIO=1 GRAPH=lenet make graph kernels xsa application package run_emu"
@@ -52,9 +54,10 @@ print-%  : ; @echo $* = $($*)
 #   hw    : Hardware Run
 # =========================================================
 TARGET ?= sw_emu
-EXTIO ?= 1
 GRAPH ?= lenet
-LOG_PROFILE ?= 0
+EXTIO ?= 0
+DLOG ?= 1
+DOUT ?= 1
 ITER_CNT ?= 1
 EN_TRACE ?= 0
 
@@ -172,8 +175,11 @@ endif
 ifeq ($(EXTIO), 1)
 	AIE_FLAGS += --Xpreproc=-DEXTERNAL_IO
 endif
-ifeq ($(LOG_PROFILE), 1)
-	AIE_FLAGS += --Xpreproc=-DLOG_PROFILE
+ifeq ($(DLOG), 1)
+	AIE_FLAGS += --Xpreproc=-D__LOG_VERBOSE__
+endif
+ifeq ($(DOUT), 1)
+	AIE_FLAGS += --Xpreproc=-D__OUTPUT_INTER__
 endif
 #AIE_FLAGS += --test-iterations=100 
 #AIE_FLAGS += --Xmapper=BufferOptLevel9
@@ -197,8 +203,8 @@ AIE_SIM_FLAGS := --pkg-dir=$(BUILD_TARGET_DIR)/$(WORK_DIR)/ \
 X86SIM_REPORT_DIR := $(BLD_REPORTS_DIR)/x86simulator_output
 AIESIM_REPORT_DIR := $(BLD_REPORTS_DIR)/aiesimulator_output
 
-ifeq ($(LOG_PROFILE), 1)
-TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_$(GRAPH)_logprofile.py
+ifeq ($(DOUT), 1)
+TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_$(GRAPH)_output_inter.py
 else
 TRAFFIC_GEN_PY := $(DESIGN_REPO)/trafficgen/xtg_$(GRAPH).py
 endif
@@ -283,8 +289,8 @@ VPP_LINK_FLAGS := --clock.defaultTolerance 0.001 \
                   --advanced.param compiler.userPostSysLinkOverlayTcl=$(DIRECTIVES_REPO)/noc_qos.tcl \
                   --vivado.prop run.synth_1.STEPS.SYNTH_DESIGN.ARGS.CONTROL_SET_OPT_THRESHOLD=16
 
-ifeq ($(LOG_PROFILE), 1)
-	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_log_profile.cfg
+ifeq ($(DOUT), 1)
+	VPP_LINK_FLAGS += --config $(SYSTEM_CONFIGS_REPO)/$(GRAPH)_output_inter.cfg
 else
 	VPP_LINK_FLAGS += --clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL1)_0 \
 										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL2)_0 \
@@ -346,8 +352,8 @@ GCC_INC_FLAGS := -I$(XILINX_VITIS)/aietools/include/ \
 GCC_INC_LIB := -ladf_api_xrt \
                -lxrt_coreutil 
 
-ifeq ($(LOG_PROFILE), 1)
-GCC_FLAGS += -DLOG_PROFILE
+ifeq ($(DOUT), 1)
+GCC_FLAGS += -D__OUTPUT_INTER__
 endif
 
 ifeq ($(TARGET), sw_emu)

@@ -24,7 +24,7 @@ char OUT_GEMM4[] = "lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.tx
 char OUT_GEMM5[] = "lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt";
 char OUT_GEMM6[] = "lenet_mnist__19___relu5_Relu__output__1x10.txt";
 
-#ifdef LOG_PROFILE
+#ifdef __OUTPUT_INTER__
 // Unable to map 8 or more outputs since <= 8 cascade lines
 MnistLenetBchwGraph<Conv5x5on8ReluBCHW, Maxpool2x2BCHW, GemmReluMKKN, ArgmaxScalar, ConcatVector> lenet (
   "lenet", INPUT_TXT, "lenet_out.txt",
