@@ -43,6 +43,7 @@ class ConcatGraph : public adf::graph {
     ConcatGraph() { 
       k[0] = adf::kernel::create_object<CONCAT<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>>();
       adf::source(k[0]) = "concat.cc";
+      adf::headers(k[0]) = {"concat.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
       for (int i = 0; i < LCNT; i++)

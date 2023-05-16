@@ -57,10 +57,11 @@ class ConvReluGraph : public adf::graph {
     ) { 
       k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
+      adf::headers(k[0]) = {"conv.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], pout[0]);
-      adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos; // weight (<= 16384B)
@@ -96,13 +97,13 @@ class ConvReluGmemParamGraph : public adf::graph {
     ConvReluGmemParamGraph() { 
       k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K>>();
       adf::source(k[0]) = "conv.cc";
+      adf::headers(k[0]) = {"conv.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<M*K*K*C*4>>         (pin[1], k[0].in[1]);
       adf::connect<adf::window<M*4>>               (pin[2], k[0].in[2]);
       adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], pout[0]);
-
-      adf::runtime<ratio>(k[0]) = 0.6;
     }
 
 };
@@ -168,9 +169,9 @@ class ConvReluChunkGraph : public adf::graph {
         bChunk = std::vector<float>(bias.begin()+i*MCHUNK, bias.begin()+i*MCHUNK+chunkSize);
         bChunk.resize(MCHUNK, 0);
 
-        convs[i] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, MCHUNK, K>>(
-          wChunk, bChunk);
+        convs[i] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, MCHUNK, K>>(wChunk, bChunk);
         adf::source(convs[i]) = "conv.cc";
+        adf::headers(convs[i]) = {"conv.h"};
         adf::runtime<ratio>(convs[i]) = 0.6;
         
         adf::location<adf::kernel>(convs[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 

@@ -37,10 +37,11 @@ class IdentityGraph : public adf::graph {
     IdentityGraph() { 
       k[0] = adf::kernel::create_object<IDENTITY<N>>();
       adf::source(k[0]) = "identity.cc";
+      adf::headers(k[0]) = {"identity.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::connect<adf::window<N*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<N*4>> (k[0].out[0], pout[0]);
-      adf::runtime<ratio>(k[0]) = 0.6;
     }
 
 };

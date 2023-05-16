@@ -50,10 +50,11 @@ class GemmReluGraph : public adf::graph {
     ) { 
       k[0] = adf::kernel::create_object<GEMM<M, K, N>>(weights, bias);
       adf::source(k[0]) = "gemm.cc";
+      adf::headers(k[0]) = {"gemm.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::connect<adf::window<M*K*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
-      adf::runtime<ratio>(k[0]) = 0.6;
     }
 
 };
@@ -82,13 +83,13 @@ class GemmReluGmemParamGraph : public adf::graph {
     GemmReluGmemParamGraph() { 
       k[0] = adf::kernel::create_object<GEMM<M, K, N>>();
       adf::source(k[0]) = "gemm.cc";
+      adf::headers(k[0]) = {"gemm.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::connect<adf::window<M*K*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<K*N*4>> (pin[1], k[0].in[1]);
       adf::connect<adf::window<N*4>>   (pin[2], k[0].in[2]);
       adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
-
-      adf::runtime<ratio>(k[0]) = 0.6;
     }
 
 };
@@ -147,8 +148,10 @@ class GemmReluMknkChunkGraph : public adf::graph {
         wChunk.resize(NCHUNK*K, 0);
         bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+chunkSize);
         bChunk.resize(NCHUNK, 0);
+        
         gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK>>(wChunk, bChunk);
         adf::source(gemms[i]) = "gemm.cc";
+        adf::headers(gemms[i]) = {"gemm.h"};
         adf::runtime<ratio>(gemms[i]) = 0.6;
 
         adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
@@ -228,6 +231,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
         
         gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK>>(wChunk, bChunk);
         adf::source(gemms[i]) = "gemm.cc";
+        adf::headers(gemms[i]) = {"gemm.h"};
         adf::runtime<ratio>(gemms[i]) = 0.6;
 
         adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 

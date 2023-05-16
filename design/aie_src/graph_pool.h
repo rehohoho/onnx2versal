@@ -42,6 +42,7 @@ class MaxpoolGraph : public adf::graph {
     MaxpoolGraph() { 
       k[0] = adf::kernel::create_object<POOL<INP_W, OUT_W, B, C>>();
       adf::source(k[0]) = "pool.cc";
+      adf::headers(k[0]) = {"pool.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
       adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);

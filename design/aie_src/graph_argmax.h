@@ -39,6 +39,7 @@ class ArgmaxGraph : public adf::graph {
     ArgmaxGraph() { 
       k[0] = adf::kernel::create_object<ARGMAX<WINDOW_SIZE, CHUNK_SIZE>>();
       adf::source(k[0]) = "argmax.cc";
+      adf::headers(k[0]) = {"argmax.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
       adf::connect<adf::window<WINDOW_SIZE*4>> (pin[0], k[0].in[0]);
