@@ -5,15 +5,22 @@ import numpy as np
 import onnx
 from onnx import numpy_helper
 
+MAX_FLOAT_PARAMS = 16384//4
+
+
+def type_to_cstr(np_dtype: np.dtype):
+  if np_dtype == "float32":
+    return "float"
+  elif np_dtype == "int8":
+    return "int"
+  else:
+    raise NotImplementedError(f"Not implemented type {np_dtype}")
 
 class OpParser:
   include_file: str
 
   def __init__(self, name: str):
     self.name = name
-
-  def save_output(self, output: np.ndarray):
-    np.savetxt(f"../data/{self.name}_goldenout.txt", output.reshape(-1, 2))
   
   def get_include_line(self) -> str:
     return f'#include "{self.include_file}"'
@@ -57,6 +64,7 @@ class ConvOp(OpParser):
     self.C = inC
     self.M = wM
     self.K = wK1
+    self.ctype = type_to_cstr(tweight.dtype)
   
   def register_weights(self, 
                        weights: np.ndarray, 
@@ -73,10 +81,15 @@ class ConvOp(OpParser):
     self.bias = bias
   
   def get_kernel_line(self) -> str:
-    return f"ConvReluGraph<Conv5x5on8ReluBCHW,{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
+    graph = "ConvReluGraph"
+    kernel = "ConvReluScalarBCHW"
+    if self.OUT_W % 8 == 0 and self.K == 5:
+      kernel = "Conv5x5on8ReluBCHW"
+    
+    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
 
   def get_arg_line(self) -> str:
-    return f"std::vector<float> {self.name}_w,\nstd::vector<float> {self.name}_b"
+    return f"std::vector<{self.ctype}> {self.name}_w,\nstd::vector<{self.ctype}> {self.name}_b"
   
   def get_initlist_line(self) -> str:
     return f"{self.name}({self.name}_w, {self.name}_b)"
@@ -84,8 +97,8 @@ class ConvOp(OpParser):
   def get_weight_line(self) -> str:
     wstring = str(self.weights.flatten().tolist())[1:-1]
     bstring = str(self.bias.flatten().tolist())[1:-1]
-    return f"std::vector<float> {self.name}_w {{{wstring}}};\n" + \
-      f"std::vector<float> {self.name}_b {{{bstring}}};"
+    return f"std::vector<{self.ctype}> {self.name}_w {{{wstring}}};\n" + \
+      f"std::vector<{self.ctype}> {self.name}_b {{{bstring}}};"
   
   def get_callarg_line(self) -> str:
     return f"{self.name}_w, {self.name}_b"
@@ -109,6 +122,7 @@ class GemmOp(OpParser):
     self.M = inM
     self.K = inK
     self.N = wN
+    self.ctype = type_to_cstr(tweight.dtype)
   
   def register_weights(self, 
                        weights: np.ndarray,
@@ -126,13 +140,22 @@ class GemmOp(OpParser):
     self.bias = bias
   
   def get_kernel_type(self) -> str:
-    return f"GemmReluMkknChunkGraph<GemmReluMKKN,ConcatVector,MAX_FLOAT_PARAMS/{self.K}/4*4,{self.M},{self.K},{self.N}>"
+    graph = "GemmReluMkknChunkGraph"
+    kernel = "GemmReluScalarMKKN"
+    concat_kernel = "ConcatScalar"
+    chunkSize = MAX_FLOAT_PARAMS/self.K//4*4
+    if self.K % 2 == 0 and chunkSize % 4 == 0:
+      kernel = "GemmReluMKKN"
+    if chunkSize % 8 == 0 and self.N % 4 == 0:
+      concat_kernel = "ConcatVector"
+    
+    return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N}>"
   
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
 
   def get_arg_line(self) -> str:
-    return f"std::vector<float> {self.name}_w,\nstd::vector<float> {self.name}_b"
+    return f"std::vector<{self.ctype}> {self.name}_w,\nstd::vector<{self.ctype}> {self.name}_b"
   
   def get_initlist_line(self) -> str:
     return f"{self.name}({self.name}_w, {self.name}_b)"
@@ -140,8 +163,8 @@ class GemmOp(OpParser):
   def get_weight_line(self) -> str:
     wstring = str(self.weights.flatten().tolist())[1:-1]
     bstring = str(self.bias.flatten().tolist())[1:-1]
-    return f"std::vector<float> {self.name}_w {{{wstring}}};\n" + \
-      f"std::vector<float> {self.name}_b {{{bstring}}};"
+    return f"std::vector<{self.ctype}> {self.name}_w {{{wstring}}};\n" + \
+      f"std::vector<{self.ctype}> {self.name}_b {{{bstring}}};"
   
   def get_callarg_line(self) -> str:
     return f"{self.name}_w, {self.name}_b"
@@ -164,17 +187,24 @@ class PoolOp(OpParser):
     self.C = inC
   
   def get_kernel_line(self) -> str:
-    return f"MaxpoolGraph<Maxpool2x2BCHW,{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
+    graph = "Maxpool2x2BCHW"
+    kernel = "MaxpoolScalarBCHW"
+    if self.OUT_W % 8 == 0:
+      kernel = "Maxpool2x2BCHW"
+    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
 
 
 class CppGenerator:
 
   def __init__(self,
+               data_path: str,
                onnx_path: str,
-               input_tensor: np.ndarray,
+               input_tensors: List[np.ndarray],
                output_tensors: Mapping[str, np.ndarray],
                is_output_all: bool = False):
     self.is_output_all = is_output_all
+    self.data_path = data_path
+
     self.op_list: List[OpParser] = []
     self.nodeout_2_adfport: Mapping[str, OpParser] = {}
     self.adf_connects: List[str] = []
@@ -182,23 +212,25 @@ class CppGenerator:
     model = onnx.load(onnx_path)
     self.nodes = model.graph.node
     
-    # save input
-    np.savetxt(f"../data/input.txt", input_tensor.reshape(-1, 2))
-    
-    # register node output and model outputs
+    # register model input, node output and model outputs
+    self.modelin_2_tensor = {i.name: t for i, t in zip(model.graph.input, input_tensors)}
     for i, model_input in enumerate(model.graph.input):
       self.nodeout_2_adfport[model_input.name] = f"plin[{i}].out[0]"
     self.modelout_2_adfport = {i.name: None for i in model.graph.output}
 
+    # save inputs
+    for input_name, input_tensor in self.modelin_2_tensor.items():
+      np.savetxt(f"{self.data_path}/{input_name}.txt", input_tensor.reshape(-1, 2))
+
     # store I/O tensors and model parameters
-    self.input_tensor: np.ndarray = input_tensor
+    self.input_tensors: List[np.ndarray] = input_tensors
     self.initializers: Mapping[str, np.ndarray] = {
       init.name: init for init in model.graph.initializer}
     self.output_tensors: Mapping[str, np.ndarray] = output_tensors
   
   def get_tensor(self, name: str):
-    if name == "input":
-      return self.input_tensor
+    if name in self.modelin_2_tensor:
+      return self.modelin_2_tensor[name]
     elif name in self.initializers:
       return numpy_helper.to_array(self.initializers[name])
     elif name in self.output_tensors:
@@ -222,7 +254,6 @@ class CppGenerator:
         toutput = self.get_tensor(onnx_out_name)
         
         op = ConvOp(f"kconv{i}")
-        op.save_output(toutput)
         op.register_params(tinput, tweight, tbias, toutput)
         op.register_weights(tweight, tbias)
         self.op_list.append(op)
@@ -232,6 +263,7 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_adfport:
           self.modelout_2_adfport[onnx_out_name] = op.name
+        np.savetxt(f"{self.data_path}/{op.name}_goldenout.txt", toutput.reshape(-1, 2))
       
       elif node.op_type == "Relu":
         # handled by fusing with previous
@@ -241,8 +273,8 @@ class CppGenerator:
         onnx_out_name = node.output[0]
         tinput = self.get_tensor(node.input[0])
         toutput = self.get_tensor(onnx_out_name)
+        
         op = PoolOp(f"kpool{i}")
-        op.save_output(toutput)
         op.register_params(tinput, toutput)
         self.op_list.append(op)
 
@@ -251,17 +283,19 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_adfport:
           self.modelout_2_adfport[onnx_out_name] = op.name
+        np.savetxt(f"{self.data_path}/{op.name}_goldenout.txt", toutput.reshape(-1, 2))
 
       elif node.op_type == "Gemm":
         if self.nodes[i+1].op_type != "Relu": # lookahead
           raise NotImplementedError("No relu found after Gemm, no valid implementation.")
+        
         onnx_out_name = self.nodes[i+1].output[0]
         tinput = self.get_tensor(node.input[0])
         tweight = self.get_tensor(node.input[1])
         tbias = self.get_tensor(node.input[2])
         toutput = self.get_tensor(onnx_out_name)
+
         op = GemmOp(f"kgemm{i}")
-        op.save_output(toutput)
         op.register_params(tinput, tweight, tbias, toutput)
         op.register_weights(tweight, tbias)
         self.op_list.append(op)
@@ -272,6 +306,7 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_adfport:
           self.modelout_2_adfport[onnx_out_name] = op.name
+        np.savetxt(f"{self.data_path}/{op.name}_goldenout.txt", toutput.reshape(-1, 2))
         
       elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
         print(f"WARNING: {node.op_type} not implemented, skipping...")
@@ -290,11 +325,15 @@ class CppGenerator:
           out_path = f"{i}__{node.name}__{ioname}__{tensor_shapestr}.txt".replace("/", "_")
           if "weight" in ioname or "bias" in ioname:
             out_name = ioname.replace("/", "_").replace(".", "_")
-            tmp = f"std::vector<float> {out_name} {{{str(tensor.flatten().tolist())[1:-2]}}};"
-            with open(out_path, "w") as f: f.write(tmp)
+            tensor = str(tensor.flatten().tolist())[1:-2]
+            tmp = f"std::vector<{type_to_cstr(tensor.dtype)}> {out_name} {{{tensor}}};"
+            with open(out_path, "w") as f: 
+              f.write(tmp)
           else:
-            if tensor.size > 2: tensor = tensor.reshape(-1, 2)
-            else: tensor = tensor.reshape(-1)
+            if tensor.size > 2: 
+              tensor = tensor.reshape(-1, 2)
+            else: 
+              tensor = tensor.reshape(-1)
             np.savetxt(out_path, tensor)
 
   def get_includes(self) -> str:
@@ -305,7 +344,8 @@ class CppGenerator:
     return "    " + "\n".join(i.get_kernel_line() for i in self.op_list).replace("\n", "\n    ")
 
   def get_args(self) -> str:
-    args = [f"const std::string& {opname}_out" for opname in self.modelout_2_adfport.values()]
+    args = [f"const std::string& {inpname}" for inpname in self.modelin_2_tensor]
+    args += [f"const std::string& {opname}_out" for opname in self.modelout_2_adfport.values()]
     args += [i.get_arg_line() for i in self.op_list]
     args += [f"const std::string& {op.name}_out = std::string()" for op in self.op_list if op.name not in self.modelout_2_adfport.values()]
     args = [i for i in args if i != ""]
@@ -315,6 +355,13 @@ class CppGenerator:
     initlists = [i.get_initlist_line() for i in self.op_list]
     initlists = [i for i in initlists if i != ""]
     return "      " + ",\n".join(initlists).replace("\n", "\n      ")
+  
+  def get_plins(self) -> str:
+    plins = [
+      f'plin[{i}] = adf::input_plio::create("plin{i}_"+id+"_{inpname}", PLIO64_ARG({inpname}));'
+      for i, inpname in enumerate(self.modelin_2_tensor)
+    ]
+    return "      " + "\n".join(plins).replace("\n", "\n      ")
   
   def get_plouts(self) -> str:
     plouts = [
@@ -360,19 +407,18 @@ class MyGraph : public adf::graph {{
 {self.get_kernels()}
 
   public:
-    adf::input_plio plin[1];
+    adf::input_plio plin[{len(self.modelin_2_tensor)}];
     std::vector<adf::output_plio> plout; // intermediate outputs optional
 
     MyGraph(
       const std::string& id,
-      const std::string& INPUT_TXT,
 {self.get_args()}
     ): 
 {self.get_initlist()}
     {{ 
-      // plin[0] mandatory input
-      plin[0] = adf::input_plio::create("plin0_"+id+"_input", PLIO64_ARG(INPUT_TXT));
-      
+      // mandatory input
+{self.get_plins()}
+
       // mandatory output
 {self.get_plouts()}
 
