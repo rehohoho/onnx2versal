@@ -731,3 +731,145 @@ xrtBOFree(inter{i}_bohdl);""")
       i += 1
     optout_syncs.append("#endif")
     return "   " + "\n".join(optout_closes + optout_syncs + optout_writes).replace("\n", "\n   ")
+
+  def generate_host_cpp_str(self) -> str:
+    return f"""
+#include <fstream>
+
+#include "graph_gen.cpp"
+
+#include "experimental/xrt_aie.h"
+#include "experimental/xrt_kernel.h"
+#include "experimental/xrt_bo.h"
+#include "experimental/xrt_error.h"
+
+#include "adf/adf_api/XRTConfig.h"
+
+
+#define V_PER_LINE      2
+{self.get_host_datafiles()}
+
+void write_arr_to_file(
+   const std::string& filename,
+   const float* bomapped,
+   const size_t bosize
+) {{
+   std::ofstream file;
+   file.open(filename, std::ofstream::out);
+   if (!file) printf("Unable to open %s\\n", filename.c_str());
+   for (int j = 0; j < bosize; j+=V_PER_LINE) {{
+      for (int k = 0; k < V_PER_LINE; k++) {{
+         file << bomapped[j+k] << " ";
+      }}
+      file << std::endl;
+   }}
+}}
+
+
+static std::vector<char> load_xclbin(
+   xrtDeviceHandle device, 
+   const std::string &fnm
+) {{
+   if (fnm.empty())
+      throw std::runtime_error("No xclbin specified");
+   
+   // load bit stream
+   std::ifstream stream(fnm);
+   stream.seekg(0,stream.end);
+   size_t size = stream.tellg();
+   stream.seekg(0,stream.beg);
+   
+   std::vector<char> header(size);
+   stream.read(header.data(),size);
+   
+   auto top = reinterpret_cast<const axlf*>(header.data());
+   if (xrtDeviceLoadXclbin(device, top))
+      throw std::runtime_error("Bitstream download failed");
+   
+   return header;
+}}
+
+int main(int argc, char ** argv) {{
+   // Parse args
+   if(argc != 5) {{
+      std::cout << "Usage: " << argv[0] <<" <xclbin>" << " <iter_cnt>" << " <data_dir>" << " <out_dir>" << std::endl;
+      return EXIT_FAILURE;
+   }}
+   const char* xclbin_path = argv[1];
+   const int iter_cnt = atoi(argv[2]);
+   std::string data_dir = argv[3];
+   data_dir.append("/");
+   std::string out_dir = argv[4];
+   out_dir.append("/");
+   printf("\\nConfig:\\nxclbin: %s\\niter_cnt: %d\\ndata_dir: %s\\nout_dir: %s\\n\\n", 
+      xclbin_path, iter_cnt, data_dir.c_str(), out_dir.c_str());
+
+   // Open device, load xclbin
+   auto deviceIdx = xrt::device(0);
+   auto dhdl = xrtDeviceOpen(0);
+   auto xclbin = load_xclbin(dhdl, xclbin_path);
+   auto top = reinterpret_cast<const axlf*>(xclbin.data());
+
+
+   // Allocate BOs (buffer objects) of requested size with appropriate flags
+   // Memory map BOs into user's address space (DDR Memory)
+   // Create kernel handle, runtime handle, set args, start kernels
+
+   // Inputs
+{self.get_host_input_inits()}
+  
+   // Outputs
+{self.get_host_output_inits()}
+
+#ifdef __OUTPUT_INTER__
+{self.get_host_optout_inits()}
+#endif
+
+
+   // Graph execution for AIE
+   adf::registerXRT(dhdl, top->m_header.uuid);
+   try {{
+      adfCheck(myGraph.init(), "init myGraph");
+#ifdef __IS_SW_EMU__
+      adfCheck(myGraph.run(iter_cnt), "run myGraph");
+      adfCheck(myGraph.wait(), "wait myGraph");
+#else
+      get_graph_throughput_by_port(myGraph, "plout[0]", myGraph.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
+#endif
+      adfCheck(myGraph.end(), "end myGraph");
+   }}
+   catch (const std::system_error& ex) {{
+      xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);
+      auto errCode = error.get_error_code();
+      auto timestamp = error.get_timestamp();
+      auto err_str = error.to_string();
+      std::cout << timestamp << " error code:" << errCode << " Error:" << err_str << std::endl;
+   }}
+
+   
+   // Wait for Kernel execution to end, close runtime and kernel handlers
+   printf("Waiting for dma hls to complete...\\n");
+   
+   // Close input handlers
+{self.get_host_input_closes()}
+   
+   // Close output handlers
+{self.get_host_output_closes()}
+
+   printf("Closed runtime handlers and kernel handlers...\\n");
+
+#ifdef __OUTPUT_INTER__
+{self.get_host_optout_closes()}
+#endif
+
+   xrtBOFree(in0_bohdl);
+   printf("Released I/O buffer objects.\\n");
+
+   xrtDeviceClose(dhdl);
+   return 0;
+}}
+"""
+
+  def generate_host_cpp(self) -> str:
+    with open("../design/host_app_src/gen_aie_app.cpp", "w") as f:
+      f.write(self.generate_host_cpp_str())
