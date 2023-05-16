@@ -548,3 +548,60 @@ if __name__ == "__main__":
       f.write(self.generate_xtg_python_str(is_output_inter=False))
     with open("../design/trafficgen/xtg_gen_output_inter.py", "w") as f:
       f.write(self.generate_xtg_python_str(is_output_inter=True))
+  
+  def get_cfg_input_kernels(self) -> str:
+    tmp = f"nk=mm2s:{len(self.modelin_2_tensor)}:"
+    for i in range(len(self.modelin_2_tensor)):
+      tmp += f"mm2s_{i},"
+    return tmp.strip(",")
+  
+  def get_cfg_output_kernels(self, is_output_inter: bool) -> str:
+    out_cnt = len(self.modelout_2_op)
+    if is_output_inter:
+      out_cnt = len(self.op_list)
+    
+    tmp = f"nk=s2mm:{out_cnt}:"
+    for i in range(out_cnt):
+      tmp += f"s2mm_{i},"
+    return tmp.strip(",")
+  
+  def get_cfg_input_scs(self) -> str:
+    in_scs = [
+      f"stream_connect=mm2s_{i}.s:ai_engine_0.plin{i}_myGraph_{inpname}"
+      for i, inpname in enumerate(self.modelin_2_tensor)
+    ]
+    return "\n".join(in_scs)
+
+  def get_cfg_output_scs(self, is_output_inter: bool) -> str:
+    out_scs = [
+      f"stream_connect=ai_engine_0.plout{i}_myGraph_{op.name}:s2mm_{i}.s"
+      for i, op in enumerate(self.modelout_2_op.values())
+    ]
+    if is_output_inter:
+      n_out = len(self.modelout_2_op)
+      out_scs += [
+        f"stream_connect=ai_engine_0.plout{n_out+j}_myGraph_{op.name}:s2mm_{n_out+j}.s"
+        for j, op in enumerate(self.op_list) if op not in self.modelout_2_op.values()
+      ]
+    return "\n".join(out_scs)  
+  
+  def generate_cfg_str(self, is_output_inter: bool):
+    return f"""
+[connectivity]
+{self.get_cfg_input_kernels()}
+{self.get_cfg_output_kernels(is_output_inter=is_output_inter)}
+
+#Connections For LeNET Insts 0...
+{self.get_cfg_input_scs()}
+{self.get_cfg_output_scs(is_output_inter=is_output_inter)}
+
+[advanced]
+# Disable Profiling in hw_emu so that it is faster...
+param=hw_emu.enableProfiling=false
+"""
+
+  def generate_cfg(self):
+    with open("../design/system_configs/gen.cfg", "w") as f:
+      f.write(self.generate_cfg_str(is_output_inter=False))
+    with open("../design/system_configs/gen_output_inter.cfg", "w") as f:
+      f.write(self.generate_cfg_str(is_output_inter=True))

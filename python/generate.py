@@ -88,6 +88,7 @@ if __name__ == '__main__':
   cppGenerator.parse()
   cppGenerator.generate_cpp_graph()
   cppGenerator.generate_xtg_python()
+  cppGenerator.generate_cfg()
 
   # Generate end-to-end data
   generate_txt(loader=loader, 
