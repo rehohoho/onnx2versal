@@ -391,7 +391,8 @@ endif
 # 	v++.package_summary
 # 	v++_package.log 
 EMBEDDED_PACKAGE_OUT := $(BUILD_TARGET_DIR)/package
-EMBEDDED_EXEC_SCRIPT := run_script.sh
+EMBEDDED_EXEC_HWEMU_SCRIPT := run_hw_emu.sh
+EMBEDDED_EXEC_HW_SCRIPT := run_hw.sh
 
 PKG_FLAGS := -t $(TARGET) \
              --save-temps \
@@ -410,7 +411,8 @@ PKG_FLAGS += --package.rootfs $(COMMON_IMAGE_VERSAL)/rootfs.ext4 \
              --package.out_dir $(EMBEDDED_PACKAGE_OUT) \
              --package.image_format=ext4 \
              --package.sd_file $(BUILD_TARGET_DIR)/$(APP_ELF) \
-             --package.sd_file $(EXEC_SCRIPTS_REPO)/$(EMBEDDED_EXEC_SCRIPT) \
+             --package.sd_file $(EXEC_SCRIPTS_REPO)/$(EMBEDDED_EXEC_HWEMU_SCRIPT) \
+             --package.sd_file $(EXEC_SCRIPTS_REPO)/$(EMBEDDED_EXEC_HW_SCRIPT) \
 						 --package.sd_file $(PROJECT_REPO)/check.py \
 						 --package.sd_dir $(DATA_REPO)
 endif
@@ -449,7 +451,7 @@ else
 
 ifeq ($(TARGET),hw_emu)
 	cd $(EMBEDDED_PACKAGE_OUT); \
-	./launch_hw_emu.sh -run-app $(EMBEDDED_EXEC_SCRIPT) -no-reboot | tee $(AIESIM_REPORT_DIR)/embedded_run.log
+	./launch_hw_emu.sh -run-app $(EMBEDDED_EXEC_HWEMU_SCRIPT) -no-reboot | tee $(AIESIM_REPORT_DIR)/embedded_run.log
 else # sw_emu
 	mkdir -p $(X86SIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
