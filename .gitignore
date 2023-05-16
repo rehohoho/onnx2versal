@@ -19,6 +19,9 @@ aiesimulator_output/
 
 # external data
 data/MNIST
+data/*_goldenout.txt
+data/*_in.txt
+data/input.txt
 
 # python
 *.pyc

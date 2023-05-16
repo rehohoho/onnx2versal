@@ -253,7 +253,7 @@ class CppGenerator:
         tbias = self.get_tensor(node.input[2])
         toutput = self.get_tensor(onnx_out_name)
         
-        op = ConvOp(f"kconv{i}")
+        op = ConvOp(f"k{i}conv")
         op.register_params(tinput, tweight, tbias, toutput)
         op.register_weights(tweight, tbias)
         self.op_list.append(op)
@@ -263,6 +263,7 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_adfport:
           self.modelout_2_adfport[onnx_out_name] = op.name
+        np.savetxt(f"{self.data_path}/{op.name}_in.txt", tinput.reshape(-1, 2))
         np.savetxt(f"{self.data_path}/{op.name}_goldenout.txt", toutput.reshape(-1, 2))
       
       elif node.op_type == "Relu":
@@ -274,7 +275,7 @@ class CppGenerator:
         tinput = self.get_tensor(node.input[0])
         toutput = self.get_tensor(onnx_out_name)
         
-        op = PoolOp(f"kpool{i}")
+        op = PoolOp(f"k{i}pool")
         op.register_params(tinput, toutput)
         self.op_list.append(op)
 
@@ -283,6 +284,7 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_adfport:
           self.modelout_2_adfport[onnx_out_name] = op.name
+        np.savetxt(f"{self.data_path}/{op.name}_in.txt", tinput.reshape(-1, 2))
         np.savetxt(f"{self.data_path}/{op.name}_goldenout.txt", toutput.reshape(-1, 2))
 
       elif node.op_type == "Gemm":
@@ -295,7 +297,7 @@ class CppGenerator:
         tbias = self.get_tensor(node.input[2])
         toutput = self.get_tensor(onnx_out_name)
 
-        op = GemmOp(f"kgemm{i}")
+        op = GemmOp(f"k{i}gemm")
         op.register_params(tinput, tweight, tbias, toutput)
         op.register_weights(tweight, tbias)
         self.op_list.append(op)
@@ -306,6 +308,7 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_adfport:
           self.modelout_2_adfport[onnx_out_name] = op.name
+        np.savetxt(f"{self.data_path}/{op.name}_in.txt", tinput.reshape(-1, 2))
         np.savetxt(f"{self.data_path}/{op.name}_goldenout.txt", toutput.reshape(-1, 2))
         
       elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
