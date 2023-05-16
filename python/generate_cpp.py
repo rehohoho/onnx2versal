@@ -655,6 +655,15 @@ xrtRunStart(in{i}_rhdl);""")
     inp_initsyncs.append("#endif")
     return "   " + "\n".join(inp_inits+inp_initsyncs).replace("\n", "\n   ")
   
+  def get_host_input_closes(self) -> str:
+    inp_closes = [f"""auto in{i}_state = xrtRunWait(in{i}_rhdl);    
+printf("mm2s completed with status (%d)\\n", in{i}_state);
+xrtRunClose(in{i}_rhdl);
+xrtKernelClose(in{i}_khdl);"""
+      for i in range(len(self.modelin_2_tensor))
+    ]
+    return "   " + "\n".join(inp_closes).replace("\n", "\n   ")
+  
   def get_host_output_inits(self) -> str:
     out_inits = []
     for i, op in enumerate(self.modelout_2_op.values()):
@@ -670,6 +679,21 @@ xrtRunSetArg(out{i}_rhdl, 0, out{i}_bohdl);
 xrtRunSetArg(out{i}_rhdl, 2, {op.out_size});
 xrtRunStart(out{i}_rhdl);""")
     return "   " + "\n".join(out_inits).replace("\n", "\n   ")
+
+  def get_host_output_closes(self) -> str:
+    out_closes = [
+    f"""auto out{i}_state = xrtRunWait(out{i}_rhdl);
+printf("s2mm completed with status (%d)\\n", out{i}_state);
+xrtRunClose(out{i}_rhdl);
+xrtKernelClose(out{i}_khdl);
+#ifdef __IS_SW_EMU__
+xrtBOSync(out{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, {op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);
+#endif
+write_arr_to_file(out_dir+"{op.name}_goldenout.txt", out{i}_bomapped, {op.out_size});
+xrtBOFree(out{i}_bohdl);"""
+      for i, op in enumerate(self.modelout_2_op.values())
+    ]
+    return "   " + "\n".join(out_closes).replace("\n", "\n   ")
 
   def get_host_optout_inits(self) -> str:
     optout_inits = []
@@ -688,3 +712,22 @@ xrtRunSetArg(inter{i}_rhdl, 2, {op.out_size});
 xrtRunStart(inter{i}_rhdl);""")
       i += 1
     return "   " + "\n".join(optout_inits).replace("\n", "\n   ")
+  
+  def get_host_optout_closes(self) -> str:
+    optout_closes = []
+    optout_syncs = ["#ifdef __IS_SW_EMU__"]
+    optout_writes = []
+    i = len(self.modelout_2_op)
+    for op in self.op_list:
+      if op in self.modelout_2_op.values(): continue
+      optout_closes.append(f"""auto inter{i}_state = xrtRunWait(inter{i}_rhdl);
+printf("inter{i} completed with status (%d)\\n", inter{i}_state);
+xrtRunClose(inter{i}_rhdl);
+xrtKernelClose(inter{i}_khdl);""");
+      optout_syncs.append(
+        f"xrtBOSync(inter{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, {op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);")
+      optout_writes.append(f"""write_arr_to_file(out_dir+"{op.name}_goldenout.txt", inter{i}_bomapped, {op.out_size});
+xrtBOFree(inter{i}_bohdl);""")
+      i += 1
+    optout_syncs.append("#endif")
+    return "   " + "\n".join(optout_closes + optout_syncs + optout_writes).replace("\n", "\n   ")
