@@ -23,7 +23,7 @@ help::
 	@echo  "    GRAPH       lenet (default),           target graph as per design/aie_src/graph_[].cpp"
 	@echo  "    EXTIO       0 (default) | 1,           traffic gen usage, graph runs only, redundant for system due to host script"
 	@echo  "    DLOG        1 (default) | 0,           if enable verbose logging, kernel names and timing"
-	@echo  "    DOUT        1 (default) | 0,           if enable output intermediates"
+	@echo  "    DOUT        1 (default) | 0,           if enable output intermediates, max 6-7 outputs, AIE has <= 8 cascade channels"
 	@echo  "    ITER_CNT    1 (default),               number of run iterations, independent in x86sim, aiesim, emu"
 	@echo  "    EN_TRACE    0 (default) | 1,           enable profiling .ini (hw)"
 	@echo  ""
