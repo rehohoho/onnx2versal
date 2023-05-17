@@ -53,7 +53,8 @@ design/traffic_gen/xtg_[net_name].py
 ```
 
 ## Usage - Simulation, Verification, Profiling, Hardware Build
-`make help` for full details. Only key (and probably insufficient) examples here. <b>If you run into issues running the make, try to run each recipe one by one.</b>
+`make help` for full details. Only key (and probably insufficient) examples here. <br />
+<b>If you run into issues running the make, try to run each recipe one by one.</b>
 ```
 OPTIONS:
 Use the make recipes with required values for options mentioned below-
@@ -68,17 +69,16 @@ $ TARGET=sw_emu GRAPH=my_model [EXTIO=1] [DOUT=0] make graph clean_reports aiesi
 ## Functional check: runs system software emulation (x86 graph, sysC kernels)
 $ TARGET=sw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application package clean_reports run_emu
 
-
 ## Functional/performance check: runs graph in aiesimulator
 $ TARGET=hw_emu GRAPH=my_model [EXTIO=1] [DOUT=0] make graph clean_reports aiesim_profile
 
 ## Functional/performance check: runs system in hardware emulation with QEMU (sysC graph, kernels NoC, DDR)
-$ TARGET=hw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application package clean_reports run_emu
+$ TARGET=hw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application package run_emu
 
 
 ## Hardware: create hardware image, flash the SD card
 $ TARGET=hw GRAPH=my_model [DOUT=0] make graph kernels xsa application package
-$ sudo dd if=build/lenet/sw_emu/package/sd_card.img of=/dev/ conv=fsync status=progress
+$ sudo dd if=build/my_model/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress
 ```
 
 ## Directory structure
