@@ -93,276 +93,263 @@ $(document).ready(function(){initNavTree('md_lenet_example.html',''); initResiza
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h1><a class="anchor" id="autotoc_md13"></a>
-Generate</h1>
-<div class="fragment"><div class="line">rm ../data/lenet_mnist__* ../data/mnist_test_*</div>
-<div class="line">cd python/</div>
-<div class="line">python generate_node_data.py</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md14"></a>
-Manually write</h1>
-<div class="fragment"><div class="line">design/aie_src/graph_[net_name].h</div>
-<div class="line">design/aie_src/graph_[net_name].cpp</div>
-<div class="line">design/host_app_src/[net_name]_aie_app.cpp</div>
-<div class="line">design/system_configs/[net_name]_logprofile.cfg</div>
-<div class="line">design/system_configs/[net_name].cfg</div>
-<div class="line">design/traffic_gen/xtg_[net_name]_logprofile.cfg</div>
-<div class="line">design/traffic_gen/xtg_[net_name].cfg</div>
+Requirements and setup</h1>
+<ul>
+<li>See <a href="README.md#Requirements">README Requirements</a></li>
+<li>See <a href="README.md#Setup">README Setup</a></li>
+<li>Make sure you don't <code>source sample_env_setup.sh</code> as it overwrites your python environment for this section.</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md14"></a>
+Train Lenet model on MNIST</h1>
+<div class="fragment"><div class="line">$ cd python/;python train.py</div>
+<div class="line">stdout:</div>
+<div class="line">accuracy: 0.xxx</div>
+<div class="line">Model finished training</div>
+<div class="line">Converted to onnx</div>
+<div class="line">Exported model has been tested with ONNXRuntime, and the result looks good!</div>
+<div class="line"> </div>
+<div class="line">files:</div>
+<div class="line">models/</div>
+<div class="line">├── lenet_mnist.onnx</div>
+<div class="line">└── lenet_mnist.pkl</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md15"></a>
-Make notes</h1>
-<div class="fragment"><div class="line">EXTIO: 0|1        whether to use external traffic generator, only graph tests</div>
-<div class="line">                  host app in system tests is equivalent of traffic generator</div>
-<div class="line">LOG_PROFILE: 0|1  whether to stdout profile logs and output intermediates</div>
+Generate files</h1>
+<div class="fragment"><div class="line">$ python generate.py</div>
+<div class="line"> </div>
+<div class="line">stdout:</div>
+<div class="line">WARNING: fusing Conv+Relu</div>
+<div class="line">Padding Conv weights (6, 1, 5, 5) to (6, 1, 5, 8)</div>
+<div class="line">WARNING: fusing Conv+Relu</div>
+<div class="line">Padding Conv weights (16, 6, 5, 5) to (16, 6, 5, 8)</div>
+<div class="line">WARNING: Shape not implemented, skipping...</div>
+<div class="line">WARNING: Constant not implemented, skipping...</div>
+<div class="line">WARNING: Gather not implemented, skipping...</div>
+<div class="line">WARNING: Constant not implemented, skipping...</div>
+<div class="line">WARNING: Unsqueeze not implemented, skipping...</div>
+<div class="line">WARNING: Constant not implemented, skipping...</div>
+<div class="line">WARNING: Concat not implemented, skipping...</div>
+<div class="line">WARNING: Reshape not implemented, skipping...</div>
+<div class="line">Found matching output /Reshape_output_0 and k5pool output</div>
+<div class="line">Padding Gemm weights (84, 10) to (84, 12)</div>
+<div class="line">Generating MNIST txt for 100 data points</div>
+<div class="line"> </div>
+<div class="line">files:</div>
+<div class="line">models/</div>
+<div class="line">├── lenet_mnist_inter.onnx</div>
+<div class="line">├── lenet_mnist.onnx</div>
+<div class="line">└── lenet_mnist.pkl</div>
+<div class="line">data/</div>
+<div class="line">├── input.txt</div>
+<div class="line">├── k0conv_goldenout.txt</div>
+<div class="line">├── k0conv_in.txt</div>
+<div class="line">├── k14gemm_goldenout.txt</div>
+<div class="line">├── k14gemm_in.txt</div>
+<div class="line">├── k16gemm_goldenout.txt</div>
+<div class="line">├── k16gemm_in.txt</div>
+<div class="line">├── k18gemm_goldenout.txt</div>
+<div class="line">├── k18gemm_in.txt</div>
+<div class="line">├── k2pool_goldenout.txt</div>
+<div class="line">├── k2pool_in.txt</div>
+<div class="line">├── k3conv_goldenout.txt</div>
+<div class="line">├── k3conv_in.txt</div>
+<div class="line">├── k5pool_goldenout.txt</div>
+<div class="line">├── k5pool_in.txt</div>
+<div class="line">├── mnist_test_data.txt</div>
+<div class="line">└── mnist_test_label.txt</div>
+<div class="line">design/</div>
+<div class="line">├── aie_src</div>
+<div class="line">│   └── graph_lenet_mnist.cpp</div>
+<div class="line">├── host_app_src</div>
+<div class="line">│   └── lenet_mnist_aie_app.cpp</div>
+<div class="line">├── system_configs</div>
+<div class="line">│   ├── lenet_mnist.cfg</div>
+<div class="line">│   └── lenet_mnist_output_inter.cfg</div>
+<div class="line">└── trafficgen</div>
+<div class="line">    ├── xtg_lenet_mnist_output_inter.py</div>
+<div class="line">    └── xtg_lenet_mnist.py</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md16"></a>
-Run x86sim graph (~1 min compile)</h1>
-<p>For graph test, ITER_CNT (default 1) is used in compilation</p><ul>
-<li>Analyze graph compilation after compile: <br  />
- <code>vitis_analyzer build/lenet/sw_emu/Work/graph_lenet.aiecompile_summary</code></li>
-<li>Clean build: <br  />
- <code>TARGET=sw_emu GRAPH=lenet make clean</code></li>
-</ul>
-<details >
-<summary >
-</summary>
-<p><b>Compile-time file input, output intermediate results:</b><br  />
- <code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make clean_reports graph aiesim</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
-<div class="line">Checking 1/6: lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 2/6: lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/6: lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/6: lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/6: lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/6: lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
-<div class="line">reports_dir/</div>
-<div class="line">└── lenet</div>
-<div class="line">    └── sw_emu</div>
-<div class="line">        └── x86simulator_output</div>
-<div class="line">            ├── lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">            ├── lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">            ├── lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">            ├── lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">            ├── lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">            ├── lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">            ├── lenet_out.txt</div>
-<div class="line">            ├── x86sim.aierun_summary</div>
-<div class="line">            ├── x86sim_check.log</div>
-<div class="line">            └── x86simulator.log</div>
-</div><!-- fragment --> </details>
-<details >
-<summary >
-</summary>
-<p><b>External traffic generator, output prediction only:</b><br  />
- <code>TARGET=sw_emu EXTIO=1 LOG_PROFILE=0 GRAPH=lenet make clean_reports graph aiesim ITER_CNT=100</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
-<div class="line">17:05:09: Creating ipc_axis_master_util for plin0_lenet_input...</div>
-<div class="line">17:05:09: Creating ipc_axis_slave_util for plout0_lenet_argm19...</div>
-<div class="line">17:05:09: Begin run...</div>
-<div class="line">17:05:09: Running master plin0_lenet_input</div>
-<div class="line">17:05:09: Running slave plout0_lenet_argm19</div>
-<div class="line">17:05:09: [plin0_lenet_input]: Sending 39200 float32 data...</div>
-<div class="line">17:05:10: [plout0_lenet_argm19]: read lines #0</div>
-<div class="line">17:05:11: [plout0_lenet_argm19]: read lines #1</div>
-<div class="line">17:05:12: [plout0_lenet_argm19]: read lines #2</div>
-<div class="line">...</div>
-<div class="line">17:06:46: [plout0_lenet_argm19]: read lines #98</div>
-<div class="line">17:06:47: [plout0_lenet_argm19]: read lines #99</div>
-<div class="line">17:06:47: Slave plout0_lenet_argm19 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/sw_emu/x86simulator_output/mnist_test_label.txt</div>
-<div class="line">17:06:47: Master plin0_lenet_input finished.</div>
-<div class="line">|INFO | plout0_lenet_argm19 will connect to :: /tmp/unix_ruien:plout0_lenet_argm19</div>
-<div class="line">|INFO | plin0_lenet_input will connect to :: /tmp/unix_ruien:plin0_lenet_input</div>
-<div class="line">[init lenet]: success</div>
-<div class="line">[run lenet]: success</div>
-<div class="line">|ERROR| plin0_lenet_input Failed to read data : Address already in use1|ERROR| plout0_lenet_argm19 Failed to read data : Success1|ERROR| plout0_lenet_argm19INFO: Connection with &#39;plin0_lenet_input&#39; closed.</div>
-<div class="line"> caught exception : Failed to read data1[end lenet]: success</div>
-<div class="line">Simulation completed successfully returning zero</div>
-<div class="line">Checking directories /home/ruien/workspace/onnx2versal/reports_dir/lenet/sw_emu/x86simulator_output and /home/ruien/workspace/onnx2versal/data</div>
-<div class="line">Checking 1/1: mnist_test_label.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
-<div class="line">reports_dir/</div>
-<div class="line">└── lenet</div>
-<div class="line">    └── sw_emu</div>
-<div class="line">        └── x86simulator_output</div>
-<div class="line">            ├── mnist_test_label.txt</div>
-<div class="line">            ├── x86sim.aierun_summary</div>
-<div class="line">            ├── x86sim_check.log</div>
-<div class="line">            ├── x86sim_filetraffic.log</div>
-<div class="line">            └── x86simulator.log</div>
-</div><!-- fragment --> </details>
-<details >
-<summary >
-</summary>
-<p><b>External traffic generator, output intermediate results:</b><br  />
- <code>TARGET=sw_emu EXTIO=1 LOG_PROFILE=1 GRAPH=lenet make clean_reports graph aiesim</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
-<div class="line">Checking 1/6: lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 2/6: lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/6: lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/6: lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/6: lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/6: lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
-<div class="line">reports_dir/</div>
-<div class="line">└── lenet</div>
-<div class="line">    └── sw_emu</div>
-<div class="line">        └── x86simulator_output</div>
-<div class="line">            ├── lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">            ├── lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">            ├── lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">            ├── lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">            ├── lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">            ├── lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">            ├── lenet_out.txt</div>
-<div class="line">            ├── x86sim.aierun_summary</div>
-<div class="line">            ├── x86sim_check.log</div>
-<div class="line">            ├── x86sim_filetraffic.log</div>
-<div class="line">            └── x86simulator.log</div>
-</div><!-- fragment --> </details>
-<p><br  />
-</p>
+Make options</h1>
+<p>See <a href="README.md#usage---simulation-verification-profiling-hardware-build">README Make Options</a></p>
 <h1><a class="anchor" id="autotoc_md17"></a>
-Run x86sim system (~2 min compile)</h1>
-<p>For system test, ITER_CNT is an argument into host app.</p><ul>
-<li>Analyze system compilation after compile: <br  />
- <code>vitis_analyzer build/lenet/sw_emu/vck190_lenet_aie.xsa.link_summary</code></li>
-<li>Clean build: <br  />
- <code>TARGET=sw_emu GRAPH=lenet make clean</code></li>
-</ul>
-<details >
-<summary >
-</summary>
-<p><b>Test system with x86 AIE, sysC PL, x86 PS, prediction only:</b><br  />
- <code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make graph kernels xsa application package</code><br  />
- <code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean_reports run_emu ITER_CNT=100</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
+Functional check: runs graph in x86simulator</h1>
+<p>(~1 min compile, ~0s run)<br  />
+ For graph test, ITER_CNT is an argument into graph compilation (make graph) </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim</div>
+<div class="line"> </div>
+<div class="line">stdout:</div>
+<div class="line">...</div>
+<div class="line">Checking 1/7: k5pool_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 2/7: k0conv_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 3/7: k2pool_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 4/7: k18gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 5/7: k16gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 6/7: k3conv_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 7/7: k14gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line"> </div>
+<div class="line">files:</div>
+<div class="line">reports_dir/</div>
+<div class="line">└── lenet_mnist</div>
+<div class="line">    └── sw_emu</div>
+<div class="line">        └── x86simulator_output</div>
+<div class="line">            ├── k0conv_goldenout.txt</div>
+<div class="line">            ├── k14gemm_goldenout.txt</div>
+<div class="line">            ├── k16gemm_goldenout.txt</div>
+<div class="line">            ├── k18gemm_goldenout.txt</div>
+<div class="line">            ├── k2pool_goldenout.txt</div>
+<div class="line">            ├── k3conv_goldenout.txt</div>
+<div class="line">            ├── k5pool_goldenout.txt</div>
+<div class="line">            ├── x86sim.aierun_summary</div>
+<div class="line">            ├── x86sim_check.log</div>
+<div class="line">            └── x86simulator.log</div>
+</div><!-- fragment --><p><b>Traffic generator will have extra stdout and files (EXTIO=1)</b></p>
+<div class="fragment"><div class="line">extra stdout:</div>
+<div class="line">17:54:35: Creating ipc_axis_master_util for plin0_lenet_mnist_input...</div>
+<div class="line">17:54:36: Creating ipc_axis_slave_util for plout0_lenet_mnist_k18gemm...</div>
+<div class="line">17:54:36: Creating ipc_axis_slave_util for plout1_lenet_mnist_k0conv...</div>
+<div class="line">...</div>
+<div class="line">17:54:36: Begin run...</div>
+<div class="line">17:54:36: Running master plin0_lenet_mnist_input</div>
+<div class="line">17:54:36: [plin0_lenet_mnist_input]: Sending 392 float32 data...</div>
+<div class="line">17:54:36: Running slave plout0_lenet_mnist_k18gemm</div>
+<div class="line">17:54:36: Running slave plout1_lenet_mnist_k0conv</div>
+<div class="line">...</div>
+<div class="line">17:54:36: [plout1_lenet_mnist_k0conv]: read lines #0</div>
+<div class="line">17:54:36: [plout2_lenet_mnist_k2pool]: read lines #0</div>
+<div class="line">...</div>
+<div class="line">Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/sw_emu/x86simulator_output/k18gemm_goldenout.txt</div>
+<div class="line">17:54:37: Slave plout1_lenet_mnist_k0conv finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/sw_emu/x86simulator_output/k0conv_goldenout.txt</div>
+<div class="line">17:54:37: Slave plout2_lenet_mnist_k2pool finished. Written to /home/ruien/workspace/test/</div>
+<div class="line">...</div>
+<div class="line">17:54:37: Master plin0_lenet_mnist_input finished.</div>
+<div class="line">|INFO | plin0_lenet_mnist_input will connect to :: /tmp/unix_ruien:plin0_lenet_mnist_input</div>
+<div class="line">|INFO | plout0_lenet_mnist_k18gemm will connect to :: /tmp/unix_ruien:plout0_lenet_mnist_k18gemm</div>
+<div class="line">|INFO | plout3_lenet_mnist_k3conv will connect to :: /tmp/unix_ruien:plout3_lenet_mnist_k3conv</div>
+<div class="line">|INFO | plout1_lenet_mnist_k0conv will connect to :: /tmp/unix_ruien:plout1_lenet_mnist_k0conv</div>
+<div class="line">...</div>
+<div class="line"> </div>
+<div class="line">extra files:</div>
+<div class="line">reports_dir/</div>
+<div class="line">└── lenet_mnist</div>
+<div class="line">    └── sw_emu</div>
+<div class="line">        └── x86simulator_output</div>
+<div class="line">             └── x86sim_filetraffic.log</div>
+</div><!-- fragment --><p><b>Analyze graph compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/sw_emu/Work/graph_lenet_mnist.aiecompile_summary</div>
+</div><!-- fragment --><p> <b>Clean software graph build</b> </p><div class="fragment"><div class="line">TARGET=sw_emu GRAPH=lenet_mnist make clean</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md18"></a>
+Functional check: runs system software emulation</h1>
+<p>(x86 graph, sysC kernels, ~2 min compile)<br  />
+ For system test, ITER_CNT is an argument into host app compilation (make application) </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
+<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean_reports run_emu</div>
+<div class="line"> </div>
+<div class="line">stdout:</div>
+<div class="line">Initializing ADF API...</div>
+<div class="line"> </div>
+<div class="line">Config:</div>
+<div class="line">xclbin: a.xclbin</div>
+<div class="line">iter_cnt: 1</div>
+<div class="line">data_dir: /home/ruien/workspace/test/data/</div>
+<div class="line">out_dir: /home/ruien/workspace/test/reports_dir/lenet_mnist/sw_emu/x86simulator_output/</div>
+<div class="line"> </div>
 <div class="line">CRITICAL WARNING: [SW-EM 09-0] Unable to find emconfig.json. Using default device &quot;xilinx:pcie-hw-em:7v3:1.0&quot;</div>
 <div class="line">CRITICAL WARNING: [SW-EM 09-0] Unable to find emconfig.json. Using default device &quot;xilinx:pcie-hw-em:7v3:1.0&quot;</div>
-<div class="line">Input memory virtual addr 0x0x7f0bc8000000</div>
-<div class="line">Output memory virtual addr 0x0x7f07c8000000</div>
-<div class="line">xrtBOSync done.</div>
-<div class="line">[init lenet]: success</div>
+<div class="line">Input0 memory virtual addr 0x0x7f1b94000000</div>
+<div class="line">Output0 memory virtual addr 0x0x7f1394000000</div>
+<div class="line">Inter1 memory virtual addr 0x0x7f0b94000000</div>
+<div class="line">Inter2 memory virtual addr 0x0x7f0394000000</div>
+<div class="line">...</div>
+<div class="line">[init lenet_mnist]: success</div>
+<div class="line">[run lenet_mnist]: success</div>
+<div class="line">[wait lenet_mnist]: success</div>
 <div class="line">Kernel Name: mm2s_0, CU Number: 0, Thread creation status: success</div>
 <div class="line">Kernel Name: s2mm_0, CU Number: 1, Thread creation status: success</div>
+<div class="line">Kernel Name: s2mm_1, CU Number: 2, Thread creation status: success</div>
+<div class="line">...</div>
 <div class="line">Kernel Name: mm2s_0, CU Number: 0, State: Start</div>
 <div class="line">Kernel Name: mm2s_0, CU Number: 0, State: Running</div>
 <div class="line">Kernel Name: s2mm_0, CU Number: 1, State: Start</div>
 <div class="line">Kernel Name: s2mm_0, CU Number: 1, State: Running</div>
-<div class="line">Kernel Name: mm2s_0, CU Number: 0, State: Idle</div>
-<div class="line">Kernel Name: s2mm_0, CU Number: 1, State: Idle</div>
+<div class="line">...</div>
+<div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
+<div class="line">start = -1,end = -1,total = 0</div>
+<div class="line">Running Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt;</div>
+<div class="line">Kernel Name: s2mm_1, CU Number: 2, State: Idle</div>
+<div class="line">start = -1,end = -1,total = 0</div>
+<div class="line">Running Conv5x5on8ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
+<div class="line">Kernel Name: s2mm_2, CU Number: 3, State: Idle</div>
+<div class="line">start = -1,end = -1,total = 0</div>
+<div class="line">Running Maxpool2x2BCHW::filter&lt;8, 4, 1, 16&gt;</div>
+<div class="line">Kernel Name: s2mm_3, CU Number: 4, State: Idle</div>
+<div class="line">start = -1,end = -1,total = 0</div>
+<div class="line">...</div>
 <div class="line">device process sw_emu_device done</div>
 <div class="line">Kernel Name: mm2s_0, CU Number: 0, Status: Shutdown</div>
 <div class="line">Kernel Name: s2mm_0, CU Number: 1, Status: Shutdown</div>
-<div class="line">INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 76831</div>
-<div class="line">INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 1</div>
-<div class="line">[run lenet]: success</div>
-<div class="line">[wait lenet]: success</div>
-<div class="line">[end lenet]: success</div>
+<div class="line">...</div>
+<div class="line">INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 157</div>
+<div class="line">INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 573</div>
+<div class="line">[end lenet_mnist]: success</div>
 <div class="line">Waiting for dma hls to complete...</div>
 <div class="line">mm2s completed with status (4)</div>
 <div class="line">s2mm completed with status (4)</div>
 <div class="line">Closed runtime handlers and kernel handlers...</div>
+<div class="line">inter1 completed with status (4)</div>
+<div class="line">inter2 completed with status (4)</div>
+<div class="line">...</div>
 <div class="line">Released I/O buffer objects.</div>
-<div class="line">Checking directories /home/ruien/workspace/onnx2versal/reports_dir/lenet/sw_emu/x86simulator_output and /home/ruien/workspace/onnx2versal/data</div>
-<div class="line">Checking 1/1: mnist_test_label.txt</div>
+<div class="line">Checking directories /home/ruien/workspace/test/reports_dir/lenet_mnist/sw_emu/x86simulator_output and /home/ruien/workspace/test/data</div>
+<div class="line">Checking 1/7: k18gemm_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
+<div class="line">Checking 2/7: k14gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 3/7: k0conv_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 4/7: k5pool_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 5/7: k2pool_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 6/7: k3conv_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 7/7: k16gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line"> </div>
+<div class="line">files:</div>
 <div class="line">reports_dir/</div>
-<div class="line">└── lenet</div>
+<div class="line">└── lenet_mnist</div>
 <div class="line">    └── sw_emu</div>
 <div class="line">        └── x86simulator_output</div>
 <div class="line">            ├── embedded_run.log</div>
-<div class="line">            ├── mnist_test_label.txt</div>
+<div class="line">            ├── k0conv_goldenout.txt</div>
+<div class="line">            ├── k14gemm_goldenout.txt</div>
+<div class="line">            ├── k16gemm_goldenout.txt</div>
+<div class="line">            ├── k18gemm_goldenout.txt</div>
+<div class="line">            ├── k2pool_goldenout.txt</div>
+<div class="line">            ├── k3conv_goldenout.txt</div>
+<div class="line">            ├── k5pool_goldenout.txt</div>
 <div class="line">            └── x86sim_check.log</div>
-</div><!-- fragment --> </details>
-<details >
-<summary >
-</summary>
-<p><b>Test system with x86 AIE, sysC PL, x86 PS, output intermediates:</b><br  />
- This fails mnist_test_label.txt check since only 1 iteration is done, should pass intermediate tests<br  />
- <code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph kernels xsa application package</code><br  />
- <code>TARGET=sw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make clean_reports run_emu ITER_CNT=1</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
-<div class="line">Checking 1/7: lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 2/7: lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/7: lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/7: mnist_test_label.txt</div>
-<div class="line">WARNING: arr1 shape (1, 2), arr2 shape (50, 2)</div>
-<div class="line">TEST (tolerance): first 2 FAILED! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/7: lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/7: lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 7/7: lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Traceback (most recent call last):</div>
-<div class="line">  File &quot;/home/ruien/workspace/onnx2versal/check.py&quot;, line 74, in &lt;module&gt;</div>
-<div class="line">    assert(pass_count == len(filenames)), f&quot;{pass_count} / {len(filenames)} tests passed.&quot;</div>
-<div class="line">AssertionError: 6 / 7 tests passed.</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
-<div class="line">└── lenet</div>
-<div class="line">    └── sw_emu</div>
-<div class="line">        └── x86simulator_output</div>
-<div class="line">            ├── embedded_run.log</div>
-<div class="line">            ├── lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">            ├── lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">            ├── lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">            ├── lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">            ├── lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">            ├── lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">            ├── mnist_test_label.txt</div>
-<div class="line">            └── x86sim_check.log</div>
-</div><!-- fragment --> </details>
-<p><br  />
-</p>
-<h1><a class="anchor" id="autotoc_md18"></a>
-Run sysC graph (~4.5 min compile, ~8 min run)</h1>
-<p>Only can output maximum of 6-7 intermediates since AIE only has 8 cascade lines. aiesim_profile allows printf and timing.</p><ul>
-<li>Analyze graph compilation after compile: <br  />
- <code>vitis_analyzer build/lenet/hw_emu/Work/graph_lenet.aiecompile_summary</code></li>
-<li>Analyze profiled info after run (includes graph analysis): <br  />
- <code>vitis_analyzer reports_dir/lenet/hw_emu/aiesimulator_output/default.aierun_summary</code></li>
-<li>Clean build: <br  />
- <code>TARGET=hw_emu GRAPH=lenet make clean</code></li>
-</ul>
-<details >
-<summary >
-</summary>
-<p><b>Test the graph with SysC, outputs intermediate results:</b><br  />
- <code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=1 GRAPH=lenet make graph clean_reports aiesim_profile</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
-<div class="line">[init lenet]: success</div>
-<div class="line">Set iterations for the core(s) of graph lenet</div>
-<div class="line">Enabling core(s) of graph lenet</div>
-<div class="line">[run graph]: success</div>
-<div class="line">Waiting for core(s) of graph lenet to finish execution ...</div>
-<div class="line">Running Conv5x5ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
-<div class="line">start = 3647,end = 24918,total = 21271</div>
+</div><!-- fragment --><p><b>Analyze system compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/sw_emu/vck190_lenet_mnist_aie.xsa.link_summary</div>
+</div><!-- fragment --><p> <b>Clean build</b> </p><div class="fragment"><div class="line">TARGET=sw_emu GRAPH=lenet_mnist make clean</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md19"></a>
+Functional/performance check: runs graph in aiesimulator</h1>
+<p>(with SysC ~4.5 min compile, ~8 min run)<br  />
+ For graph test, ITER_CNT is an argument into graph compilation (make graph) </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph</div>
+<div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make clean_reports aiesim_profile</div>
+<div class="line"> </div>
+<div class="line">stdout:</div>
+<div class="line">Waiting for core(s) of graph lenet_mnist to finish execution ...</div>
+<div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
+<div class="line">start = 3236,end = 20164,total = 16928</div>
 <div class="line">Running Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt;</div>
-<div class="line">start = 29335,end = 30236,total = 901</div>
-<div class="line">Running Conv5x5ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
-<div class="line">start = 31414,end = 72938,total = 41524</div>
+<div class="line">start = 24570,end = 25471,total = 901</div>
+<div class="line">Running Conv5x5on8ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
+<div class="line">start = 26651,end = 52727,total = 26076</div>
 <div class="line">Running Maxpool2x2BCHW::filter&lt;8, 4, 1, 16&gt;</div>
-<div class="line">start = 74309,end = 74600,total = 291</div>
+<div class="line">start = 54101,end = 54392,total = 291</div>
 <div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
@@ -371,239 +358,125 @@ Run sysC graph (~4.5 min compile, ~8 min run)</h1>
 <div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">start = 75024,end = 75927,total = 903</div>
-<div class="line">start = 75028,end = 75931,total = 903</div>
-<div class="line">start = 75028,end = 75931,total = 903</div>
-<div class="line">start = 75032,end = 75935,total = 903</div>
-<div class="line">start = 75036,end = 75939,total = 903</div>
-<div class="line">start = 75040,end = 75943,total = 903</div>
-<div class="line">start = 75044,end = 75947,total = 903</div>
-<div class="line">start = 75048,end = 75951,total = 903</div>
-<div class="line">Running Concat8Scalar&lt;16, 16, 120&gt;</div>
-<div class="line">start = 76162,end = 76724,total = 562</div>
+<div class="line">start = 54820,end = 55723,total = 903</div>
+<div class="line">start = 54824,end = 55727,total = 903</div>
+<div class="line">start = 54824,end = 55727,total = 903</div>
+<div class="line">start = 54828,end = 55731,total = 903</div>
+<div class="line">start = 54832,end = 55735,total = 903</div>
+<div class="line">start = 54836,end = 55739,total = 903</div>
+<div class="line">start = 54840,end = 55743,total = 903</div>
+<div class="line">start = 54844,end = 55747,total = 903</div>
+<div class="line">Running ConcatVector&lt;8, 16, 16, 120&gt;::filter8</div>
+<div class="line">start = 55947,end = 56073,total = 126</div>
 <div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
-<div class="line">start = 77040,end = 77928,total = 888</div>
-<div class="line">start = 77044,end = 77932,total = 888</div>
-<div class="line">start = 77048,end = 77936,total = 888</div>
-<div class="line">Running Concat3Scalar&lt;32, 32, 84&gt;</div>
-<div class="line">start = 78131,end = 78962,total = 831</div>
+<div class="line">start = 56393,end = 57281,total = 888</div>
+<div class="line">start = 56397,end = 57285,total = 888</div>
+<div class="line">start = 56401,end = 57289,total = 888</div>
+<div class="line">Running ConcatVector&lt;3, 32, 32, 84&gt;::filter3</div>
+<div class="line">start = 57437,end = 57510,total = 73</div>
 <div class="line">Running GemmReluMKKN&lt;1, 84, 48&gt;</div>
-<div class="line">start = 79226,end = 80199,total = 973</div>
-<div class="line">Running Concat1Scalar&lt;48, 48, 10&gt;</div>
-<div class="line">start = 80343,end = 81221,total = 878</div>
-<div class="line">Running ArgmaxScalar&lt;10, 10&gt;</div>
-<div class="line">start = 81407,end = 81543,total = 136</div>
+<div class="line">start = 57782,end = 58755,total = 973</div>
+<div class="line">Running ConcatScalar&lt;1, 48, 48, 10&gt;::filter1</div>
+<div class="line">start = 58899,end = 59777,total = 878</div>
 <div class="line">core(s) are done executing</div>
 <div class="line">[wait graph]: success</div>
-<div class="line">plout[0]: Cycles 21 Throughput 476190476.190476 samples/s</div>
-<div class="line">Waiting for core(s) of graph lenet to finish execution ...</div>
+<div class="line">plout[0]: Cycles 10 Throughput 1000000000.000000 samples/s</div>
+<div class="line">Waiting for core(s) of graph lenet_mnist to finish execution ...</div>
 <div class="line">core(s) are done executing</div>
-<div class="line">[end lenet]: success</div>
+<div class="line">[end lenet_mnist]: success</div>
 <div class="line">Exiting!</div>
 <div class="line">generate profile data for all cores</div>
 <div class="line">generate profile data for all cores</div>
 <div class="line">Stopping Simulator.</div>
+<div class="line">Info: /OSCI/SystemC: Simulation stopped by user.</div>
 <div class="line">...</div>
-<div class="line">Checking 1/6: lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
+<div class="line">[INFO] : Simulation Finished, Sim result: 0</div>
+<div class="line">Checking directories /home/ruien/workspace/test/reports_dir/lenet_mnist/hw_emu/aiesimulator_output and /home/ruien/workspace/test/data</div>
+<div class="line">Checking 1/7: k14gemm_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 2/6: lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
+<div class="line">Checking 2/7: k16gemm_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/6: lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
+<div class="line">Checking 3/7: k18gemm_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/6: lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
+<div class="line">Checking 4/7: k3conv_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/6: lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
+<div class="line">Checking 5/7: k0conv_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/6: lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
+<div class="line">Checking 6/7: k5pool_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
+<div class="line">Checking 7/7: k2pool_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line"> </div>
+<div class="line">files:</div>
 <div class="line">reports_dir/</div>
-<div class="line">└── lenet</div>
-<div class="line">    ├── hw_emu</div>
-<div class="line">    │   └── aiesimulator_output</div>
-<div class="line">    │       ├── aiesim.log</div>
-<div class="line">    │       ├── aiesim_options.txt</div>
-<div class="line">    │       ├── default.aierun_summary</div>
-<div class="line">    │       ├── lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">    │       ├── lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">    │       ├── lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">    │       ├── lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">    │       ├── lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">    │       ├── lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">    │       ├── lenet_out.txt</div>
-<div class="line">    │       ├── memconfig.json</div>
-<div class="line">    │       ├── profile_funct_22_4.txt</div>
-<div class="line">    │       ├── profile_funct_22_4.xml</div>
-<div class="line">    │       ├── profile_funct_22_5.txt</div>
-<div class="line">    │       ├── profile_funct_22_5.xml</div>
-<div class="line">    │       ...</div>
-<div class="line">    │       ├── profile_instr_28_6.txt</div>
-<div class="line">    │       ├── profile_instr_28_6.xml</div>
-<div class="line">    │       ├── region_0x0_0x7fffffff.mmap.dat</div>
-<div class="line">    │       └── x86sim_check.log</div>
-</div><!-- fragment --> </details>
-<details >
-<summary >
-</summary>
-<p><b>Test the graph with SysC, outputs predictions, use external traffic generator:</b><br  />
- <code>TARGET=hw_emu EXTIO=1 LOG_PROFILE=0 GRAPH=lenet make graph clean_reports aiesim_profile</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
-</div><!-- fragment --> </details>
-<p><br  />
-</p>
-<details >
-<summary >
-</summary>
-<p><b>Test the graph with SysC, outputs intermediate result, use external traffic generator:</b><br  />
- <code>TARGET=hw_emu EXTIO=1 LOG_PROFILE=1 GRAPH=lenet make graph clean_reports aiesim_profile</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
+<div class="line">└── lenet_mnist</div>
+<div class="line">    └── hw_emu</div>
+<div class="line">        └── aiesimulator_output</div>
+<div class="line">            ├── aiesim.log</div>
+<div class="line">            ├── aiesim_options.txt</div>
+<div class="line">            ├── default.aierun_summary</div>
+<div class="line">            ├── k0conv_goldenout.txt</div>
+<div class="line">            ├── k14gemm_goldenout.txt</div>
+<div class="line">            ├── k16gemm_goldenout.txt</div>
+<div class="line">            ├── k18gemm_goldenout.txt</div>
+<div class="line">            ├── k2pool_goldenout.txt</div>
+<div class="line">            ├── k3conv_goldenout.txt</div>
+<div class="line">            ├── k5pool_goldenout.txt</div>
+<div class="line">            ├── memconfig.json</div>
+<div class="line">            ├── profile_funct_22_0.txt</div>
+<div class="line">            ├── profile_funct_22_0.xml</div>
+<div class="line">            ├── ...</div>
+<div class="line">            ├── region_0x0_0x7fffffff.mmap.dat</div>
+<div class="line">            └── aiesim_check.log</div>
+</div><!-- fragment --><p><b>Traffic generator will have extra stdout and files (EXTIO=1)</b></p>
+<div class="fragment"><div class="line">extra stdout:</div>
+<div class="line">INFO::[ XTLM_IPC_AXIS_MASTER ] SIM-IPC&#39;s external process can be connected to instance :  plin0_lenet_mnist_input</div>
+<div class="line">INFO::[ XTLM_IPC_AXIS_SLAVE ] SIM-IPC&#39;s external process can be connected to instance :  plout0_lenet_mnist_k18gemm</div>
+<div class="line">INFO::[ XTLM_IPC_AXIS_SLAVE ] SIM-IPC&#39;s external process can be connected to instance :  plout1_lenet_mnist_k0conv</div>
 <div class="line">[INFO]: Enabled Stream Switch Port Latency </div>
-<div class="line">18:04:39: Creating ipc_axis_master_util for plin0_lenet_input...</div>
-<div class="line">18:04:39: Creating ipc_axis_slave_util for plout0_lenet_argm19...</div>
-<div class="line">IP-INFO: [ps_i28_ps_main] IP started.</div>
-<div class="line">18:04:40: Creating ipc_axis_slave_util for plout1_lenet_conv00...</div>
-<div class="line">18:04:40: Creating ipc_axis_slave_util for plout2_lenet_pool01...</div>
-<div class="line">18:04:40: Creating ipc_axis_slave_util for plout3_lenet_conv02...</div>
-<div class="line">18:04:40: Creating ipc_axis_slave_util for plout4_lenet_gemm14...</div>
-<div class="line">18:04:40: Creating ipc_axis_slave_util for plout5_lenet_gemm16...</div>
-<div class="line">18:04:40: Creating ipc_axis_slave_util for plout6_lenet_gemm18...</div>
-<div class="line">18:04:40: Begin run...</div>
-<div class="line">18:04:40: Running master plin0_lenet_input</div>
-<div class="line">18:04:40: [plin0_lenet_input]: Sending 392 float32 data...</div>
-<div class="line">18:04:40: Running slave plout0_lenet_argm19</div>
-<div class="line">18:04:40: Running slave plout1_lenet_conv00</div>
-<div class="line">18:04:40: Running slave plout2_lenet_pool01</div>
-<div class="line">18:04:40: Running slave plout3_lenet_conv02</div>
-<div class="line">18:04:40: Running slave plout4_lenet_gemm14</div>
-<div class="line">18:04:40: Running slave plout5_lenet_gemm16</div>
-<div class="line">18:04:40: Running slave plout6_lenet_gemm18</div>
+<div class="line">18:45:08: Creating ipc_axis_master_util for plin0_lenet_mnist_input...</div>
+<div class="line">18:45:08: Creating ipc_axis_slave_util for plout0_lenet_mnist_k18gemm...</div>
+<div class="line">IP-INFO: [ps_i27_ps_main] IP started.</div>
+<div class="line">18:45:09: Creating ipc_axis_slave_util for plout1_lenet_mnist_k0conv...</div>
+<div class="line">18:45:09: Creating ipc_axis_slave_util for plout2_lenet_mnist_k2pool...</div>
 <div class="line">...</div>
-<div class="line">[init lenet]: success</div>
-<div class="line">Set iterations for the core(s) of graph lenet</div>
-<div class="line">Enabling core(s) of graph lenet</div>
-<div class="line">[run graph]: success</div>
-<div class="line">Waiting for core(s) of graph lenet to finish execution ...</div>
-<div class="line">Running Conv5x5ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
-<div class="line">start = 3462,end = 24733,total = 21271</div>
-<div class="line">Running Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt;</div>
-<div class="line">18:08:45: [plout1_lenet_conv00]: read lines #0</div>
-<div class="line">start = 28357,end = 29258,total = 901</div>
-<div class="line">Running Conv5x5ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
-<div class="line">18:09:01: [plout2_lenet_pool01]: read lines #0</div>
-<div class="line">start = 30297,end = 71821,total = 41524</div>
-<div class="line">Running Maxpool2x2BCHW::filter&lt;8, 4, 1, 16&gt;</div>
-<div class="line">18:15:00: [plout3_lenet_conv02]: read lines #0</div>
-<div class="line">start = 73009,end = 73300,total = 291</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">start = 73724,end = 74627,total = 903</div>
-<div class="line">start = 73728,end = 74631,total = 903</div>
-<div class="line">start = 73728,end = 74631,total = 903</div>
-<div class="line">start = 73732,end = 74635,total = 903</div>
-<div class="line">start = 73736,end = 74639,total = 903</div>
-<div class="line">start = 73740,end = 74643,total = 903</div>
-<div class="line">start = 73744,end = 74647,total = 903</div>
-<div class="line">start = 73748,end = 74651,total = 903</div>
-<div class="line">Running Concat8Scalar&lt;16, 16, 120&gt;</div>
-<div class="line">start = 74862,end = 75424,total = 562</div>
-<div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
-<div class="line">18:15:23: [plout4_lenet_gemm14]: read lines #0</div>
-<div class="line">start = 75740,end = 76628,total = 888</div>
-<div class="line">start = 75744,end = 76632,total = 888</div>
-<div class="line">start = 75748,end = 76636,total = 888</div>
-<div class="line">Running Concat3Scalar&lt;32, 32, 84&gt;</div>
-<div class="line">start = 76831,end = 77662,total = 831</div>
-<div class="line">Running GemmReluMKKN&lt;1, 84, 48&gt;</div>
-<div class="line">18:15:42: [plout5_lenet_gemm16]: read lines #0</div>
-<div class="line">start = 77926,end = 78899,total = 973</div>
-<div class="line">Running Concat1Scalar&lt;48, 48, 10&gt;</div>
-<div class="line">start = 79043,end = 79921,total = 878</div>
-<div class="line">Running ArgmaxScalar&lt;10, 10&gt;</div>
-<div class="line">18:16:00: [plout6_lenet_gemm18]: read lines #0</div>
-<div class="line">start = 80107,end = 80243,total = 136</div>
-<div class="line">18:16:02: [plout0_lenet_argm19]: read lines #0</div>
-<div class="line">18:16:02: Slave plout0_lenet_argm19 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/hw_emu/aiesimulator_output/lenet_out.txt</div>
-<div class="line">18:16:02: Slave plout1_lenet_conv00 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/hw_emu/aiesimulator_output/lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">18:16:02: Slave plout2_lenet_pool01 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/hw_emu/aiesimulator_output/lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">18:16:02: Slave plout3_lenet_conv02 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/hw_emu/aiesimulator_output/lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">18:16:02: Slave plout4_lenet_gemm14 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/hw_emu/aiesimulator_output/lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">18:16:02: Slave plout5_lenet_gemm16 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/hw_emu/aiesimulator_output/lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">18:16:02: Slave plout6_lenet_gemm18 finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet/hw_emu/aiesimulator_output/lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">18:16:02: Master plin0_lenet_input finished.</div>
+<div class="line">18:45:09: Begin run...</div>
+<div class="line">18:45:09: Running master plin0_lenet_mnist_input</div>
+<div class="line">18:45:09: [plin0_lenet_mnist_input]: Sending 392 float32 data...</div>
+<div class="line">18:45:09: Running slave plout0_lenet_mnist_k18gemm</div>
+<div class="line">18:45:09: Running slave plout1_lenet_mnist_k0conv</div>
 <div class="line">...</div>
-<div class="line">Checking 1/6: lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 2/6: lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/6: lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/6: lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/6: lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/6: lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
+<div class="line">18:47:35: [plout1_lenet_mnist_k0conv]: read lines #0</div>
+<div class="line">18:47:46: [plout2_lenet_mnist_k2pool]: read lines #0</div>
+<div class="line">...</div>
+<div class="line">18:51:01: Slave plout0_lenet_mnist_k18gemm finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/hw_emu/aiesimulator_output/k18gemm_goldenout.txt</div>
+<div class="line">18:51:01: Slave plout1_lenet_mnist_k0conv finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/hw_emu/aiesimulator_output/k0conv_goldenout.txt</div>
+<div class="line">18:51:01: Slave plout2_lenet_mnist_k2pool finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/hw_emu/aiesimulator_output/k2pool_goldenout.txt</div>
+<div class="line">...</div>
+<div class="line">18:51:01: Master plin0_lenet_mnist_input finished.</div>
+<div class="line">WARNING::[ XTLM_IPC::006 ] plin0_lenet_mnist_input Closing Socket</div>
+<div class="line">WARNING::[ XTLM_IPC::006 ] plout5_lenet_mnist_k14gemm Closing Socket</div>
+<div class="line">WARNING::[ XTLM_IPC::006 ] plout6_lenet_mnist_k16gemm Closing Socket</div>
+<div class="line">...</div>
+<div class="line"> </div>
+<div class="line">extra files:</div>
 <div class="line">reports_dir/</div>
-<div class="line">└── lenet</div>
-<div class="line">    ├── hw_emu</div>
-<div class="line">    │   └── aiesimulator_output</div>
-<div class="line">    │       ├── aiesim_filetraffic.log</div>
-<div class="line">    │       ├── aiesim.log</div>
-<div class="line">    │       ├── aiesim_options.txt</div>
-<div class="line">    │       ├── default.aierun_summary</div>
-<div class="line">    │       ├── lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">    │       ├── lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">    │       ├── lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">    │       ├── lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">    │       ├── lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">    │       ├── lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">    │       ├── lenet_out.txt</div>
-<div class="line">    │       ├── memconfig.json</div>
-<div class="line">    │       ├── profile_funct_22_4.txt</div>
-<div class="line">    │       ├── profile_funct_22_4.xml</div>
-<div class="line">    │       ├── profile_funct_22_5.txt</div>
-<div class="line">    │       ├── profile_funct_22_5.xml</div>
-<div class="line">    │       ...</div>
-<div class="line">    │       ├── profile_instr_28_6.txt</div>
-<div class="line">    │       ├── profile_instr_28_6.xml</div>
-<div class="line">    │       ├── region_0x0_0x7fffffff.mmap.dat</div>
-<div class="line">    │       └── x86sim_check.log</div>
-</div><!-- fragment --> </details>
-<p><br  />
-</p>
-<h1><a class="anchor" id="autotoc_md19"></a>
-Run sysC system (~15min compile, ~30min run)</h1>
-<ul>
-<li>Analyze system compilation after compile: <br  />
- <code>vitis_analyzer build/lenet/hw_emu/vck190_lenet_aie.xsa.link_summary</code></li>
-<li>Analyze profiled info after run (includes system analysis): <br  />
- <code>vitis_analyzer reports_dir/lenet/hw_emu/aiesimulator_output/default.aierun_summary</code></li>
-<li>Clean build: <br  />
- <code>TARGET=hw_emu GRAPH=lenet make clean</code></li>
-</ul>
-<details >
-<summary >
-</summary>
-<p><b>Test system with SysC AIE, SysC PL, SysC NoC, SysC DDR, QEMU PS:</b><br  />
- This fails mnist_test_label.txt check since only 1 iteration is done, should pass intermediate tests<br  />
- <code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean graph kernels xsa application package</code><br  />
- <code>TARGET=hw_emu EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean_reports run_emu ITER_CNT=1</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
+<div class="line">└── lenet_mnist</div>
+<div class="line">    └── hw_emu</div>
+<div class="line">        └── aiesimulator_output</div>
+<div class="line">            └── aiesim_filetraffic.log</div>
+</div><!-- fragment --><p><b>Analyze graph compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/hw_emu/Work/graph_lenet_mnist.aiecompile_summary</div>
+</div><!-- fragment --><p> <b>Analyze profiled information after run (includes graph analysis)</b> </p><div class="fragment"><div class="line">vitis_analyzer reports_dir/lenet_mnist/hw_emu/aiesimulator_output/default.aierun_summary</div>
+</div><!-- fragment --><p> <b>Clean hardware emulation build</b> </p><div class="fragment"><div class="line">TARGET=hw_emu GRAPH=lenet_mnist make clean</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md20"></a>
+Functional/performance check: runs system in hardware emulation with QEMU</h1>
+<p>(sysC graph, kernels NoC, DDR, ~15min compile, ~30min run)<br  />
+ For system test, ITER_CNT is an argument into host app compilation (make application) </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
+<div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph clean_reports run_emu</div>
+<div class="line"> </div>
+<div class="line">stdout:</div>
 <div class="line">Initializing ADF API...</div>
 <div class="line"> </div>
 <div class="line">Config:</div>
@@ -612,91 +485,116 @@ Run sysC system (~15min compile, ~30min run)</h1>
 <div class="line">data_dir: data/</div>
 <div class="line">out_dir: output/</div>
 <div class="line"> </div>
+<div class="line">[   79.139175] zocl-drm axi:zyxclmm_drm: zocl_create_client: created KDS client for pid(576), ret: 0</div>
+<div class="line">[   79.142194] zocl-drm axi:zyxclmm_drm: zocl_destroy_client: client exits pid(576)</div>
+<div class="line">[   79.155865] zocl-drm axi:zyxclmm_drm: zocl_create_client: created KDS client for pid(576), ret: 0</div>
+<div class="line">...</div>
+<div class="line">[   81.095991] [drm] found kind 29(AIE_RESOURCES)</div>
+<div class="line">[   81.096374] [drm] found kind 8(IP_LAYOUT)</div>
+<div class="line">[   81.096586] [drm] skip kind 9(DEBUG_IP_LAYOUT) return code: -22</div>
+<div class="line">[   81.096772] [drm] found kind 25(AIE_METADATA)</div>
+<div class="line">[   81.097048] [drm] found kind 7(CONNECTIVITY)</div>
+<div class="line">[   81.097227] [drm] found kind 6(MEM_TOPOLOGY)</div>
+<div class="line">[   81.098613] [drm] Memory 0 is not reserved in device tree. Will allocate memory from CMA</div>
+<div class="line">[   83.707507] zocl_irq_intc ZOCL_CU_INTC.2.auto: zocl_irq_intc_add: managing IRQ 46</div>
+<div class="line">[   83.829517] cu_drv CU.3.auto: cu_probe: CU[0] created</div>
+<div class="line">[   84.699804] zocl_irq_intc ZOCL_CU_INTC.2.auto: zocl_irq_intc_add: managing IRQ 47</div>
+<div class="line">[   84.790210] cu_drv CU.4.auto: cu_probe: CU[1] created</div>
+<div class="line">...</div>
+<div class="line">[   91.621456] cu_drv CU.3.auto:  ffff000007cd7c10 xrt_cu_intr_thread: CU[0] start</div>
+<div class="line">[   92.042016] cu_drv CU.4.auto:  ffff000007c6a410 xrt_cu_intr_thread: CU[1] start</div>
+<div class="line">...</div>
 <div class="line">XAIEFAL: INFO: Resource group Avail is created.</div>
 <div class="line">XAIEFAL: INFO: Resource group Static is created.</div>
 <div class="line">XAIEFAL: INFO: Resource group Generic is created.</div>
-<div class="line">Input memory virtual addr 0x0xffffa50f5000</div>
-<div class="line">Output memory virtual addr 0x0xffffa50f4000</div>
-<div class="line">Inter1 memory virtual addr 0x0xffff85eac000</div>
-<div class="line">Inter2 memory virtual addr 0x0xffff85eab000</div>
-<div class="line">Inter3 memory virtual addr 0x0xffff85eaa000</div>
-<div class="line">Inter4 memory virtual addr 0x0xffff85ea9000</div>
-<div class="line">Inter5 memory virtual addr 0x0xffff85ea8000</div>
-<div class="line">Inter6 memory virtual addr 0x0xffff85ea7000</div>
-<div class="line">[init lenet]: success</div>
+<div class="line">[   94.206063] [drm] zocl_xclbin_read_axlf 9fee7350-25b2-b56d-7e20-d9e9d2b8c46f ret: 0</div>
+<div class="line">[   94.748985] [drm] bitstream 9fee7350-25b2-b56d-7e20-d9e9d2b8c46f locked, ref=1</div>
+<div class="line">[   94.754304] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_add_context: Client pid(576) add context Domain(65535) CU(0xffff) shared(true)</div>
+<div class="line">[   94.756977] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_del_context: Client pid(576) del context Domain(65535) CU(0xffff)</div>
+<div class="line">Input0 memory virtual addr 0x0xffffb714e000</div>
+<div class="line">[   94.769813] [drm] bitstream 9fee7350-25b2-b56d-7e20-d9e9d2b8c46f unlocked, ref=0</div>
+<div class="line">[   94.875906] [drm] bitstream 9fee7350-25b2-b56d-7e20-d9e9d2b8c46f locked, ref=1</div>
+<div class="line">[   94.876340] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_add_context: Client pid(576) add context Domain(0) CU(0x1) shared(true)</div>
+<div class="line">Output0 memory virtual addr 0x0xffffb714c000</div>
+<div class="line">[   95.539467] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_add_context: Client pid(576) add context Domain(0) CU(0x0) shared(true)</div>
+<div class="line">...</div>
+<div class="line">[init lenet_mnist]: success</div>
 <div class="line">XRT build version: 2.14.0</div>
 <div class="line">Build hash: 43926231f7183688add2dccfd391b36a1f000bea</div>
 <div class="line">Build date: 2022-10-07 05:12:02</div>
 <div class="line">Git branch: 2022.2</div>
-<div class="line">PID: 592</div>
+<div class="line">PID: 576</div>
 <div class="line">UID: 0</div>
-<div class="line">[Mon May 15 01:37:55 2023 GMT]</div>
+<div class="line">[Wed May 17 02:48:04 2023 GMT]</div>
 <div class="line">HOST: </div>
-<div class="line">EXE: /mnt/lenet_aie_xrt.elf</div>
-<div class="line">[XRT] ERROR: Can&#39;t start profiling: port name &#39;plout0_lenet_argm19&#39; not found: Invalid argument</div>
+<div class="line">EXE: /mnt/aie_xrt.elf</div>
+<div class="line">[XRT] ERROR: Can&#39;t start profiling: port name &#39;plout0_lenet_mnist_k18gemm&#39; not found: Invalid argument</div>
+<div class="line">[  124.882853] hrtimer: interrupt took 343510625 ns</div>
 <div class="line">[run graph]: success</div>
 <div class="line">[wait graph]: success</div>
 <div class="line">plout[0]: ERROR: Invalid handle. Only two performance counter in a AIE-PL interface tile. Event profile is not supported for x86sim.</div>
-<div class="line">[end lenet]: success</div>
+<div class="line">[end lenet_mnist]: success</div>
 <div class="line">Waiting for dma hls to complete...</div>
 <div class="line">mm2s completed with status (4)</div>
+<div class="line">[  641.684981] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_del_context: Client pid(576) del context Domain(0) CU(0x1)</div>
 <div class="line">s2mm completed with status (4)</div>
+<div class="line">[  643.379135] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_del_context: Client pid(576) del context Domain(0) CU(0x0)</div>
 <div class="line">Closed runtime handlers and kernel handlers...</div>
 <div class="line">inter1 completed with status (4)</div>
+<div class="line">[  643.396986] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_del_context: Client pid(576) del context Domain(0) CU(0x2)</div>
 <div class="line">inter2 completed with status (4)</div>
-<div class="line">inter3 completed with status (4)</div>
-<div class="line">inter4 completed with status (4)</div>
-<div class="line">inter5 completed with status (4)</div>
-<div class="line">inter6 completed with status (4)</div>
+<div class="line">[  643.397625] zocl-drm axi:zyxclmm_drm:  ffff000001b9dc10 kds_del_context: Client pid(576) del context Domain(0) CU(0x3)</div>
+<div class="line">...</div>
 <div class="line">Released I/O buffer objects.</div>
+<div class="line">[  643.401090] [drm] bitstream 9fee7350-25b2-b56d-7e20-d9e9d2b8c46f unlocked, ref=0</div>
+<div class="line">[  643.535997] zocl-drm axi:zyxclmm_drm: zocl_destroy_client: client exits pid(576)</div>
+<div class="line">[  643.555318] zocl-drm axi:zyxclmm_drm: zocl_destroy_client: client exits pid(576)</div>
+<div class="line">Checking directories data and output</div>
+<div class="line">Checking 1/7: k14gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 2/7: k16gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 3/7: k5pool_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 4/7: k2pool_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 5/7: k3conv_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 6/7: k0conv_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">Checking 7/7: k18gemm_goldenout.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
 <div class="line">INFO: TEST PASSED, RC=0</div>
 <div class="line"> </div>
-<div class="line">11 minutes and 3 seconds elapsed.</div>
+<div class="line">9 minutes and 36 seconds elapsed.</div>
 <div class="line"> </div>
-<div class="line">Checking 1/7: lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 2/7: mnist_test_label.txt</div>
-<div class="line">WARNING: arr1 shape (50, 2), arr2 shape (1, 2)</div>
-<div class="line">TEST (tolerance): first 2 FAILED! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/7: lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/7: lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/7: lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/7: lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 7/7: lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
-<div class="line">outputs/</div>
-<div class="line">└── lenet_mnist__15___relu3_Relu___relu3_Relu_output_0__1x120.txt</div>
-<div class="line">└── lenet_mnist__17___relu4_Relu___relu4_Relu_output_0__1x84.txt</div>
-<div class="line">└── lenet_mnist__19___relu5_Relu__output__1x10.txt</div>
-<div class="line">└── lenet_mnist__1___relu1_Relu___relu1_Relu_output_0__1x6x24x24.txt</div>
-<div class="line">└── lenet_mnist__2___pool1_MaxPool___pool1_MaxPool_output_0__1x6x12x12.txt</div>
-<div class="line">└── lenet_mnist__4___relu2_Relu___relu2_Relu_output_0__1x16x8x8.txt</div>
-<div class="line">└── mnist_test_label.txt</div>
-</div><!-- fragment --> </details>
-<p><br  />
-</p>
-<h1><a class="anchor" id="autotoc_md20"></a>
-Test system on hardware (~1h compile, ~6min flash, ~10s boot, ~0s run)</h1>
-<details >
-<summary >
-</summary>
-<p><b>Test system on hardware:</b><br  />
- <code>TARGET=hw EXTIO=0 LOG_PROFILE=0 GRAPH=lenet make clean graph kernels xsa application package</code><br  />
- <code>sudo dd if=build/lenet/hw_emu/package/sd_card.img of=/dev/mmcblk0 conv=fsync status=progress</code> </p>
-<p></p>
-<div class="fragment"><div class="line">stdout:</div>
-</div><!-- fragment --><div class="fragment"><div class="line">files:</div>
+<div class="line">INFO: Embedded host run completed.</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">files: (in QEMU environment)</div>
+<div class="line">output/</div>
+<div class="line">└── lenet_mnist</div>
+<div class="line">    ├── k0conv_goldenout.txt</div>
+<div class="line">    ├── k14gemm_goldenout.txt</div>
+<div class="line">    ├── k16gemm_goldenout.txt</div>
+<div class="line">    ├── k18gemm_goldenout.txt</div>
+<div class="line">    ├── k2pool_goldenout.txt</div>
+<div class="line">    ├── k3conv_goldenout.txt</div>
+<div class="line">    └── k5pool_goldenout.txt</div>
+</div><!-- fragment --><p><b>Analyze system compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/hw_emu/vck190_lenet_mnist_aie.xsa.link_summary</div>
+</div><!-- fragment --><p> <b>Clean hardware emulation build</b> </p><div class="fragment"><div class="line">TARGET=hw_emu GRAPH=lenet_mnist make clean</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md21"></a>
+Test system on hardware</h1>
+<p>(~1h compile, ~6min flash, ~10s boot, ~0s run)<br  />
+ <b>Hardware: create hardware image, flash the SD card</b> </p><div class="fragment"><div class="line">$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package</div>
+<div class="line">$ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress</div>
+<div class="line"> </div>
+<div class="line">stdout:</div>
+<div class="line"> </div>
+<div class="line">files:</div>
 <div class="line">outputs/</div>
 <div class="line">└── mnist_test_label.txt</div>
-</div><!-- fragment --> </details>
-<p><br  />
- </p>
-</div></div><!-- contents -->
+</div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -86,6 +86,7 @@ var NAVTREEINDEX0 =
 "md_lenet_example.html#autotoc_md18":[6,5],
 "md_lenet_example.html#autotoc_md19":[6,6],
 "md_lenet_example.html#autotoc_md20":[6,7],
+"md_lenet_example.html#autotoc_md21":[6,8],
 "modules.html":[7],
 "pages.html":[],
 "pool_8h_source.html":[9,0,0,0,15],

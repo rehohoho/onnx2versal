@@ -38,14 +38,15 @@ var NAVTREE =
       [ "Test the op", "index.html#autotoc_md11", null ]
     ] ],
     [ "Lenet Example", "md_lenet_example.html", [
-      [ "Generate", "md_lenet_example.html#autotoc_md13", null ],
-      [ "Manually write", "md_lenet_example.html#autotoc_md14", null ],
-      [ "Make notes", "md_lenet_example.html#autotoc_md15", null ],
-      [ "Run x86sim graph (~1 min compile)", "md_lenet_example.html#autotoc_md16", null ],
-      [ "Run x86sim system (~2 min compile)", "md_lenet_example.html#autotoc_md17", null ],
-      [ "Run sysC graph (~4.5 min compile, ~8 min run)", "md_lenet_example.html#autotoc_md18", null ],
-      [ "Run sysC system (~15min compile, ~30min run)", "md_lenet_example.html#autotoc_md19", null ],
-      [ "Test system on hardware (~1h compile, ~6min flash, ~10s boot, ~0s run)", "md_lenet_example.html#autotoc_md20", null ]
+      [ "Requirements and setup", "md_lenet_example.html#autotoc_md13", null ],
+      [ "Train Lenet model on MNIST", "md_lenet_example.html#autotoc_md14", null ],
+      [ "Generate files", "md_lenet_example.html#autotoc_md15", null ],
+      [ "Make options", "md_lenet_example.html#autotoc_md16", null ],
+      [ "Functional check: runs graph in x86simulator", "md_lenet_example.html#autotoc_md17", null ],
+      [ "Functional check: runs system software emulation", "md_lenet_example.html#autotoc_md18", null ],
+      [ "Functional/performance check: runs graph in aiesimulator", "md_lenet_example.html#autotoc_md19", null ],
+      [ "Functional/performance check: runs system in hardware emulation with QEMU", "md_lenet_example.html#autotoc_md20", null ],
+      [ "Test system on hardware", "md_lenet_example.html#autotoc_md21", null ]
     ] ],
     [ "Modules", "modules.html", "modules" ],
     [ "Classes", "annotated.html", [
