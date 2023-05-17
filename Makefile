@@ -20,7 +20,7 @@ help::
 	@echo  " OPTIONS:"
 	@echo  " Use the make recipes with required values for options mentioned below-"
 	@echo  "    TARGET      sw_emu(default)|hw_emu|hw, build target"
-	@echo  "    GRAPH       lenet (default),           target graph as per design/aie_src/graph_[].cpp"
+	@echo  "    GRAPH       lenet_mnist (default),     target graph as per design/aie_src/graph_[].cpp"
 	@echo  "    EXTIO       0 (default) | 1,           traffic gen usage, graph runs only, redundant for system due to host script"
 	@echo  "    DLOG        1 (default) | 0,           if enable verbose logging, kernel names and timing"
 	@echo  "    DOUT        1 (default) | 0,           if enable output intermediates, max 6-7 outputs, AIE has <= 8 cascade channels"
@@ -71,7 +71,7 @@ help::
 	@echo  "  Functional/performance check: runs graph in aiesimulator"
 	@echo  "  $$ TARGET=hw_emu GRAPH=lenet_mnist [EXTIO=1] [DOUT=0] make graph clean_reports aiesim_profile"
 	@echo  ""
-	@echo  "  Functional/performance check: runs system in hardware emulation with SysC QEMU (sysC graph, kernels NoC, DDR)"
+	@echo  "  Functional/performance check: runs system in hardware emulation with QEMU (sysC graph, kernels NoC, DDR)"
 	@echo  "  $$ TARGET=hw_emu GRAPH=lenet_mnist [DOUT=0] make graph kernels xsa application package run_emu"
 	@echo  ""
 	@echo  "  Clean hardware emulation build and reports."
@@ -80,7 +80,7 @@ help::
 	@echo  ""
 	@echo  "  Hardware: create hardware image, flash the SD card"
 	@echo  "  $$ TARGET=hw GRAPH=lenet_mnist [DOUT=0] make graph kernels xsa application package"
-	@echo  "  $$ sudo dd if=build/$(GRAPH)/$(TARGET)/package/sd_card.img of=/dev/$(DEVICE) conv=fsync status=progress"
+	@echo  "  $$ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress"
 	@echo  ""
 
 # Print all options passed to Makefile
@@ -92,7 +92,7 @@ print-%  : ; @echo $* = $($*)
 #   hw    : Hardware Run
 # =========================================================
 TARGET ?= sw_emu
-GRAPH ?= lenet
+GRAPH ?= lenet_mnist
 EXTIO ?= 0
 DLOG ?= 1
 DOUT ?= 1
@@ -258,7 +258,7 @@ else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_check.log
 endif
 else  # Use External Traffic Generator
 ifeq ($(TARGET), sw_emu)
@@ -270,7 +270,7 @@ else
 	mkdir -p $(AIESIM_REPORT_DIR); \
 	cd $(BUILD_TARGET_DIR); \
 	aiesimulator $(AIE_SIM_FLAGS) -o $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim.log & python3 $(TRAFFIC_GEN_PY) --input_dir $(DATA_REPO) --output_dir $(AIESIM_REPORT_DIR) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_filetraffic.log; \
-	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/x86sim_check.log
+	python3 $(PROJECT_REPO)/check.py -f1=$(AIESIM_REPORT_DIR) -f2=$(DATA_REPO) 2>&1 | tee -a $(AIESIM_REPORT_DIR)/aiesim_check.log
 endif
 endif
 
@@ -372,7 +372,7 @@ endif
 #	  net_app.o 
 # 	net_xrt.elf
 APP_OBJ_NAME 		:= $(GRAPH)_aie
-APP_ELF 				:= $(APP_OBJ_NAME)_xrt.elf
+APP_ELF 				:= aie_xrt.elf
 APP_SRC_CPP 	  := $(HOST_APP_SRC_REPO)/$(GRAPH)_aie_app.cpp
 AIE_CONTROL_CPP := $(BUILD_TARGET_DIR)/$(WORK_DIR)/ps/c_rts/aie_control_xrt.cpp
 

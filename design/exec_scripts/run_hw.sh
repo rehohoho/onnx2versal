@@ -5,7 +5,7 @@ SECONDS=0
 
 # Executing the elf...
 mkdir -p output/
-./lenet_aie_xrt.elf a.xclbin 100 data output
+./aie_xrt.elf a.xclbin 100 data output
 python3 check.py -f1 data -f2 output
 
 return_code=$?
