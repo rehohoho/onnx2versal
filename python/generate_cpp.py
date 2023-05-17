@@ -208,11 +208,13 @@ class CppGenerator:
   def __init__(self,
                data_path: str,
                onnx_path: str,
+               data_count: int,
                input_tensors: List[np.ndarray],
                output_tensors: Mapping[str, np.ndarray],
                is_output_all: bool = False):
     self.is_output_all = is_output_all
     self.data_path = data_path
+    self.data_count = data_count
 
     self.op_list: List[OpParser] = []
     self.nodeout_2_adfport: Mapping[str, str] = {}
@@ -493,20 +495,30 @@ int main(int argc, char ** argv) {{
     with open(f"../design/aie_src/graph_{self.graph_name}.cpp", "w") as f:
       f.write(self.generate_cpp_graph_str())
   
-  def get_xtg_masters(self) -> str:
+  def get_xtg_masters(self, is_output_inter: bool) -> str:
     masters = [
       f'("plin{i}_{self.graph_name}_{inpname}", f"{{args.input_dir}}/{inpname}.txt", 64, ' + \
       f'"{str(self.modelin_2_tensor[inpname].dtype)}")'
       for i, inpname in enumerate(self.modelin_2_tensor)
     ]
+    if not is_output_inter:
+      masters = [i.replace(".txt", "_host.txt") for i in masters]
     return "    " + ",\n".join(masters).replace("\n", "\n    ")
   
   def get_xtg_slaves(self, is_output_inter: bool) -> str:
-    slaves = [
-      f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", ' + \
-      f'64, "{str(op.dtype)}", {op.out_size})'
-      for i, op in enumerate(self.modelout_2_op.values())
-    ]
+    slaves = []
+    for i, op in enumerate(self.modelout_2_op.values()):
+      size = op.out_size
+      file_suffix = "_goldenout.txt"
+      if not is_output_inter:
+        size *= self.data_count
+        file_suffix = file_suffix.replace(".txt", "_host.txt")
+      slaves += [
+        f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{op.name}{file_suffix}", ' + \
+        f'64, "{str(op.dtype)}", {size})'
+        for i, op in enumerate(self.modelout_2_op.values())
+      ]
+
     if is_output_inter:
       i = len(self.modelout_2_op)
       for op in self.op_list:
@@ -533,7 +545,7 @@ if __name__ == "__main__":
   logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 
   master_list = [
-{self.get_xtg_masters()}
+{self.get_xtg_masters(is_output_inter=is_output_inter)}
   ]
 
   slave_list = [
@@ -616,6 +628,9 @@ param=hw_emu.enableProfiling=false
       f'#define OUTPUT{i}_FILENAME "{op.name}_goldenout.txt"'
       for i, op in enumerate(self.modelout_2_op.values())
     ]
+    outfiles_host = [i.replace(".txt", "_host.txt") for i in outfiles]
+    outfiles = ["#ifdef __OUTPUT_INTER__"] + outfiles + ["#else"] + outfiles_host + ["#endif"]
+    
     n_outs = len(self.modelout_2_op)
     outfiles += [
       f'#define INTER{n_outs+i}_FILENAME "{op.name}_goldenout.txt"'
@@ -631,15 +646,15 @@ param=hw_emu.enableProfiling=false
       input_tensor = self.modelin_2_tensor[input_name]
       size = input_tensor.size
       dtype = dtype_to_cstr(input_tensor.dtype)
-      inp_inits.append(f"""xrtBufferHandle in{i}_bohdl = xrtBOAlloc(dhdl, {size}*sizeof({dtype}), 0, 0);
+      inp_inits.append(f"""xrtBufferHandle in{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{size}*sizeof({dtype}), 0, 0);
 auto in{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(in{i}_bohdl));
 printf("Input{i} memory virtual addr 0x%p\\n", in{i}_bomapped);
 
 std::ifstream inp_file;
-inp_file.open(data_dir+"{input_name}.txt", std::ifstream::in);
-if (!inp_file) printf("Unable to open %s.\\n", (data_dir+"{input_name}.txt").c_str());
+inp_file.open(data_dir+INPUT{i}_FILENAME, std::ifstream::in);
+if (!inp_file) printf("Unable to open %s.\\n", (data_dir+INPUT{i}_FILENAME).c_str());
 {dtype} d;
-for (int j = 0; j < {size}; j+=V_PER_LINE) {{
+for (int j = 0; j < iter_cnt*{size}; j+=V_PER_LINE) {{
   for (int k = 0; k < V_PER_LINE; k++) {{
       inp_file >> d;
       in{i}_bomapped[j+k] = d;
@@ -648,10 +663,10 @@ for (int j = 0; j < {size}; j+=V_PER_LINE) {{
 xrtKernelHandle in{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "mm2s:{{mm2s_{i}}}");
 xrtRunHandle in{i}_rhdl = xrtRunOpen(in{i}_khdl); 
 xrtRunSetArg(in{i}_rhdl, 0, in{i}_bohdl);
-xrtRunSetArg(in{i}_rhdl, 2, {size});
+xrtRunSetArg(in{i}_rhdl, 2, iter_cnt*{size});
 xrtRunStart(in{i}_rhdl);""")
       inp_initsyncs.append(
-        f"xrtBOSync(in{i}_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, {size}*sizeof({dtype}), 0);"
+        f"xrtBOSync(in{i}_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, iter_cnt*{size}*sizeof({dtype}), 0);"
       )
     
     inp_initsyncs.append("#endif")
@@ -661,7 +676,8 @@ xrtRunStart(in{i}_rhdl);""")
     inp_closes = [f"""auto in{i}_state = xrtRunWait(in{i}_rhdl);    
 printf("mm2s completed with status (%d)\\n", in{i}_state);
 xrtRunClose(in{i}_rhdl);
-xrtKernelClose(in{i}_khdl);"""
+xrtKernelClose(in{i}_khdl);
+xrtBOFree(in{i}_bohdl);"""
       for i in range(len(self.modelin_2_tensor))
     ]
     return "   " + "\n".join(inp_closes).replace("\n", "\n   ")
@@ -670,15 +686,14 @@ xrtKernelClose(in{i}_khdl);"""
     out_inits = []
     for i, op in enumerate(self.modelout_2_op.values()):
       dtype = dtype_to_cstr(op.dtype)
-      out_inits.append(f"""size_t output_size_in_bytes = {op.out_size}*sizeof({dtype});
-xrtBufferHandle out{i}_bohdl = xrtBOAlloc(dhdl, {op.out_size}*sizeof({dtype}), 0, 0);
+      out_inits.append(f"""xrtBufferHandle out{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({dtype}), 0, 0);
 auto out{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(out{i}_bohdl));
 printf("Output{i} memory virtual addr 0x%p\\n", out{i}_bomapped);
 
 xrtKernelHandle out{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{{s2mm_{i}}}");
 xrtRunHandle out{i}_rhdl = xrtRunOpen(out{i}_khdl); 
 xrtRunSetArg(out{i}_rhdl, 0, out{i}_bohdl);
-xrtRunSetArg(out{i}_rhdl, 2, {op.out_size});
+xrtRunSetArg(out{i}_rhdl, 2, iter_cnt*{op.out_size});
 xrtRunStart(out{i}_rhdl);""")
     return "   " + "\n".join(out_inits).replace("\n", "\n   ")
 
@@ -689,9 +704,9 @@ printf("s2mm completed with status (%d)\\n", out{i}_state);
 xrtRunClose(out{i}_rhdl);
 xrtKernelClose(out{i}_khdl);
 #ifdef __IS_SW_EMU__
-xrtBOSync(out{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, {op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);
+xrtBOSync(out{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);
 #endif
-write_arr_to_file(out_dir+"{op.name}_goldenout.txt", out{i}_bomapped, {op.out_size});
+write_arr_to_file(out_dir+OUTPUT{i}_FILENAME, out{i}_bomapped, iter_cnt*{op.out_size});
 xrtBOFree(out{i}_bohdl);"""
       for i, op in enumerate(self.modelout_2_op.values())
     ]
@@ -704,13 +719,13 @@ xrtBOFree(out{i}_bohdl);"""
       if op in self.modelout_2_op.values(): continue
       dtype = dtype_to_cstr(op.dtype)
       optout_inits.append(f"""
-xrtBufferHandle inter{i}_bohdl = xrtBOAlloc(dhdl, {op.out_size}*sizeof({dtype}), 0, 0);
+xrtBufferHandle inter{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({dtype}), 0, 0);
 auto inter{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(inter{i}_bohdl));
 printf("Inter{i} memory virtual addr 0x%p\\n", inter{i}_bomapped);
 xrtKernelHandle inter{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{{s2mm_{i}}}");
 xrtRunHandle inter{i}_rhdl = xrtRunOpen(inter{i}_khdl);
 xrtRunSetArg(inter{i}_rhdl, 0, inter{i}_bohdl);
-xrtRunSetArg(inter{i}_rhdl, 2, {op.out_size});
+xrtRunSetArg(inter{i}_rhdl, 2, iter_cnt*{op.out_size});
 xrtRunStart(inter{i}_rhdl);""")
       i += 1
     return "   " + "\n".join(optout_inits).replace("\n", "\n   ")
@@ -725,10 +740,10 @@ xrtRunStart(inter{i}_rhdl);""")
       optout_closes.append(f"""auto inter{i}_state = xrtRunWait(inter{i}_rhdl);
 printf("inter{i} completed with status (%d)\\n", inter{i}_state);
 xrtRunClose(inter{i}_rhdl);
-xrtKernelClose(inter{i}_khdl);""");
+xrtKernelClose(inter{i}_khdl);""")
       optout_syncs.append(
-        f"xrtBOSync(inter{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, {op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);")
-      optout_writes.append(f"""write_arr_to_file(out_dir+"{op.name}_goldenout.txt", inter{i}_bomapped, {op.out_size});
+        f"xrtBOSync(inter{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);")
+      optout_writes.append(f"""write_arr_to_file(out_dir+INTER{i}_FILENAME, inter{i}_bomapped, iter_cnt*{op.out_size});
 xrtBOFree(inter{i}_bohdl);""")
       i += 1
     optout_syncs.append("#endif")
@@ -863,9 +878,6 @@ int main(int argc, char ** argv) {{
 #ifdef __OUTPUT_INTER__
 {self.get_host_optout_closes()}
 #endif
-
-   xrtBOFree(in0_bohdl);
-   printf("Released I/O buffer objects.\\n");
 
    xrtDeviceClose(dhdl);
    return 0;

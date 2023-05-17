@@ -10,36 +10,6 @@ import onnxruntime
 from generate_cpp import CppGenerator
 
 
-def generate_txt(loader: DataLoader,
-                 data_count: int,
-                 output_data_path: str,
-                 output_label_path: str):
-  data = None
-  labels = None
-
-  print(f"Generating MNIST txt for {data_count} data points")
-  for x, y in loader:
-    if data is None:
-      data = x
-    else:
-      data = torch.concat((data, x))
-    
-    if labels is None:
-      labels = y
-    else:
-      labels = torch.concat((labels, y))
-    
-    if data.shape[0] >= data_count:
-      break
-  
-  np.savetxt(output_data_path, data.numpy().reshape(-1, 2), fmt="%.7g")
-  np.savetxt(output_label_path, labels.numpy().reshape(-1, 2), fmt="%.7g")
-
-
-def to_numpy(tensor):
-  return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-
-
 def generate_inter_graph(onnx_path: str,
                          onnx_inter_path: str):
   model = onnx.load(onnx_path)
@@ -51,6 +21,20 @@ def generate_inter_graph(onnx_path: str,
     model.graph.output.append(intermediate_layer_value_info)
   onnx.save(model, onnx_inter_path)
   return output_names
+
+
+def get_host_data(loader: DataLoader,
+                  data_count: int):
+  data = None
+  print(f"Generating MNIST txt for {data_count} data points")
+  for x, y in loader:
+    if data is None:
+      data = x
+    else:
+      data = torch.concat((data, x))  
+    if data.shape[0] >= data_count:
+      break
+  return data
 
 
 if __name__ == '__main__':
@@ -65,7 +49,7 @@ if __name__ == '__main__':
   dataset = mnist.MNIST(root=DATA_PATH, train=False, transform=ToTensor(), download=True)
   loader = DataLoader(dataset, batch_size=1)
   data, label = next(iter(loader))
-  input_tensor = torch.Tensor(data[0]).reshape(1, 1, 28, 28)
+  input_tensor = data[0].unsqueeze(0)
   
   # Update ONNX to output intermediate tensors
   onnx_inter_path = ONNX_PATH.replace(".onnx", "_inter.onnx")
@@ -82,6 +66,7 @@ if __name__ == '__main__':
 
   cppGenerator = CppGenerator(data_path=DATA_PATH, 
                               onnx_path=ONNX_PATH, 
+                              data_count=DATA_COUNT,
                               input_tensors=[input_tensor.numpy()], 
                               output_tensors=output_tensors, 
                               is_output_all=IS_OUTPUT_ALL_NODES)
@@ -92,7 +77,12 @@ if __name__ == '__main__':
   cppGenerator.generate_host_cpp()
 
   # Generate end-to-end data
-  generate_txt(loader=loader, 
-               data_count=DATA_COUNT, 
-               output_data_path=TEST_DATA_TXT, 
-               output_label_path=TEST_LABEL_TXT)
+  data = get_host_data(loader, DATA_COUNT)
+  ort_session = onnxruntime.InferenceSession(ONNX_PATH)
+  ort_inputs = {ort_session.get_inputs()[0].name: data.numpy()}
+  ort_outs = ort_session.run(None, ort_inputs)
+  
+  model_input_path = f"{DATA_PATH}/{list(cppGenerator.modelin_2_tensor.keys())[0]}_host.txt"
+  model_output_path = f"{DATA_PATH}/{list(cppGenerator.modelout_2_op.values())[0].name}_goldenout_host.txt"
+  np.savetxt(model_input_path, data.numpy().reshape(-1, 2), fmt="%.7g")
+  np.savetxt(model_output_path, ort_outs[-1].reshape(-1, 2), fmt="%.7g")
