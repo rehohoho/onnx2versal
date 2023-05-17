@@ -25,9 +25,27 @@
 var NAVTREE =
 [
   [ "onnx2versal", "index.html", [
-    [ "Kernel Example", "index.html#autotoc_md1", null ],
-    [ "Write a Kernel", "index.html#autotoc_md2", null ],
-    [ "Write a Graph", "index.html#autotoc_md3", null ],
+    [ "Requirements", "index.html#autotoc_md1", null ],
+    [ "Setup", "index.html#autotoc_md2", null ],
+    [ "Usage", "index.html#autotoc_md3", null ],
+    [ "Directory structure", "index.html#autotoc_md4", null ],
+    [ "Let me dev", "index.html#autotoc_md5", [
+      [ "Important documentation", "index.html#autotoc_md6", null ],
+      [ "Write a graph", "index.html#autotoc_md7", null ],
+      [ "Write a op", "index.html#autotoc_md8", null ],
+      [ "Add data", "index.html#autotoc_md9", null ],
+      [ "Test the op", "index.html#autotoc_md10", null ]
+    ] ],
+    [ "Lenet Example", "md_lenet_example.html", [
+      [ "Generate", "md_lenet_example.html#autotoc_md12", null ],
+      [ "Manually write", "md_lenet_example.html#autotoc_md13", null ],
+      [ "Make notes", "md_lenet_example.html#autotoc_md14", null ],
+      [ "Run x86sim graph (~1 min compile)", "md_lenet_example.html#autotoc_md15", null ],
+      [ "Run x86sim system (~2 min compile)", "md_lenet_example.html#autotoc_md16", null ],
+      [ "Run sysC graph (~4.5 min compile, ~8 min run)", "md_lenet_example.html#autotoc_md17", null ],
+      [ "Run sysC system (~15min compile, ~30min run)", "md_lenet_example.html#autotoc_md18", null ],
+      [ "Test system on hardware (~1h compile, ~6min flash, ~10s boot, ~0s run)", "md_lenet_example.html#autotoc_md19", null ]
+    ] ],
     [ "Modules", "modules.html", "modules" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],

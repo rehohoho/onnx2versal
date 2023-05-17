@@ -113,14 +113,15 @@ $(document).ready(function(){initNavTree('graph__argmax_8h_source.html',''); ini
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_class" href="classArgmaxGraph.html">ArgmaxGraph</a>() { </div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>      k[0] = adf::kernel::create_object&lt;ARGMAX&lt;WINDOW_SIZE, CHUNK_SIZE&gt;&gt;();</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>      adf::source(k[0]) = <span class="stringliteral">&quot;argmax.cc&quot;</span>;</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>      </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>      adf::connect&lt;adf::window&lt;WINDOW_SIZE*4&gt;&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>      adf::connect&lt;adf::window&lt;WINDOW_SIZE/CHUNK_SIZE*4&gt;&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    }</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>};</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">#endif </span><span class="comment">// __ARGMAX_GRAPH_H__</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;argmax.h&quot;</span>};</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>      </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>      adf::connect&lt;adf::window&lt;WINDOW_SIZE*4&gt;&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>      adf::connect&lt;adf::window&lt;WINDOW_SIZE/CHUNK_SIZE*4&gt;&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    }</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>};</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#endif </span><span class="comment">// __ARGMAX_GRAPH_H__</span></div>
 <div class="ttc" id="aclassArgmaxGraph_html"><div class="ttname"><a href="classArgmaxGraph.html">ArgmaxGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition:</b> graph_argmax.h:29</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

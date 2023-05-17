@@ -113,7 +113,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for BHWC. MaxpoolScalarBCHW::filter&lt;24, 12, 1, 6&gt; total = 11302.  <a href="classMaxpoolScalarBCHW.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2BCHW.html">Maxpool2x2BCHW&lt; INP_W, OUT_W, B, C &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for BCHW with 2x2 kernel. Requires OUT_W%8=0. Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt; total = 901.  <a href="classMaxpool2x2BCHW.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for BCHW with 2x2 kernel. Requires OUT_W%4=0. Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt; total = 901.  <a href="classMaxpool2x2BCHW.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -123,8 +123,8 @@ Classes</h2></td></tr>
 <li>2 accs will blow the 64-float vector regs (901 -&gt; 1330 cycles)</li>
 <li>Using window_incr instead of pointers (901 -&gt; 988 cycles)</li>
 <li>Concat adds additional computation (901 -&gt; 1468 cycles)</li>
+<li>All kernels assume INP_W divisible by OUT_W </li>
 </ul>
-<dl class="section attention"><dt>Attention</dt><dd>All kernels assume INP_W divisible by OUT_W </dd></dl>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

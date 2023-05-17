@@ -1,4 +1,4 @@
 <map id="GemmReluMknkChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N &gt;" name="GemmReluMknkChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N &gt;">
-<area shape="rect" id="node1" title="Multiinstance graph for MxK times NxK that stores weights and biases Chunks NxK weights by N dimensio..." alt="" coords="5,124,209,180"/>
+<area shape="rect" id="node1" title="Multiinstance graph for MxK times NxK that stores weights and biases. Requires NxK weight,..." alt="" coords="5,124,209,180"/>
 <area shape="rect" id="node2" href="$classConcatGraph.html" title=" " alt="" coords="9,5,205,61"/>
 </map>
