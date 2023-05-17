@@ -92,12 +92,12 @@ $(document).ready(function(){initNavTree('md_lenet_example.html',''); initResiza
   <div class="headertitle"><div class="title">Lenet Example </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md12"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md13"></a>
 Generate</h1>
 <div class="fragment"><div class="line">rm ../data/lenet_mnist__* ../data/mnist_test_*</div>
 <div class="line">cd python/</div>
 <div class="line">python generate_node_data.py</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md13"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md14"></a>
 Manually write</h1>
 <div class="fragment"><div class="line">design/aie_src/graph_[net_name].h</div>
 <div class="line">design/aie_src/graph_[net_name].cpp</div>
@@ -106,12 +106,12 @@ Manually write</h1>
 <div class="line">design/system_configs/[net_name].cfg</div>
 <div class="line">design/traffic_gen/xtg_[net_name]_logprofile.cfg</div>
 <div class="line">design/traffic_gen/xtg_[net_name].cfg</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md14"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md15"></a>
 Make notes</h1>
 <div class="fragment"><div class="line">EXTIO: 0|1        whether to use external traffic generator, only graph tests</div>
 <div class="line">                  host app in system tests is equivalent of traffic generator</div>
 <div class="line">LOG_PROFILE: 0|1  whether to stdout profile logs and output intermediates</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md15"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md16"></a>
 Run x86sim graph (~1 min compile)</h1>
 <p>For graph test, ITER_CNT (default 1) is used in compilation</p><ul>
 <li>Analyze graph compilation after compile: <br  />
@@ -234,7 +234,7 @@ Run x86sim graph (~1 min compile)</h1>
 </div><!-- fragment --> </details>
 <p><br  />
 </p>
-<h1><a class="anchor" id="autotoc_md16"></a>
+<h1><a class="anchor" id="autotoc_md17"></a>
 Run x86sim system (~2 min compile)</h1>
 <p>For system test, ITER_CNT is an argument into host app.</p><ul>
 <li>Analyze system compilation after compile: <br  />
@@ -333,7 +333,7 @@ Run x86sim system (~2 min compile)</h1>
 </div><!-- fragment --> </details>
 <p><br  />
 </p>
-<h1><a class="anchor" id="autotoc_md17"></a>
+<h1><a class="anchor" id="autotoc_md18"></a>
 Run sysC graph (~4.5 min compile, ~8 min run)</h1>
 <p>Only can output maximum of 6-7 intermediates since AIE only has 8 cascade lines. aiesim_profile allows printf and timing.</p><ul>
 <li>Analyze graph compilation after compile: <br  />
@@ -585,7 +585,7 @@ Run sysC graph (~4.5 min compile, ~8 min run)</h1>
 </div><!-- fragment --> </details>
 <p><br  />
 </p>
-<h1><a class="anchor" id="autotoc_md18"></a>
+<h1><a class="anchor" id="autotoc_md19"></a>
 Run sysC system (~15min compile, ~30min run)</h1>
 <ul>
 <li>Analyze system compilation after compile: <br  />
@@ -680,7 +680,7 @@ Run sysC system (~15min compile, ~30min run)</h1>
 </div><!-- fragment --> </details>
 <p><br  />
 </p>
-<h1><a class="anchor" id="autotoc_md19"></a>
+<h1><a class="anchor" id="autotoc_md20"></a>
 Test system on hardware (~1h compile, ~6min flash, ~10s boot, ~0s run)</h1>
 <details >
 <summary >
