@@ -1,5 +1,6 @@
 from typing import List, Mapping
 from dataclasses import dataclass
+import os
 
 import numpy as np
 import onnx
@@ -219,6 +220,7 @@ class CppGenerator:
     
     model = onnx.load(onnx_path)
     self.nodes = model.graph.node
+    self.graph_name = os.path.splitext(os.path.basename(onnx_path))[0]
     
     # register model input, node output and model outputs
     self.modelin_2_tensor = {i.name: t for i, t in zip(model.graph.input, input_tensors)}
@@ -415,7 +417,7 @@ class CppGenerator:
 #include "graph_utils.h"
 
 
-class MyGraph : public adf::graph {{
+class {self.graph_name.capitalize()} : public adf::graph {{
 
   private:
 {self.get_kernels()}
@@ -424,7 +426,7 @@ class MyGraph : public adf::graph {{
     adf::input_plio plin[{len(self.modelin_2_tensor)}];
     std::vector<adf::output_plio> plout; // intermediate outputs optional
 
-    MyGraph(
+    {self.graph_name.capitalize()}(
       const std::string& id,
 {self.get_args()}
     ): 
@@ -455,13 +457,13 @@ class MyGraph : public adf::graph {{
 
 // Unable to map 8 or more outputs on hardware since <= 8 cascade lines
 #ifdef __OUTPUT_INTER__
-MyGraph myGraph (
-  "myGraph",
+{self.graph_name.capitalize()} {self.graph_name} (
+  "{self.graph_name}",
 {self.get_callargs(is_output_inter=True)}
 );
 #else
-MyGraph myGraph (
-  "myGraph",
+{self.graph_name.capitalize()} {self.graph_name} (
+  "{self.graph_name}",
 {self.get_callargs(is_output_inter=False)}
 );
 #endif
@@ -469,9 +471,9 @@ MyGraph myGraph (
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {{
-	adfCheck(myGraph.init(), "init myGraph");
-  adfCheck(myGraph.run(ITER_CNT), "run myGraph");
-	adfCheck(myGraph.end(), "end myGraph");
+	adfCheck({self.graph_name}.init(), "init {self.graph_name}");
+  adfCheck({self.graph_name}.run(ITER_CNT), "run {self.graph_name}");
+	adfCheck({self.graph_name}.end(), "end {self.graph_name}");
   return 0;
 }}
 #endif
@@ -479,21 +481,21 @@ int main(int argc, char ** argv) {{
 
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {{
-	adfCheck(myGraph.init(), "init myGraph");
-  get_graph_throughput_by_port(myGraph, "plout[0]", myGraph.plout[0], 1*10, sizeof(float), ITER_CNT);
-	adfCheck(myGraph.end(), "end myGraph");
+	adfCheck({self.graph_name}.init(), "init {self.graph_name}");
+  get_graph_throughput_by_port({self.graph_name}, "plout[0]", {self.graph_name}.plout[0], 1*10, sizeof(float), ITER_CNT);
+	adfCheck({self.graph_name}.end(), "end {self.graph_name}");
   return 0;
 }}
 #endif
 """
   
   def generate_cpp_graph(self):
-    with open("../design/aie_src/graph_gen.cpp", "w") as f:
+    with open(f"../design/aie_src/graph_{self.graph_name}.cpp", "w") as f:
       f.write(self.generate_cpp_graph_str())
   
   def get_xtg_masters(self) -> str:
     masters = [
-      f'("plin{i}_myGraph_{inpname}", f"{{args.input_dir}}/{inpname}.txt", 64, ' + \
+      f'("plin{i}_{self.graph_name}_{inpname}", f"{{args.input_dir}}/{inpname}.txt", 64, ' + \
       f'"{str(self.modelin_2_tensor[inpname].dtype)}")'
       for i, inpname in enumerate(self.modelin_2_tensor)
     ]
@@ -501,7 +503,7 @@ int main(int argc, char ** argv) {{
   
   def get_xtg_slaves(self, is_output_inter: bool) -> str:
     slaves = [
-      f'("plout{i}_myGraph_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", ' + \
+      f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", ' + \
       f'64, "{str(op.dtype)}", {op.out_size})'
       for i, op in enumerate(self.modelout_2_op.values())
     ]
@@ -510,7 +512,7 @@ int main(int argc, char ** argv) {{
       for op in self.op_list:
         if op in self.modelout_2_op.values(): continue
         slaves.append(
-          f'("plout{i}_myGraph_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", 64, "{str(op.dtype)}", {op.out_size})')
+          f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", 64, "{str(op.dtype)}", {op.out_size})')
         i += 1
     return "    " + ",\n".join(slaves).replace("\n", "\n    ")
   
@@ -543,9 +545,9 @@ if __name__ == "__main__":
 """
 
   def generate_xtg_python(self):
-    with open("../design/trafficgen/xtg_gen.py", "w") as f:
+    with open(f"../design/trafficgen/xtg_{self.graph_name}.py", "w") as f:
       f.write(self.generate_xtg_python_str(is_output_inter=False))
-    with open("../design/trafficgen/xtg_gen_output_inter.py", "w") as f:
+    with open(f"../design/trafficgen/xtg_{self.graph_name}_output_inter.py", "w") as f:
       f.write(self.generate_xtg_python_str(is_output_inter=True))
   
   def get_cfg_input_kernels(self) -> str:
@@ -566,21 +568,21 @@ if __name__ == "__main__":
   
   def get_cfg_input_scs(self) -> str:
     in_scs = [
-      f"stream_connect=mm2s_{i}.s:ai_engine_0.plin{i}_myGraph_{inpname}"
+      f"stream_connect=mm2s_{i}.s:ai_engine_0.plin{i}_{self.graph_name}_{inpname}"
       for i, inpname in enumerate(self.modelin_2_tensor)
     ]
     return "\n".join(in_scs)
 
   def get_cfg_output_scs(self, is_output_inter: bool) -> str:
     out_scs = [
-      f"stream_connect=ai_engine_0.plout{i}_myGraph_{op.name}:s2mm_{i}.s"
+      f"stream_connect=ai_engine_0.plout{i}_{self.graph_name}_{op.name}:s2mm_{i}.s"
       for i, op in enumerate(self.modelout_2_op.values())
     ]
     if is_output_inter:
       i = len(self.modelout_2_op)
       for op in self.op_list:
         if op in self.modelout_2_op.values(): continue
-        out_scs.append(f"stream_connect=ai_engine_0.plout{i}_myGraph_{op.name}:s2mm_{i}.s")
+        out_scs.append(f"stream_connect=ai_engine_0.plout{i}_{self.graph_name}_{op.name}:s2mm_{i}.s")
         i += 1
     return "\n".join(out_scs)  
   
@@ -600,9 +602,9 @@ param=hw_emu.enableProfiling=false
 """
 
   def generate_cfg(self):
-    with open("../design/system_configs/gen.cfg", "w") as f:
+    with open(f"../design/system_configs/{self.graph_name}.cfg", "w") as f:
       f.write(self.generate_cfg_str(is_output_inter=False))
-    with open("../design/system_configs/gen_output_inter.cfg", "w") as f:
+    with open(f"../design/system_configs/{self.graph_name}_output_inter.cfg", "w") as f:
       f.write(self.generate_cfg_str(is_output_inter=True))
 
   def get_host_datafiles(self) -> str:
@@ -631,7 +633,7 @@ param=hw_emu.enableProfiling=false
       dtype = dtype_to_cstr(input_tensor.dtype)
       inp_inits.append(f"""xrtBufferHandle in{i}_bohdl = xrtBOAlloc(dhdl, {size}*sizeof({dtype}), 0, 0);
 auto in{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(in{i}_bohdl));
-printf("Input memory virtual addr 0x%p\\n", in{i}_bomapped);
+printf("Input{i} memory virtual addr 0x%p\\n", in{i}_bomapped);
 
 std::ifstream inp_file;
 inp_file.open(data_dir+"{input_name}.txt", std::ifstream::in);
@@ -671,7 +673,7 @@ xrtKernelClose(in{i}_khdl);"""
       out_inits.append(f"""size_t output_size_in_bytes = {op.out_size}*sizeof({dtype});
 xrtBufferHandle out{i}_bohdl = xrtBOAlloc(dhdl, {op.out_size}*sizeof({dtype}), 0, 0);
 auto out{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(out{i}_bohdl));
-printf("Output memory virtual addr 0x%p\\n", out{i}_bomapped);
+printf("Output{i} memory virtual addr 0x%p\\n", out{i}_bomapped);
 
 xrtKernelHandle out{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{{s2mm_{i}}}");
 xrtRunHandle out{i}_rhdl = xrtRunOpen(out{i}_khdl); 
@@ -736,7 +738,7 @@ xrtBOFree(inter{i}_bohdl);""")
     return f"""
 #include <fstream>
 
-#include "graph_gen.cpp"
+#include "graph_{self.graph_name}.cpp"
 
 #include "experimental/xrt_aie.h"
 #include "experimental/xrt_kernel.h"
@@ -829,14 +831,14 @@ int main(int argc, char ** argv) {{
    // Graph execution for AIE
    adf::registerXRT(dhdl, top->m_header.uuid);
    try {{
-      adfCheck(myGraph.init(), "init myGraph");
+      adfCheck({self.graph_name}.init(), "init {self.graph_name}");
 #ifdef __IS_SW_EMU__
-      adfCheck(myGraph.run(iter_cnt), "run myGraph");
-      adfCheck(myGraph.wait(), "wait myGraph");
+      adfCheck({self.graph_name}.run(iter_cnt), "run {self.graph_name}");
+      adfCheck({self.graph_name}.wait(), "wait {self.graph_name}");
 #else
-      get_graph_throughput_by_port(myGraph, "plout[0]", myGraph.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
+      get_graph_throughput_by_port({self.graph_name}, "plout[0]", {self.graph_name}.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
 #endif
-      adfCheck(myGraph.end(), "end myGraph");
+      adfCheck({self.graph_name}.end(), "end {self.graph_name}");
    }}
    catch (const std::system_error& ex) {{
       xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);
@@ -871,5 +873,5 @@ int main(int argc, char ** argv) {{
 """
 
   def generate_host_cpp(self) -> str:
-    with open("../design/host_app_src/gen_aie_app.cpp", "w") as f:
+    with open(f"../design/host_app_src/{self.graph_name}_aie_app.cpp", "w") as f:
       f.write(self.generate_host_cpp_str())
