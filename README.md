@@ -12,6 +12,14 @@ See documentation at https://rehohoho.github.io/onnx2versal/: actual kernel and 
 * Python 3
 
 ## Setup
+Setup python environment. Anaconda/miniconda is an option. Install the requirements in your environment.
+```
+conda create -n o2v python=3.10 -y
+conda activate o2v
+which python # (conda path)/bin/python
+pip install -r python/requirements.txt
+```
+
 Setup following lines in `./sample_env_setup.sh`. Run `source sample_env_setup.sh` to setup environment in your shell.
 ```
 export PLATFORM_REPO_PATHS=/tools/Xilinx/Vitis/2022.2/base_platforms
@@ -21,7 +29,7 @@ export XILINX_X86_XRT=/opt/xilinx/xrt
 export PYTHON3_LOCATION=/usr/bin
 ```
 
-## Usage
+## Usage - Generate
 
 **Inputs**
 ```
@@ -44,9 +52,16 @@ design/traffic_gen/xtg_[net_name]_output_inter.py # external traffic generator f
 design/traffic_gen/xtg_[net_name].py
 ```
 
-**Simulation, Verification, Profiling, Hardware Build** <br />
-`make help` for full details. Only key (and probably insufficient) examples here.
+## Usage - Simulation, Verification, Profiling, Hardware Build
+`make help` for full details. Only key (and probably insufficient) examples here. <b>If you run into issues running the make, try to run each recipe one by one.</b>
 ```
+OPTIONS:
+Use the make recipes with required values for options mentioned below-
+    TARGET      sw_emu(default)|hw_emu|hw, build target
+    GRAPH       lenet (default),           target graph as per design/aie_src/graph_[].cpp
+    EXTIO       0 (default) | 1,           traffic gen usage, graph runs only, redundant for system due to host script
+    DOUT        1 (default) | 0,           if enable output intermediates, max 6-7 outputs, AIE has <= 8 cascade channels
+
 ## Functional check: runs graph in x86simulator
 $ TARGET=sw_emu GRAPH=my_model [EXTIO=1] [DOUT=0] make graph clean_reports aiesim
 
@@ -57,8 +72,8 @@ $ TARGET=sw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application packa
 ## Functional/performance check: runs graph in aiesimulator
 $ TARGET=hw_emu GRAPH=my_model [EXTIO=1] [DOUT=0] make graph clean_reports aiesim_profile
 
-## Functional/performance check: runs system in hardware emulation with SysC QEMU (sysC graph, kernels NoC, DDR)
-$ TARGET=hw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application package run_emu
+## Functional/performance check: runs system in hardware emulation with QEMU (sysC graph, kernels NoC, DDR)
+$ TARGET=hw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application package clean_reports run_emu
 
 
 ## Hardware: create hardware image, flash the SD card
