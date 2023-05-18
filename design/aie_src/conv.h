@@ -2,6 +2,7 @@
 #define CONV_H_
 
 #include <adf.h>
+#include <assert.h>
 
 
 /** 
@@ -134,6 +135,7 @@ class Conv5x5ReluBCHW {
     );
     
     static void registerKernelClass() {
+      assert(OUT_W%8==0);
       REGISTER_FUNCTION(Conv5x5ReluBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -166,6 +168,7 @@ class Conv5x5on8ReluBCHW {
     );
     
     static void registerKernelClass() {
+      assert(OUT_W%8==0);
       REGISTER_FUNCTION(Conv5x5on8ReluBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

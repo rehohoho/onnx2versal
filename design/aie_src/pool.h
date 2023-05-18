@@ -2,6 +2,7 @@
 #define POOL_H_
 
 #include <adf.h>
+#include <assert.h>
 
 
 /** 
@@ -67,6 +68,7 @@ class Maxpool2x2BCHW {
       output_window<float>* out_window     // BCPQ (1x6x12x12)
     );
     static void registerKernelClass() {
+      assert(OUT_W%4==0);
       REGISTER_FUNCTION(Maxpool2x2BCHW::filter);
     }
 };
