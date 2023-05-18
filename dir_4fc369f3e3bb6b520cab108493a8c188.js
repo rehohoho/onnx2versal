@@ -11,12 +11,14 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "graph_identity.h", "graph__identity_8h_source.html", null ],
     [ "graph_lenet.h", "graph__lenet_8h_source.html", null ],
     [ "graph_pool.h", "graph__pool_8h_source.html", null ],
+    [ "graph_qlinearconv.h", "graph__qlinearconv_8h_source.html", null ],
     [ "graph_quantize_linear.h", "graph__quantize__linear_8h_source.html", null ],
     [ "graph_transpose.h", "graph__transpose_8h_source.html", null ],
     [ "graph_utils.h", "graph__utils_8h_source.html", null ],
     [ "identity.h", "identity_8h_source.html", null ],
     [ "kernel_utils.h", "kernel__utils_8h_source.html", null ],
     [ "pool.h", "pool_8h_source.html", null ],
+    [ "qlinearconv.h", "qlinearconv_8h_source.html", null ],
     [ "quantize_linear.h", "quantize__linear_8h_source.html", null ],
     [ "transpose.h", "transpose_8h_source.html", null ]
 ];
