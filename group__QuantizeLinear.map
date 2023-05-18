@@ -1,0 +1,4 @@
+<map id="QuantizeLinear" name="QuantizeLinear">
+<area shape="rect" id="node1" title="Linear quantization operator. It consumes a high precision tensor, a scale, and a zero point to compu..." alt="" coords="5,5,114,31"/>
+<area shape="rect" id="node2" href="$group__QuantizeLinearKernels.html" title=" " alt="" coords="162,5,314,31"/>
+</map>

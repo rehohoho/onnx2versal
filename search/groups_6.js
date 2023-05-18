@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['transpose_0',['Transpose',['../group__Transpose.html',1,'']]],
-  ['transposekernels_1',['TransposeKernels',['../group__TransposeKernels.html',1,'']]]
+  ['quantizelinear_0',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
+  ['quantizelinearkernels_1',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]]
 ];

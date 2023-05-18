@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['transpose_0',['Transpose',['../group__Transpose.html',1,'']]],
-  ['transposegraph_1',['TransposeGraph',['../classTransposeGraph.html',1,'']]],
-  ['transposekernels_2',['TransposeKernels',['../group__TransposeKernels.html',1,'']]],
-  ['transposescalarbhwc2bchw_3',['TransposeScalarBHWC2BCHW',['../classTransposeScalarBHWC2BCHW.html',1,'']]]
+  ['quantizelinear_0',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
+  ['quantizelineargraph_1',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearkernels_2',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
+  ['quantizelinearscalar_3',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]]
 ];

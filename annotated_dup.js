@@ -28,6 +28,8 @@ var annotated_dup =
     [ "MaxpoolScalarBCHW", "classMaxpoolScalarBCHW.html", null ],
     [ "MaxpoolScalarBHWC", "classMaxpoolScalarBHWC.html", null ],
     [ "MnistLenetBchwGraph", "classMnistLenetBchwGraph.html", null ],
+    [ "QuantizeLinearGraph", "classQuantizeLinearGraph.html", null ],
+    [ "QuantizeLinearScalar", "classQuantizeLinearScalar.html", null ],
     [ "TransposeGraph", "classTransposeGraph.html", null ],
     [ "TransposeScalarBHWC2BCHW", "classTransposeScalarBHWC2BCHW.html", null ]
 ];
