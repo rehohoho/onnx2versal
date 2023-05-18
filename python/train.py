@@ -10,14 +10,15 @@ from torchvision.transforms import ToTensor
 import torch.onnx
 import onnxruntime
 
-from model import Lenet
+from model import Lenet, QuantizedLenet
 
 
 if __name__ == "__main__":
   BATCH_SIZE = 256
   ALL_EPOCH = 1
   DATA_PATH = "../data"
-  MODEL_PATH = "../models"
+  PKL_PATH = "../models/lenet_mnist.pkl"
+  ONNX_PATH = "../models/lenet_mnist.onnx"
 
   # Setup data, model, optimizer, loss_fn
   device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -25,7 +26,7 @@ if __name__ == "__main__":
   test_dataset = mnist.MNIST(root=DATA_PATH, train=False, transform=ToTensor(), download=True)
   train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE)
   test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
-  model = Lenet().to(device)
+  model = QuantizedLenet().to(device)
   sgd = SGD(model.parameters(), lr=1e-1)
   loss_fn = CrossEntropyLoss()
   prev_acc = 0
@@ -57,9 +58,9 @@ if __name__ == "__main__":
 
     acc = all_correct_num / all_sample_num
     print(f"accuracy: {acc:.3f}", flush=True)
-    if not os.path.isdir(MODEL_PATH):
-        os.mkdir(MODEL_PATH)
-    torch.save(model, f"{MODEL_PATH}/lenet_mnist.pkl")
+    if not os.path.isdir(os.path.dirname(PKL_PATH)):
+        os.mkdir(os.path.dirname(PKL_PATH))
+    torch.save(model, PKL_PATH)
     
     if np.abs(acc - prev_acc) < 1e-4:
         break  
@@ -71,7 +72,7 @@ if __name__ == "__main__":
   torch.onnx.export(
     model,                            # model being run
     test_x,                           # model input (or a tuple for multiple inputs)
-    f"{MODEL_PATH}/lenet_mnist.onnx", # where to save the model
+    ONNX_PATH,                        # where to save the model
     export_params=True,               # store the trained parameter weights in model file
     do_constant_folding=True,         # whether to execute constant folding for optimization
     input_names = ["input"],          # model's input names
@@ -85,7 +86,7 @@ if __name__ == "__main__":
   input_tensor = data[0].unsqueeze(0)
   torch_out = model.forward(input_tensor)
 
-  ort_session = onnxruntime.InferenceSession(f"{MODEL_PATH}/lenet_mnist.onnx")
+  ort_session = onnxruntime.InferenceSession(ONNX_PATH)
   ort_inputs = {ort_session.get_inputs()[0].name: input_tensor.numpy()}
   ort_outs = ort_session.run(None, ort_inputs)
 
