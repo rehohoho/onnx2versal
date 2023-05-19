@@ -46,8 +46,8 @@ class QLinearConvGraph : public adf::graph {
     adf::port<output> pout[1];
 
     QLinearConvGraph(
-      std::vector<float> weights,
-      std::vector<float> bias,
+      std::vector<int8_t> weights,
+      std::vector<int32_t> bias,
       float x_scale,
       float w_scale,
       float y_scale,

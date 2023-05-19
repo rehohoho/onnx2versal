@@ -15,8 +15,8 @@ class QLinearConvGraphTest : public adf::graph {
 
     QLinearConvGraphTest(
       const std::string& id,
-      std::vector<float> weights,
-      std::vector<float> bias,
+      std::vector<int8_t> weights,
+      std::vector<int32_t> bias,
       float x_scale,
       float w_scale,
       float y_scale,
@@ -34,21 +34,31 @@ class QLinearConvGraphTest : public adf::graph {
 };
 
 // instance to be compiled and used in host within xclbin
-std::vector<float> fpweights {127, 127, 127, 127, 127, 127, 127, 127};
-std::vector<float> fpbias {1, 1, 1, 1, 1, 1, 1, 1};
+std::vector<int8_t> fpweights {127, 127, 127, 127, 127, 127, 127, 127};
+std::vector<int32_t> fpbias {146, 146, 146, 146, 146, 146, 146, 146};
+
+std::vector<int8_t> lenet_w {-17, -50, 1, 9, 127, 1};
+std::vector<int32_t> lenet_b {-9955, 8150, -5166, 9124, 8301, -5062};
 
 //BCHW
 QLinearConvGraphTest<QLinearConvScalar, 28, 28, 1, 1, 8, 1> qLinearConvScalar(
   "qLinearConvScalar", fpweights, fpbias, 0.00369204697, 0.003, 0.00162681262, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_QLinearConvScalar.txt");
 
+QLinearConvGraphTest<QLinearConvScalar, 28, 28, 1, 1, 6, 1> lenet(
+  "lenet", lenet_w, lenet_b, 0.00392157, 0.01691757, 0.01058531, -128, 0, -128,
+  "k1qlinearconv_in.txt", "k1qlinearconv_goldenout.txt");
+
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
-  // BCHW
   adfCheck(qLinearConvScalar.init(), "init qLinearConvScalar");
   adfCheck(qLinearConvScalar.run(ITER_CNT), "run qLinearConvScalar");
 	adfCheck(qLinearConvScalar.end(), "end qLinearConvScalar");
+
+  adfCheck(lenet.init(), "init lenet");
+  adfCheck(lenet.run(ITER_CNT), "run lenet");
+	adfCheck(lenet.end(), "end lenet");
   return 0;
 }
 #endif
