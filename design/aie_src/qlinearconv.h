@@ -11,14 +11,17 @@
  * https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv
  * Note:
  *  y = saturate ((x / y_scale) + y_zero_point)
- *  x = (y - y_zero_point) * y_scale
+ *  Bias must be quantized using scale = x_scale * w_scale and zero_point = 0
+ *  Saturate at the end only.
  * 
- *  x3 = x1*x2
- *  (y3-y3_zero_point)*y3_scale = (y1-y1_zero_point)*y1_scale * (y2-y2_zero_point)*y2_scale
- *  y3 = y3_zero_point + (y1-y1_zero_point)*y1_scale * (y2-y2_zero_point)*y2_scale / y3_scale
- *     = y3_zero_point + y1_scale*y2_scale/y3_scale * (y1-y1_zero_point) * (y2-y2_zero_point)
+ * Computation:
+ *  x = (qx - qx_zero) * qx_scale
+ *  bias = qbias * x_scale * w_scale
+ *  y = x*w + bias =>
+ *  (qy-qy_zero)*qy_scale = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale + qbias*qx_scale*qw_scale
+ *                       = [(qx-qx_zero) * (qw-qw_zero) + qbias] * qx_scale*qw_scale
+ *  qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
  * 
- * @{
  */
 
 
@@ -30,15 +33,18 @@ class QLinearConvScalar {
   
   private:
     alignas(32) int8_t (&weights)[M*C*K*K];
-    alignas(32) int8_t (&bias)[M];
-    float xy_over_w;
+    alignas(32) int32_t (&bias)[M];
+    float x_scale;
+    float w_scale;
+    float y_scale;
     int8_t x_zero_point;
+    int8_t w_zero_point;
     int8_t y_zero_point;
 	
   public:
     QLinearConvScalar (
       int8_t (&w)[M*C*K*K],
-      int8_t (&b)[M],
+      int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,

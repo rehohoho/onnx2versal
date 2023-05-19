@@ -19,20 +19,25 @@ void QLinearConvScalar<INP_W, OUT_W, B, C, M, K>::filter(
       for (int h = 0; h < OUT_W; h++) {
         for (int w = 0; w < OUT_W; w++) {
         
-          int16_t res = 0;
+          // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
+          int res = bias[m];
           weightIdx = m*C*K*K;
           
           for (int c = 0; c < C; c++) {
             for (int p = 0; p < K; p++) {
               for (int q = 0; q < K; q++) {
-                int8_t a = window_readincr(in) - x_zero_point;
-                res += y_zero_point + x_scale*w_scale/y_scale * a * (weights[weightIdx]-w_zero_point);
+                int a = window_readincr(in) - x_zero_point;
+                res += a * (weights[weightIdx]-w_zero_point);
                 weightIdx++;
               }
               window_incr(in, -K+INP_W); // go left K, down 1
             }
             window_incr(in, -K*INP_W + INP_W*INP_W); // go up K, channel 1
           }
+          res = y_zero_point + round(x_scale*w_scale/y_scale * res);
+          
+          // saturate at the end only
+          res = std::min(std::max(res, -128), 128);
 
           // if (res < 0) res = 0;
           window_writeincr(out, res);
