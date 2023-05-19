@@ -29,7 +29,9 @@ class PadGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 PadGraphTest<PadScalar, int16_t, 28, 28, 32> padScalar(
-  "padScalar", "pad_int16in.txt", "pad_int16out.txt");
+  "padScalar", "pad_int16in.txt", "pad_int16out_PadScalar.txt");
+PadGraphTest<PadVectorInt16, int16_t, 28, 28, 32> padVector(
+  "padVector", "pad_int16in.txt", "pad_int16out_PadVector.txt");
 
 
 #ifdef __X86SIM__
@@ -37,6 +39,10 @@ int main(int argc, char ** argv) {
   adfCheck(padScalar.init(), "init padScalar");
   adfCheck(padScalar.run(ITER_CNT), "run padScalar");
 	adfCheck(padScalar.end(), "end padScalar");
+
+  adfCheck(padVector.init(), "init padVector");
+  adfCheck(padVector.run(ITER_CNT), "run padVector");
+	adfCheck(padVector.end(), "end padVector");
   return 0;
 }
 #endif
@@ -47,6 +53,10 @@ int main(int argc, char ** argv) {
   adfCheck(padScalar.init(), "init padScalar");
   get_graph_throughput_by_port(padScalar, "plout[0]", padScalar.plout[0], 28*32, sizeof(int16_t), ITER_CNT);
 	adfCheck(padScalar.end(), "end padScalar");
+
+  adfCheck(padVector.init(), "init padVector");
+  get_graph_throughput_by_port(padVector, "plout[0]", padVector.plout[0], 28*32, sizeof(int16_t), ITER_CNT);
+	adfCheck(padVector.end(), "end padVector");
   return 0;
 }
 #endif

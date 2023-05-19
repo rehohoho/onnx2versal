@@ -1,6 +1,7 @@
 #ifndef PAD_H_
 #define PAD_H_
 
+#include <type_traits>
 #include <adf.h>
 #include <assert.h>
 
@@ -38,22 +39,23 @@ class PadScalar {
 
 /**
  * @brief Vector implementation for Pad
- * PadVector::filter<int16_t, 28, 28, 32>, total = 5521
+ * PadVectorInt16::filter<int16_t, 28, 28, 32>, total = 5521
  */
 template <typename TT, int N, int INP_W, int OUT_W>
-class PadVector {
+class PadVectorInt16 {
   private:
     static const int WORD_SIZE_BITS = 16;
 
   public:
     void filter(
-      input_window<TT>* in,  // NxINP_W
-      output_window<TT>* out // NxOUT_W
+      input_window<int16>* in,  // NxINP_W
+      output_window<int16>* out // NxOUT_W
     );
 
     static void registerKernelClass() {
       assert(INP_W<=OUT_W);
-      REGISTER_FUNCTION(PadVector::filter);
+      assert((std::is_same<TT, int16>::value));
+      REGISTER_FUNCTION(PadVectorInt16::filter);
     }
 };
 /** @}*/

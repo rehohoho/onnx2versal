@@ -22,12 +22,12 @@ void PadScalar<TT, N, INP_W, OUT_W>::filter(
 
 
 template <typename TT, int N, int INP_W, int OUT_W>
-void PadVector<TT, N, INP_W, OUT_W>::filter(
-	input_window<TT>* in,  // NxINP_W
-  output_window<TT>* out // NxOUT_W
+void PadVectorInt16<TT, N, INP_W, OUT_W>::filter(
+	input_window<int16>* in,  // NxINP_W
+  output_window<int16>* out // NxOUT_W
 ) {
   PROFILE_HEADER(printf(
-    "Running PadVector::filter<%d, %d>\n", INP_W, OUT_W));
+    "Running PadVectorInt16::filter<%d, %d>\n", INP_W, OUT_W));
   
   const int word_size = WORD_SIZE_BITS/sizeof(TT);
 
@@ -37,7 +37,7 @@ void PadVector<TT, N, INP_W, OUT_W>::filter(
     int j = 0;
     for (j; j < INP_W-7; j+=8) {
       for (int k = 0; k < 8; k++) {
-        v = upd_elem(v, k, window_readincr(in));
+        v = upd_elem(v, k, window_readincr(in)); // vector boundary issues
       }
       window_writeincr(out, v);
     }
