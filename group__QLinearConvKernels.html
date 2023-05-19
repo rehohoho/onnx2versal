@@ -89,8 +89,6 @@ $(document).ready(function(){initNavTree('group__QLinearConvKernels.html',''); i
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
   <div class="headertitle"><div class="title">QLinearConvKernels<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -103,16 +101,8 @@ Collaboration diagram for QLinearConvKernels:</div>
 <area shape="rect" title=" " alt="" coords="151,5,292,31"/>
 </map>
 </div>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvScalar.html">QLinearConvScalar&lt; INP_W, OUT_W, B, C, M, K &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, QLinearConvScalar&lt;28,24,1,1,6,5&gt; takes cycles.  <a href="classQLinearConvScalar.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p><a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv</a> Note: y = saturate ((x / y_scale) + y_zero_point) x = (y - y_zero_point) * y_scale</p>
-<p>x3 = x1*x2 (y3-y3_zero_point)*y3_scale = (y1-y1_zero_point)*y1_scale * (y2-y2_zero_point)*y2_scale y3 = y3_zero_point + (y1-y1_zero_point)*y1_scale * (y2-y2_zero_point)*y2_scale / y3_scale = y3_zero_point + y1_scale*y2_scale/y3_scale * (y1-y1_zero_point) * (y2-y2_zero_point) </p>
+<p><a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv</a> Note: y = saturate ((x / y_scale) + y_zero_point) Bias must be quantized using scale = x_scale * w_scale and zero_point = 0 Saturate at the end only.</p>
+<p>Computation: x = (qx - qx_zero) * qx_scale bias = qbias * x_scale * w_scale y = x*w + bias =&gt; (qy-qy_zero)*qy_scale = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale + qbias*qx_scale*qw_scale = [(qx-qx_zero) * (qw-qw_zero) + qbias] * qx_scale*qw_scale qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale </p>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

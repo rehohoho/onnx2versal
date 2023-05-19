@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['transposegraph_0',['TransposeGraph',['../classTransposeGraph.html',1,'']]],
-  ['transposescalarbhwc2bchw_1',['TransposeScalarBHWC2BCHW',['../classTransposeScalarBHWC2BCHW.html',1,'']]]
+  ['qlinearconvgraph_0',['QLinearConvGraph',['../classQLinearConvGraph.html',1,'']]],
+  ['qlinearconvscalar_1',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
+  ['quantizelineargraph_2',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearscalar_3',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]]
 ];

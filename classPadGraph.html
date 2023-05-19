@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConvGraph&lt; CONV, INP_W, OUT_W, B, C, M, K &gt; Class Template Reference</title>
+<title>onnx2versal: PadGraph&lt; PAD, TT, N, INP_W, OUT_W &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearConvGraph.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classPadGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -90,49 +90,42 @@ $(document).ready(function(){initNavTree('classQLinearConvGraph.html',''); initR
 
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="classQLinearConvGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConvGraph&lt; CONV, INP_W, OUT_W, B, C, M, K &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
+<a href="classPadGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">PadGraph&lt; PAD, TT, N, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.  
- <a href="classQLinearConvGraph.html#details">More...</a></p>
+<p>Single instance graph.  
+ <a href="classPadGraph.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="graph__qlinearconv_8h_source.html">graph_qlinearconv.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="graph__pad_8h_source.html">graph_pad.h</a>&gt;</code></p>
 
 <p>Inherits adf::graph.</p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:a6bfa64403bff939f579ef34d91ba2e07"><td class="memItemLeft" align="right" valign="top"><a id="a6bfa64403bff939f579ef34d91ba2e07" name="a6bfa64403bff939f579ef34d91ba2e07"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvGraph</b> (std::vector&lt; int8_t &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, int8_t x_zero_point, int8_t w_zero_point, int8_t y_zero_point)</td></tr>
-<tr class="separator:a6bfa64403bff939f579ef34d91ba2e07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5bd644ba3ca0b292ef921e4bb0ffbb29"><td class="memItemLeft" align="right" valign="top"><a id="a5bd644ba3ca0b292ef921e4bb0ffbb29" name="a5bd644ba3ca0b292ef921e4bb0ffbb29"></a>
+<tr class="memitem:a8f2b807ed732214bbdb42dc31980b4fe"><td class="memItemLeft" align="right" valign="top"><a id="a8f2b807ed732214bbdb42dc31980b4fe" name="a8f2b807ed732214bbdb42dc31980b4fe"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:a5bd644ba3ca0b292ef921e4bb0ffbb29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f5811d2cbd17f3fc4c49ec642fae2f9"><td class="memItemLeft" align="right" valign="top"><a id="a6f5811d2cbd17f3fc4c49ec642fae2f9" name="a6f5811d2cbd17f3fc4c49ec642fae2f9"></a>
+<tr class="separator:a8f2b807ed732214bbdb42dc31980b4fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d95be06cb1cba3ad02db665d7857b78"><td class="memItemLeft" align="right" valign="top"><a id="a1d95be06cb1cba3ad02db665d7857b78" name="a1d95be06cb1cba3ad02db665d7857b78"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a6f5811d2cbd17f3fc4c49ec642fae2f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a1d95be06cb1cba3ad02db665d7857b78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int &gt; class CONV, int INP_W, int OUT_W, int B, int C, int M, int K&gt;<br />
-class QLinearConvGraph&lt; CONV, INP_W, OUT_W, B, C, M, K &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int &gt; class PAD, typename TT, int N, int INP_W, int OUT_W&gt;<br />
+class PadGraph&lt; PAD, TT, N, INP_W, OUT_W &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>design/aie_src/<a class="el" href="graph__qlinearconv_8h_source.html">graph_qlinearconv.h</a></li>
+<li>design/aie_src/<a class="el" href="graph__pad_8h_source.html">graph_pad.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQLinearConvGraph.html">QLinearConvGraph</a></li>
+    <li class="navelem"><a class="el" href="classPadGraph.html">PadGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

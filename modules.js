@@ -6,6 +6,7 @@ var modules =
     [ "Gemm", "group__Gemm.html", "group__Gemm" ],
     [ "Identity", "group__Identity.html", "group__Identity" ],
     [ "Lenet", "group__Lenet.html", "group__Lenet" ],
+    [ "Pad", "group__Pad.html", "group__Pad" ],
     [ "Pool2D", "group__Pool2D.html", "group__Pool2D" ],
     [ "QLinearConv", "group__QLinearConv.html", "group__QLinearConv" ],
     [ "QuantizeLinear", "group__QuantizeLinear.html", "group__QuantizeLinear" ],
