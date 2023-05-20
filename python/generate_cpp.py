@@ -8,6 +8,7 @@ from onnx import numpy_helper
 
 MAX_FLOAT_PARAMS = 16384//4
 PLIO_WIDTH = 64 // 8 # in bytes
+VECTOR_WORD_BOUNDARY = 16 # in bytes
 
 
 def dtype_to_cstr(np_dtype: np.dtype):
@@ -19,6 +20,19 @@ def dtype_to_cstr(np_dtype: np.dtype):
     return "int8_t"
   else:
     raise NotImplementedError(f"Not implemented type {np_dtype}")
+
+
+def save_tensor(output_path: str, tensor: np.ndarray):
+    n_lines = PLIO_WIDTH//tensor.dtype.itemsize
+    if tensor.size > n_lines: 
+      tensor = tensor.reshape(-1, n_lines)
+    else: 
+      tensor = tensor.reshape(-1)
+    fmt = "%.9e"
+    if "int" in str(tensor.dtype):
+      fmt = "%d"
+    np.savetxt(output_path, tensor, fmt=fmt)
+
 
 class OpParser:
   include_file: str
@@ -220,9 +234,6 @@ class QuantizeLinearOp(OpParser):
   def register_weights(self, 
                        scale: np.ndarray,
                        zeropoint: np.ndarray):
-    """Expects NxK weights as per PyTorch
-    Returns KxN weights, with N padded so N%4=0
-    """
     assert scale.shape == () and zeropoint.shape == ()
     self.scale = scale.item()
     self.zeropoint = zeropoint.item()
@@ -245,6 +256,92 @@ class QuantizeLinearOp(OpParser):
   
   def get_callarg_line(self) -> str:
     return f"{self.name}_scale, {self.name}_zeropoint"
+
+
+class QLinearConvOp(OpParser):
+  include_file: str = "graph_quantize_linear.h"
+
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 10
+    tin, tin_scale, tin_zero, tw, tw_scale, tw_zero, tout_scale, tout_zero, tbias, tout = tensors
+
+    inB, inC, inH, inW = tin.shape
+    wM, wC, wK1, wK2 = tw.shape
+    bM, = tbias.shape
+    outB, outM, outH, outW = tout.shape
+    
+    assert inH == inW and outH == outW and inC == wC and wM == bM and bM == outM \
+      and inB == outB and wK1 == wK2
+
+    self.INP_W = inH # configuration params
+    self.OUT_W = outH
+    self.B = inB
+    self.C = inC
+    self.M = wM
+    self.K = wK1
+    self.dtype = tout.dtype
+    self.out_size = tout.size
+
+    vector_size = VECTOR_WORD_BOUNDARY // tin.dtype.itemsize
+
+    k_pad = (vector_size- wK2%vector_size) % vector_size
+    if k_pad != 0:
+      print(f"Padding QLinearConvOp weights {wM, wC, wK1, wK2} to {wM, wC, wK1, wK2+k_pad}")
+      tw = np.pad(tw, ((0,0),(0,0),(0,0),(0,k_pad)), "constant", constant_values=0)
+    
+    self.in_zero = tin_zero # stored params
+    self.weights = tw
+    self.bias = tbias
+
+    # pad INP_W to vector boundary
+    n_pad = (vector_size - inW%vector_size) % vector_size
+    if n_pad != 0:
+      print(f"Padding QLinearConvOp tin {inB, inC, inH, inW} to {inB, inC, inH, inW+n_pad}")
+      tin = np.pad(tin, ((0,0),(0,0),(0,0),(0,n_pad)), "constant", constant_values=tin_zero)
+    self.tin = tin
+    
+    # pad OUT_W to vector boundary
+    n_pad = (vector_size - outW%vector_size) % vector_size
+    if n_pad != 0:
+      print(f"Padding QLinearConvOp tout {outB, outM, outH, outW} to {outB, outM, outH, outW+n_pad}")
+      pad = np.round(tout_zero + tbias * tin_scale*tw_scale/tout_scale).astype(tout.dtype)
+      pad = pad.repeat(n_pad*outH).reshape(*tout.shape[:-1], -1)
+      tout = np.concatenate((tout, pad), axis=-1)
+      # tout = np.pad(tout, ((0,0),(0,0),(0,0),(0,n_pad)), "constant", constant_values=0)
+    self.tout = tout
+    
+    import ipdb;ipdb.set_trace()
+    # self.weights.flatten().tolist()
+    # self.bias.flatten().tolist()
+    # tin_scale, tw_scale, tout_scale
+    # tin_zero, tw_zero, tout_zero
+  
+  def get_kernel_line(self) -> str:
+    graph = "QLinearConvScalar"
+    kernel = "QLinearConvGraph"
+    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
+
+  def get_arg_line(self) -> str:
+    ctype = dtype_to_cstr(self.dtype)
+    return f"{ctype} {self.name}_zero,\nstd::vector<{ctype}> {self.name}_w,\nstd::vector<{ctype}> {self.name}_b"
+  
+  def get_initlist_line(self) -> str:
+    return f"{self.name}({self.name}_zero, {self.name}_w, {self.name}_b)"
+  
+  def get_weight_line(self) -> str:
+    wstring = str(self.weights.flatten().tolist())[1:-1]
+    bstring = str(self.bias.flatten().tolist())[1:-1]
+    ctype = dtype_to_cstr(self.dtype)
+    return f"{ctype} {self.name}_zero {self.in_zero};\n" + \
+      f"std::vector<{ctype}> {self.name}_w {{{wstring}}};\n" + \
+      f"std::vector<{ctype}> {self.name}_b {{{bstring}}};"
+  
+  def get_callarg_line(self) -> str:
+    return f"{self.name}_zero, {self.name}_w, {self.name}_b"
+  
+  def save_txt(self, data_path: str) -> str:
+    save_tensor(f"{data_path}/{self.name}_in.txt", self.tin)
+    save_tensor(f"{data_path}/{self.name}_goldenout.txt", self.tout)
 
 
 class CppGenerator:
@@ -276,7 +373,7 @@ class CppGenerator:
 
     # save inputs
     for input_name, input_tensor in self.modelin_2_tensor.items():
-      self.save_tensor(f"{self.data_path}/{input_name}.txt", input_tensor)
+      save_tensor(f"{self.data_path}/{input_name}.txt", input_tensor)
 
     # store I/O tensors and model parameters
     self.input_tensors: List[np.ndarray] = input_tensors
@@ -293,14 +390,6 @@ class CppGenerator:
       return self.output_tensors[name]
     else:
       raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
-    
-  def save_tensor(self, output_path: str, tensor: np.ndarray):
-    n_lines = PLIO_WIDTH//tensor.dtype.itemsize
-    if tensor.size > n_lines: 
-      tensor = tensor.reshape(-1, n_lines)
-    else: 
-      tensor = tensor.reshape(-1)
-    np.savetxt(output_path, tensor)
     
   # assumes nodes are in topological sorted order
   def parse(self):
@@ -327,8 +416,8 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_op:
           self.modelout_2_op[onnx_out_name] = op
-        self.save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
-        self.save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
+        save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
+        save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
       
       elif node.op_type == "Relu":
         # handled by fusing with previous
@@ -348,8 +437,8 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_op:
           self.modelout_2_op[onnx_out_name] = op
-        self.save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
-        self.save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
+        save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
+        save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
 
       elif node.op_type == "Gemm":
         if self.nodes[i+1].op_type != "Relu": # lookahead
@@ -372,8 +461,8 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_op:
           self.modelout_2_op[onnx_out_name] = op
-        self.save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
-        self.save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
+        save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
+        save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
         
       elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
         print(f"WARNING: {node.op_type} not implemented, skipping...")
@@ -399,9 +488,28 @@ class CppGenerator:
         self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
         if onnx_out_name in self.modelout_2_op:
           self.modelout_2_op[onnx_out_name] = op
-        self.save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
-        self.save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
+        save_tensor(f"{self.data_path}/{op.name}_in.txt", tinput)
+        save_tensor(f"{self.data_path}/{op.name}_goldenout.txt", toutput)
         
+      elif node.op_type == "QLinearConv":
+        onnx_out_name = node.output[0]
+        op = QLinearConvOp(f"k{i}qlinearconv")
+        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+
+        self.adf_connects.append(
+          f"  adf::connect<> ({self.nodeout_2_adfport[node.input[0]]}, {op.name}.pin[0]);")
+        self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
+        if onnx_out_name in self.modelout_2_op:
+          self.modelout_2_op[onnx_out_name] = op
+      
+      elif node.op_type == "QGemm":
+        import ipdb;ipdb.set_trace()
+      
+      elif node.op_type == "DequantizeLinear":        
+        import ipdb;ipdb.set_trace()
+
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")
 
@@ -418,7 +526,7 @@ class CppGenerator:
             with open(out_path, "w") as f: 
               f.write(tmp)
           else:
-            self.save_tensor(out_path, tensor)
+            save_tensor(out_path, tensor)
 
   def get_includes(self) -> str:
     include_list = set(i.get_include_line() for i in self.op_list)
