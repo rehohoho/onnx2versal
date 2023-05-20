@@ -24,6 +24,18 @@ Y = Y_zero_point + X_scale*W_scale/Y_scale * (X.astype(int)-X_zero_point) * (W-W
 Y = np.tile(Y,M) + np.repeat(B,OUT_W*OUT_W) * X_scale*W_scale/Y_scale # apply bias
 Y = np.round(Y)
 
+X = X.reshape(1,C,INP_W,INP_W)
+n_pad = (16 - INP_W%16) % 16
+if n_pad != 0:
+  X = np.pad(X, ((0,0),(0,0),(0,0),(0,n_pad)), "constant", constant_values=X_zero_point)
+Y = Y.reshape(1,M,OUT_W,OUT_W)
+n_pad = (16 - OUT_W%16) % 16
+if n_pad != 0:
+  pad = np.round(Y_zero_point + B * X_scale*W_scale/Y_scale).astype(Y.dtype)
+  pad = pad.repeat(n_pad*OUT_W).reshape(*Y.shape[:-1], -1)
+  Y = np.concatenate((Y, pad), axis=-1)
+  # Y = np.pad(Y, ((0,0),(0,0),(0,0),(0,n_pad)), "constant", constant_values=0)
+
 # Testing shifting
 # import ipdb;ipdb.set_trace()
 # scale = X_scale*W_scale/Y_scale
