@@ -1,5 +1,5 @@
-#ifndef QLINAERCONV_H_
-#define QLINAERCONV_H_
+#ifndef QLINEARCONV_H_
+#define QLINEARCONV_H_
 
 #include <adf.h>
 
@@ -28,7 +28,7 @@
 /**
  * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes  cycles
  */
-template <int INP_W, int OUT_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
 class QLinearConvScalar {
   
   private:
@@ -67,4 +67,4 @@ class QLinearConvScalar {
 /** @}*/
 
 
-#endif // QLINAERCONV_H_
+#endif // QLINEARCONV_H_

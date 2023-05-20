@@ -15,8 +15,10 @@
  * MxHxW per instance. This is done over B iterations to yield B batches.
  * 
  * @tparam CONV     Conv2D Kernel
- * @tparam INP_W    input width/height
- * @tparam OUT_W    output width/height, = INP_W - K/2
+ * @tparam INP_H    input height
+ * @tparam INP_W    input width
+ * @tparam OUT_H    output height, = INP_H - K/2
+ * @tparam OUT_W    output width,  = INP_W - K/2
  * @tparam B        batch size
  * @tparam C        input channels
  * @tparam M        output channels
@@ -30,12 +32,12 @@
  * Max size = 16384 and 4096 bytes respectively
  * 
  * @connections
- * @connect{pin[0], B*C*INP_W*INP_W}
- * @connect{pout[0], B*M*OUT_W*OUT_W}
+ * @connect{pin[0], B*C*INP_H*INP_W}
+ * @connect{pout[0], B*M*OUT_H*OUT_W}
  * @endconnections
  */
-template <template<int, int, int, int, int, int> class CONV, 
-  int INP_W, int OUT_W, int B, int C, int M, int K>
+template <template<int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
 class QLinearConvGraph : public adf::graph {
 
   private:
@@ -55,14 +57,14 @@ class QLinearConvGraph : public adf::graph {
       int8_t w_zero_point,
       int8_t y_zero_point
     ) { 
-      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K>>(
+      k[0] = adf::kernel::create_object<CONV<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero_point, w_zero_point, y_zero_point);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
-      adf::connect<adf::window<B*INP_W*INP_W*C>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_W*OUT_W*M>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*INP_H*INP_W*C>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<B*OUT_H*OUT_W*M>> (k[0].out[0], pout[0]);
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos; // weight (<= 16384B)
