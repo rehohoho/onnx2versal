@@ -79,29 +79,23 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
     for (int c = 0; c < C; c++) {
       for (int p = 0; p < K; p++) {
         v16int16 wvec = unpack(*(v16int8 *) w_ptr); w_ptr += 16;
-        for (int q = 0; q < K; q++) {
-          // printf("%d:%d ", x_zero_point, ext_elem(wvec, q));
+        // for (int q = 0; q < K; q++) {
+        for (int q = 4; q < 4 + K*2; q+=2) {
           res += x_zero_point * ext_elem(wvec, q);
         }
       }
     }
-    // printf("%d\n", res);
     bias[m] -= res;
   }
 }
 
 /**
- * unpack to int16 to handle   OOB int8-int8
- *
- * mac16 (v16acc48 acc, 
- *  v32int16 xbuff, int xstart, unsigned int xoffsets, unsigned int xoffsets_hi, unsigned int xsquare, 
- *  v16int16 zbuff, int zstart, unsigned int zoffsets, unsigned int zoffsets_hi, int zstep)
- * 
  * QLinearConvVector<28,32,24,32,1,1,6,5>
  * fp scale: ~40k
  * fixed point scale: ~14k
  * precompute x_zero_weight into bias: 11341
  * int16*int8: 9177
+ * int8*int8: 6724
  * 
  * 
  * https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits
@@ -114,48 +108,26 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
  * Requires: x indexing %4, z indexing %2
  * v64int8, v32int8 can store 2 rows of calculations, 2 mac16 / 4 loads
  * 
- * acc0  += z0*x0  + z1*x1   z2*x2  + z3*x3   z4*x4
- * acc1  += z0*x1  + z1*x2   z2*x3  + z3*x4   z4*x5
- * acc2  += z0*x2  + z1*x3   z2*x4  + z3*x5   z4*x6  x2 %4 != 0, not indexable
- * acc3  += z0*x3  + z1*x4   z2*x5  + z3*x6   z4*x7
- * acc4  += z0*x4  + z1*x5   z2*x6  + z3*x7   z4*x8
- * acc5  += z0*x5  + z1*x6   z2*x7  + z3*x8   z4*x9
- * acc6  += z0*x6  + z1*x7   z2*x8  + z3*x9   z4*x10
- * acc7  += z0*x7  + z1*x8   z2*x9  + z3*x10  z4*x11
- * acc8  += z0*x8  + z1*x9   z2*x10 + z3*x11  z4*x12
- * acc9  += z0*x9  + z1*x10  z2*x11 + z3*x12  z4*x13
- * acc10 += z0*x10 + z1*x11  z2*x12 + z3*x13  z4*x14
- * acc11 += z0*x11 + z1*x12  z2*x13 + z3*x14  z4*x15
- * acc12 += z0*x12 + z1*x13  z2*x14 + z3*x15  z4*x16
- * acc13 += z0*x13 + z1*x14  z2*x15 + z3*x16  z4*x17
- * acc14 += z0*x14 + z1*x15  z2*x16 + z3*x17  z4*x18
- * acc15 += z0*x15 + z1*x16  z2*x17 + z3*x18  z4*x19
+ * int8xint8, requires to expand 5 weights into 16 long vector [0,0,0,0, a,a, b,b, c,c, d,d, e,e, 0,0]
+ * acc0  += x4*z0  + x6*z1   x8*z2  + x10*z3  x12*z4 
+ * acc1  += x5*z1  + x7*z2   x9*z3  + x11*z4  x13*z5
+ * acc2  += x0       x2      x4*z2  + x6*z3   x8*z4  + x10*z5   x12*z6
+ * acc3  += x1       x3      x5*z3  + x7*z4   x9*z5  + x11*z6   x13*z7
  * 
- * int8xint8, requires to expand 5 weights into 16 long vector (idx 4-12)
- * acc0  += x4*z0  + x5*z1   x8*z2  + x9*z3   x12*z4 
- * acc1  += x4*z1  + x5*z2   x8*z3  + x9*z4   x12*z5
- * acc2  +=                  x4*z2  + x5*z3   x8*z4  + x9*z5   x12*z6
- * acc3  +=                  x4*z3  + x5*z4   x8*z5  + x9*z6   x12*z7
+ * acc4  += x4*z4  + x6*z5   x8*z6  + x10*z7  x12*z8
+ * acc5  += x5*z5  + x7*z6   x9*z7  + x11*z8  x13*z9 (z6 reads - 128?) -128 94 -> -128 -128
+ * acc6  +=                  x4*z6  + x6*z7   x8*z8  + x10*z9   x12*z10
+ * acc7  +=                  x5*z7  + x7*z8   x9*z9  + x11*z10  x13*z11 (z8 reads -128?) 126 126 -> 126 -128
  * 
- * acc4  += x4*z4  + x5*z5   x8*z6  + x9*z7   x12*z8
- * acc5  += x4*z5  + x5*z6   x8*z7  + x9*z8   x12*z9
- * acc6  +=                  x4*z6  + x5*z7   x8*z8  + x9*z9   x12*z10
- * acc7  +=                  x4*z7  + x5*z8   x8*z9  + x9*z10  x12*z11
+ * acc8  += x4*z8  + x6*z9   x8*z10 + x10*z11 x12*z12
+ * acc9  += x5*z9  + x7*z10  x9*z11 + x11*z12 x13*z13 x
+ * acc10 +=                  x4*z10 + x6*z11  x8*z12 + x10*z13  x12*z14
+ * acc11 +=                  x5*z11 + x7*z12  x9*z13 + x11*z14  x13*z15 x
  * 
- * acc8  += x4*z8  + x5*z9   x8*z10 + x9*z11  x12*z12
- * acc9  += x4*z9  + x5*z10  x8*z11 + x9*z12  x12*z13
- * acc10 +=                  x4*z10 + x5*z11  x8*z12 + x9*z13  x12*z14
- * acc11 +=                  x4*z11 + x5*z12  x8*z13 + x9*z14  x12*z15
- * 
- * acc12 += x4*z12 + x5*z13  x8*z14 + x9*z15  x12*z16
- * acc13 += x4*z13 + x5*z14  x8*z15 + x9*z16  x12*z17
- * acc14 +=                  x4*z14 + x5*z15  x8*z16 + x9*z17  x12*z18
- * acc15 +=                  x4*z15 + x5*z16  x8*z17 + x9*z18  x12*z19
- * 
- * v64int8 wvec; // x, indexable in *4
- * v32int8 data; // z, indexable in *2
- * acc = mac16(acc, wvec, 0, xoffsets, xstep, xsquare, data, 0, 0x06040200, 2, 0x2110);
- * 
+ * acc12 += x4*z12 + x6*z13  x8*z14 + x10*z15 x12*z16
+ * acc13 += x5*z13 + x7*z14  x9*z15 + x11*z16 x13*z17 x
+ * acc14 +=                  x4*z14 + x6*z15  x8*z16 + x10*z17  x12*z18
+ * acc15 +=                  x5*z15 + x7*z16  x9*z17 + x11*z18  x13*z19 x
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  * Use pointers to avoid alignment issues on loads
@@ -172,8 +144,8 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   
   v16int16 add = aie::broadcast<int16_t, 16>(y_zero_point);
   v16int16 scale = aie::broadcast<int16_t, 16>(float2fix(x_scale*w_scale/y_scale, 24));
-  v32int16 data = undef_v32int16();
-  v32int8 wvec = null_v32int8();
+  v64int8 wvec = null_v64int8();
+  v32int8 data = null_v32int8();
 
   int8_t *in_ptr = (int8_t *) in->ptr;
   int8_t *w_ptr = (int8_t *) weights;
@@ -181,10 +153,12 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   const int SELECT_S = ((1 << W_REM) - 1) << (16 - W_REM);
 
 // xoffsets: 4b offset for lane 0,2,4,6, for 04, off0=2*4, off2=(0+4 +1)*2 => 8,9, 10,11
-#define MAC_ROW \
-  acc1 = mac16(acc1, data, 0, 0x03020100, 0x07060504, 2, 0x2110, wvec, 0, 0x0, 0x0, 2, 0x3210); \
-  acc1 = mac16(acc1, data, 0, 0x05040302, 0x09080706, 2, 0x2110, wvec, 4, 0x0, 0x0, 2, 0x3210); 
+// #define MAC_ROW \
+//   acc1 = mac16(acc1, data, 0, 0x03020100, 0x07060504, 2, 0x2110, wvec, 0, 0x0, 0x0, 2, 0x3210); \
+//   acc1 = mac16(acc1, data, 0, 0x05040302, 0x09080706, 2, 0x2110, wvec, 4, 0x0, 0x0, 2, 0x3210); 
 
+#define MAC_ROW \
+  acc1 = mac16(acc1, wvec, 0, 0x00000000, 4, 0x1032, data, 0, 0x76543210, 2, 0x2110);
   
   set_sat();
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
@@ -200,23 +174,24 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
           v16acc48 acc1 = null_v16acc48(); // ups(bvec, 0);
         
           for (int c = 0; c < C; c++) { // computes 1x16 partial products over 5x5 kernel
-            data = unpack(*(v32int8 *)in_ptr); in_ptr += INP_W;
+            // data = unpack(*(v32int8 *)in_ptr); in_ptr += INP_W;
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
             MAC_ROW;
             
-            data = unpack(*(v32int8 *)in_ptr); in_ptr += INP_W;
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
             MAC_ROW;
 
-            data = unpack(*(v32int8 *)in_ptr); in_ptr += INP_W;
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
             MAC_ROW;
             
-            data = unpack(*(v32int8 *)in_ptr); in_ptr += INP_W;
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
             MAC_ROW;
             
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 4*INP_W; // channel +1, up 1
+            data = *(v32int8 *) in_ptr; in_ptr += INP_H*INP_W - 4*INP_W; // channel +1, up 1
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
             MAC_ROW;
           }
