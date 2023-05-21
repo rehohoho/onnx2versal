@@ -2,6 +2,7 @@
 #define QLINEARCONV_H_
 
 #include <adf.h>
+#include <assert.h>
 
 
 /** 
@@ -32,7 +33,7 @@ template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K
 class QLinearConvScalar {
   
   private:
-    alignas(32) int8_t (&weights)[M*C*K*K];
+    alignas(32) int8_t (&weights)[M*C*K*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
@@ -43,7 +44,7 @@ class QLinearConvScalar {
 	
   public:
     QLinearConvScalar (
-      int8_t (&w)[M*C*K*K],
+      int8_t (&w)[M*C*K*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -60,6 +61,48 @@ class QLinearConvScalar {
 
 		static void registerKernelClass() {
 			REGISTER_FUNCTION(QLinearConvScalar::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
+ * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes  cycles, 
+ * requires 
+ */
+template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
+class QLinearConvVector {
+  
+  private:
+    alignas(32) int8_t (&weights)[M*C*K*16];
+    alignas(32) int32_t (&bias)[M];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    int8_t x_zero_point;
+    int8_t w_zero_point;
+    int8_t y_zero_point;
+	
+  public:
+    QLinearConvVector (
+      int8_t (&w)[M*C*K*16],
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero_point,
+      int8_t w_zero_point,
+      int8_t y_zero_point
+    );
+
+		void filter(
+			input_window<int8_t>* in,
+			output_window<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+			REGISTER_FUNCTION(QLinearConvVector::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
 		}
