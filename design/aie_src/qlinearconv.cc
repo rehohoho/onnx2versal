@@ -86,6 +86,7 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
       }
     }
     bias[m] -= res;
+    bias[m] += y_zero_point / (x_scale*w_scale/y_scale);
   }
 }
 
@@ -96,6 +97,7 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
  * precompute x_zero_weight into bias: 11341
  * int16*int8: 9177
  * int8*int8: 6724
+ * precompute y_zero: 5174
  * 
  * 
  * https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits
@@ -142,10 +144,15 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   PROFILE_HEADER(printf(
     "Running QLinearConvVector<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C, M, K));
   
-  v16int16 add = aie::broadcast<int16_t, 16>(y_zero_point);
   v16int16 scale = aie::broadcast<int16_t, 16>(float2fix(x_scale*w_scale/y_scale, 24));
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();
+  v16int32 bvec = undef_v16int32();
+  v16int32 accbuf = undef_v16int32();
+  v16int16 pacc = undef_v16int16();
+
+  v16acc48 acc1 = undef_v16acc48();
+  v16acc48 acc2 = undef_v16acc48();
 
   int8_t *in_ptr = (int8_t *) in->ptr;
   int8_t *w_ptr = (int8_t *) weights;
@@ -166,12 +173,12 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   // BHWM
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
-      v16int32 bvec = aie::broadcast<int32_t, 16>(bias[m]);
+      bvec = aie::broadcast<int32_t, 16>(bias[m]);
       for (int h = 0; h < OUT_H; h++) {
         for (int w = 0; w < OUT_W; w+=16) {
 
           // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
-          v16acc48 acc1 = null_v16acc48(); // ups(bvec, 0);
+          acc1 = null_v16acc48(); // ups(bvec, 0);
         
           for (int c = 0; c < C; c++) { // computes 1x16 partial products over 5x5 kernel
             // data = unpack(*(v32int8 *)in_ptr); in_ptr += INP_W;
@@ -196,11 +203,11 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
             MAC_ROW;
           }
 
-          v16int32 accbuf = lsrs(acc1, 0) + bvec; // cast to int32
+          accbuf = lsrs(acc1, 0) + bvec; // cast to int32
           if (w + 16 >= OUT_W)
             accbuf = select16(SELECT_S, accbuf, null_v16int32()); // zero out padded end of width
           acc1 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
-          v16int16 pacc = srs(acc1, 24) + add;
+          pacc = srs(acc1, 24);
           window_writeincr(out, pack(pacc)); // v16int8
 
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
