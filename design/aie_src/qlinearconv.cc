@@ -104,13 +104,11 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
  * 24 selects 4*4=16, (4+2+1)*4=28 => rows (16,18),(17,19),(28,30),(29,30) before square
  * square executes on 4x2 matrix
  * 
- * mac16 (v16acc48 acc, 
- *  v64int8 xbuff, int xstart, unsigned int xoffsets, int xstep, unsigned int xsquare, 
- *  v32int8 zbuff, int zstart, unsigned int zoffsets, int zstep, unsigned int zsquare)
- * Requires: x indexing %4, z indexing %2
- * v64int8, v32int8 can store 2 rows of calculations, 2 mac16 / 4 loads
+ * int8 * int8:
+ * Requires: 
+ *  x indexing %4, z indexing %2
+ *  expand 5 weights into 16 long vector [0,0,0,0, a,a, b,b, c,c, d,d, e,e, 0,0]
  * 
- * int8xint8, requires to expand 5 weights into 16 long vector [0,0,0,0, a,a, b,b, c,c, d,d, e,e, 0,0]
  * acc0  += x4*z0  + x6*z1   x8*z2  + x10*z3  x12*z4 
  * acc1  += x5*z1  + x7*z2   x9*z3  + x11*z4  x13*z5
  * acc2  += x0       x2      x4*z2  + x6*z3   x8*z4  + x10*z5   x12*z6
@@ -149,13 +147,13 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   v32int8 data = null_v32int8();
   v16int32 bvec = undef_v16int32();
   v16int32 accbuf = undef_v16int32();
-  v16int16 pacc = undef_v16int16();
 
   v16acc48 acc1 = undef_v16acc48();
   v16acc48 acc2 = undef_v16acc48();
 
   int8_t *in_ptr = (int8_t *) in->ptr;
   int8_t *w_ptr = (int8_t *) weights;
+  v16int8 *out_ptr = (v16int8 *) out->ptr;
   const int W_REM = OUT_H % 16;
   const int SELECT_S = ((1 << W_REM) - 1) << (16 - W_REM);
 
@@ -164,8 +162,8 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
 //   acc1 = mac16(acc1, data, 0, 0x03020100, 0x07060504, 2, 0x2110, wvec, 0, 0x0, 0x0, 2, 0x3210); \
 //   acc1 = mac16(acc1, data, 0, 0x05040302, 0x09080706, 2, 0x2110, wvec, 4, 0x0, 0x0, 2, 0x3210); 
 
-#define MAC_ROW \
-  acc1 = mac16(acc1, wvec, 0, 0x00000000, 4, 0x1032, data, 0, 0x76543210, 2, 0x2110);
+#define MAC_ROW(acc) \
+  acc = mac16(acc, wvec, 0, 0x00000000, 4, 0x1032, data, 0, 0x76543210, 2, 0x2110);
   
   set_sat();
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
@@ -174,48 +172,107 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
       bvec = aie::broadcast<int32_t, 16>(bias[m]);
-      for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_W; w+=16) {
+      for (int h = 0; h < OUT_H; h+=2) {
+        for (int w = 0; w < OUT_W-16; w+=16) {
 
           // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
-          acc1 = null_v16acc48(); // ups(bvec, 0);
+          acc1 = null_v16acc48();
+          acc2 = null_v16acc48();
         
           for (int c = 0; c < C; c++) { // computes 1x16 partial products over 5x5 kernel
             // data = unpack(*(v32int8 *)in_ptr); in_ptr += INP_W;
-            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
-            MAC_ROW;
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
             
-            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
-            MAC_ROW;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
 
+            wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
+            MAC_ROW(acc1);
             data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
+
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
-            MAC_ROW;
-            
+            MAC_ROW(acc1);
             data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
+
             wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
-            MAC_ROW;
-            
-            data = *(v32int8 *) in_ptr; in_ptr += INP_H*INP_W - 4*INP_W; // channel +1, up 1
-            wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
-            MAC_ROW;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_H*INP_W - 5*INP_W; // channel +1, up 5
+            MAC_ROW(acc2);
           }
 
+          // must read out to multiply, no op to multiply in acc
           accbuf = lsrs(acc1, 0) + bvec; // cast to int32
-          if (w + 16 >= OUT_W)
-            accbuf = select16(SELECT_S, accbuf, null_v16int32()); // zero out padded end of width
           acc1 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
-          pacc = srs(acc1, 24);
-          window_writeincr(out, pack(pacc)); // v16int8
+          *out_ptr = bsrs(acc1, 24); 
+          out_ptr += OUT_W/16;
+
+          accbuf = lsrs(acc2, 0) + bvec; // cast to int32
+          acc2 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
+          *out_ptr = bsrs(acc2, 24); 
+          out_ptr += 1-OUT_W/16;
 
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
           w_ptr -= C*16*5;
         } // W
 
-        in_ptr += INP_W - OUT_W; // go left OUT_W, down 1
-        // window_incr(out, OUT_W);
+        // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
+        acc1 = null_v16acc48();
+        acc2 = null_v16acc48();
+      
+        for (int c = 0; c < C; c++) { // computes 1x16 partial products over 5x5 kernel
+          wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
+          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+          MAC_ROW(acc1);
+          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+          MAC_ROW(acc2);
+          
+          wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
+          MAC_ROW(acc1);
+          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+          MAC_ROW(acc2);
+
+          wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
+          MAC_ROW(acc1);
+          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+          MAC_ROW(acc2);
+
+          wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
+          MAC_ROW(acc1);
+          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+          MAC_ROW(acc2);
+
+          wvec = upd_v(wvec, 0, *(v16int8 *) w_ptr); w_ptr += 16;
+          MAC_ROW(acc1);
+          data = *(v32int8 *) in_ptr; in_ptr += INP_H*INP_W - 5*INP_W; // channel +1, up 5
+          MAC_ROW(acc2);
+        }
+
+        // must read out to multiply, no op to multiply in acc
+        accbuf = lsrs(acc1, 0) + bvec; // cast to int32
+        accbuf = select16(SELECT_S, accbuf, null_v16int32()); // zero out padded end of width
+        acc1 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
+        *out_ptr = bsrs(acc1, 24); 
+        out_ptr += OUT_W/16;
+
+        accbuf = lsrs(acc2, 0) + bvec; // cast to int32
+        accbuf = select16(SELECT_S, accbuf, null_v16int32()); // zero out padded end of width
+        acc2 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
+        *out_ptr = bsrs(acc2, 24); 
+        out_ptr += 1-OUT_W/16;
+
+        in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
+        w_ptr -= C*16*5;
+
+        in_ptr += 2*INP_W - OUT_W; // go left OUT_W, down 2
+        out_ptr += OUT_W/16;
       } // H
       in_ptr -= OUT_H*INP_W; // go up OUT_H
       w_ptr += C*16*5;
