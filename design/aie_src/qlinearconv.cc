@@ -18,15 +18,17 @@ void QLinearConvScalar<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
     for (int m = 0; m < M; m++) { 
       
       for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_W; w++) {
+        for (int w = 0; w < OUT_H; w++) {
         
           // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
+          // assume rounding done at the end
           int res = bias[m];
           weightIdx = m*C*K*16;
           
           for (int c = 0; c < C; c++) {
             for (int p = 0; p < K; p++) {
-              for (int q = 0; q < K; q++) {
+              // for (int q = 0; q < K; q++) {
+              for (int q = 4; q < 4 + K*2; q+=2) {
                 int a = window_readincr(in);
                 res += (a - x_zero_point) * (weights[weightIdx+q]-w_zero_point);
               }
@@ -35,17 +37,22 @@ void QLinearConvScalar<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
             }
             window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
           }
+          // printf("%f ", x_scale*w_scale/y_scale * res);
+          // if (w%8==7) printf("\n");
           res = y_zero_point + round(x_scale*w_scale/y_scale * res);
           
           // saturate at the end only
-          res = std::min(std::max(res, -128), 128);
+          res = std::min(std::max(res, -128), 127);
 
           // if (res < 0) res = 0;
-          window_writeincr(out, res);
+          window_writeincr(out, (int8_t) res);
           window_incr(in, -C*INP_H*INP_W + 1); // go channel -C, right 1
         }
 
-        window_incr(in, INP_W-OUT_W); // go left OUT_W, go down 1
+        for (int w = OUT_H; w < OUT_W; w++)
+          window_writeincr(out, y_zero_point);
+
+        window_incr(in, INP_W-OUT_H); // go left OUT_H, go down 1
       }
       window_incr(in, -OUT_H*INP_W); // go up OUT_H
     }
@@ -87,7 +94,7 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
       }
     }
     bias[m] -= res;
-    bias[m] += y_zero_point / (x_scale*w_scale/y_scale);
+    // bias[m] += y_zero_point / (x_scale*w_scale/y_scale);
   }
 }
 
@@ -147,7 +154,9 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   PROFILE_HEADER(printf(
     "Running QLinearConvVector<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C, M, K));
   
-  int16_t scale = float2fix(x_scale*w_scale/y_scale, 24);
+  int scalebits = abs(log2(x_scale*w_scale/y_scale)) + 14; // -1 due to rounding, -1 to fit in 16b
+  printf("scalebits %d\n", scalebits);
+  int16_t scale = float2fix(x_scale*w_scale/y_scale, scalebits);
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();
   v16int32 accbuf = undef_v16int32();
@@ -214,14 +223,19 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
           // must read out to multiply, no op to multiply in acc
           accbuf = lsrs(acc1, 0); // cast to int32
           acc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
+          // acc1 = aie::add((aie::accum<acc48,16>) acc1, y_zero_point);
           // acc1 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
-          *out_ptr = bsrs(acc1, 24); 
+          // accbuf = lsrs(acc1, scalebits); print_vec<int, int>((int *) &accbuf, 16);
+          *out_ptr = pack(aie::add((aie::vector<int16_t,16>) srs(acc1, scalebits), (int16_t) y_zero_point));
+          // *out_ptr = bsrs(acc1, scalebits); 
           out_ptr += OUT_W/16;
 
           acc2 = aie::add((aie::accum<acc48,16>) acc2, bias[m]);
           accbuf = lsrs(acc2, 0);
           acc2 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
-          *out_ptr = bsrs(acc2, 24); 
+          // accbuf = lsrs(acc2, scalebits); print_vec<int, int>((int *) &accbuf, 16);
+          *out_ptr = pack(aie::add((aie::vector<int16_t,16>) srs(acc2, scalebits), (int16_t) y_zero_point));
+          // *out_ptr = bsrs(acc2, scalebits); 
           out_ptr += 1-OUT_W/16;
 
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
@@ -264,14 +278,16 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
         accbuf = lsrs(acc1, 0);
         accbuf = select16(SELECT_S, accbuf, null_v16int32());
         acc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
-        *out_ptr = bsrs(acc1, 24); 
+        // *out_ptr = bsrs(acc1, scalebits); 
+        *out_ptr = pack(aie::add((aie::vector<int16_t,16>) srs(acc1, scalebits), (int16_t) y_zero_point));
         out_ptr += OUT_W/16;
 
         acc2 = aie::add((aie::accum<acc48,16>) acc2, bias[m]);
         accbuf = lsrs(acc2, 0);
         accbuf = select16(SELECT_S, accbuf, null_v16int32());
         acc2 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
-        *out_ptr = bsrs(acc2, 24); 
+        // *out_ptr = bsrs(acc2, scalebits); 
+        *out_ptr = pack(aie::add((aie::vector<int16_t,16>) srs(acc2, scalebits), (int16_t) y_zero_point));
         out_ptr += 1-OUT_W/16;
 
         in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
