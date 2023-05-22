@@ -71,6 +71,7 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero_point(x_zero_point), w_zero_point(w_zero_point), y_zero_point(y_zero_point)
 { 
+  // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
   int8_t *w_ptr = (int8_t *) weights;
   
   // precompute x_zero_weights into bias
@@ -98,6 +99,10 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
  * int16*int8: 9177
  * int8*int8: 6724
  * precompute y_zero: 5174
+ * two accs: ~4541
+ * remove redundant add, scale vectors: 4225
+ * 
+ * int32 required for bias and y_zero due to floating point scaling
  * 
  * 
  * https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits
@@ -142,10 +147,9 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   PROFILE_HEADER(printf(
     "Running QLinearConvVector<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C, M, K));
   
-  v16int16 scale = aie::broadcast<int16_t, 16>(float2fix(x_scale*w_scale/y_scale, 24));
+  int16_t scale = float2fix(x_scale*w_scale/y_scale, 24);
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();
-  v16int32 bvec = undef_v16int32();
   v16int32 accbuf = undef_v16int32();
 
   v16acc48 acc1 = undef_v16acc48();
@@ -171,7 +175,6 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   // BHWM
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
-      bvec = aie::broadcast<int32_t, 16>(bias[m]);
       for (int h = 0; h < OUT_H; h+=2) {
         for (int w = 0; w < OUT_W-16; w+=16) {
 
@@ -207,15 +210,17 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
             data = *(v32int8 *) in_ptr; in_ptr += INP_H*INP_W - 5*INP_W; // channel +1, up 5
             MAC_ROW(acc2);
           }
-
+          acc1 = aie::add((aie::accum<acc48,16>) acc1, bias[m]);
           // must read out to multiply, no op to multiply in acc
-          accbuf = lsrs(acc1, 0) + bvec; // cast to int32
-          acc1 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
+          accbuf = lsrs(acc1, 0); // cast to int32
+          acc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
+          // acc1 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
           *out_ptr = bsrs(acc1, 24); 
           out_ptr += OUT_W/16;
 
-          accbuf = lsrs(acc2, 0) + bvec; // cast to int32
-          acc2 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
+          acc2 = aie::add((aie::accum<acc48,16>) acc2, bias[m]);
+          accbuf = lsrs(acc2, 0);
+          acc2 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
           *out_ptr = bsrs(acc2, 24); 
           out_ptr += 1-OUT_W/16;
 
@@ -255,16 +260,17 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
           MAC_ROW(acc2);
         }
 
-        // must read out to multiply, no op to multiply in acc
-        accbuf = lsrs(acc1, 0) + bvec; // cast to int32
-        accbuf = select16(SELECT_S, accbuf, null_v16int32()); // zero out padded end of width
-        acc1 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
+        acc1 = aie::add((aie::accum<acc48,16>) acc1, bias[m]);
+        accbuf = lsrs(acc1, 0);
+        accbuf = select16(SELECT_S, accbuf, null_v16int32());
+        acc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
         *out_ptr = bsrs(acc1, 24); 
         out_ptr += OUT_W/16;
 
-        accbuf = lsrs(acc2, 0) + bvec; // cast to int32
-        accbuf = select16(SELECT_S, accbuf, null_v16int32()); // zero out padded end of width
-        acc2 = mul16(accbuf, 0, 0x76543210, 0xfedcba98, scale, 0, 0x0, 0x0); // fixed point scale
+        acc2 = aie::add((aie::accum<acc48,16>) acc2, bias[m]);
+        accbuf = lsrs(acc2, 0);
+        accbuf = select16(SELECT_S, accbuf, null_v16int32());
+        acc2 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf, scale);
         *out_ptr = bsrs(acc2, 24); 
         out_ptr += 1-OUT_W/16;
 
