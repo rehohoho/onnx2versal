@@ -4,52 +4,51 @@ import torch
 np.random.seed(0)
 
 INP_W = 28
-OUT_W = 28
-M = 8
+M = 6
 C = 1 # loop dependency missed issue occurs at C=1
-K = 1
-PAD = (8 - K%8) % 8
+K = 5
 
-# arange (1x1 convolution, i.e. multiplication only)
-X_scale = 0.00369204697
+def round_away(x):
+  x = np.round(x, 3) # rounds 4.499996 and 4.496 to 4.5 first
+  a = np.abs(x)
+  b = np.floor(a) + np.floor(2*(a%1))
+  return np.sign(x)*b
+
+X_scale = 0.004
 W_scale = 0.003
-Y_scale = 0.00162681262
+Y_scale = 0.002
 X_zero_point = 25
 W_zero_point = 0
 Y_zero_point = 19
 X = np.arange(C*INP_W*INP_W).astype(np.int8)
-W = np.repeat([127], M*C*K*K).astype(np.int8)
-B = (np.ones((M))/ X_scale / W_scale * Y_scale).astype(np.int32) # quantized, scale=xscale*wscale, zero=0
-Y = Y_zero_point + X_scale*W_scale/Y_scale * (X.astype(int)-X_zero_point) * (W-W_zero_point)[0]
-Y = np.tile(Y,M) + np.repeat(B,OUT_W*OUT_W) * X_scale*W_scale/Y_scale # apply bias
-Y = np.round(Y)
+W = np.arange(M*C*K*K).astype(np.int8)
+B = (np.arange(M) / (X_scale*W_scale/Y_scale)).astype(np.int32)
 
 X = X.reshape(1,C,INP_W,INP_W)
 n_pad = (16 - INP_W%16) % 16
 if n_pad != 0:
   X = np.pad(X, ((0,0),(0,0),(0,0),(0,n_pad)), "constant", constant_values=X_zero_point)
-Y = Y.reshape(1,M,OUT_W,OUT_W)
-n_pad = (16 - OUT_W%16) % 16
-if n_pad != 0:
-  pad = np.round(Y_zero_point + B * X_scale*W_scale/Y_scale).astype(Y.dtype)
-  pad = pad.repeat(n_pad*OUT_W).reshape(*Y.shape[:-1], -1)
-  Y = np.concatenate((Y, pad), axis=-1)
-  # Y = np.pad(Y, ((0,0),(0,0),(0,0),(0,n_pad)), "constant", constant_values=0)
 
-# Testing shifting
-# import ipdb;ipdb.set_trace()
-# scale = X_scale*W_scale/Y_scale
-# shift = int(math.log(1/scale, 2))
-# off_scale = scale * 2**shift
-# o1 = (y1 >> shift) * off_scale
-# o2 = y1 * scale
-# o1 = o1.astype(np.int32)
-# o2 = o2.astype(np.int32)
-# np.savetxt("o1.txt", o1.reshape(-1, 2), fmt="%f")
-# np.savetxt("o2.txt", o2.reshape(-1, 2), fmt="%f")
-# np.testing.assert_allclose(o1, o2, atol=0.5)
+W = W.reshape(M,C,K,K)
+k_pad = (16- K%16) % 16
+if k_pad != 0:
+  W = np.pad(W, ((0,0),(0,0),(0,0),(0,k_pad)), "constant", constant_values=0)
+if K == 5:
+  W = W[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
+
+Y = torch.nn.functional.conv2d(
+  torch.Tensor(X[:,:,:,:28].astype(int) - X_zero_point),
+  torch.Tensor(W[:,:,:,(4,6,8,10,12)].astype(int) - W_zero_point),
+  torch.Tensor(B[:])).numpy() * X_scale*W_scale/Y_scale
+Y = round_away(Y) + Y_zero_point
+Y = np.clip(Y, -128, 127).astype(np.int8)
+
+n_pad = (16 - Y.shape[-1]%16) % 16
+if n_pad != 0:
+  Y = np.pad(Y, ((0,0),(0,0),(0,0),(0,n_pad)), "constant", constant_values=Y_zero_point)
 
 np.savetxt("qlinearconv_int8in.txt", X.reshape(-1, 8), fmt="%d")
-np.savetxt("qlinearconv_int8out_QLinearConvScalar.txt", Y.astype(np.int8).reshape(-1, 8), fmt="%d")
+np.savetxt("qlinearconv_int8out_QLinearConvScalar.txt", Y.reshape(-1, 8), fmt="%d")
+np.savetxt("qlinearconv_int8out_QLinearConvVector.txt", Y.reshape(-1, 8), fmt="%d")
 print("int8weights\n", W.flatten().tolist(), "\n\n\n")
 print("int8bias\n", B.flatten().tolist(), "\n\n\n")
