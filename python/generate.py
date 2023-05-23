@@ -2,7 +2,6 @@ import numpy as np
 import torch
 from torchvision.datasets import mnist
 from torchvision.transforms import ToTensor
-from torch.utils.data import DataLoader
 import onnx
 from onnx import helper
 import onnxruntime
@@ -23,15 +22,15 @@ def generate_inter_graph(onnx_path: str,
   return output_names
 
 
-def get_host_data(loader: DataLoader,
-                  data_count: int):
+def get_n_data(dataset: torch.utils.data.Dataset,
+               data_count: int):
   data = None
   print(f"Generating MNIST txt for {data_count} data points")
-  for x, y in loader:
+  for x, y in dataset:
     if data is None:
-      data = x
+      data = x.unsqueeze(0)
     else:
-      data = torch.concat((data, x))  
+      data = torch.concat((data, x.unsqueeze(0)))
     if data.shape[0] >= data_count:
       break
   return data
@@ -40,16 +39,12 @@ def get_host_data(loader: DataLoader,
 if __name__ == '__main__':
   DATA_COUNT = 100
   DATA_PATH = "../data"
-  ONNX_PATH = "../models/lenet_mnist.onnx"
-  TEST_DATA_TXT = "../data/mnist_test_data.txt"
-  TEST_LABEL_TXT = "../data/mnist_test_label.txt"
+  ONNX_PATH = "../models/lenet_mnist_int8.onnx"
   IS_OUTPUT_ALL_NODES = False
 
   # Data
   dataset = mnist.MNIST(root=DATA_PATH, train=False, transform=ToTensor(), download=True)
-  loader = DataLoader(dataset, batch_size=1)
-  data, label = next(iter(loader))
-  input_tensor = data[0].unsqueeze(0)
+  input_tensor = dataset[0][0].unsqueeze(0)
   
   # Update ONNX to output intermediate tensors
   onnx_inter_path = ONNX_PATH.replace(".onnx", "_inter.onnx")
@@ -77,7 +72,7 @@ if __name__ == '__main__':
   cppGenerator.generate_host_cpp()
 
   # Generate end-to-end data
-  data = get_host_data(loader, DATA_COUNT)
+  data = get_n_data(dataset, DATA_COUNT)
   ort_session = onnxruntime.InferenceSession(ONNX_PATH)
   ort_inputs = {ort_session.get_inputs()[0].name: data.numpy()}
   ort_outs = ort_session.run(None, ort_inputs)
