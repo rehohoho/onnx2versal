@@ -1,4 +1,4 @@
 <map id="Concat" name="Concat">
-<area shape="rect" id="node1" title="Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE." alt="" coords="5,5,68,31"/>
-<area shape="rect" id="node2" href="$group__ConcatKernels.html" title=" " alt="" coords="116,5,222,31"/>
+<area shape="rect" id="Node000001" title="Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE." alt="" coords="5,5,68,31"/>
+<area shape="rect" id="Node000002" href="$group__ConcatKernels.html" title=" " alt="" coords="116,5,222,31"/>
 </map>

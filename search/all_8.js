@@ -1,11 +1,10 @@
 var searchData=
 [
-  ['qlinearconv_0',['QLinearConv',['../group__QLinearConv.html',1,'']]],
-  ['qlinearconvgraph_1',['QLinearConvGraph',['../classQLinearConvGraph.html',1,'']]],
-  ['qlinearconvkernels_2',['QLinearConvKernels',['../group__QLinearConvKernels.html',1,'']]],
-  ['qlinearconvscalar_3',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
-  ['quantizelinear_4',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
-  ['quantizelineargraph_5',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearkernels_6',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
-  ['quantizelinearscalar_7',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]]
+  ['pad_0',['Pad',['../group__Pad.html',1,'']]],
+  ['padgraph_1',['PadGraph',['../classPadGraph.html',1,'']]],
+  ['padkernels_2',['PadKernels',['../group__PadKernels.html',1,'']]],
+  ['padscalar_3',['PadScalar',['../classPadScalar.html',1,'']]],
+  ['padvectorint16_4',['PadVectorInt16',['../classPadVectorInt16.html',1,'']]],
+  ['pool2d_5',['Pool2D',['../group__Pool2D.html',1,'']]],
+  ['pool2dkernels_6',['Pool2DKernels',['../group__Pool2DKernels.html',1,'']]]
 ];

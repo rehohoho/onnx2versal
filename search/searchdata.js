@@ -1,24 +1,27 @@
 var indexSectionsWithContent =
 {
-  0: "acgilmopqt",
+  0: "acfgilmopqt",
   1: "acgimpqt",
-  2: "acgilpqt",
-  3: "lo"
+  2: "f",
+  3: "acgilpqt",
+  4: "lo"
 };
 
 var indexSectionNames =
 {
   0: "all",
   1: "classes",
-  2: "groups",
-  3: "pages"
+  2: "functions",
+  3: "groups",
+  4: "pages"
 };
 
 var indexSectionLabels =
 {
   0: "All",
   1: "Classes",
-  2: "Modules",
-  3: "Pages"
+  2: "Functions",
+  3: "Modules",
+  4: "Pages"
 };
 

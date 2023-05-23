@@ -33,6 +33,7 @@ var annotated_dup =
     [ "PadVectorInt16", "classPadVectorInt16.html", null ],
     [ "QLinearConvGraph", "classQLinearConvGraph.html", null ],
     [ "QLinearConvScalar", "classQLinearConvScalar.html", null ],
+    [ "QLinearConvVector", "classQLinearConvVector.html", "classQLinearConvVector" ],
     [ "QuantizeLinearGraph", "classQuantizeLinearGraph.html", null ],
     [ "QuantizeLinearScalar", "classQuantizeLinearScalar.html", null ],
     [ "TransposeGraph", "classTransposeGraph.html", null ],

@@ -1,4 +1,5 @@
 <map id="ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K &gt;" name="ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K &gt;">
-<area shape="rect" id="node1" title="Multiinstance graph that stores weights and biases. If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and ..." alt="" coords="319,5,522,76"/>
-<area shape="rect" id="node2" href="$classConcatGraph.html" title=" " alt="" coords="5,5,215,76"/>
+<area shape="rect" id="Node000001" title="Multiinstance graph that stores weights and biases. If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and ..." alt="" coords="319,5,522,76"/>
+<area shape="rect" id="Node000002" href="$classConcatGraph.html" title=" " alt="" coords="5,5,215,76"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="230,38,318,38,318,43,230,43"/>
 </map>

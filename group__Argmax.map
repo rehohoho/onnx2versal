@@ -1,4 +1,4 @@
 <map id="Argmax" name="Argmax">
-<area shape="rect" id="node1" title="Argmax over chunks of CHUNK_SIZE in WINDOW_SIZE vector." alt="" coords="5,5,71,31"/>
-<area shape="rect" id="node2" href="$group__ArgmaxKernels.html" title=" " alt="" coords="119,5,228,31"/>
+<area shape="rect" id="Node000001" title="Argmax over chunks of CHUNK_SIZE in WINDOW_SIZE vector." alt="" coords="5,5,71,31"/>
+<area shape="rect" id="Node000002" href="$group__ArgmaxKernels.html" title=" " alt="" coords="119,5,228,31"/>
 </map>

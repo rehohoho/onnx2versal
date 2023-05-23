@@ -1,4 +1,4 @@
 <map id="Pool2D" name="Pool2D">
-<area shape="rect" id="node1" title="Pool2D function on BCHW, yielding BCH&#39;W&#39;, where H&#39;=H/factor, W&#39;=W/factor." alt="" coords="5,5,69,31"/>
-<area shape="rect" id="node2" href="$group__Pool2DKernels.html" title=" " alt="" coords="117,5,224,31"/>
+<area shape="rect" id="Node000001" title="Pool2D function on BCHW, yielding BCH&#39;W&#39;, where H&#39;=H/factor, W&#39;=W/factor." alt="" coords="5,5,69,31"/>
+<area shape="rect" id="Node000002" href="$group__Pool2DKernels.html" title=" " alt="" coords="117,5,224,31"/>
 </map>

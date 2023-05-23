@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['lenet_0',['Lenet',['../group__Lenet.html',1,'']]],
-  ['lenet_20example_1',['Lenet Example',['../md_lenet_example.html',1,'']]]
+  ['identity_0',['Identity',['../group__Identity.html',1,'']]],
+  ['identitygraph_1',['IdentityGraph',['../classIdentityGraph.html',1,'']]],
+  ['identitykernels_2',['IdentityKernels',['../group__IdentityKernels.html',1,'']]],
+  ['identityscalar_3',['IdentityScalar',['../classIdentityScalar.html',1,'']]]
 ];
