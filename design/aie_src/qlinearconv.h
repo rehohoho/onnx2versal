@@ -9,20 +9,25 @@
  * @defgroup QLinearConvKernels
  * @ingroup QLinearConv
  * 
- * https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv
- * Note:
- *  y = saturate ((x / y_scale) + y_zero_point)
- *  Bias must be quantized using scale = x_scale * w_scale and zero_point = 0
- *  Saturate at the end only.
  * 
- * Computation:
- *  x = (qx - qx_zero) * qx_scale
- *  bias = qbias * x_scale * w_scale
- *  y = x*w + bias =>
- *  (qy-qy_zero)*qy_scale = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale + qbias*qx_scale*qw_scale
+ * 
+ * @details See https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv.
+ * - y = saturate ((x / y_scale) + y_zero_point)
+ * - Bias must be quantized using scale = x_scale * w_scale and zero_point = 0
+ * 
+ * Computation
+ * - x = (qx - qx_zero) * qx_scale
+ * - bias = qbias * x_scale * w_scale
+ * - y = x*w + bias =>
+ * - (qy-qy_zero)*qy_scale = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale + qbias*qx_scale*qw_scale
  *                       = [(qx-qx_zero) * (qw-qw_zero) + qbias] * qx_scale*qw_scale
- *  qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
+ * - qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
  * 
+ * Implementation
+ * - only precompute -qx_zero*(qw_qw_zero), rounding is done before adding qy_zero
+ * - int32 bias: -qx_zero*(qw_zero): k*int8*int8 > 16bits
+ * - int8 shifted qy_zero: shift added into acc
+ * - int16 scale: saturated to 8 bits
  */
 
 
@@ -68,8 +73,9 @@ class QLinearConvScalar {
 
 
 /**
- * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes  cycles, 
- * requires 
+ * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes 4398 cycles.
+ * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
+ * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0
  */
 template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
 class QLinearConvVector {
@@ -83,6 +89,12 @@ class QLinearConvVector {
     int8_t x_zero_point;
     int8_t w_zero_point;
     int8_t y_zero_point;
+
+    // precomputation
+    int16_t scalebits;
+    int16_t scale;
+    int32_t shift;
+    unsigned int select_mask;
 	
   public:
     QLinearConvVector (
@@ -102,6 +114,7 @@ class QLinearConvVector {
 		);
 
 		static void registerKernelClass() {
+      assert(INP_W%16==0 && OUT_W%16==0);
 			REGISTER_FUNCTION(QLinearConvVector::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
