@@ -32,7 +32,7 @@
 
 
 /**
- * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes  cycles
+ * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes 1019814 cycles
  */
 template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
 class QLinearConvScalar {
