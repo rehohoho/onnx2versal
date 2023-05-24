@@ -101,8 +101,23 @@ Collaboration diagram for QLinearConvKernels:</div>
 <area shape="rect" title=" " alt="" coords="151,5,292,31"/>
 </map>
 </div>
-<p><a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv</a> Note: y = saturate ((x / y_scale) + y_zero_point) Bias must be quantized using scale = x_scale * w_scale and zero_point = 0 Saturate at the end only.</p>
-<p>Computation: x = (qx - qx_zero) * qx_scale bias = qbias * x_scale * w_scale y = x*w + bias =&gt; (qy-qy_zero)*qy_scale = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale + qbias*qx_scale*qw_scale = [(qx-qx_zero) * (qw-qw_zero) + qbias] * qx_scale*qw_scale qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale </p>
+<p>See <a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv</a>.</p><ul>
+<li>y = saturate ((x / y_scale) + y_zero_point)</li>
+<li>Bias must be quantized using scale = x_scale * w_scale and zero_point = 0</li>
+</ul>
+<p>Computation</p><ul>
+<li>x = (qx - qx_zero) * qx_scale</li>
+<li>bias = qbias * x_scale * w_scale</li>
+<li>y = x*w + bias =&gt;</li>
+<li>(qy-qy_zero)*qy_scale = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale + qbias*qx_scale*qw_scale = [(qx-qx_zero) * (qw-qw_zero) + qbias] * qx_scale*qw_scale</li>
+<li>qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale</li>
+</ul>
+<p>Implementation</p><ul>
+<li>only precompute -qx_zero*(qw_qw_zero), rounding is done before adding qy_zero</li>
+<li>int32 bias: -qx_zero*(qw_zero): k*int8*int8 &gt; 16bits</li>
+<li>int8 shifted qy_zero: shift added into acc</li>
+<li>int16 scale: saturated to 8 bits </li>
+</ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

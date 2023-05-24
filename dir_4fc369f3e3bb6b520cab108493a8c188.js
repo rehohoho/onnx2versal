@@ -12,6 +12,7 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "graph_lenet.h", "graph__lenet_8h_source.html", null ],
     [ "graph_pad.h", "graph__pad_8h_source.html", null ],
     [ "graph_pool.h", "graph__pool_8h_source.html", null ],
+    [ "graph_qgemm.h", "graph__qgemm_8h_source.html", null ],
     [ "graph_qlinearconv.h", "graph__qlinearconv_8h_source.html", null ],
     [ "graph_quantize_linear.h", "graph__quantize__linear_8h_source.html", null ],
     [ "graph_transpose.h", "graph__transpose_8h_source.html", null ],
@@ -20,6 +21,7 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "kernel_utils.h", "kernel__utils_8h_source.html", null ],
     [ "pad.h", "pad_8h_source.html", null ],
     [ "pool.h", "pool_8h_source.html", null ],
+    [ "qgemm.h", "qgemm_8h_source.html", null ],
     [ "qlinearconv.h", "qlinearconv_8h_source.html", null ],
     [ "quantize_linear.h", "quantize__linear_8h_source.html", null ],
     [ "transpose.h", "transpose_8h_source.html", null ]

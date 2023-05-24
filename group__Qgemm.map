@@ -1,0 +1,4 @@
+<map id="Qgemm" name="Qgemm">
+<area shape="rect" id="Node000001" title="The qgemm operator consumes a quantized input tensor, its scale and zero point, a quantized weight,..." alt="" coords="5,5,73,31"/>
+<area shape="rect" id="Node000002" href="$group__QgemmKernels.html" title=" " alt="" coords="121,5,232,31"/>
+</map>

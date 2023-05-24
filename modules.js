@@ -8,6 +8,7 @@ var modules =
     [ "Lenet", "group__Lenet.html", "group__Lenet" ],
     [ "Pad", "group__Pad.html", "group__Pad" ],
     [ "Pool2D", "group__Pool2D.html", "group__Pool2D" ],
+    [ "Qgemm", "group__Qgemm.html", "group__Qgemm" ],
     [ "QLinearConv", "group__QLinearConv.html", "group__QLinearConv" ],
     [ "QuantizeLinear", "group__QuantizeLinear.html", "group__QuantizeLinear" ],
     [ "Transpose", "group__Transpose.html", "group__Transpose" ]

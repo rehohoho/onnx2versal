@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Class Members - Functions</title>
+<title>onnx2versal: Qgemm</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('functions_func.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('group__Qgemm.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -88,10 +88,48 @@ $(document).ready(function(){initNavTree('functions_func.html',''); initResizabl
 </div>
 </div>
 
+<div class="header">
+  <div class="summary">
+<a href="#groups">Modules</a> &#124;
+<a href="#nested-classes">Classes</a>  </div>
+  <div class="headertitle"><div class="title">Qgemm</div></div>
+</div><!--header-->
 <div class="contents">
-<div class="textblock">Here is a list of all documented functions with links to the class documentation for each member:</div><ul>
-<li>filter()&#160;:&#160;<a class="el" href="classQgemmVector.html#a8e237fc0e3f813ecaf7171065fedae20">QgemmVector&lt; M, K, N, NPAD &gt;</a>, <a class="el" href="classQLinearConvVector.html#a2fa8173c6083a1c04664b265d1295e17">QLinearConvVector&lt; INP_H, INP_W, OUT_H, OUT_W, B, C, M, K &gt;</a></li>
-</ul>
+
+<p>The qgemm operator consumes a quantized input tensor, its scale and zero point, a quantized weight, its scale and zero point, and output's scale and zero point, and computes the quantized output. xA^T + b as per torch.nn.Linear. Applies general matrix multiply: output(MxN) = input(MxK) * weights(KxNPAD) + bias(NPAD)  
+<a href="#details">More...</a></p>
+<div class="dynheader">
+Collaboration diagram for Qgemm:</div>
+<div class="dyncontent">
+<div class="center"><img src="group__Qgemm.png" border="0" usemap="#agroup____Qgemm" alt=""/></div>
+<map name="agroup____Qgemm" id="agroup____Qgemm">
+<area shape="rect" title="The qgemm operator consumes a quantized input tensor, its scale and zero point, a quantized weight,..." alt="" coords="5,5,73,31"/>
+<area shape="rect" href="group__QgemmKernels.html" title=" " alt="" coords="121,5,232,31"/>
+</map>
+</div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="groups" name="groups"></a>
+Modules</h2></td></tr>
+<tr class="memitem:group__QgemmKernels"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__QgemmKernels.html">QgemmKernels</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQGemmGraph.html">QGemmGraph&lt; QGEMM, M, K, N, NPAD &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases.  <a href="classQGemmGraph.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">GEMM</td><td>Gemm Kernel </td></tr>
+    <tr><td class="paramname">M</td><td>number of rows of input matrix </td></tr>
+    <tr><td class="paramname">K</td><td>number of cols / number of rows of weight matrix </td></tr>
+    <tr><td class="paramname">N</td><td>number of cols of weight matrix / size of bias vector </td></tr>
+    <tr><td class="paramname">NPAD</td><td>padded N </td></tr>
+  </table>
+  </dd>
+</dl>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

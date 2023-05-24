@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConvVector&lt; INP_H, INP_W, OUT_H, OUT_W, B, C, M, K &gt; Class Template Reference</title>
+<title>onnx2versal: QgemmVector&lt; M, K, N, NPAD &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearConvVector.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQgemmVector.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,41 +92,41 @@ $(document).ready(function(){initNavTree('classQLinearConvVector.html',''); init
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classQLinearConvVector-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConvVector&lt; INP_H, INP_W, OUT_H, OUT_W, B, C, M, K &gt; Class Template Reference</div></div>
+<a href="classQgemmVector-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QgemmVector&lt; M, K, N, NPAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a> &raquo; <a class="el" href="group__QgemmKernels.html">QgemmKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation, QLinearConvVector&lt;28,24,1,1,6,5&gt; takes 4398 cycles. Requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0.  
+<p>Vector implementation for MK*KN, stores weights and biases, requires N%16=0, K%4=0 QgemmVector&lt;1,84,10,16&gt; takes 127 cycles.  
 </p>
 
-<p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="qgemm_8h_source.html">qgemm.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae27f7940793485ff7121f15aff9e1832"><td class="memItemLeft" align="right" valign="top"><a id="ae27f7940793485ff7121f15aff9e1832" name="ae27f7940793485ff7121f15aff9e1832"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvVector</b> (int8_t(&amp;w)[M *C *K *16], int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero_point, int8_t w_zero_point, int8_t y_zero_point)</td></tr>
-<tr class="separator:ae27f7940793485ff7121f15aff9e1832"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fa8173c6083a1c04664b265d1295e17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvVector.html#a2fa8173c6083a1c04664b265d1295e17">filter</a> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a2fa8173c6083a1c04664b265d1295e17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad268b8af1651a36ab97b9e6c43ffab0"><td class="memItemLeft" align="right" valign="top"><a id="aad268b8af1651a36ab97b9e6c43ffab0" name="aad268b8af1651a36ab97b9e6c43ffab0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmVector</b> (int8_t(&amp;w)[K *NPAD], int32_t(&amp;b)[NPAD], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
+<tr class="separator:aad268b8af1651a36ab97b9e6c43ffab0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e237fc0e3f813ecaf7171065fedae20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmVector.html#a8e237fc0e3f813ecaf7171065fedae20">filter</a> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
+<tr class="separator:a8e237fc0e3f813ecaf7171065fedae20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a6d995b6dc7a9c8eaa41d00f7ac24aa24"><td class="memItemLeft" align="right" valign="top"><a id="a6d995b6dc7a9c8eaa41d00f7ac24aa24" name="a6d995b6dc7a9c8eaa41d00f7ac24aa24"></a>
+<tr class="memitem:a08c3c77551d08c16ff04f3904b6bb028"><td class="memItemLeft" align="right" valign="top"><a id="a08c3c77551d08c16ff04f3904b6bb028" name="a08c3c77551d08c16ff04f3904b6bb028"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a6d995b6dc7a9c8eaa41d00f7ac24aa24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a08c3c77551d08c16ff04f3904b6bb028"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a2fa8173c6083a1c04664b265d1295e17" name="a2fa8173c6083a1c04664b265d1295e17"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2fa8173c6083a1c04664b265d1295e17">&#9670;&#160;</a></span>filter()</h2>
+<a id="a8e237fc0e3f813ecaf7171065fedae20" name="a8e237fc0e3f813ecaf7171065fedae20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e237fc0e3f813ecaf7171065fedae20">&#9670;&#160;</a></span>filter()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K&gt; </div>
+template&lt;int M, int K, int N, int NPAD&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classQLinearConvVector.html">QLinearConvVector</a>&lt; INP_H, INP_W, OUT_H, OUT_W, B, C, M, K &gt;::filter </td>
+          <td class="memname">void <a class="el" href="classQgemmVector.html">QgemmVector</a>&lt; M, K, N, NPAD &gt;::filter </td>
           <td>(</td>
           <td class="paramtype">input_window&lt; int8_t &gt; *&#160;</td>
           <td class="paramname"><em>in</em>, </td>
@@ -144,27 +144,24 @@ template&lt;int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int
         </tr>
       </table>
 </div><div class="memdoc">
-<p>QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt; fp scale: ~40k fixed point scale: ~14k precompute x_zero_weight into bias: 11341 int16*int8: 9177 int8*int8: 6724 precompute y_zero: 5174 two accs: ~4541 remove redundant add, scale vectors: 4225 remove precomputing y_zero: ~4700 separate buffers for scaleshift: 4398</p>
-<p><a href="https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits">https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits</a> 24 selects 4*4=16, (4+2+1)*4=28 =&gt; rows (16,18),(17,19),(28,30),(29,30) before square square executes on 4x2 matrix</p>
-<p>int8 * int8: Requires: x indexing %4, z indexing %2 expand 5 weights into 16 long vector [0,0,0,0, a,a, b,b, c,c, d,d, e,e, 0,0]</p>
-<p>acc0 += x4*z0 + x6*z1 x8*z2 + x10*z3 x12*z4 acc1 += x5*z1 + x7*z2 x9*z3 + x11*z4 x13*z5 acc2 += x0 x2 x4*z2 + x6*z3 x8*z4 + x10*z5 x12*z6 acc3 += x1 x3 x5*z3 + x7*z4 x9*z5 + x11*z6 x13*z7</p>
-<p>acc4 += x4*z4 + x6*z5 x8*z6 + x10*z7 x12*z8 acc5 += x5*z5 + x7*z6 x9*z7 + x11*z8 x13*z9 (z6 reads - 128?) -128 94 -&gt; -128 -128 acc6 += x4*z6 + x6*z7 x8*z8 + x10*z9 x12*z10 acc7 += x5*z7 + x7*z8 x9*z9 + x11*z10 x13*z11 (z8 reads -128?) 126 126 -&gt; 126 -128</p>
-<p>acc8 += x4*z8 + x6*z9 x8*z10 + x10*z11 x12*z12 acc9 += x5*z9 + x7*z10 x9*z11 + x11*z12 x13*z13 x acc10 += x4*z10 + x6*z11 x8*z12 + x10*z13 x12*z14 acc11 += x5*z11 + x7*z12 x9*z13 + x11*z14 x13*z15 x</p>
-<p>acc12 += x4*z12 + x6*z13 x8*z14 + x10*z15 x12*z16 acc13 += x5*z13 + x7*z14 x9*z15 + x11*z16 x13*z17 x acc14 += x4*z14 + x6*z15 x8*z16 + x10*z17 x12*z18 acc15 += x5*z15 + x7*z16 x9*z17 + x11*z18 x13*z19 x</p>
+<p>QgemmVector&lt;28,32,24,32,1,1,6,5&gt;</p>
+<p><a href="https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits">https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits</a> int8 * int8 requires x indexing %4, z indexing %2 </p><pre class="fragment">     z0  z1  z2  z3  z4  z5  z6  z7
+</pre><p> acc0 += x0 x16 x32 x48 x64 x80 x96 x112 acc1 += x1 x17 acc2 += x2 x18 acc3 += x3 x19 acc4 += x4 x20 acc5 += x5 x21 acc6 += x6 x22 acc7 += x7 x23 acc8 += x8 x24 acc9 += x9 x25 acc10 += x10 x26 acc11 += x11 x27 acc12 += x12 x28 acc13 += x13 x29 acc14 += x14 x30 acc15 += x15 x31</p>
+<p>xidx: 30 =&gt; 0-3, 16-19, 33 =&gt; 12-15, 28-31 (square executes on 4x2 matrix) zidx: 00 =&gt; 0,1, 2,3 =&gt; 0 1 0 1 acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);</p>
 <p>Vector registers can hold 256 int8 at most, 128 int16 at most. </p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>design/aie_src/<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a></li>
-<li>design/aie_src/qlinearconv.cc</li>
+<li>design/aie_src/<a class="el" href="qgemm_8h_source.html">qgemm.h</a></li>
+<li>design/aie_src/qgemm.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQLinearConvVector.html">QLinearConvVector</a></li>
+    <li class="navelem"><a class="el" href="classQgemmVector.html">QgemmVector</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>
