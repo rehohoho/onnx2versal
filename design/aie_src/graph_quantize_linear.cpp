@@ -30,8 +30,8 @@ class QuantizeLinearScalarTest : public adf::graph {
 // instance to be compiled and used in host within xclbin
 QuantizeLinearScalarTest<QuantizeLinearScalar, 1*1*28*28> quantizeLinearScalar(
   "quantizeLinearScalar", 
-  "10__input_QuantizeLinear__input__1x1x28x28.txt", 
-  "10__input_QuantizeLinear__input_QuantizeLinear_Output__1x1x28x28.txt",
+  "k0quantizelinear_in.txt", 
+  "k0quantizelinear_goldenout.txt",
   3.921568859368562698e-03, -128);
 
 

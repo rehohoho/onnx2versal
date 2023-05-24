@@ -20,8 +20,6 @@ void QLinearConvScalar<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
       for (int h = 0; h < OUT_H; h++) {
         for (int w = 0; w < OUT_H; w++) {
         
-          // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
-          // assume rounding done at the end
           int res = bias[m];
           weightIdx = m*C*K*16;
           
@@ -37,14 +35,9 @@ void QLinearConvScalar<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
             }
             window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
           }
-          // printf("%f ", x_scale*w_scale/y_scale * res);
-          // if (w%8==7) printf("\n");
           res = y_zero_point + round(x_scale*w_scale/y_scale * res);
-          
-          // saturate at the end only
           res = std::min(std::max(res, -128), 127);
 
-          // if (res < 0) res = 0;
           window_writeincr(out, (int8_t) res);
           window_incr(in, -C*INP_H*INP_W + 1); // go channel -C, right 1
         }

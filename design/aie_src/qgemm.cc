@@ -72,7 +72,6 @@ QgemmVector<M,K,N,NPAD>::QgemmVector (
 
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
   shift = float2fix((float) y_zero, scalebits); // scalebits <= 24
-  printf("%d %d %d\n", scalebits, scale, shift);
 };
 
 /**

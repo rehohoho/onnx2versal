@@ -126,9 +126,9 @@ void GemmReluMKKN<M, K, NCHUNK>::filter(
       v8float acc2 = *(v8float *) (b_ptr + j + 8);
       int k = 0;
 
-      for (k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[:16]
+      for (k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[k:16]
         matA = *(v8float *) a_ptr; a_ptr += 8;
-        MAC_ROW(0); // += input[0]*weight[:16]
+        MAC_ROW(0); // += input[0]*weight[0:16]
         MAC_ROW(1);
         MAC_ROW(2);
         MAC_ROW(3);
