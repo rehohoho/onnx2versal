@@ -5,7 +5,8 @@ import numpy as np
 import onnx
 from onnx import numpy_helper
 
-from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, ArgmaxOp, ConvOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp
+from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, \
+  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp
 
 
 class CppGenerator:
@@ -83,12 +84,11 @@ class CppGenerator:
         pass
             
       elif node.op_type == "MaxPool":
-        onnx_out_name = node.output[0]
         op = PoolOp(f"k{i}pool")
         op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port(node.input[0], node.output[0], op)
 
       elif node.op_type == "Gemm":
         if self.nodes[i+1].op_type != "Relu": # lookahead
@@ -109,31 +109,32 @@ class CppGenerator:
           self.modelout_2_op[onnx_out_name] = op
       
       elif node.op_type == "QuantizeLinear":
-        onnx_out_name = node.output[0]
         op = QuantizeLinearOp(f"k{i}quantizelinear")
-        op.register_params([self.get_tensor(i) for i in (*node.input, onnx_out_name)])
+        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port(node.input[0], node.output[0], op)
 
       elif node.op_type == "QLinearConv":
-        onnx_out_name = node.output[0]
         op = QLinearConvOp(f"k{i}qlinearconv")
         op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port(node.input[0], node.output[0], op)
         
       elif node.op_type == "QGemm":
-        onnx_out_name = node.output[0]
         op = QGemm(f"k{i}qgemm")
         op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port(node.input[0], node.output[0], op)
       
-      elif node.op_type == "DequantizeLinear":        
-        import ipdb;ipdb.set_trace()
+      elif node.op_type == "DequantizeLinear":
+        op = DequantizeLinearOp(f"k{i}dequantizeLinear")
+        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input[0], node.output[0], op)
 
       elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
         print(f"WARNING: {node.op_type} not implemented, skipping...")
