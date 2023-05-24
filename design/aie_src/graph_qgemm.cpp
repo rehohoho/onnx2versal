@@ -45,15 +45,24 @@ QGemmGraphTest<QgemmScalar, 1, 84, 10, 16> qgemmScalar(
   "qgemmScalar", weights, bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qgemm_int8in.txt", "qgemm_int8out_qgemmScalar.txt");
 
-QGemmGraphTest<QgemmScalar, 1, 84, 10, 16> lenet(
+QGemmGraphTest<QgemmVector, 1, 84, 10, 16> qgemmVector(
+  "qgemmVector", weights, bias, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qgemm_int8in.txt", "qgemm_int8out_qgemmVector.txt");
+
+QGemmGraphTest<QgemmVector, 1, 84, 10, 16> lenet(
   "lenet", lenet_w, lenet_b, 0.04296031594276428, 0.0022037059534341097, 0.058117881417274475, -128, 0, -128,
   "k8qgemm_in.txt", "k8qgemm_goldenout.txt");
+
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
   adfCheck(qgemmScalar.init(), "init qgemmScalar");
   adfCheck(qgemmScalar.run(ITER_CNT), "run qgemmScalar");
 	adfCheck(qgemmScalar.end(), "end qgemmScalar");
+
+  adfCheck(qgemmVector.init(), "init qgemmVector");
+  adfCheck(qgemmVector.run(ITER_CNT), "run qgemmVector");
+	adfCheck(qgemmVector.end(), "end qgemmVector");
 
   adfCheck(lenet.init(), "init lenet");
   adfCheck(lenet.run(ITER_CNT), "run lenet");
@@ -66,8 +75,16 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
   adfCheck(qgemmScalar.init(), "init qgemmScalar");
-  get_graph_throughput_by_port(qgemmScalar, "plout[0]", qgemmScalar.plout[0], 1*10, sizeof(float_t), ITER_CNT);
+  get_graph_throughput_by_port(qgemmScalar, "plout[0]", qgemmScalar.plout[0], 1*16, sizeof(int8_t), ITER_CNT);
 	adfCheck(qgemmScalar.end(), "end qgemmScalar");
+
+  adfCheck(qgemmVector.init(), "init qgemmVector");
+  get_graph_throughput_by_port(qgemmVector, "plout[0]", qgemmVector.plout[0], 1*16, sizeof(int8_t), ITER_CNT);
+	adfCheck(qgemmVector.end(), "end qgemmVector");
+
+  adfCheck(lenet.init(), "init lenet");
+  get_graph_throughput_by_port(lenet, "plout[0]", lenet.plout[0], 1*16, sizeof(int8_t), ITER_CNT);
+	adfCheck(lenet.end(), "end lenet");
   return 0;
 }
 #endif

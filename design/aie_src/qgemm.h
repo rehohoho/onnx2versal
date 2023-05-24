@@ -14,7 +14,7 @@
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * QgemmScalar<1, 84, 10> total = 
+ * QgemmVector<1,84,10,16> takes 10724 cycles
  */
 template <int M, int K, int N, int NPAD>
 class QgemmScalar {
@@ -60,7 +60,7 @@ class QgemmScalar {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases,
- * QgemmVector<1, 84, 10> total = 
+ * QgemmVector<1,84,10,16> takes 136 cycles
  */
 template <int M, int K, int N, int NPAD>
 class QgemmVector {
