@@ -154,7 +154,7 @@ class GemmOp(OpParser):
     self.tout = tout
 
     tw = tw.transpose(1,0) # heap
-    self.weights = tw = pad_lastdim(tw, "Gemm weights", 4) 
+    self.weights = pad_lastdim(tw, "Gemm weights", 4) 
     self.bias = tbias
   
     self.outname_2_tensors[f"{self.name}_in.txt"] = tin #files
@@ -221,6 +221,119 @@ class PoolOp(OpParser):
     return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
 
 
+class QGemm(OpParser):
+  include_file: str = "graph_qgemm.h"
+
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 10
+    tin, tin_scale, tin_zero, tw, tw_scale, tw_zero, tbias, tout_scale, tout_zero, tout = tensors
+
+    inM, inK = tin.shape
+    wN, wK = tw.shape
+    bN, = tbias.shape
+    outM, outN = tout.shape
+    
+    assert inM == outM and inK == wK and wN == bN and bN == outN
+
+    self.M, self.K, self.N = inM, inK, wN # config
+    self.dtype = tw.dtype
+    self.out_size = tout.size
+    self.tout = tout
+  
+    vector_size = VECTOR_WORD_BOUNDARY // tin.dtype.itemsize
+
+    self.weights = pad_lastdim(tw.T, "QGemm weights", vector_size) # heap
+    self.bias = pad_lastdim(tbias, "QGemm bias", vector_size)
+    self.in_zero = tin_zero
+
+    # pad INP_W, OUT_W to vector boundary
+    self.outname_2_tensors[f"{self.name}_in.txt"] = pad_lastdim(
+      tin, "QGemm tin", vector_size, value=tin_zero) #files
+    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = pad_lastdim(
+      tout, "QGemm tout", vector_size, value=tin_zero)
+    
+  def get_kernel_line(self) -> str:
+    graph = "QLinearConvScalar"
+    kernel = "QLinearConvGraph"
+    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
+
+  def get_arg_line(self) -> str:
+    ctype = dtype_to_cstr(self.dtype)
+    return f"{ctype} {self.name}_zero,\nstd::vector<{ctype}> {self.name}_w,\nstd::vector<{ctype}> {self.name}_b"
+  
+  def get_initlist_line(self) -> str:
+    return f"{self.name}({self.name}_zero, {self.name}_w, {self.name}_b)"
+  
+  def get_weight_line(self) -> str:
+    wstring = str(self.weights.flatten().tolist())[1:-1]
+    bstring = str(self.bias.flatten().tolist())[1:-1]
+    ctype = dtype_to_cstr(self.dtype)
+    return f"{ctype} {self.name}_zero {self.in_zero};\n" + \
+      f"std::vector<{ctype}> {self.name}_w {{{wstring}}};\n" + \
+      f"std::vector<{ctype}> {self.name}_b {{{bstring}}};"
+  
+  def get_callarg_line(self) -> str:
+    return f"{self.name}_zero, {self.name}_w, {self.name}_b"
+
+
+class QLinearConvOp(OpParser):
+  include_file: str = "graph_quantize_linear.h"
+
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 10
+    tin, tin_scale, tin_zero, tw, tw_scale, tw_zero, tout_scale, tout_zero, tbias, tout = tensors
+
+    inB, inC, inH, inW = tin.shape
+    wM, wC, wK1, wK2 = tw.shape
+    bM, = tbias.shape
+    outB, outM, outH, outW = tout.shape
+    
+    assert inH == inW and outH == outW and inC == wC and wM == bM and bM == outM \
+      and inB == outB and wK1 == wK2
+
+    self.INP_W, self.OUT_W, self.B, self.C, self.M, self.K = inH, outH, inB, inC, wM, wK1 #config
+    self.dtype = tout.dtype
+    self.out_size = tout.size
+
+    vector_size = VECTOR_WORD_BOUNDARY // tin.dtype.itemsize
+
+    tw = pad_lastdim(tw, "QLinearConvOp weights", vector_size)
+    if wK1 == 5:
+      tw = tw[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
+    
+    self.in_zero = tin_zero # heap
+    self.weights, self.bias = tw, tbias
+
+    # pad INP_W, OUT_W to vector boundary
+    self.outname_2_tensors[f"{self.name}_in.txt"] = pad_lastdim(
+      tin, "QLinearConvOp tin", vector_size, value=tin_zero) #files
+    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = pad_lastdim(
+      tout, "QLinearConvOp tout", vector_size, value=tin_zero)
+    
+  def get_kernel_line(self) -> str:
+    graph = "QLinearConvScalar"
+    kernel = "QLinearConvGraph"
+    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
+
+  def get_arg_line(self) -> str:
+    ctype = dtype_to_cstr(self.dtype)
+    return f"{ctype} {self.name}_zero,\nstd::vector<{ctype}> {self.name}_w,\nstd::vector<{ctype}> {self.name}_b"
+  
+  def get_initlist_line(self) -> str:
+    return f"{self.name}({self.name}_zero, {self.name}_w, {self.name}_b)"
+  
+  def get_weight_line(self) -> str:
+    wstring = str(self.weights.flatten().tolist())[1:-1]
+    bstring = str(self.bias.flatten().tolist())[1:-1]
+    ctype = dtype_to_cstr(self.dtype)
+    return f"{ctype} {self.name}_zero {self.in_zero};\n" + \
+      f"std::vector<{ctype}> {self.name}_w {{{wstring}}};\n" + \
+      f"std::vector<{ctype}> {self.name}_b {{{bstring}}};"
+  
+  def get_callarg_line(self) -> str:
+    return f"{self.name}_zero, {self.name}_w, {self.name}_b"
+
+
 class QuantizeLinearOp(OpParser):
   include_file: str = "graph_quantize_linear.h"
 
@@ -258,63 +371,3 @@ class QuantizeLinearOp(OpParser):
   
   def get_callarg_line(self) -> str:
     return f"{self.name}_scale, {self.name}_zero"
-
-
-class QLinearConvOp(OpParser):
-  include_file: str = "graph_quantize_linear.h"
-
-  def register_params(self, tensors: List[np.ndarray]):
-    assert len(tensors) == 10
-    tin, tin_scale, tin_zero, tw, tw_scale, tw_zero, tout_scale, tout_zero, tbias, tout = tensors
-
-    inB, inC, inH, inW = tin.shape
-    wM, wC, wK1, wK2 = tw.shape
-    bM, = tbias.shape
-    outB, outM, outH, outW = tout.shape
-    
-    assert inH == inW and outH == outW and inC == wC and wM == bM and bM == outM \
-      and inB == outB and wK1 == wK2
-
-    self.INP_W, self.OUT_W, self.B, self.C, self.M, self.K = inH, outH, inB, inC, wM, wK1 #config
-    self.dtype = tout.dtype
-    self.out_size = tout.size
-
-    vector_size = VECTOR_WORD_BOUNDARY // tin.dtype.itemsize
-
-    tw = pad_lastdim(tw, "QLinearConvOp weights", vector_size)
-    if wK1 == 5:
-      tw = tw[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
-    
-    self.in_zero = tin_zero # heap
-    self.weights, self.bias = tw, tbias
-
-    # pad INP_W, OUT_W to vector boundary
-    self.outname_2_tensors[f"{self.name}_in.txt"] = pad_lastdim(
-      tin, "QLinearConvOp tin", vector_size, value=tin_zero) #files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = pad_lastdim(
-      tout, "QLinearConvOp tout", vector_size, value=tin_zero)
-    
-    import ipdb;ipdb.set_trace()
-  
-  def get_kernel_line(self) -> str:
-    graph = "QLinearConvScalar"
-    kernel = "QLinearConvGraph"
-    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
-
-  def get_arg_line(self) -> str:
-    ctype = dtype_to_cstr(self.dtype)
-    return f"{ctype} {self.name}_zero,\nstd::vector<{ctype}> {self.name}_w,\nstd::vector<{ctype}> {self.name}_b"
-  
-  def get_initlist_line(self) -> str:
-    return f"{self.name}({self.name}_zero, {self.name}_w, {self.name}_b)"
-  
-  def get_weight_line(self) -> str:
-    wstring = str(self.weights.flatten().tolist())[1:-1]
-    bstring = str(self.bias.flatten().tolist())[1:-1]
-    ctype = dtype_to_cstr(self.dtype)
-    return f"{ctype} {self.name}_zero {self.in_zero};\n" + \
-      f"std::vector<{ctype}> {self.name}_w {{{wstring}}};\n" + \
-      f"std::vector<{ctype}> {self.name}_b {{{bstring}}};"
-  
-  def get_callarg_line(self) -> str:
-    return f"{self.name}_zero, {self.name}_w, {self.name}_b"
