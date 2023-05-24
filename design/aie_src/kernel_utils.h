@@ -24,10 +24,10 @@ void print_fvec(VECTYPE* vec, int N) {
   printf("\n");
 }
 
-template<typename VECTYPE>
+template<typename VECTYPE, typename CAST>
 void print_vec(VECTYPE* vec, int N) {
   for (int i = 0; i < N; i++) 
-    printf("%d ", vec[i]);
+    printf("%d ", (CAST) vec[i]);
   printf("\n");
 }
 
