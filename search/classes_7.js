@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['qgemmgraph_0',['QGemmGraph',['../classQGemmGraph.html',1,'']]],
+  ['qgemmgraph_0',['QgemmGraph',['../classQgemmGraph.html',1,'']]],
   ['qgemmscalar_1',['QgemmScalar',['../classQgemmScalar.html',1,'']]],
   ['qgemmvector_2',['QgemmVector',['../classQgemmVector.html',1,'']]],
   ['qlinearconvgraph_3',['QLinearConvGraph',['../classQLinearConvGraph.html',1,'']]],

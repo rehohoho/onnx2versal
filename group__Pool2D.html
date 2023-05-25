@@ -115,7 +115,7 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolGraph.html">MaxpoolGraph&lt; POOL, TT, INP_W, OUT_W, B, C &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolGraph.html">MaxpoolGraph&lt; POOL, TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph.  <a href="classMaxpoolGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -124,8 +124,11 @@ Classes</h2></td></tr>
   <table class="tparams">
     <tr><td class="paramname">TT</td><td>input and output type </td></tr>
     <tr><td class="paramname">POOL</td><td>Pool Kernel </td></tr>
-    <tr><td class="paramname">INP_W</td><td>input width/height </td></tr>
-    <tr><td class="paramname">OUT_W</td><td>output width/height, = INP_W - K/2 </td></tr>
+    <tr><td class="paramname">INP_H</td><td>input height </td></tr>
+    <tr><td class="paramname">INP_W</td><td>input width for computation </td></tr>
+    <tr><td class="paramname">INP_W_PAD</td><td>input width of tensor </td></tr>
+    <tr><td class="paramname">OUT_W</td><td>output width for computation = INP_W - K/2 </td></tr>
+    <tr><td class="paramname">OUT_W_PAD</td><td>output width of tensor </td></tr>
     <tr><td class="paramname">B</td><td>batch size </td></tr>
     <tr><td class="paramname">C</td><td>input channels </td></tr>
   </table>

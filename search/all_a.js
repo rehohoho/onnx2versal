@@ -1,7 +1,7 @@
 var searchData=
 [
   ['qgemm_0',['Qgemm',['../group__Qgemm.html',1,'']]],
-  ['qgemmgraph_1',['QGemmGraph',['../classQGemmGraph.html',1,'']]],
+  ['qgemmgraph_1',['QgemmGraph',['../classQgemmGraph.html',1,'']]],
   ['qgemmkernels_2',['QgemmKernels',['../group__QgemmKernels.html',1,'']]],
   ['qgemmscalar_3',['QgemmScalar',['../classQgemmScalar.html',1,'']]],
   ['qgemmvector_4',['QgemmVector',['../classQgemmVector.html',1,'']]],
