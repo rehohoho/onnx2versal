@@ -1,4 +1,5 @@
 from typing import List
+import math
 
 import numpy as np
 
@@ -341,25 +342,32 @@ class QLinearConvOp(OpParser):
 
 
 class QuantizeLinearOp(OpParser):
+  """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for OUT_W
+  """
   include_file: str = "graph_quantize_linear.h"
 
   def register_params(self, tensors: List[np.ndarray]):
     assert len(tensors) == 4
-    tin, tscale, tzero, tout = tensors
-
-    assert tin.size == tout.size and tscale.shape == () and tzero.shape == ()
     
-    self.WINDOW_SIZE = tin.size # config
-    self.dtype = tout.dtype
-    self.out_size = tout.size
+    tin, tscale, tzero, tout = tensors
+    assert tin.size == tout.size and tscale.shape == () and tzero.shape == ()
+
+    self.tout = tout # reference copy to check against to compress graph
 
     self.varname_2_tensors[f"{self.name}_scale"] = tscale # heap
     self.varname_2_tensors[f"{self.name}_zero"] = tzero
 
     self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
+    tout = pad_lastdim(tout, "QuantizeLinearOp tout", get_vector_boundary(tout))
     self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    assert tout.shape[:-1] == tin.shape[:-1]
+    
+    inH = math.prod(tin.shape[:-1]) # config
+    self.INP_H, self.INP_W, self.OUT_W = inH, tin.shape[-1], tout.shape[-1]
+    self.dtype = tout.dtype
+    self.out_size = tout.size
   
   def get_kernel_line(self) -> str:
     graph = "QuantizeLinearGraph"
     kernel = "QuantizeLinearScalar"
-    return f"{graph}<{kernel},{self.WINDOW_SIZE}> {self.name};"
+    return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
