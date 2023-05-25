@@ -25,12 +25,12 @@
  * @brief Scalar implementation for BHWC.
  * MaxpoolScalarBHWC::filter<24, 12, 1, 6> total = 7673
  */
-template <int INP_W, int OUT_W, int B, int C>
+template <typename TT, int INP_W, int OUT_W, int B, int C>
 class MaxpoolScalarBHWC {
   public:
     void filter(
-      input_window<float>* in,      // BHWC (1x24x24x6)
-      output_window<float>* out     // BPQC (1x12x12x6)
+      input_window<TT>* in,      // BHWC (1x24x24x6)
+      output_window<TT>* out     // BPQC (1x12x12x6)
     );
     static void registerKernelClass() {
       REGISTER_FUNCTION(MaxpoolScalarBHWC::filter);
@@ -42,12 +42,12 @@ class MaxpoolScalarBHWC {
  * @brief Scalar implementation for BHWC.
  * MaxpoolScalarBCHW::filter<24, 12, 1, 6> total = 11302
  */
-template <int INP_W, int OUT_W, int B, int C>
+template <typename TT, int INP_W, int OUT_W, int B, int C>
 class MaxpoolScalarBCHW {
   public:
     void filter(
-      input_window<float>* in,      // BCHW (1x6x24x24)
-      output_window<float>* out     // BCPQ (1x6x12x12)
+      input_window<TT>* in,      // BCHW (1x6x24x24)
+      output_window<TT>* out     // BCPQ (1x6x12x12)
     );
     static void registerKernelClass() {
       REGISTER_FUNCTION(MaxpoolScalarBCHW::filter);
@@ -60,7 +60,7 @@ class MaxpoolScalarBCHW {
  * Requires OUT_W%4=0.
  * Maxpool2x2BCHW::filter<24, 12, 1, 6> total = 901
  */
-template <int INP_W, int OUT_W, int B, int C>
+template <typename TT, int INP_W, int OUT_W, int B, int C>
 class Maxpool2x2BCHW {
   public:
     void filter(
@@ -68,7 +68,7 @@ class Maxpool2x2BCHW {
       output_window<float>* out_window     // BCPQ (1x6x12x12)
     );
     static void registerKernelClass() {
-      assert(OUT_W%4==0);
+      assert(OUT_W%4==0 && (std::is_same<TT, float>::value));
       REGISTER_FUNCTION(Maxpool2x2BCHW::filter);
     }
 };

@@ -4,10 +4,10 @@
 #include "kernel_utils.h"
 
 
-template <int INP_W, int OUT_W, int B, int C>
-void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
-  input_window<float>* in,      // BHWC (1x24x24x6)
-  output_window<float>* out     // BPQC (1x12x12x6)
+template <typename TT, int INP_W, int OUT_W, int B, int C>
+void MaxpoolScalarBHWC<TT, INP_W, OUT_W, B, C>::filter(
+  input_window<TT>* in,      // BHWC (1x24x24x6)
+  output_window<TT>* out     // BPQC (1x12x12x6)
 ) {
   PROFILE_HEADER(printf(
     "Running MaxpoolScalarBHWC::filter<%d, %d, %d, %d>\n", INP_W, OUT_W, B, C));
@@ -18,11 +18,11 @@ void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
     for (int h = 0; h < OUT_W; h++) {
       for (int w = 0; w < OUT_W; w++) {
 
-        float arr[C] = {-std::numeric_limits<double>::infinity()};
+        TT arr[C] = {-std::numeric_limits<TT>::infinity()};
         for (int p = 0; p < K; p++) {
           for (int q = 0; q < K; q++) {
             for (int c = 0; c < C; c++) {
-              float a = window_readincr(in);
+              TT a = window_readincr(in);
               arr[c] = (arr[c] < a) ? a : arr[c];
             }
           }
@@ -42,10 +42,10 @@ void MaxpoolScalarBHWC<INP_W, OUT_W, B, C>::filter(
 }
 
 
-template <int INP_W, int OUT_W, int B, int C>
-void MaxpoolScalarBCHW<INP_W, OUT_W, B, C>::filter(
-  input_window<float>* in,      // BCHW (1x6x24x24)
-  output_window<float>* out     // BCPQ (1x6x12x12)
+template <typename TT, int INP_W, int OUT_W, int B, int C>
+void MaxpoolScalarBCHW<TT, INP_W, OUT_W, B, C>::filter(
+  input_window<TT>* in,      // BCHW (1x6x24x24)
+  output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {
   PROFILE_HEADER(printf(
     "Running MaxpoolScalarBCHW::filter<%d, %d, %d, %d>\n", INP_W, OUT_W, B, C));
@@ -57,10 +57,10 @@ void MaxpoolScalarBCHW<INP_W, OUT_W, B, C>::filter(
       for (int h = 0; h < OUT_W; h++) {
         for (int w = 0; w < OUT_W; w++) {
 
-          float c = -std::numeric_limits<double>::infinity();
+          TT c = -std::numeric_limits<TT>::infinity();
           for (int p = 0; p < K; p++) {
             for (int q = 0; q < K; q++) {
-              float a = window_readincr(in);
+              TT a = window_readincr(in);
               c = (a > c) ? a : c;
             }
             window_incr(in, -K+INP_W); // left K, down 1
@@ -78,8 +78,8 @@ void MaxpoolScalarBCHW<INP_W, OUT_W, B, C>::filter(
 }
 
 
-template <int INP_W, int OUT_W, int B, int C>
-void Maxpool2x2BCHW<INP_W, OUT_W, B, C>::filter(
+template <typename TT, int INP_W, int OUT_W, int B, int C>
+void Maxpool2x2BCHW<TT, INP_W, OUT_W, B, C>::filter(
   input_window<float>* in_window,      // BCHW (1x6x24x24)
   output_window<float>* out_window     // BCPQ (1x6x12x12)
 ) {

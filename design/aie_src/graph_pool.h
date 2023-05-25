@@ -10,6 +10,7 @@
  * 
  * @brief Pool2D function on BCHW, yielding BCH'W', where H'=H/factor, W'=W/factor
  * 
+ * @tparam TT       input and output type
  * @tparam POOL     Pool Kernel
  * @tparam INP_W    input width/height
  * @tparam OUT_W    output width/height, = INP_W - K/2
@@ -27,11 +28,12 @@
  * @connect{pout[0], B*C*OUT_W*OUT_W*4}
  * @endconnections
  */
-template <template<int, int, int, int> class POOL,
-  int INP_W, int OUT_W, int B, int C>
+template <template<typename, int, int, int, int> class POOL,
+  typename TT, int INP_W, int OUT_W, int B, int C>
 class MaxpoolGraph : public adf::graph {
 
   private:
+    static constexpr int TTSIZE = sizeof(TT);
     adf::kernel k[1];
     std::string id;
 
@@ -40,13 +42,13 @@ class MaxpoolGraph : public adf::graph {
     adf::port<output> pout[1];
 
     MaxpoolGraph() { 
-      k[0] = adf::kernel::create_object<POOL<INP_W, OUT_W, B, C>>();
+      k[0] = adf::kernel::create_object<POOL<TT, INP_W, OUT_W, B, C>>();
       adf::source(k[0]) = "pool.cc";
       adf::headers(k[0]) = {"pool.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_W*OUT_W*C*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*INP_W*INP_W*C*TTSIZE>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<B*OUT_W*OUT_W*C*TTSIZE>> (k[0].out[0], pout[0]);
     }
 
 };
