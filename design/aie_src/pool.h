@@ -25,7 +25,7 @@
  * @brief Scalar implementation for BHWC.
  * MaxpoolScalarBHWC::filter<24, 12, 1, 6> total = 7673
  */
-template <typename TT, int INP_W, int OUT_W, int B, int C>
+template <typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
 class MaxpoolScalarBHWC {
   public:
     void filter(
@@ -42,7 +42,7 @@ class MaxpoolScalarBHWC {
  * @brief Scalar implementation for BHWC.
  * MaxpoolScalarBCHW::filter<24, 12, 1, 6> total = 11302
  */
-template <typename TT, int INP_W, int OUT_W, int B, int C>
+template <typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
 class MaxpoolScalarBCHW {
   public:
     void filter(
@@ -60,7 +60,7 @@ class MaxpoolScalarBCHW {
  * Requires OUT_W%4=0.
  * Maxpool2x2BCHW::filter<24, 12, 1, 6> total = 901
  */
-template <typename TT, int INP_W, int OUT_W, int B, int C>
+template <typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
 class Maxpool2x2BCHW {
   public:
     void filter(
