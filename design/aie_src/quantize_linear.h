@@ -2,6 +2,7 @@
 #define QUANTIZE_LINEAR_H
 
 #include <adf.h>
+#include <assert.h>
 
 
 /** 
@@ -16,7 +17,7 @@
 
 
 /**
- * @brief Scalar implementation, QuantizeLinearScalar<1*1*28*28> takes  cycles
+ * @brief Scalar implementation, QuantizeLinearScalar<1*1*28*28> takes 166265 cycles
  */
 template <int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearScalar {
@@ -38,6 +39,35 @@ class QuantizeLinearScalar {
 
 		static void registerKernelClass() {
 			REGISTER_FUNCTION(QuantizeLinearScalar::filter);
+		}
+};
+
+
+/**
+ * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 38890 cycles,
+ * requires INP_W%4==0, OUT_W%16==0
+ */
+template <int INP_H, int INP_W, int OUT_W>
+class QuantizeLinearVector {
+  
+  private:
+    float y_scale;
+    int y_zero_point; // same type as output
+	
+  public:
+    QuantizeLinearVector (
+      float y_scale,
+      int y_zero_point
+    ): y_scale(y_scale), y_zero_point(y_zero_point) {};
+
+		void filter(
+			input_window<float>* in,
+			output_window<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+      assert(INP_W%4 == 0 && OUT_W%16 == 0);
+			REGISTER_FUNCTION(QuantizeLinearVector::filter);
 		}
 };
 /** @}*/
