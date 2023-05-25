@@ -211,31 +211,38 @@ class GemmOp(OpParser):
 
 
 class PoolOp(OpParser):
+  """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for OUT_W
+  """
   include_file: str = "graph_pool.h"
   
   def register_params(self, tensors: List[np.ndarray]):
     assert len(tensors) == 2
+    
     tin, tout = tensors
-
     inB, inC, inH, inW = tin.shape
     outB, outC, outH, outW = tout.shape
-    
     assert inH == inW and outH == outW and inC == outC and inB == outB
 
-    self.INP_W, self.OUT_W, self.B, self.C = inH, outH, inB, inC #config
+    self.tout = tout # reference copy to check against to compress graph
+    
+    tin = pad_lastdim(tin, "PoolOp tin", get_vector_boundary(tout)) #files
+    self.filename_2_tensors[f"{self.name}_in.txt"] = tin
+    tout = pad_lastdim(tout, "PoolOp tout", get_vector_boundary(tout))
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    assert tin.shape[:-2] == tout.shape[:-2] and tin.shape[-2] % tout.shape[-2] == 0
+    
+    self.INP_H, self.INP_W, self.INP_W_PAD = inH, inW, tin.shape[-1]
+    self.OUT_W, self.OUT_W_PAD = outW, tout.shape[-1]
+    self.B, self.C = inB, inC
     self.dtype = tout.dtype
     self.out_size = tout.size
-    self.tout = tout
-
-    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
   
   def get_kernel_line(self) -> str:
     graph = "MaxpoolGraph"
     kernel = "MaxpoolScalarBCHW"
-    if self.OUT_W % 4 == 0 and self.dtype == "float32":
+    if self.OUT_W % 4 == 0 and self.INP_W/self.OUT_W == 2 and self.dtype == "float32":
       kernel = "Maxpool2x2BCHW"
-    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
+    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.INP_W_PAD},{self.OUT_W},{self.OUT_W_PAD},{self.B},{self.C}> {self.name};"
 
 
 class QGemm(OpParser):
@@ -307,6 +314,8 @@ class QLinearConvOp(OpParser):
     assert inH == inW and outH == outW and inC == wC and wM == bM and bM == outM \
       and inB == outB and wK1 == wK2
 
+    self.tout = tout # reference copy to check against to compress graph
+    
     self.INP_W, self.OUT_W, self.B, self.C, self.M, self.K = inH, outH, inB, inC, wM, wK1 #config
     self.dtype = tout.dtype
     self.out_size = tout.size
