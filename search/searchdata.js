@@ -1,9 +1,9 @@
 var indexSectionsWithContent =
 {
-  0: "acfgilmopqt",
-  1: "acgimpqt",
+  0: "acdfgilmopqt",
+  1: "acdgimpqt",
   2: "f",
-  3: "acgilpqt",
+  3: "acdgilpqt",
   4: "lo"
 };
 

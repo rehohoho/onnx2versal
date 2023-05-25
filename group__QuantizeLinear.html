@@ -115,7 +115,7 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinearGraph.html">QuantizeLinearGraph&lt; QUANTIZE_LINEAR, WINDOW_SIZE &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinearGraph.html">QuantizeLinearGraph&lt; QUANTIZE_LINEAR, INP_H, INP_W, OUT_W &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph.  <a href="classQuantizeLinearGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -123,7 +123,9 @@ Classes</h2></td></tr>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">QUANTIZE_LINAER</td><td>QuantizeLinaer Kernel </td></tr>
-    <tr><td class="paramname">WINDOW_SIZE</td><td>size of window </td></tr>
+    <tr><td class="paramname">INP_H</td><td>input height </td></tr>
+    <tr><td class="paramname">INP_W</td><td>input width </td></tr>
+    <tr><td class="paramname">OUT_W</td><td>output width, allows padding, expects OUT_W &gt;= INP_W </td></tr>
   </table>
   </dd>
 </dl>

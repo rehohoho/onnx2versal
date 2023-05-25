@@ -1,5 +1,11 @@
 var searchData=
 [
-  ['transposegraph_0',['TransposeGraph',['../classTransposeGraph.html',1,'']]],
-  ['transposescalarbhwc2bchw_1',['TransposeScalarBHWC2BCHW',['../classTransposeScalarBHWC2BCHW.html',1,'']]]
+  ['qgemmgraph_0',['QGemmGraph',['../classQGemmGraph.html',1,'']]],
+  ['qgemmscalar_1',['QgemmScalar',['../classQgemmScalar.html',1,'']]],
+  ['qgemmvector_2',['QgemmVector',['../classQgemmVector.html',1,'']]],
+  ['qlinearconvgraph_3',['QLinearConvGraph',['../classQLinearConvGraph.html',1,'']]],
+  ['qlinearconvscalar_4',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
+  ['qlinearconvvector_5',['QLinearConvVector',['../classQLinearConvVector.html',1,'']]],
+  ['quantizelineargraph_6',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearscalar_7',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]]
 ];

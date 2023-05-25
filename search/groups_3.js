@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['identity_0',['Identity',['../group__Identity.html',1,'']]],
-  ['identitykernels_1',['IdentityKernels',['../group__IdentityKernels.html',1,'']]]
+  ['gemm_0',['Gemm',['../group__Gemm.html',1,'']]],
+  ['gemmkernels_1',['GemmKernels',['../group__GemmKernels.html',1,'']]]
 ];

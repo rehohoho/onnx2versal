@@ -1,4 +1,7 @@
 var searchData=
 [
-  ['filter_0',['filter',['../classQgemmVector.html#a8e237fc0e3f813ecaf7171065fedae20',1,'QgemmVector::filter()'],['../classQLinearConvVector.html#a2fa8173c6083a1c04664b265d1295e17',1,'QLinearConvVector::filter()']]]
+  ['dequantizelinear_0',['DequantizeLinear',['../group__DequantizeLinear.html',1,'']]],
+  ['dequantizelineargraph_1',['DequantizeLinearGraph',['../classDequantizeLinearGraph.html',1,'']]],
+  ['dequantizelinearkernels_2',['DequantizeLinearKernels',['../group__DequantizeLinearKernels.html',1,'']]],
+  ['dequantizelinearscalar_3',['DequantizeLinearScalar',['../classDequantizeLinearScalar.html',1,'']]]
 ];

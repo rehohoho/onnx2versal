@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['gemm_0',['Gemm',['../group__Gemm.html',1,'']]],
-  ['gemmkernels_1',['GemmKernels',['../group__GemmKernels.html',1,'']]]
+  ['dequantizelinear_0',['DequantizeLinear',['../group__DequantizeLinear.html',1,'']]],
+  ['dequantizelinearkernels_1',['DequantizeLinearKernels',['../group__DequantizeLinearKernels.html',1,'']]]
 ];

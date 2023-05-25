@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['lenet_0',['Lenet',['../group__Lenet.html',1,'']]]
+  ['identity_0',['Identity',['../group__Identity.html',1,'']]],
+  ['identitykernels_1',['IdentityKernels',['../group__IdentityKernels.html',1,'']]]
 ];

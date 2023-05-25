@@ -1,4 +1,4 @@
 var group__QuantizeLinearKernels =
 [
-    [ "QuantizeLinearScalar< WINDOW_SIZE >", "classQuantizeLinearScalar.html", null ]
+    [ "QuantizeLinearScalar< INP_H, INP_W, OUT_W >", "classQuantizeLinearScalar.html", null ]
 ];

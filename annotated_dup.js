@@ -13,6 +13,8 @@ var annotated_dup =
     [ "ConvReluScalarBCHW", "classConvReluScalarBCHW.html", null ],
     [ "ConvReluScalarBHWC", "classConvReluScalarBHWC.html", null ],
     [ "ConvReluScalarGmemParamBHWC", "classConvReluScalarGmemParamBHWC.html", null ],
+    [ "DequantizeLinearGraph", "classDequantizeLinearGraph.html", null ],
+    [ "DequantizeLinearScalar", "classDequantizeLinearScalar.html", null ],
     [ "GemmReluGmemParamGraph", "classGemmReluGmemParamGraph.html", null ],
     [ "GemmReluGraph", "classGemmReluGraph.html", null ],
     [ "GemmReluMKKN", "classGemmReluMKKN.html", null ],
