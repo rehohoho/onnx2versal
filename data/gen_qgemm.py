@@ -35,8 +35,8 @@ tin_zero = 25
 tw_zero = 0
 tout_zero = 19
 
-tin = np.arange(M*K).astype(np.int8).reshape(M,K)
-tw = np.arange(N*K).astype(np.int8).reshape(K,N)
+tin = np.tile(np.arange(11), M*K//11+1).astype(np.int8)[:M*K].reshape(M,K)
+tw = np.tile(np.arange(11), K*N//11+1).astype(np.int8)[:K*N].reshape(K,N)
 tbias = (np.arange(N) / (tin_scale*tw_scale/tout_scale)).astype(np.int32)
 
 # padding for vector read/write

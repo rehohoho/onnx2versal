@@ -31,7 +31,7 @@
  * @endconnections
  */
 template <template<int, int, int, int> class QGEMM, int M, int K, int N, int NPAD>
-class QGemmGraph : public adf::graph {
+class QgemmGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -40,7 +40,7 @@ class QGemmGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    QGemmGraph(
+    QgemmGraph(
       std::vector<int8_t> weights,
       std::vector<int32_t> bias,
       float x_scale,
