@@ -18,7 +18,7 @@
 /**
  * @brief Scalar implementation, QuantizeLinearScalar<1*1*28*28> takes  cycles
  */
-template <int WINDOW_SIZE>
+template <int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearScalar {
   
   private:

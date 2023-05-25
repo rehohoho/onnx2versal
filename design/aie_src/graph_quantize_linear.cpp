@@ -2,11 +2,11 @@
 #include "graph_utils.h"
 
 
-template <template<int> class QUANTIZE_LINEAR, int WINDOW_SIZE>
+template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearScalarTest : public adf::graph {
 
   private:
-    QuantizeLinearGraph<QUANTIZE_LINEAR, WINDOW_SIZE> g;
+    QuantizeLinearGraph<QUANTIZE_LINEAR, INP_H, INP_W, OUT_W> g;
 
   public:
     adf::input_plio plin[1];
@@ -21,14 +21,14 @@ class QuantizeLinearScalarTest : public adf::graph {
     ): g(y_scale, y_zero_point) { 
       plin[0] = adf::input_plio::create("plin0_quantize_linear"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_quantize_linear"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<WINDOW_SIZE*4>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<WINDOW_SIZE>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<INP_H*INP_W*4>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<INP_H*OUT_W>> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
-QuantizeLinearScalarTest<QuantizeLinearScalar, 1*1*28*28> quantizeLinearScalar(
+QuantizeLinearScalarTest<QuantizeLinearScalar, 28, 28, 32> quantizeLinearScalar(
   "quantizeLinearScalar", 
   "k0quantizelinear_in.txt", 
   "k0quantizelinear_goldenout.txt",

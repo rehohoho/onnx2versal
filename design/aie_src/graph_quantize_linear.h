@@ -15,7 +15,9 @@
  * nearest even. 
  * 
  * @tparam QUANTIZE_LINAER  QuantizeLinaer Kernel
- * @tparam WINDOW_SIZE	    size of window
+ * @tparam INP_H	          input height
+ * @tparam INP_W	          input width
+ * @tparam OUT_W	          output width, allows padding, expects OUT_W >= INP_W
  * 
  * @{
  */
@@ -24,11 +26,11 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], WINDOW_SIZE*4}
- * @connect{pout[0], WINDOW_SIZE}
+ * @connect{pin[0], INP_H*INP_W*4}
+ * @connect{pout[0], INP_H*OUT_W}
  * @endconnections
  */
-template <template<int> class QUANTIZE_LINEAR, int WINDOW_SIZE>
+template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearGraph : public adf::graph {
 
   private:
@@ -43,13 +45,13 @@ class QuantizeLinearGraph : public adf::graph {
       float y_scale,
       int y_zero_point
     ) { 
-      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<WINDOW_SIZE>>(y_scale, y_zero_point);
+      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<INP_H, INP_W, OUT_W>>(y_scale, y_zero_point);
       adf::source(k[0]) = "quantize_linear.cc";
       adf::headers(k[0]) = {"quantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<WINDOW_SIZE*4>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<WINDOW_SIZE>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<INP_H*INP_W*4>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<INP_H*OUT_W>> (k[0].out[0], pout[0]);
     }
 
 };
