@@ -2,13 +2,14 @@
 #include "graph_utils.h"
 
 
-template <template<typename, int, int, int, int> class POOL,
-  typename TT, int INP_W, int OUT_W, int B, int C>
+template <template<typename, int, int, int, int, int, int, int> class POOL,
+  typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
 class MaxpoolGraphTest : public adf::graph {
 
   private:
     static constexpr int TTSIZE = sizeof(TT);
-    MaxpoolGraph<POOL, TT, INP_W, OUT_W, B, C> g;
+    static constexpr int K = INP_H/OUT_W;
+    MaxpoolGraph<POOL, TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C> g;
 
   public:
     adf::input_plio plin[1];
@@ -21,28 +22,28 @@ class MaxpoolGraphTest : public adf::graph {
     ) { 
       plin[0] = adf::input_plio::create("plin0_maxpool"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_maxpool"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<B*INP_W*INP_W*C*TTSIZE>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<B*OUT_W*OUT_W*C*TTSIZE>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<B*INP_H*INP_W_PAD*C*TTSIZE>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<B*INP_H/K*OUT_W_PAD*C*TTSIZE>> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
 // BHWC
-MaxpoolGraphTest<MaxpoolScalarBHWC, float, 24, 12, 1, 6> maxpoolScalarBHWC(
+MaxpoolGraphTest<MaxpoolScalarBHWC, float, 24, 24, 24, 12, 12, 1, 6> maxpoolScalarBHWC(
   "maxpoolScalarBHWC", "pool_fpin.txt", "pool_fpout_MaxpoolScalarBHWC.txt");
-MaxpoolGraphTest<MaxpoolScalarBHWC, float, 24, 12, 1, 6> maxpoolScalarBHWC_rand(
+MaxpoolGraphTest<MaxpoolScalarBHWC, float, 24, 24, 24, 12, 12, 1, 6> maxpoolScalarBHWC_rand(
   "maxpoolScalarBHWC_rand", "pool_fpin_rand.txt", "pool_fpout_MaxpoolScalarBHWC_rand.txt");
 
 // BCHW
-MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 12, 1, 6> maxpoolScalarBCHW(
+MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpoolScalarBCHW(
   "maxpoolScalarBCHW", "pool_fpin.txt", "pool_fpout_MaxpoolScalarBCHW.txt");
-MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 12, 1, 6> maxpoolScalarBCHW_rand(
+MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpoolScalarBCHW_rand(
   "maxpoolScalarBCHW_rand", "pool_fpin_rand.txt", "pool_fpout_MaxpoolScalarBCHW_rand.txt");
 
-MaxpoolGraphTest<Maxpool2x2BCHW, float, 24, 12, 1, 6> maxpool2x2BCHW(
+MaxpoolGraphTest<Maxpool2x2BCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpool2x2BCHW(
   "maxpool2x2BCHW", "pool_fpin.txt", "pool_fpout_Maxpool2x2BCHW.txt");
-MaxpoolGraphTest<Maxpool2x2BCHW, float, 24, 12, 1, 6> maxpool2x2BCHW_rand(
+MaxpoolGraphTest<Maxpool2x2BCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpool2x2BCHW_rand(
   "maxpool2x2BCHW_rand", "pool_fpin_rand.txt", "pool_fpout_Maxpool2x2BCHW_rand.txt");
 
 
