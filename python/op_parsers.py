@@ -18,6 +18,17 @@ def dtype_to_cstr(np_dtype: np.dtype):
     raise NotImplementedError(f"Not implemented type {np_dtype}")
 
 
+def get_vector_boundary(tensor: np.ndarray):
+  return VECTOR_WORD_BOUNDARY // tensor.dtype.itemsize
+
+
+def get_tensor_type(tensor: np.ndarray):
+  if tensor.shape == ():
+    return dtype_to_cstr(tensor.dtype)
+  else:
+    return f"std::vector<{dtype_to_cstr(tensor.dtype)}>"
+
+
 def save_tensor(output_path: str, 
                 tensor: np.ndarray):
     n_lines = PLIO_WIDTH//tensor.dtype.itemsize
@@ -50,25 +61,38 @@ class OpParser:
 
   def __init__(self, name: str):
     self.name = name
-    self.outname_2_tensors = {}
+    self.varname_2_tensors = {}  # generate files
+    self.filename_2_tensors = {} # output txt
   
   def get_include_line(self) -> str:
     return f'#include "{self.include_file}"'
   
   def get_arg_line(self) -> str:
-    return f""
+    return ",\n".join(
+      f"{get_tensor_type(tensor)} {varname}" 
+      for varname, tensor in self.varname_2_tensors.items())
   
   def get_initlist_line(self) -> str:
-    return f""
+    initlist = ", ".join(varname for varname in self.varname_2_tensors)
+    if initlist == "": 
+      return ""
+    return f"{self.name}({initlist})"
   
   def get_weight_line(self) -> str:
-    return f""
+    lines = []
+    for varname, tensor in self.varname_2_tensors.items():
+      tensor_type = get_tensor_type(tensor)
+      if "vector" in tensor_type:
+        lines.append(f"{tensor_type} {varname} {{{str(tensor.flatten().tolist())[1:-1]}}};")
+      else:
+        lines.append(f"{tensor_type} {varname} = {str(tensor)};")
+    return "\n".join(lines)
   
   def get_callarg_line(self) -> str:
-    return f""
+    return ", ".join(varname for varname in self.varname_2_tensors)
   
   def save_txt(self, data_path: str):
-    for outname, outtensor in self.outname_2_tensors.items():
+    for outname, outtensor in self.filename_2_tensors.items():
       save_tensor(f"{data_path}/{outname}", outtensor)
       print(f"Saved tensor of shape {outtensor.shape} into {outname}")
 
@@ -100,11 +124,11 @@ class ConvOp(OpParser):
     self.out_size = tout.size
     self.tout = tout
 
-    self.weights = pad_lastdim(tw, "Conv weights", 8) # heap
-    self.bias = tbias
+    self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw, "Conv weights", 8) # heap
+    self.varname_2_tensors[f"{self.name}_b"] = tbias
 
-    self.outname_2_tensors[f"{self.name}_in.txt"] = tin # files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.filename_2_tensors[f"{self.name}_in.txt"] = tin # files
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
   
   def get_kernel_line(self) -> str:
     graph = "ConvReluGraph"
@@ -113,29 +137,10 @@ class ConvOp(OpParser):
       kernel = "Conv5x5on8ReluBCHW"
     
     return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
-
-  def get_arg_line(self) -> str:
-    ctype = dtype_to_cstr(self.dtype)
-    return f"std::vector<{ctype}> {self.name}_w,\nstd::vector<{ctype}> {self.name}_b"
-  
-  def get_initlist_line(self) -> str:
-    return f"{self.name}({self.name}_w, {self.name}_b)"
-  
-  def get_weight_line(self) -> str:
-    wstring = str(self.weights.flatten().tolist())[1:-1]
-    bstring = str(self.bias.flatten().tolist())[1:-1]
-    ctype = dtype_to_cstr(self.dtype)
-    return f"std::vector<{ctype}> {self.name}_w {{{wstring}}};\n" + \
-      f"std::vector<{ctype}> {self.name}_b {{{bstring}}};"
-  
-  def get_callarg_line(self) -> str:
-    return f"{self.name}_w, {self.name}_b"
   
 
 class DequantizeLinearOp(OpParser):
   include_file: str = "graph_dequantize_linear.h"
-  scale_vname = "_scale"
-  zero_vname = "_zero"
 
   def register_params(self, tensors: List[np.ndarray]):
     assert len(tensors) == 4
@@ -147,30 +152,16 @@ class DequantizeLinearOp(OpParser):
     self.dtype = tout.dtype
     self.out_size = tout.size
 
-    self.scale = tscale.item() # heap
-    self.zero = tzero.item()
-
-    self.outname_2_tensors[f"{self.name}_in.txt"] = tin #files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.varname_2_tensors[f"{self.name}_scale"] = tscale # heap
+    self.varname_2_tensors[f"{self.name}_zero"] = tzero
+    
+    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
   
   def get_kernel_line(self) -> str:
     graph = "DequantizeLinearGraph"
     kernel = "DequantizeLinearScalar"
     return f"{graph}<{kernel},{self.WINDOW_SIZE}> {self.name};"
-
-  def get_arg_line(self) -> str:
-    return f"float {self.name}{self.scale_vname},\n{ctype} {self.name}{self.zero_vname}"
-  
-  def get_initlist_line(self) -> str:
-    return f"{self.name}({self.name}{self.scale_vname}, {self.name}{self.zero_vname})"
-  
-  def get_weight_line(self) -> str:
-    ctype = dtype_to_cstr(self.dtype)
-    return f"float {self.name}{self.scale_vname} {{{self.scale}}};\n" + \
-      f"{ctype} {self.name}{self.zero_vname} {{{self.zero}}};"
-  
-  def get_callarg_line(self) -> str:
-    return f"{self.name}{self.scale_vname}, {self.name}{self.zero_vname}"
 
 
 class GemmOp(OpParser):
@@ -196,11 +187,11 @@ class GemmOp(OpParser):
     self.tout = tout
 
     tw = tw.transpose(1,0) # heap
-    self.weights = pad_lastdim(tw, "Gemm weights", 4) 
-    self.bias = tbias
+    self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw, "Gemm weights", 4) # heap
+    self.varname_2_tensors[f"{self.name}_b"] = tbias
   
-    self.outname_2_tensors[f"{self.name}_in.txt"] = tin #files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
 
   def get_kernel_type(self) -> str:
     graph = "GemmReluMkknChunkGraph"
@@ -216,23 +207,6 @@ class GemmOp(OpParser):
   
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
-
-  def get_arg_line(self) -> str:
-    ctype = dtype_to_cstr(self.dtype)
-    return f"std::vector<{ctype}> {self.name}_w,\nstd::vector<{ctype}> {self.name}_b"
-  
-  def get_initlist_line(self) -> str:
-    return f"{self.name}({self.name}_w, {self.name}_b)"
-  
-  def get_weight_line(self) -> str:
-    wstring = str(self.weights.flatten().tolist())[1:-1]
-    bstring = str(self.bias.flatten().tolist())[1:-1]
-    ctype = dtype_to_cstr(self.dtype)
-    return f"std::vector<{ctype}> {self.name}_w {{{wstring}}};\n" + \
-      f"std::vector<{ctype}> {self.name}_b {{{bstring}}};"
-  
-  def get_callarg_line(self) -> str:
-    return f"{self.name}_w, {self.name}_b"
 
 
 class PoolOp(OpParser):
@@ -252,15 +226,15 @@ class PoolOp(OpParser):
     self.out_size = tout.size
     self.tout = tout
 
-    self.outname_2_tensors[f"{self.name}_in.txt"] = tin #files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
   
   def get_kernel_line(self) -> str:
     graph = "MaxpoolGraph"
     kernel = "MaxpoolScalarBCHW"
-    if self.OUT_W % 4 == 0:
+    if self.OUT_W % 4 == 0 and self.dtype == "float32":
       kernel = "Maxpool2x2BCHW"
-    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
+    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_W},{self.OUT_W},{self.B},{self.C}> {self.name};"
 
 
 class QGemm(OpParser):
@@ -290,17 +264,23 @@ class QGemm(OpParser):
     self.out_size = tout.size
     self.tout = tout
   
-    vector_size = VECTOR_WORD_BOUNDARY // tin.dtype.itemsize
-
-    self.weights = pad_lastdim(tw.T, "QGemm weights", vector_size) # heap
-    self.bias = pad_lastdim(tbias, "QGemm bias", vector_size)
-    self.in_zero = tin_zero
-    self.NPAD = self.weights.shape[-1]
+    vector_size = get_vector_boundary(tin)
+    
+    self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw.T, "QGemm weights", vector_size) # heap
+    self.varname_2_tensors[f"{self.name}_b"] = pad_lastdim(tbias, "QGemm bias", vector_size)
+    self.varname_2_tensors[f"{self.name}_xscale"] = tin_scale
+    self.varname_2_tensors[f"{self.name}_wscale"] = tw_scale
+    self.varname_2_tensors[f"{self.name}_yscale"] = tout_scale
+    self.varname_2_tensors[f"{self.name}_xzero"] = tin_zero
+    self.varname_2_tensors[f"{self.name}_wzero"] = tw_zero
+    self.varname_2_tensors[f"{self.name}_yzero"] = tout_zero
+    
+    self.NPAD = self.varname_2_tensors[f"{self.name}_w"].shape[-1]
 
     # pad INP_W, OUT_W to vector boundary
-    self.outname_2_tensors[f"{self.name}_in.txt"] = pad_lastdim(
+    self.filename_2_tensors[f"{self.name}_in.txt"] = pad_lastdim(
       tin, "QGemm tin", vector_size, value=tin_zero) #files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = pad_lastdim(
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = pad_lastdim(
       tout, "QGemm tout", vector_size, value=tin_zero)
     
   def get_kernel_line(self) -> str:
@@ -310,28 +290,9 @@ class QGemm(OpParser):
       kernel = "QgemmVector"
     return f"{graph}<{kernel},{self.M},{self.K},{self.N},{self.NPAD}> {self.name};"
 
-  def get_arg_line(self) -> str:
-    ctype = dtype_to_cstr(self.dtype)
-    return f"{ctype} {self.name}{self._xzero},\n" + \ 
-      f"std::vector<{ctype}> {self.name}{self._w},\nstd::vector<{ctype}> {self.name}{self._b}"
-  
-  def get_initlist_line(self) -> str:
-    return f"{self.name}({self.name}_zero, {self.name}{self._w}, {self.name}{self._b})"
-  
-  def get_weight_line(self) -> str:
-    wstring = str(self.weights.flatten().tolist())[1:-1]
-    bstring = str(self.bias.flatten().tolist())[1:-1]
-    ctype = dtype_to_cstr(self.dtype)
-    return f"{ctype} {self.name}_zero {self.in_zero};\n" + \
-      f"std::vector<{ctype}> {self.name}{self._w} {{{wstring}}};\n" + \
-      f"std::vector<{ctype}> {self.name}{self._b} {{{bstring}}};"
-  
-  def get_callarg_line(self) -> str:
-    return f"{self.name}_zero, {self.name}{self._w}, {self.name}{self._b}"
-
 
 class QLinearConvOp(OpParser):
-  include_file: str = "graph_quantize_linear.h"
+  include_file: str = "graph_qlinearconv.h"
 
   def register_params(self, tensors: List[np.ndarray]):
     assert len(tensors) == 10
@@ -349,43 +310,34 @@ class QLinearConvOp(OpParser):
     self.dtype = tout.dtype
     self.out_size = tout.size
 
-    vector_size = VECTOR_WORD_BOUNDARY // tin.dtype.itemsize
+    vector_size = get_vector_boundary(tin)
 
     tw = pad_lastdim(tw, "QLinearConvOp weights", vector_size)
     if wK1 == 5:
       tw = tw[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
     
-    self.in_zero = tin_zero # heap
-    self.weights, self.bias = tw, tbias
-
+    self.varname_2_tensors[f"{self.name}_w"] = tw # heap
+    self.varname_2_tensors[f"{self.name}_b"] = tbias
+    self.varname_2_tensors[f"{self.name}_xscale"] = tin_scale
+    self.varname_2_tensors[f"{self.name}_wscale"] = tw_scale
+    self.varname_2_tensors[f"{self.name}_yscale"] = tout_scale
+    self.varname_2_tensors[f"{self.name}_xzero"] = tin_zero
+    self.varname_2_tensors[f"{self.name}_wzero"] = tw_zero
+    self.varname_2_tensors[f"{self.name}_yzero"] = tout_zero
+    
     # pad INP_W, OUT_W to vector boundary
-    self.outname_2_tensors[f"{self.name}_in.txt"] = pad_lastdim(
-      tin, "QLinearConvOp tin", vector_size, value=tin_zero) #files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = pad_lastdim(
-      tout, "QLinearConvOp tout", vector_size, value=tin_zero)
+    tin = pad_lastdim(tin, "QLinearConvOp tin", vector_size, value=tin_zero) #files
+    self.filename_2_tensors[f"{self.name}_in.txt"] = tin
+    tout = pad_lastdim(tout, "QLinearConvOp tout", vector_size, value=tin_zero)
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
+
+    self.INP_W_PAD = tin.shape[-1]
+    self.OUT_W_PAD = tout.shape[-1]
     
   def get_kernel_line(self) -> str:
-    graph = "QLinearConvScalar"
-    kernel = "QLinearConvGraph"
-    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
-
-  def get_arg_line(self) -> str:
-    ctype = dtype_to_cstr(self.dtype)
-    return f"{ctype} {self.name}_zero,\nstd::vector<{ctype}> {self.name}_w,\nstd::vector<{ctype}> {self.name}_b"
-  
-  def get_initlist_line(self) -> str:
-    return f"{self.name}({self.name}_zero, {self.name}_w, {self.name}_b)"
-  
-  def get_weight_line(self) -> str:
-    wstring = str(self.weights.flatten().tolist())[1:-1]
-    bstring = str(self.bias.flatten().tolist())[1:-1]
-    ctype = dtype_to_cstr(self.dtype)
-    return f"{ctype} {self.name}_zero {self.in_zero};\n" + \
-      f"std::vector<{ctype}> {self.name}_w {{{wstring}}};\n" + \
-      f"std::vector<{ctype}> {self.name}_b {{{bstring}}};"
-  
-  def get_callarg_line(self) -> str:
-    return f"{self.name}_zero, {self.name}_w, {self.name}_b"
+    graph = "QLinearConvGraph"
+    kernel = "QLinearConvVector"
+    return f"{graph}<{kernel},{self.INP_W},{self.INP_W_PAD},{self.OUT_W},{self.OUT_W_PAD},{self.B},{self.C},{self.M},{self.K}> {self.name};"
 
 
 class QuantizeLinearOp(OpParser):
@@ -401,27 +353,13 @@ class QuantizeLinearOp(OpParser):
     self.dtype = tout.dtype
     self.out_size = tout.size
 
-    self.scale = tscale.item() # heap
-    self.zero = tzero.item()
+    self.varname_2_tensors[f"{self.name}_scale"] = tscale # heap
+    self.varname_2_tensors[f"{self.name}_zero"] = tzero
 
-    self.outname_2_tensors[f"{self.name}_in.txt"] = tin #files
-    self.outname_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
   
   def get_kernel_line(self) -> str:
     graph = "QuantizeLinearGraph"
     kernel = "QuantizeLinearScalar"
     return f"{graph}<{kernel},{self.WINDOW_SIZE}> {self.name};"
-
-  def get_arg_line(self) -> str:
-    return f"float {self.name}_scale,\n{ctype} {self.name}_zero"
-  
-  def get_initlist_line(self) -> str:
-    return f"{self.name}({self.name}_scale, {self.name}_zero)"
-  
-  def get_weight_line(self) -> str:
-    ctype = dtype_to_cstr(self.dtype)
-    return f"float {self.name}_scale {{{self.scale}}};\n" + \
-      f"{ctype} {self.name}_zero {{{self.zero}}};"
-  
-  def get_callarg_line(self) -> str:
-    return f"{self.name}_scale, {self.name}_zero"
