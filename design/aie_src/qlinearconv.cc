@@ -91,13 +91,14 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
   
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  assert(scalebits <= 24); // since int32_t shift, int8_t y_zero_point
+  printf("scalebits %d\n", scalebits);
+  scalebits = std::min(scalebits, 24); // since int32_t shift, int8_t y_zero_point
 
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
   shift = float2fix((float) y_zero_point, scalebits); // scalebits <= 24,
   
   int width_r = OUT_H % 16;
-  select_mask = ((1 << width_r) - 1) << (16 - width_r);
+  select_mask = (1 << width_r) - 1;
 }
 
 /**
@@ -262,8 +263,8 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
         acc2 = aie::add((aie::accum<acc48,16>) acc2, bias[m]);
         accbuf1 = lsrs(acc1, 0);
         accbuf2 = lsrs(acc2, 0);
-        accbuf1 = select16(select_mask, accbuf1, null_v16int32());
-        accbuf2 = select16(select_mask, accbuf2, null_v16int32());
+        accbuf1 = select16(select_mask, null_v16int32(), accbuf1);
+        accbuf2 = select16(select_mask, null_v16int32(), accbuf2);
         aieacc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf1, scale);
         aieacc2 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf2, scale);
         aieacc1 = aie::add(aieacc1, shift);

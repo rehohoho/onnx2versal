@@ -91,7 +91,7 @@ class QLinearConvVector {
     int8_t y_zero_point;
 
     // precomputation
-    int16_t scalebits;
+    int scalebits;
     int16_t scale;
     int32_t shift;
     unsigned int select_mask;
