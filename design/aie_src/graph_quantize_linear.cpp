@@ -3,7 +3,7 @@
 
 
 template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
-class QuantizeLinearScalarTest : public adf::graph {
+class QuantizerLinearTest : public adf::graph {
 
   private:
     QuantizeLinearGraph<QUANTIZE_LINEAR, INP_H, INP_W, OUT_W> g;
@@ -12,7 +12,7 @@ class QuantizeLinearScalarTest : public adf::graph {
     adf::input_plio plin[1];
     adf::output_plio plout[1];
 
-    QuantizeLinearScalarTest(
+    QuantizerLinearTest(
       const std::string& id,
       const std::string& INP_TXT, 
       const std::string& OUT_TXT,
@@ -28,11 +28,17 @@ class QuantizeLinearScalarTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-QuantizeLinearScalarTest<QuantizeLinearScalar, 28, 28, 32> quantizeLinearScalar(
+QuantizerLinearTest<QuantizeLinearScalar, 28, 28, 32> quantizeLinearScalar(
   "quantizeLinearScalar", 
-  "k0quantizelinear_in.txt", 
-  "k0quantizelinear_goldenout.txt",
-  3.921568859368562698e-03, -128);
+  "quantizelinear_int8in.txt", 
+  "quantizelinear_int8out_QuantizeLinearScalar.txt",
+  0.00392156889, -128);
+
+QuantizerLinearTest<QuantizeLinearVector, 28, 28, 32> quantizeLinearVector(
+  "quantizeLinearVector", 
+  "quantizelinear_int8in.txt", 
+  "quantizelinear_int8out_QuantizeLinearVector.txt",
+  0.00392156889, -128);
 
 
 #ifdef __X86SIM__
@@ -40,6 +46,10 @@ int main(int argc, char ** argv) {
 	adfCheck(quantizeLinearScalar.init(), "init quantizeLinearScalar");
   adfCheck(quantizeLinearScalar.run(ITER_CNT), "run quantizeLinearScalar");
 	adfCheck(quantizeLinearScalar.end(), "end quantizeLinearScalar");
+
+  adfCheck(quantizeLinearVector.init(), "init quantizeLinearVector");
+  adfCheck(quantizeLinearVector.run(ITER_CNT), "run quantizeLinearVector");
+	adfCheck(quantizeLinearVector.end(), "end quantizeLinearVector");
   return 0;
 }
 #endif
@@ -50,6 +60,10 @@ int main(int argc, char ** argv) {
 	adfCheck(quantizeLinearScalar.init(), "init quantizeLinearScalar");
   get_graph_throughput_by_port(quantizeLinearScalar, "plout[0]", quantizeLinearScalar.plout[0], 10, sizeof(float), ITER_CNT);
 	adfCheck(quantizeLinearScalar.end(), "end quantizeLinearScalar");
+
+  adfCheck(quantizeLinearVector.init(), "init quantizeLinearVector");
+  get_graph_throughput_by_port(quantizeLinearVector, "plout[0]", quantizeLinearVector.plout[0], 10, sizeof(float), ITER_CNT);
+	adfCheck(quantizeLinearVector.end(), "end quantizeLinearVector");
   return 0;
 }
 #endif

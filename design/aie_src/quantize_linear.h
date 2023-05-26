@@ -55,7 +55,7 @@ class QuantizeLinearVector {
     int y_zero_point; // same type as output
 
     // precompute
-    int bitshift = 8;
+    int bitshift = 16;
 
     unsigned int select_mask;
     int16_t y_scale_inv_int;
