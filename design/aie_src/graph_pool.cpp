@@ -41,10 +41,13 @@ MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpoolScal
 MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpoolScalarBCHW_rand(
   "maxpoolScalarBCHW_rand", "pool_fpin_rand.txt", "pool_fpout_MaxpoolScalarBCHW_rand.txt");
 
-MaxpoolGraphTest<Maxpool2x2BCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpool2x2BCHW(
-  "maxpool2x2BCHW", "pool_fpin.txt", "pool_fpout_Maxpool2x2BCHW.txt");
-MaxpoolGraphTest<Maxpool2x2BCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpool2x2BCHW_rand(
-  "maxpool2x2BCHW_rand", "pool_fpin_rand.txt", "pool_fpout_Maxpool2x2BCHW_rand.txt");
+MaxpoolGraphTest<Maxpool2x2FloatBCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpool2x2BCHW(
+  "maxpool2x2BCHW", "pool_fpin.txt", "pool_fpout_Maxpool2x2FloatBCHW.txt");
+MaxpoolGraphTest<Maxpool2x2FloatBCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpool2x2BCHW_rand(
+  "maxpool2x2BCHW_rand", "pool_fpin_rand.txt", "pool_fpout_Maxpool2x2FloatBCHW_rand.txt");
+
+MaxpoolGraphTest<Maxpool2x2Int8BCHW, int8_t, 24, 24, 32, 12, 16, 1, 6> maxpool2x2int8BCHW(
+  "maxpool2x2int8BCHW", "pool_int8in.txt", "pool_int8out_Maxpool2x2Int8BCHW.txt");
 
 
 #ifdef __X86SIM__
@@ -72,6 +75,10 @@ int main(int argc, char ** argv) {
   adfCheck(maxpool2x2BCHW_rand.init(), "init maxpool2x2BCHW_rand");
   adfCheck(maxpool2x2BCHW_rand.run(ITER_CNT), "run maxpool2x2BCHW_rand");
 	adfCheck(maxpool2x2BCHW_rand.end(), "end maxpool2x2BCHW_rand");
+  
+  adfCheck(maxpool2x2int8BCHW.init(), "init maxpool2x2int8BCHW");
+  adfCheck(maxpool2x2int8BCHW.run(ITER_CNT), "run maxpool2x2int8BCHW");
+	adfCheck(maxpool2x2int8BCHW.end(), "end maxpool2x2int8BCHW");
   return 0;
 }
 #endif
@@ -102,6 +109,10 @@ int main(int argc, char ** argv) {
   adfCheck(maxpool2x2BCHW_rand.init(), "init maxpool2x2BCHW_rand");
   get_graph_throughput_by_port(maxpool2x2BCHW_rand, "plout[0]", maxpool2x2BCHW_rand.plout[0], 1*6*12*12, sizeof(float_t), ITER_CNT);
 	adfCheck(maxpool2x2BCHW_rand.end(), "end maxpool2x2BCHW_rand");
+
+  adfCheck(maxpool2x2int8BCHW.init(), "init maxpool2x2int8BCHW");
+  get_graph_throughput_by_port(maxpool2x2int8BCHW, "plout[0]", maxpool2x2int8BCHW.plout[0], 1*6*12*12, sizeof(float_t), ITER_CNT);
+	adfCheck(maxpool2x2int8BCHW.end(), "end maxpool2x2int8BCHW");
   return 0;
 }
 #endif
