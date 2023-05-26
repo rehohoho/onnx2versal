@@ -26,13 +26,13 @@ char OUT_GEMM6[] = "lenet_mnist__19___relu5_Relu__output__1x10.txt";
 
 #ifdef __OUTPUT_INTER__
 // Unable to map 8 or more outputs since <= 8 cascade lines
-MnistLenetBchwGraph<Conv5x5on8ReluBCHW, Maxpool2x2BCHW, GemmReluMKKN, ArgmaxScalar, ConcatVector> lenet (
+MnistLenetBchwGraph<Conv5x5on8ReluBCHW, Maxpool2x2FloatBCHW, GemmReluMKKN, ArgmaxScalar, ConcatVector> lenet (
   "lenet", INPUT_TXT, "lenet_out.txt",
   conv1_weight, conv1_bias, conv2_weight, conv2_bias,
   fc1_weight, fc1_bias, fc2_weight, fc2_bias, fc3_weight, fc3_bias,
   OUT_CONV0, OUT_POOL1, OUT_CONV2, "", OUT_GEMM4, OUT_GEMM5, OUT_GEMM6);
 #else
-MnistLenetBchwGraph<Conv5x5on8ReluBCHW, Maxpool2x2BCHW, GemmReluMKKN, ArgmaxScalar, ConcatVector> lenet (
+MnistLenetBchwGraph<Conv5x5on8ReluBCHW, Maxpool2x2FloatBCHW, GemmReluMKKN, ArgmaxScalar, ConcatVector> lenet (
   "lenet", INPUT_TXT, "mnist_test_label.txt",
   conv1_weight, conv1_bias, conv2_weight, conv2_bias,
   fc1_weight, fc1_bias, fc2_weight, fc2_bias, fc3_weight, fc3_bias);

@@ -27,9 +27,9 @@
  * @details
  * Profile information
  * - Running Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16665
- * - Running Maxpool2x2BCHW::filter<24, 12, 1, 6> total = 901
+ * - Running Maxpool2x2FloatBCHW::filter<24, 12, 1, 6> total = 901
  * - Running Conv5x5on8ReluBCHW<12, 8, 1, 6, 16> total = 25952
- * - Running Maxpool2x2BCHW::filter<8, 4, 1, 16> total = 291
+ * - Running Maxpool2x2FloatBCHW::filter<8, 4, 1, 16> total = 291
  * - Running 8x GemmReluMKKN<1, 256, 16> total = 906
  * - Running ConcatVector<8, 16, 16, 120>::filter8 total = 126
  * - Running 3x GemmReluMKKN<1, 120, 32> total = 888
