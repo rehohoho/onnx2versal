@@ -13,5 +13,6 @@ var searchData=
   ['quantizelinear_10',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
   ['quantizelineargraph_11',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
   ['quantizelinearkernels_12',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
-  ['quantizelinearscalar_13',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]]
+  ['quantizelinearscalar_13',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearvector_14',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
 ];

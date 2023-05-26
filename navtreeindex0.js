@@ -45,6 +45,7 @@ var NAVTREEINDEX0 =
 "classQgemmVector.html#a8e237fc0e3f813ecaf7171065fedae20":[7,9,0,1,0],
 "classQuantizeLinearGraph.html":[7,11,1],
 "classQuantizeLinearScalar.html":[7,11,0,0],
+"classQuantizeLinearVector.html":[7,11,0,1],
 "classTransposeGraph.html":[7,12,1],
 "classTransposeScalarBHWC2BCHW.html":[7,12,0,0],
 "classes.html":[8,1],

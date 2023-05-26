@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QuantizeLinearKernels</title>
+<title>onnx2versal: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('group__QuantizeLinearKernels.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQuantizeLinearVector.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -89,33 +89,16 @@ $(document).ready(function(){initNavTree('group__QuantizeLinearKernels.html','')
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
-  <div class="headertitle"><div class="title">QuantizeLinearKernels<div class="ingroups"><a class="el" href="group__QuantizeLinear.html">QuantizeLinear</a></div></div></div>
+  <div class="headertitle"><div class="title">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt; Member List</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="dynheader">
-Collaboration diagram for QuantizeLinearKernels:</div>
-<div class="dyncontent">
-<div class="center"><img src="group__QuantizeLinearKernels.png" border="0" usemap="#agroup____QuantizeLinearKernels" alt=""/></div>
-<map name="agroup____QuantizeLinearKernels" id="agroup____QuantizeLinearKernels">
-<area shape="rect" href="group__QuantizeLinear.html" title="Linear quantization operator. It consumes a high precision tensor, a scale, and a zero point to compu..." alt="" coords="5,5,114,31"/>
-<area shape="rect" title=" " alt="" coords="162,5,314,31"/>
-</map>
-</div>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinearScalar.html">QuantizeLinearScalar&lt; INP_H, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, QuantizeLinearScalar&lt;1*1*28*28&gt; takes 166265 cycles.  <a href="classQuantizeLinearScalar.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, QuantizeLinearVector&lt;1*1*28*28&gt; takes 38890 cycles, requires INP_W%4==0, OUT_W%16==0.  <a href="classQuantizeLinearVector.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p><a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#QuantizeLinear">https://github.com/onnx/onnx/blob/main/docs/Operators.md#QuantizeLinear</a> y = saturate ((x / y_scale) + y_zero_point) </p>
-</div><!-- contents -->
+
+<p>This is the complete list of members for <a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a>, including all inherited members.</p>
+<table class="directory">
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>filter</b>(input_window&lt; float &gt; *in, output_window&lt; int8_t &gt; *out) (defined in <a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a>)</td><td class="entry"><a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="odd"><td class="entry"><b>QuantizeLinearVector</b>(float y_scale, int y_zero_point) (defined in <a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a>)</td><td class="entry"><a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>registerKernelClass</b>() (defined in <a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a>)</td><td class="entry"><a class="el" href="classQuantizeLinearVector.html">QuantizeLinearVector&lt; INP_H, INP_W, OUT_W &gt;</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">static</span></td></tr>
+</table></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

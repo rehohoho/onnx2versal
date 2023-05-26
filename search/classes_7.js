@@ -7,5 +7,6 @@ var searchData=
   ['qlinearconvscalar_4',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
   ['qlinearconvvector_5',['QLinearConvVector',['../classQLinearConvVector.html',1,'']]],
   ['quantizelineargraph_6',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearscalar_7',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]]
+  ['quantizelinearscalar_7',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearvector_8',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
 ];
