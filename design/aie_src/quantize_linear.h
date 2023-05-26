@@ -44,7 +44,7 @@ class QuantizeLinearScalar {
 
 
 /**
- * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 38890 cycles,
+ * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 2238 cycles,
  * requires INP_W%4==0, OUT_W%16==0
  */
 template <int INP_H, int INP_W, int OUT_W>
@@ -53,12 +53,19 @@ class QuantizeLinearVector {
   private:
     float y_scale;
     int y_zero_point; // same type as output
+
+    // precompute
+    int bitshift = 8;
+
+    unsigned int select_mask;
+    int16_t y_scale_inv_int;
+    int32_t shift;
 	
   public:
     QuantizeLinearVector (
       float y_scale,
       int y_zero_point
-    ): y_scale(y_scale), y_zero_point(y_zero_point) {};
+    );
 
 		void filter(
 			input_window<float>* in,
