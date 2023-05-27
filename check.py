@@ -23,6 +23,12 @@ def is_file_match(filepath1: str,
                   is_throw_err: int):
   arr1 = load_txt(filepath1)
   arr2 = load_txt(filepath2)
+
+  if "shape" in filepath1:
+    shape = os.path.splitext(filepath1)[0].split("shape")[-1].split("x")
+    shape = [int(i) for i in shape]
+    arr1 = arr1.reshape(*shape[:-1], -1)[..., :shape[-1]]
+    arr2 = arr2.reshape(*shape[:-1], -1)[..., :shape[-1]]
   
   if arr1.shape == arr2.shape:
     if np.allclose(arr1, arr2, rtol=1e-03, atol=1e-05):
