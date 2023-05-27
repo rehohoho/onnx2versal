@@ -32,7 +32,7 @@
 
 
 /**
- * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes 1019814 cycles
+ * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles
  */
 template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
 class QLinearConvScalar {
@@ -46,6 +46,8 @@ class QLinearConvScalar {
     int8_t x_zero_point;
     int8_t w_zero_point;
     int8_t y_zero_point;
+
+    float scale;
 	
   public:
     QLinearConvScalar (
@@ -57,7 +59,9 @@ class QLinearConvScalar {
       int8_t x_zero_point,
       int8_t w_zero_point,
       int8_t y_zero_point
-    ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero_point(x_zero_point), w_zero_point(w_zero_point), y_zero_point(y_zero_point) {};
+    ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero_point(x_zero_point), w_zero_point(w_zero_point), y_zero_point(y_zero_point) {
+      scale = x_scale*w_scale/y_scale;
+    };
 
 		void filter(
 			input_window<int8_t>* in,
@@ -73,7 +77,7 @@ class QLinearConvScalar {
 
 
 /**
- * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes 4398 cycles.
+ * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes 4317 cycles.
  * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
  * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0
  */
@@ -94,7 +98,6 @@ class QLinearConvVector {
     int scalebits;
     int16_t scale;
     int32_t shift;
-    unsigned int select_mask;
 	
   public:
     QLinearConvVector (

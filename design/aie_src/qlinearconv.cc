@@ -35,16 +35,13 @@ void QLinearConvScalar<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
             }
             window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
           }
-          res = y_zero_point + round(x_scale*w_scale/y_scale * res);
+          res = y_zero_point + round(scale * res);
           res = std::min(std::max(res, -128), 127);
 
           window_writeincr(out, (int8_t) res);
           window_incr(in, -C*INP_H*INP_W + 1); // go channel -C, right 1
         }
-
-        for (int w = OUT_H; w < OUT_W; w++)
-          window_writeincr(out, y_zero_point);
-
+        window_incr(out, OUT_W-OUT_H);
         window_incr(in, INP_W-OUT_H); // go left OUT_H, go down 1
       }
       window_incr(in, -OUT_H*INP_W); // go up OUT_H
@@ -91,14 +88,10 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
   
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  printf("scalebits %d\n", scalebits);
   scalebits = std::min(scalebits, 24); // since int32_t shift, int8_t y_zero_point
 
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
   shift = float2fix((float) y_zero_point, scalebits); // scalebits <= 24,
-  
-  int width_r = OUT_H % 16;
-  select_mask = (1 << width_r) - 1;
 }
 
 /**
@@ -177,7 +170,7 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
       for (int h = 0; h < OUT_H; h+=2) {
-        for (int w = 0; w < OUT_W-16; w+=16) {
+        for (int w = 0; w < OUT_W; w+=16) {
 
           acc1 = null_v16acc48();
           acc2 = null_v16acc48();
@@ -227,55 +220,9 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
           w_ptr -= C*5;
         } // W
-
-        acc1 = null_v16acc48();
-        acc2 = null_v16acc48();
-      
-        for (int c = 0; c < C; c++) {
-          wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
-          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-          MAC_ROW(acc1);
-          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-          MAC_ROW(acc2);
-          
-          wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
-          MAC_ROW(acc1);
-          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-          MAC_ROW(acc2);
-
-          wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
-          MAC_ROW(acc1);
-          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-          MAC_ROW(acc2);
-
-          wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
-          MAC_ROW(acc1);
-          data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-          MAC_ROW(acc2);
-
-          wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
-          MAC_ROW(acc1);
-          data = *(v32int8 *) in_ptr; in_ptr += INP_H*INP_W - 5*INP_W;
-          MAC_ROW(acc2);
-        }
-
-        acc1 = aie::add((aie::accum<acc48,16>) acc1, bias[m]);
-        acc2 = aie::add((aie::accum<acc48,16>) acc2, bias[m]);
-        accbuf1 = lsrs(acc1, 0);
-        accbuf2 = lsrs(acc2, 0);
-        accbuf1 = select16(select_mask, null_v16int32(), accbuf1);
-        accbuf2 = select16(select_mask, null_v16int32(), accbuf2);
-        aieacc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf1, scale);
-        aieacc2 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf2, scale);
-        aieacc1 = aie::add(aieacc1, shift);
-        aieacc2 = aie::add(aieacc2, shift);
-        *out_ptr = aieacc1.to_vector<int8_t>(scalebits);
-        out_ptr += OUT_W/16;
-        *out_ptr = aieacc2.to_vector<int8_t>(scalebits);
-        out_ptr++;
         
-        w_ptr -= C*5;
-        in_ptr += 16 - C*INP_H*INP_W + 2*INP_W - OUT_W; // go channel-C, right 16, left OUT_W, down 2
+        in_ptr += 2*INP_W - OUT_W; // go left OUT_W, down 2
+        out_ptr += OUT_W/16;
       } // H
       in_ptr -= OUT_H*INP_W; // go up OUT_H
       w_ptr += C*5;
