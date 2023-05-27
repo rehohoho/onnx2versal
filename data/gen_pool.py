@@ -2,6 +2,7 @@ import numpy as np
 import torch
 
 np.random.seed(0)
+VECTOR_WORD_BOUNDARY = 16 # in bytes
 
 
 def pad_lastdim(tensor: np.ndarray, 
@@ -15,6 +16,10 @@ def pad_lastdim(tensor: np.ndarray,
     pad_arr = (*((0,0) for _ in range(tensor.ndim-1)),(0,pad_size))
     tensor = np.pad(tensor, pad_arr, "constant", constant_values=value)
   return tensor
+
+
+def get_vector_boundary(tensor: np.ndarray):
+  return VECTOR_WORD_BOUNDARY // tensor.dtype.itemsize
 
 
 INP_H = 24
@@ -52,10 +57,12 @@ np.savetxt("pool_fpout_MaxpoolScalarBHWC_rand.txt", tout_bhwc_rand.reshape(-1, 2
 
 
 # int8
-tin = np.random.randint(-128, 128, size=(C*INP_H*INP_W)).reshape(B,C,INP_H,INP_W)
-tin = pad_lastdim(tin, "tin", 16)
-np.savetxt("pool_int8in.txt", tin.reshape(-1, 8), fmt="%d")
+tin = np.random.randint(
+  -128, 128, size=(C*INP_H*INP_W)).reshape(B,C,INP_H,INP_W).astype(np.int8)
+tout = torch.nn.functional.max_pool2d(
+  torch.Tensor(tin), INP_W//OUT_W).numpy().astype(np.int8)
 
-tout = torch.nn.functional.max_pool2d(torch.Tensor(tin), INP_W//OUT_W).numpy()
-tout = pad_lastdim(tout, "tout", 16)
-np.savetxt("pool_int8out_Maxpool2x2Int8BCHW.txt", tout.reshape(-1,8), fmt="%d")
+tin = pad_lastdim(tin, "tin", get_vector_boundary(tin))
+np.savetxt("pool_int8in.txt", tin.reshape(-1, 8), fmt="%d")
+tout = pad_lastdim(tout, "tout", get_vector_boundary(tout))
+np.savetxt(f"pool_int8out_Maxpool2x2Int8BCHW_shape{B}x{C}x{OUT_W}x{OUT_W}.txt", tout.reshape(-1,8), fmt="%d")

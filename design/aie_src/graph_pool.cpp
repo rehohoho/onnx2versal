@@ -47,7 +47,7 @@ MaxpoolGraphTest<Maxpool2x2FloatBCHW, float, 24, 24, 24, 12, 12, 1, 6> maxpool2x
   "maxpool2x2BCHW_rand", "pool_fpin_rand.txt", "pool_fpout_Maxpool2x2FloatBCHW_rand.txt");
 
 MaxpoolGraphTest<Maxpool2x2Int8BCHW, int8_t, 24, 24, 32, 12, 16, 1, 6> maxpool2x2int8BCHW(
-  "maxpool2x2int8BCHW", "pool_int8in.txt", "pool_int8out_Maxpool2x2Int8BCHW.txt");
+  "maxpool2x2int8BCHW", "pool_int8in.txt", "pool_int8out_Maxpool2x2Int8BCHW_shape1x6x12x12.txt");
 
 
 #ifdef __X86SIM__
