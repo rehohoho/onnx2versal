@@ -4,6 +4,7 @@ import os
 import numpy as np
 import onnx
 from onnx import numpy_helper
+# from google.protobuf.json_format import MessageToJson
 
 from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, \
   ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp
@@ -28,6 +29,10 @@ class CppGenerator:
     
     model = onnx.load(onnx_path)
     self.nodes = model.graph.node
+    # for node in self.nodes:
+    #   node_str = MessageToJson(node)
+    #   with open("nodes.json", "a") as f:
+    #     f.write(node_str)
     self.graph_name = os.path.splitext(os.path.basename(onnx_path))[0]
     
     # register model input, node output and model outputs
@@ -137,11 +142,13 @@ class CppGenerator:
         self.register_port(node.input[0], node.output[0], op)
 
       elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
-        print(f"WARNING: {node.op_type} not implemented, skipping...")
-        if len(node.output[0]) != 0 and \
-          np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
+        if len(node.output[0]) != 0 and np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
           print(f"Found matching output {node.output[0]} and {op.name} output")
           self.nodeout_2_adfport[node.output[0]] = f"{op.name}.pout[0]"
+          self.op_list[-1].disable_output_pad()
+          self.op_list[-1].save_txt(self.data_path)
+        else:
+          print(f"WARNING: {node.op_type} not implemented, skipping...")
       
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")
@@ -214,10 +221,10 @@ class CppGenerator:
   
   def get_callargs(self, is_output_inter: bool) -> str:
     args = ['"input.txt"']
-    args += [f'"{op.name}_goldenout.txt"' for op in self.modelout_2_op.values()]
+    args += [f'"{list(op.filename_2_tensors.keys())[-1]}"' for op in self.modelout_2_op.values()]
     args += [i.get_callarg_line() for i in self.op_list]
     if is_output_inter:
-      args += [f'"{op.name}_goldenout.txt"' for op in self.op_list 
+      args += [f'"{list(op.filename_2_tensors.keys())[-1]}"' for op in self.op_list 
                if op not in self.modelout_2_op.values()]
     args = [i for i in args if i != ""]
     return "  " + ",\n".join(args).replace("\n", "\n  ")
@@ -319,12 +326,12 @@ int main(int argc, char ** argv) {{
     slaves = []
     for i, op in enumerate(self.modelout_2_op.values()):
       size = op.out_size
-      file_suffix = "_goldenout.txt"
+      filename = list(op.filename_2_tensors.keys())[-1]
       if not is_output_inter:
         size *= self.data_count
-        file_suffix = file_suffix.replace(".txt", "_host.txt")
+        filename = filename.replace(".txt", "_host.txt")
       slaves += [
-        f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{op.name}{file_suffix}", ' + \
+        f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{filename}", ' + \
         f'64, "{str(op.dtype)}", {size})'
         for i, op in enumerate(self.modelout_2_op.values())
       ]
@@ -334,7 +341,7 @@ int main(int argc, char ** argv) {{
       for op in self.op_list:
         if op in self.modelout_2_op.values(): continue
         slaves.append(
-          f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{op.name}_goldenout.txt", 64, "{str(op.dtype)}", {op.out_size})')
+          f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{list(op.filename_2_tensors.keys())[-1]}", 64, "{str(op.dtype)}", {op.out_size})')
         i += 1
     return "    " + ",\n".join(slaves).replace("\n", "\n    ")
   
@@ -435,7 +442,7 @@ param=hw_emu.enableProfiling=false
       for i, inpname in enumerate(self.modelin_2_tensor)
     ]
     outfiles += [
-      f'#define OUTPUT{i}_FILENAME "{op.name}_goldenout.txt"'
+      f'#define OUTPUT{i}_FILENAME "{list(op.filename_2_tensors.keys())[-1]}"'
       for i, op in enumerate(self.modelout_2_op.values())
     ]
     outfiles_host = [i.replace(".txt", "_host.txt") for i in outfiles]
@@ -443,7 +450,7 @@ param=hw_emu.enableProfiling=false
     
     n_outs = len(self.modelout_2_op)
     outfiles += [
-      f'#define INTER{n_outs+i}_FILENAME "{op.name}_goldenout.txt"'
+      f'#define INTER{n_outs+i}_FILENAME "{list(op.filename_2_tensors.keys())[-1]}"'
       for i, op in enumerate(self.op_list) if op not in self.modelout_2_op.values()
     ]
     return "\n".join(outfiles)

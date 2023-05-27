@@ -57,6 +57,10 @@ def pad_lastdim(tensor: np.ndarray,
   return tensor
 
 
+def get_shape_str(tensor: np.ndarray):
+  return f"shape{'x'.join(str(i) for i in tensor.shape)}"
+
+
 class OpParser:
   include_file: str
 
@@ -96,6 +100,12 @@ class OpParser:
     for outname, outtensor in self.filename_2_tensors.items():
       save_tensor(f"{data_path}/{outname}", outtensor)
       print(f"Saved tensor of shape {outtensor.shape} into {outname}")
+  
+  def get_kernel_line(self) -> str:
+    pass
+  
+  def disable_output_pad(self) -> str:
+    pass
 
 
 class ArgmaxOp(OpParser):
@@ -128,8 +138,8 @@ class ConvOp(OpParser):
     self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw, "Conv weights", 8) # heap
     self.varname_2_tensors[f"{self.name}_b"] = tbias
 
-    self.filename_2_tensors[f"{self.name}_in.txt"] = tin # files
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
   
   def get_kernel_line(self) -> str:
     graph = "ConvReluGraph"
@@ -156,8 +166,8 @@ class DequantizeLinearOp(OpParser):
     self.varname_2_tensors[f"{self.name}_scale"] = tscale # heap
     self.varname_2_tensors[f"{self.name}_zero"] = tzero
     
-    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
   
   def get_kernel_line(self) -> str:
     graph = "DequantizeLinearGraph"
@@ -191,8 +201,8 @@ class GemmOp(OpParser):
     self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw, "Gemm weights", 4) # heap
     self.varname_2_tensors[f"{self.name}_b"] = tbias
   
-    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
   def get_kernel_type(self) -> str:
     graph = "GemmReluMkknChunkGraph"
@@ -211,7 +221,8 @@ class GemmOp(OpParser):
 
 
 class PoolOp(OpParser):
-  """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for OUT_W
+  """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for INP_W_PAD,
+  Use output tensor for OUT_W, pads OUT_W to vector boundary for OUT_W_PAD
   """
   include_file: str = "graph_pool.h"
   
@@ -226,9 +237,10 @@ class PoolOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
     
     tin = pad_lastdim(tin, "PoolOp tin", get_vector_boundary(tout)) #files
-    self.filename_2_tensors[f"{self.name}_in.txt"] = tin
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+ 
     tout = pad_lastdim(tout, "PoolOp tout", get_vector_boundary(tout))
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
     assert tin.shape[:-2] == tout.shape[:-2] and tin.shape[-2] % tout.shape[-2] == 0
     
     self.INP_H, self.INP_W, self.INP_W_PAD = inH, inW, tin.shape[-1]
@@ -241,20 +253,20 @@ class PoolOp(OpParser):
     graph = "MaxpoolGraph"
     kernel = "MaxpoolScalarBCHW"
     if self.OUT_W % 4 == 0 and self.INP_W/self.OUT_W == 2 and self.dtype == "float32":
-      kernel = "Maxpool2x2BCHW"
+      kernel = "Maxpool2x2FloatBCHW"
+    elif self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.dtype == "int8":
+      kernel = "Maxpool2x2Int8BCHW"
     return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.INP_W_PAD},{self.OUT_W},{self.OUT_W_PAD},{self.B},{self.C}> {self.name};"
+  
+  def disable_output_pad(self):
+    self.OUT_W_PAD = self.OUT_W
+    self.tout = self.tout[...,:self.OUT_W]
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(self.tout)}.txt"] = self.tout
+    print("Disabled output padding, may result in choosing scalar op instead of vector.")
 
 
 class QGemm(OpParser):
   include_file: str = "graph_qgemm.h"
-  _w: str = "_w"
-  _b: str = "_b"
-  _xzero: str = "_xzero"
-  _wzero: str = "_wzero"
-  _yzero: str = "_yzero"
-  _xscale: str = "_xscale"
-  _wscale: str = "_wscale"
-  _yscale: str = "_yscale"
 
   def register_params(self, tensors: List[np.ndarray]):
     assert len(tensors) == 10
@@ -267,13 +279,9 @@ class QGemm(OpParser):
     
     assert inM == outM and inK == wK and wN == bN and bN == outN
 
-    self.M, self.K, self.N = inM, inK, wN # config
-    self.dtype = tw.dtype
-    self.out_size = tout.size
-    self.tout = tout
+    self.tout = tout # reference copy to check against to compress graph
   
     vector_size = get_vector_boundary(tin)
-    
     self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw.T, "QGemm weights", vector_size) # heap
     self.varname_2_tensors[f"{self.name}_b"] = pad_lastdim(tbias, "QGemm bias", vector_size)
     self.varname_2_tensors[f"{self.name}_xscale"] = tin_scale
@@ -283,18 +291,21 @@ class QGemm(OpParser):
     self.varname_2_tensors[f"{self.name}_wzero"] = tw_zero
     self.varname_2_tensors[f"{self.name}_yzero"] = tout_zero
     
-    self.NPAD = self.varname_2_tensors[f"{self.name}_w"].shape[-1]
+    tin = pad_lastdim(tin, "QGemm tin", vector_size, value=tin_zero) #files
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
 
-    # pad INP_W, OUT_W to vector boundary
-    self.filename_2_tensors[f"{self.name}_in.txt"] = pad_lastdim(
-      tin, "QGemm tin", vector_size, value=tin_zero) #files
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = pad_lastdim(
-      tout, "QGemm tout", vector_size, value=tin_zero)
+    tout = pad_lastdim(tout, "QGemm tout", vector_size, value=tin_zero)
+
+    self.M, self.K, self.N = inM, inK, wN # config
+    self.NPAD = tout.shape[-1]
+    self.dtype = tw.dtype
+    self.out_size = tout.size
     
   def get_kernel_line(self) -> str:
     kernel = "QgemmScalar"
     graph = "QgemmGraph"
-    if self.NPAD%16==0 and self.K%4==0:
+    if self.NPAD%16==0:
       kernel = "QgemmVector"
     return f"{graph}<{kernel},{self.M},{self.K},{self.N},{self.NPAD}> {self.name};"
 
@@ -316,10 +327,6 @@ class QLinearConvOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
     
-    self.INP_W, self.OUT_W, self.B, self.C, self.M, self.K = inH, outH, inB, inC, wM, wK1 #config
-    self.dtype = tout.dtype
-    self.out_size = tout.size
-
     vector_size = get_vector_boundary(tin)
 
     tw = pad_lastdim(tw, "QLinearConvOp weights", vector_size)
@@ -337,12 +344,16 @@ class QLinearConvOp(OpParser):
     
     # pad INP_W, OUT_W to vector boundary
     tin = pad_lastdim(tin, "QLinearConvOp tin", vector_size, value=tin_zero) #files
-    self.filename_2_tensors[f"{self.name}_in.txt"] = tin
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    
     tout = pad_lastdim(tout, "QLinearConvOp tout", vector_size, value=tin_zero)
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
-
+    
+    self.INP_W, self.OUT_W, self.B, self.C, self.M, self.K = inH, outH, inB, inC, wM, wK1 #config
     self.INP_W_PAD = tin.shape[-1]
     self.OUT_W_PAD = tout.shape[-1]
+    self.dtype = tout.dtype
+    self.out_size = tout.size
     
   def get_kernel_line(self) -> str:
     graph = "QLinearConvGraph"
@@ -359,16 +370,17 @@ class QuantizeLinearOp(OpParser):
     assert len(tensors) == 4
     
     tin, tscale, tzero, tout = tensors
-    assert tin.size == tout.size and tscale.shape == () and tzero.shape == ()
+    assert tin.size == tout.size and tscale.shape == () and tzero.shape == () and tin.dtype == "float32" and tout.dtype == "int8"
 
     self.tout = tout # reference copy to check against to compress graph
 
     self.varname_2_tensors[f"{self.name}_scale"] = tscale # heap
     self.varname_2_tensors[f"{self.name}_zero"] = tzero
 
-    self.filename_2_tensors[f"{self.name}_in.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin #files
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    
     tout = pad_lastdim(tout, "QuantizeLinearOp tout", get_vector_boundary(tout))
-    self.filename_2_tensors[f"{self.name}_goldenout.txt"] = tout
     assert tout.shape[:-1] == tin.shape[:-1]
     
     inH = math.prod(tin.shape[:-1]) # config
@@ -379,4 +391,6 @@ class QuantizeLinearOp(OpParser):
   def get_kernel_line(self) -> str:
     graph = "QuantizeLinearGraph"
     kernel = "QuantizeLinearScalar"
+    if self.INP_W % 4 == 0 and self.OUT_W % 16 == 0:
+      kernel = "QuantizeLinearVector"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
