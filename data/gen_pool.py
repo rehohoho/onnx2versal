@@ -64,5 +64,4 @@ tout = torch.nn.functional.max_pool2d(
 
 tin = pad_lastdim(tin, "tin", get_vector_boundary(tin))
 np.savetxt("pool_int8in.txt", tin.reshape(-1, 8), fmt="%d")
-tout = pad_lastdim(tout, "tout", get_vector_boundary(tout))
 np.savetxt(f"pool_int8out_Maxpool2x2Int8BCHW_shape{B}x{C}x{OUT_W}x{OUT_W}.txt", tout.reshape(-1,8), fmt="%d")

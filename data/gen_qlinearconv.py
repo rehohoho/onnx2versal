@@ -55,7 +55,6 @@ Y = torch.nn.functional.conv2d(
   torch.Tensor(B[:])).numpy() * X_scale*W_scale/Y_scale
 Y = round_away(Y) + Y_zero_point
 Y = np.clip(Y, -128, 127).astype(np.int8)
-Y = pad_lastdim(Y, "Y", get_vector_boundary(Y))
 
 np.savetxt("qlinearconv_int8in.txt", X.reshape(-1, 8), fmt="%d")
 np.savetxt("qlinearconv_int8out_QLinearConvScalar_shape1x6x24x24.txt", Y.reshape(-1, 8), fmt="%d")

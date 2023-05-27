@@ -53,8 +53,6 @@ tout = torch.nn.functional.linear(
 tout = round_away(tout) + tout_zero
 tout = np.clip(tout, -128, 127).astype(np.int8)
 
-tout = pad_lastdim(tout, "QGemm tout", vector_size, value=tin_zero)
-
 # save
 tin = pad_lastdim(tin, "pad to write tin", 8, value=0)
 np.savetxt("qgemm_int8in.txt", tin.reshape(-1, 8), fmt="%d")
