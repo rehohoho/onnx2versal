@@ -14,7 +14,7 @@
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * QgemmVector<1,84,10,16> takes 10724 cycles
+ * QgemmVector<1,84,10,16> takes 10680 cycles
  */
 template <int M, int K, int N, int NPAD>
 class QgemmScalar {
@@ -59,8 +59,8 @@ class QgemmScalar {
 
 
 /**
- * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0, K%4=0
- * QgemmVector<1,84,10,16> takes 127 cycles
+ * @brief Vector implementation for MK*KN, stores weights and biases, requires NPAD%16=0
+ * QgemmVector<1,84,10,16> takes 125 cycles
  */
 template <int M, int K, int N, int NPAD>
 class QgemmVector {
@@ -79,7 +79,11 @@ class QgemmVector {
     int scalebits;
     int16_t scale;
     int32_t shift;
-    unsigned int select_mask;
+
+    static constexpr int KREM = K%16;
+    static constexpr int RUN_8CHUNK = KREM >= 8;
+    static constexpr int KREM2 = RUN_8CHUNK ? KREM - 8 : KREM;
+    static constexpr int RUN_LASTCHUNK = KREM2 > 0;
   
   public:
     QgemmVector (
@@ -99,6 +103,7 @@ class QgemmVector {
     );
     
     static void registerKernelClass() {
+      assert(NPAD % 16 == 0);
       REGISTER_FUNCTION(QgemmVector::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

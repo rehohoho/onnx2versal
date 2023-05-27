@@ -29,9 +29,7 @@ void QgemmScalar<M, K, N, NPAD>::filter(
       window_writeincr(out, (int8_t) res);
       window_incr(in, -K); // repeat same in row for next j
     }
-    for (int j = N; j < NPAD; j++)
-      window_writeincr(out, y_zero);
-    
+    window_incr(out, NPAD - N);
     window_incr(in, K); // next in row for next N
   }
 
@@ -73,9 +71,6 @@ QgemmVector<M,K,N,NPAD>::QgemmVector (
 
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
   shift = float2fix((float) y_zero, scalebits); // scalebits <= 24
-  
-  int n_rem = N % 16;
-  select_mask = (1 << n_rem) - 1;
 };
 
 /**
@@ -143,37 +138,28 @@ void QgemmVector<M, K, N, NPAD>::filter(
   wmat = upd_v(wmat, 7, *(v16int8 *) w_ptr); w_ptr += NPAD;
 
   for (int i = 0; i < M; i++) {
-    for (int j = 0; j < N-16; j+=16) {
+    for (int j = 0; j < N; j+=16) {
       
       acc1 = null_v16acc48();
-      int k = 0;
 
-      for (k; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
+      for (int k = 0; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
         inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 16; // load input[k:k+8]
         LOAD_W; // load weight[k:k+8,n:n+16]
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
         LOAD_W; // load weight[k+8:k+16,n:n+16]
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 8, 0x00000000, 2, 0x1010);
       } // K-16
-      for (k; k <= K-8; k+=8) {
+      if (RUN_8CHUNK) {
         inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 8;
         LOAD_W;
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
       } // K-8
-      for (k; k <= K-4; k+=4) {
-        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 4;
+      if (RUN_LASTCHUNK) {
+        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += KREM2;
         wmat = null_v128int8();
-        wmat = upd_v(wmat, 0, *(v16int8 *) w_ptr); w_ptr += NPAD;
-        wmat = upd_v(wmat, 1, *(v16int8 *) w_ptr); w_ptr += NPAD;
-        wmat = upd_v(wmat, 2, *(v16int8 *) w_ptr); w_ptr += NPAD;
-        wmat = upd_v(wmat, 3, *(v16int8 *) w_ptr); w_ptr += NPAD;
-        acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
-      } // K-4
-      for (k; k < K; k+=2) {
-        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 2;
-        wmat = null_v128int8();
-        wmat = upd_v(wmat, 0, *(v16int8 *) w_ptr); w_ptr += NPAD;
-        wmat = upd_v(wmat, 1, *(v16int8 *) w_ptr); w_ptr += NPAD;
+        for (int p = 0; p < KREM2; p++) {
+          wmat = upd_v(wmat, p, *(v16int8 *) w_ptr); w_ptr += NPAD;
+        }
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
       } // K
 
@@ -188,48 +174,8 @@ void QgemmVector<M, K, N, NPAD>::filter(
       w_ptr += -K*NPAD + 16; // next
     } // N
 
-    acc1 = null_v16acc48();
-    int k = 0;
-
-    for (k; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
-      inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 16; // load input[k:k+8]
-      LOAD_W; // load weight[k:k+8,n:n+16]
-      acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
-      LOAD_W; // load weight[k+8:k+16,n:n+16]
-      acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 8, 0x00000000, 2, 0x1010);
-    } // K-16
-    for (k; k <= K-8; k+=8) {
-      inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 8;
-      LOAD_W;
-      acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
-    } // K-8
-    for (k; k <= K-4; k+=4) {
-      inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 4;
-      wmat = null_v128int8();
-      wmat = upd_v(wmat, 0, *(v16int8 *) w_ptr); w_ptr += NPAD;
-      wmat = upd_v(wmat, 1, *(v16int8 *) w_ptr); w_ptr += NPAD;
-      wmat = upd_v(wmat, 2, *(v16int8 *) w_ptr); w_ptr += NPAD;
-      wmat = upd_v(wmat, 3, *(v16int8 *) w_ptr); w_ptr += NPAD;
-      acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
-    } // K-4
-    for (k; k < K; k+=2) {
-      inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 2;
-      wmat = null_v128int8();
-      wmat = upd_v(wmat, 0, *(v16int8 *) w_ptr); w_ptr += NPAD;
-      wmat = upd_v(wmat, 1, *(v16int8 *) w_ptr); w_ptr += NPAD;
-      acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
-    } // K
-
-    acc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
-    accbuf1 = lsrs(acc1, 0);
-    accbuf1 = select16(select_mask, null_v16int32(), accbuf1);
-    aieacc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf1, scale);
-    aieacc1 = aie::add(aieacc1, shift);
-    *out_ptr = aieacc1.to_vector<int8_t>(scalebits);
-    out_ptr++;
-
+    in_ptr += K;
     b_ptr -= N/16*16; // reset
-    w_ptr += -K*NPAD + 16; // next
     w_ptr -= NPAD;    // reset
   } // M
 
