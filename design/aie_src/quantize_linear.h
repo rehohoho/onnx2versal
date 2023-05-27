@@ -17,7 +17,7 @@
 
 
 /**
- * @brief Scalar implementation, QuantizeLinearScalar<1*1*28*28> takes 166265 cycles
+ * @brief Scalar implementation, QuantizeLinearScalar<1*1*28*28> takes 92401 cycles
  */
 template <int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearScalar {
@@ -44,7 +44,7 @@ class QuantizeLinearScalar {
 
 
 /**
- * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 2238 cycles,
+ * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 2457 cycles,
  * requires INP_W%4==0, OUT_W%16==0
  */
 template <int INP_H, int INP_W, int OUT_W>

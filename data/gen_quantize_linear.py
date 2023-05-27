@@ -19,10 +19,9 @@ def round_away(x):
 tin = np.random.random(INP_H*INP_W).reshape(INP_H, INP_W)
 tout = round_away(tin / SCALE) + ZERO
 tout = np.clip(tout, -128, 127).astype(np.int8)
-tout = np.pad(tout, ((0,0), (0,OUT_W-INP_W)), "constant", constant_values=ZERO)
 
 np.savetxt("quantizelinear_int8in.txt", tin.reshape(-1, 2))
-np.savetxt("quantizelinear_int8out_QuantizeLinearScalar.txt", tout.reshape(-1, 8), fmt="%d")
-np.savetxt("quantizelinear_int8out_QuantizeLinearVector.txt", tout.reshape(-1, 8), fmt="%d")
+np.savetxt("quantizelinear_int8out_QuantizeLinearScalar_shape28x28.txt", tout.reshape(-1, 8), fmt="%d")
+np.savetxt("quantizelinear_int8out_QuantizeLinearVector_shape28x28.txt", tout.reshape(-1, 8), fmt="%d")
 print("SCALE\n", SCALE, "\n\n\n")
 print("ZERO\n", ZERO, "\n\n\n")

@@ -14,15 +14,13 @@ void QuantizeLinearScalar<INP_H, INP_W, OUT_W>::filter(
   float y_scale_inv = 1/y_scale;
 
   for (int i = 0; i < INP_H; i++) {
-    int j = 0;
-    for (j; j < INP_W; j++) {
+    for (int j = 0; j < INP_W; j++) {
       float x = window_readincr(in);
       int y = round(x * y_scale_inv) + y_zero_point;
       y = std::min(std::max(y, -128), 128);
       window_writeincr(out, y);
     }
-    for (j; j < OUT_W; j++) 
-      window_writeincr(out, y_zero_point);
+    window_incr(out, OUT_W-INP_W);
   }
 
   PROFILE_FOOTER;
@@ -56,8 +54,7 @@ void QuantizeLinearVector<INP_H, INP_W, OUT_W>::filter(
   aie::accum<acc48,16> aieacc1;
 
   for (int i = 0; i < INP_H; i++) {
-    int j = 0;
-    for (j; j < INP_W-16; j+=16) {
+    for (int j = 0; j < INP_W; j+=16) {
       v8float x1 = window_readincr_v8(in);
       y = upd_w(y, 0, float2fix(x1, bitshift));
       v8float x2 = window_readincr_v8(in);
@@ -66,17 +63,7 @@ void QuantizeLinearVector<INP_H, INP_W, OUT_W>::filter(
       aieacc1 = aie::add(aieacc1, shift);
       window_writeincr(out, bsrs((v16acc48) aieacc1, bitshift));
     }
-
-    v8float x1 = window_readincr_v8(in);
-    y = upd_w(y, 0, float2fix(x1, bitshift));
-    v8float x2 = window_readincr_v8(in);
-    y = upd_w(y, 1, float2fix(x2, bitshift));
-    y = select16(select_mask, null_v16int32(), y);
-    aieacc1 = aie::mul<acc48>((aie::vector<int32_t,16>) y, y_scale_inv_int);
-    aieacc1 = aie::add(aieacc1, shift);
-    
-    window_writeincr(out, bsrs((v16acc48) aieacc1, bitshift));
-    window_incr(in, -(INP_H+15)/16*16 + INP_W);
+    window_incr(in, -(INP_W+15)/16*16 + INP_W);
   }
 
   PROFILE_FOOTER;

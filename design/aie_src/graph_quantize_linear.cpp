@@ -31,13 +31,13 @@ class QuantizerLinearTest : public adf::graph {
 QuantizerLinearTest<QuantizeLinearScalar, 28, 28, 32> quantizeLinearScalar(
   "quantizeLinearScalar", 
   "quantizelinear_int8in.txt", 
-  "quantizelinear_int8out_QuantizeLinearScalar.txt",
+  "quantizelinear_int8out_QuantizeLinearScalar_shape28x28.txt",
   0.00392156889, -128);
 
 QuantizerLinearTest<QuantizeLinearVector, 28, 28, 32> quantizeLinearVector(
   "quantizeLinearVector", 
   "quantizelinear_int8in.txt", 
-  "quantizelinear_int8out_QuantizeLinearVector.txt",
+  "quantizelinear_int8out_QuantizeLinearVector_shape28x28.txt",
   0.00392156889, -128);
 
 
