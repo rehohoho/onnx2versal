@@ -16,9 +16,7 @@
  * have same shape.
  * 
  * @tparam DEQUANTIZE_LINEAR  DequantizeLinear Kernel
- * @tparam CHUNK_CNT          number of chunks
- * @tparam CHUNK_SIZE         size of chunks
- * @tparam CHUNK_SIZE_PAD     size of chunks padded to vector boundary
+ * @tparam WINDOW_SIZE        size of vector
  * 
  * @{
  */
@@ -27,12 +25,11 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], CHUNK_CNT*CHUNK_SIZE_PAD}
- * @connect{pout[0], CHUNK_CNT*CHUNK_SIZE_PAD*4}
+ * @connect{pin[0], WINDOW_SIZE}
+ * @connect{pout[0], WINDOW_SIZE*4}
  * @endconnections
  */
-template <template<int, int, int> class DEQUANTIZE_LINEAR,
-  int CHUNK_CNT, int CHUNK_SIZE, int CHUNK_SIZE_PAD>
+template <template<int> class DEQUANTIZE_LINEAR, int WINDOW_SIZE>
 class DequantizeLinearGraph : public adf::graph {
 
   private:
@@ -47,13 +44,13 @@ class DequantizeLinearGraph : public adf::graph {
       float scale,
       int8_t zero
     ) { 
-      k[0] = adf::kernel::create_object<DEQUANTIZE_LINEAR<CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD>>(scale, zero);
+      k[0] = adf::kernel::create_object<DEQUANTIZE_LINEAR<WINDOW_SIZE>>(scale, zero);
       adf::source(k[0]) = "dequantize_linear.cc";
       adf::headers(k[0]) = {"dequantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE_PAD>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<WINDOW_SIZE>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<WINDOW_SIZE*4>> (k[0].out[0], pout[0]);
     }
 
 };
