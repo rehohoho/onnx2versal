@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QgemmVector&lt; M, K, N, NPAD &gt; Class Template Reference</title>
+<title>onnx2versal: QgemmVector&lt; M, K, N &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,40 +93,40 @@ $(document).ready(function(){initNavTree('classQgemmVector.html',''); initResiza
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classQgemmVector-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QgemmVector&lt; M, K, N, NPAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a> &raquo; <a class="el" href="group__QgemmKernels.html">QgemmKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">QgemmVector&lt; M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a> &raquo; <a class="el" href="group__QgemmKernels.html">QgemmKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for MK*KN, stores weights and biases, requires NPAD%16=0 QgemmVector&lt;1,84,10,16&gt; takes 125 cycles.  
+<p>Vector implementation for MK*KN, stores weights and biases, requires N%16=0 QgemmVector&lt;1,84,16&gt; takes 125 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qgemm_8h_source.html">qgemm.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aad268b8af1651a36ab97b9e6c43ffab0"><td class="memItemLeft" align="right" valign="top"><a id="aad268b8af1651a36ab97b9e6c43ffab0" name="aad268b8af1651a36ab97b9e6c43ffab0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmVector</b> (int8_t(&amp;w)[K *NPAD], int32_t(&amp;b)[NPAD], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
-<tr class="separator:aad268b8af1651a36ab97b9e6c43ffab0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e237fc0e3f813ecaf7171065fedae20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmVector.html#a8e237fc0e3f813ecaf7171065fedae20">filter</a> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a8e237fc0e3f813ecaf7171065fedae20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9006b8ec13753671a578e9aa76f6bc11"><td class="memItemLeft" align="right" valign="top"><a id="a9006b8ec13753671a578e9aa76f6bc11" name="a9006b8ec13753671a578e9aa76f6bc11"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmVector</b> (int8_t(&amp;w)[K *N], int32_t(&amp;b)[N], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
+<tr class="separator:a9006b8ec13753671a578e9aa76f6bc11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab29eaa132c31d1962fe8d90872f57e4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmVector.html#ab29eaa132c31d1962fe8d90872f57e4d">filter</a> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
+<tr class="separator:ab29eaa132c31d1962fe8d90872f57e4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a08c3c77551d08c16ff04f3904b6bb028"><td class="memItemLeft" align="right" valign="top"><a id="a08c3c77551d08c16ff04f3904b6bb028" name="a08c3c77551d08c16ff04f3904b6bb028"></a>
+<tr class="memitem:a5013f80e4e3149e3a791ed31fdbff72a"><td class="memItemLeft" align="right" valign="top"><a id="a5013f80e4e3149e3a791ed31fdbff72a" name="a5013f80e4e3149e3a791ed31fdbff72a"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a08c3c77551d08c16ff04f3904b6bb028"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5013f80e4e3149e3a791ed31fdbff72a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a8e237fc0e3f813ecaf7171065fedae20" name="a8e237fc0e3f813ecaf7171065fedae20"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e237fc0e3f813ecaf7171065fedae20">&#9670;&#160;</a></span>filter()</h2>
+<a id="ab29eaa132c31d1962fe8d90872f57e4d" name="ab29eaa132c31d1962fe8d90872f57e4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab29eaa132c31d1962fe8d90872f57e4d">&#9670;&#160;</a></span>filter()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int M, int K, int N, int NPAD&gt; </div>
+template&lt;int M, int K, int N&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classQgemmVector.html">QgemmVector</a>&lt; M, K, N, NPAD &gt;::filter </td>
+          <td class="memname">void <a class="el" href="classQgemmVector.html">QgemmVector</a>&lt; M, K, N &gt;::filter </td>
           <td>(</td>
           <td class="paramtype">input_window&lt; int8_t &gt; *&#160;</td>
           <td class="paramname"><em>in</em>, </td>

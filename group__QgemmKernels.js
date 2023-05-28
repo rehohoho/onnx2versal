@@ -1,7 +1,7 @@
 var group__QgemmKernels =
 [
-    [ "QgemmScalar< M, K, N, NPAD >", "classQgemmScalar.html", null ],
-    [ "QgemmVector< M, K, N, NPAD >", "classQgemmVector.html", [
-      [ "filter", "classQgemmVector.html#a8e237fc0e3f813ecaf7171065fedae20", null ]
+    [ "QgemmScalar< M, K, N >", "classQgemmScalar.html", null ],
+    [ "QgemmVector< M, K, N >", "classQgemmVector.html", [
+      [ "filter", "classQgemmVector.html#ab29eaa132c31d1962fe8d90872f57e4d", null ]
     ] ]
 ];

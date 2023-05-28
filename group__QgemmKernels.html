@@ -106,11 +106,11 @@ Collaboration diagram for QgemmKernels:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmScalar.html">QgemmScalar&lt; M, K, N, NPAD &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for MK*KN, stores weights and biases, QgemmVector&lt;1,84,10,16&gt; takes 10680 cycles.  <a href="classQgemmScalar.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmScalar.html">QgemmScalar&lt; M, K, N &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for MK*KN, stores weights and biases, QgemmVector&lt;1,84,16&gt; takes 16966 cycles.  <a href="classQgemmScalar.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmVector.html">QgemmVector&lt; M, K, N, NPAD &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for MK*KN, stores weights and biases, requires NPAD%16=0 QgemmVector&lt;1,84,10,16&gt; takes 125 cycles.  <a href="classQgemmVector.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmVector.html">QgemmVector&lt; M, K, N &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for MK*KN, stores weights and biases, requires N%16=0 QgemmVector&lt;1,84,16&gt; takes 125 cycles.  <a href="classQgemmVector.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: DequantizeLinearScalar&lt; CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD &gt; Class Template Reference</title>
+<title>onnx2versal: DequantizeLinearScalar&lt; WINDOW_SIZE &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classDequantizeLinearScalar.html','');
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classDequantizeLinearScalar-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">DequantizeLinearScalar&lt; CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__DequantizeLinear.html">DequantizeLinear</a> &raquo; <a class="el" href="group__DequantizeLinearKernels.html">DequantizeLinearKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">DequantizeLinearScalar&lt; WINDOW_SIZE &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__DequantizeLinear.html">DequantizeLinear</a> &raquo; <a class="el" href="group__DequantizeLinearKernels.html">DequantizeLinearKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -104,18 +104,18 @@ $(document).ready(function(){initNavTree('classDequantizeLinearScalar.html','');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a798c31df5fbdf409d6564dd91835e525"><td class="memItemLeft" align="right" valign="top"><a id="a798c31df5fbdf409d6564dd91835e525" name="a798c31df5fbdf409d6564dd91835e525"></a>
+<tr class="memitem:a2aa24084d0f0974b9d1a0ce2dd5ad927"><td class="memItemLeft" align="right" valign="top"><a id="a2aa24084d0f0974b9d1a0ce2dd5ad927" name="a2aa24084d0f0974b9d1a0ce2dd5ad927"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>DequantizeLinearScalar</b> (float scale, int8_t zero)</td></tr>
-<tr class="separator:a798c31df5fbdf409d6564dd91835e525"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8664f9c92239a29335ce96cec8610184"><td class="memItemLeft" align="right" valign="top"><a id="a8664f9c92239a29335ce96cec8610184" name="a8664f9c92239a29335ce96cec8610184"></a>
+<tr class="separator:a2aa24084d0f0974b9d1a0ce2dd5ad927"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af03eeed60cb35ff46682ef26f4953fe8"><td class="memItemLeft" align="right" valign="top"><a id="af03eeed60cb35ff46682ef26f4953fe8" name="af03eeed60cb35ff46682ef26f4953fe8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; int8_t &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:a8664f9c92239a29335ce96cec8610184"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:af03eeed60cb35ff46682ef26f4953fe8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a0ffb7a27e93e955b4e15cf3c6a7bf044"><td class="memItemLeft" align="right" valign="top"><a id="a0ffb7a27e93e955b4e15cf3c6a7bf044" name="a0ffb7a27e93e955b4e15cf3c6a7bf044"></a>
+<tr class="memitem:a6035fe89839dae14442d703034e76307"><td class="memItemLeft" align="right" valign="top"><a id="a6035fe89839dae14442d703034e76307" name="a6035fe89839dae14442d703034e76307"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a0ffb7a27e93e955b4e15cf3c6a7bf044"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a6035fe89839dae14442d703034e76307"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="dequantize__linear_8h_source.html">dequantize_linear.h</a></li>

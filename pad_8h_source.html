@@ -130,7 +130,7 @@ $(document).ready(function(){initNavTree('pad_8h_source.html',''); initResizable
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    );</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      assert(INP_W&lt;=OUT_W);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      assert(INP_W&lt;=OUT_W &amp;&amp; (std::is_same&lt;TT, int16_t&gt;::value));</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>      assert((std::is_same&lt;TT, int16&gt;::value));</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>      REGISTER_FUNCTION(PadVectorInt16::filter);</div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    }</div>

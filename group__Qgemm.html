@@ -96,7 +96,7 @@ $(document).ready(function(){initNavTree('group__Qgemm.html',''); initResizable(
 </div><!--header-->
 <div class="contents">
 
-<p>The qgemm operator consumes a quantized input tensor, its scale and zero point, a quantized weight, its scale and zero point, and output's scale and zero point, and computes the quantized output. xA^T + b as per torch.nn.Linear. Applies general matrix multiply: output(MxN) = input(MxK) * weights(KxNPAD) + bias(NPAD)  
+<p>The qgemm operator consumes a quantized input tensor, its scale and zero point, a quantized weight, its scale and zero point, and output's scale and zero point, and computes the quantized output. xA^T + b as per torch.nn.Linear. Applies general matrix multiply: output(MxN) = input(MxK) * weights(KxN) + bias(N)  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for Qgemm:</div>
@@ -115,7 +115,7 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmGraph.html">QgemmGraph&lt; QGEMM, M, K, N, NPAD &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmGraph.html">QgemmGraph&lt; QGEMM, M, K, N &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases.  <a href="classQgemmGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -126,7 +126,6 @@ Classes</h2></td></tr>
     <tr><td class="paramname">M</td><td>number of rows of input matrix </td></tr>
     <tr><td class="paramname">K</td><td>number of cols / number of rows of weight matrix </td></tr>
     <tr><td class="paramname">N</td><td>number of cols of weight matrix / size of bias vector </td></tr>
-    <tr><td class="paramname">NPAD</td><td>padded N </td></tr>
   </table>
   </dd>
 </dl>
