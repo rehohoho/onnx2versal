@@ -1,25 +1,9 @@
 import numpy as np
 import torch
 
+from python.op_parsers import pad_lastdim, get_vector_boundary
+
 np.random.seed(0)
-VECTOR_WORD_BOUNDARY = 16 # in bytes
-
-
-def pad_lastdim(tensor: np.ndarray, 
-                tensor_name: str, 
-                N: int,
-                value: int = 0):
-  lastdim = tensor.shape[-1]
-  pad_size = (N - lastdim%N) % N
-  if pad_size != 0:
-    print(f"Padding {tensor_name} {tensor.shape} to {*tensor.shape[:-1], lastdim+pad_size}")
-    pad_arr = (*((0,0) for _ in range(tensor.ndim-1)),(0,pad_size))
-    tensor = np.pad(tensor, pad_arr, "constant", constant_values=value)
-  return tensor
-
-
-def get_vector_boundary(tensor: np.ndarray):
-  return VECTOR_WORD_BOUNDARY // tensor.dtype.itemsize
 
 
 INP_H = 24

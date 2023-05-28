@@ -2,13 +2,13 @@
 #include "kernel_utils.h"
 
 
-template <int CHUNK_CNT, int CHUNK_SIZE, int CHUNK_SIZE_PAD>
-void ArgmaxScalar<CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD>::filter(
+template <int CHUNK_CNT, int CHUNK_SIZE>
+void ArgmaxScalar<CHUNK_CNT, CHUNK_SIZE>::filter(
 	input_window<float>* in,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ArgmaxScalar<%d,%d,%d>\n", CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD));
+    "Running ArgmaxScalar<%d,%d>\n", CHUNK_CNT, CHUNK_SIZE));
 
   for (int i = 0; i < CHUNK_CNT; i++) {
     float c = -std::numeric_limits<double>::infinity();
@@ -20,7 +20,6 @@ void ArgmaxScalar<CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD>::filter(
         cidx = j;
       }
     }
-    window_incr(in, CHUNK_SIZE_PAD - CHUNK_SIZE);
     window_writeincr(out, cidx);
   }
 

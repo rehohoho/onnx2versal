@@ -2,11 +2,11 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int> class ARGMAX, int CHUNK_CNT, int CHUNK_SIZE, int CHUNK_SIZE_PAD>
+template <template<int, int> class ARGMAX, int CHUNK_CNT, int CHUNK_SIZE>
 class ArgmaxGraphTest : public adf::graph {
 
   private:
-    ArgmaxGraph<ARGMAX, CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD> g;
+    ArgmaxGraph<ARGMAX, CHUNK_CNT, CHUNK_SIZE> g;
 
   public:
     adf::input_plio plin[1];
@@ -19,7 +19,7 @@ class ArgmaxGraphTest : public adf::graph {
     ) { 
       plin[0] = adf::input_plio::create("plin0_argmax"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_argmax"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE_PAD*4>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE*4>> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::window<CHUNK_CNT*4>> (g.pout[0], plout[0].in[0]);
     }
 };
@@ -27,7 +27,7 @@ class ArgmaxGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 // padded to vector boundary
-ArgmaxGraphTest<ArgmaxScalar, 10, 10, 12> argmaxScalar(
+ArgmaxGraphTest<ArgmaxScalar, 10, 10> argmaxScalar(
   "argmaxScalar", "argmax_fpin.txt", "argmax_fpout_ArgmaxScalar_shape1x10.txt");
 
 

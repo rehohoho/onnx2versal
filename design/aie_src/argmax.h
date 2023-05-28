@@ -13,9 +13,9 @@
 
 
 /**
- * @brief Scalar implementation, ArgmaxScalar<100, 10> takes 1063 cycles
+ * @brief Scalar implementation, ArgmaxScalar<100, 10> takes 1064 cycles
  */
-template <int CHUNK_CNT, int CHUNK_SIZE, int CHUNK_SIZE_PAD>
+template <int CHUNK_CNT, int CHUNK_SIZE>
 class ArgmaxScalar {
 	public:
 		void filter(
