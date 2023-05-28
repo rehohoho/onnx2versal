@@ -3,11 +3,11 @@
 
 
 template <template<int, int, int, int> class CONCAT,
-  int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+  int LCNT, int CHUNK_CNT, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatGraphTest : public adf::graph {
 
   private:
-    ConcatGraph<CONCAT, LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE> g;
+    ConcatGraph<CONCAT, LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE> g;
 
   public:
     adf::input_plio plin[LCNT];
@@ -40,26 +40,25 @@ class ConcatGraphTest : public adf::graph {
       SET_OPT_PLIN(INP7_TXT, 7);
 
       for (int i = 0; i < LCNT; i++)
-        adf::connect<adf::window<WINDOW_SIZE*4>> (plin[i].out[0], g.pin[i]);
+        adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE*4>> (plin[i].out[0], g.pin[i]);
       
-      // BLOCK_SIZE <= WINDOW_SIZE
       plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<CHUNK_CNT*BLOCK_SIZE*4>> (g.pout[0], plout[0].in[0]);
     }
 
 };
 
 
 // instance to be compiled and used in host within xclbin
-ConcatGraphTest<ConcatScalar, 5, 64, 16, 52> concatScalar(
-  "concatScalar", "concat_fpout_ConcatScalar.txt",
+ConcatGraphTest<ConcatScalar, 5, 4, 16, 52> concatScalar(
+  "concatScalar", "concat_fpout_ConcatScalar_shape4x52.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt"
 );
 
-ConcatGraphTest<ConcatVector, 5, 64, 16, 52> concatVector(
-  "concatVector", "concat_fpout_ConcatVector.txt",
+ConcatGraphTest<ConcatVector, 5, 4, 16, 52> concatVector(
+  "concatVector", "concat_fpout_ConcatVector_shape4x52.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt"

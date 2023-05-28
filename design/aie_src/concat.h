@@ -16,7 +16,7 @@
 /**
  * @brief Scalar implementation, ConcatScalar<5, 64, 16, 52> takes 650 cycles
  */
-template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+template <int LCNT, int CHUNK_CNT, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatScalar {
 	public:
 		void filter8(
@@ -105,7 +105,7 @@ class ConcatScalar {
  * @brief Vector implementation, Requires CHUNK_SIZE%8=0, BLOCK_SIZE%4=0.
  * ConcatVector<5, 64, 16, 52> takes 232 cycles.
  */
-template <int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+template <int LCNT, int CHUNK_CNT, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatVector {
 	public:
 		void filter8(

@@ -7,7 +7,8 @@
 /**
  * @defgroup Concat
  * 
- * @brief Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE
+ * @brief Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE.
+ * No CHUNK_SIZE_PAD for shaping operations.
  * 
  * @details
  * - Contains functions filter[k], k=1,2,...,8, registers filter based on LCNT
@@ -16,7 +17,7 @@
  * 
  * @tparam CONCAT       Concat Kernel
  * @tparam LCNT 				number of lanes to concat
- * @tparam WINDOW_SIZE	size of window for each lane
+ * @tparam CHUNK_CNT	  number of chunks
  * @tparam CHUNK_SIZE		size of chunk from each lanes per iteration
  * @tparam BLOCK_SIZE		size of concatenated chunks per iteration
  * 
@@ -27,12 +28,12 @@
  * @brief Graph wrapper for arbitrary concat kernel implementation and lanes
  * 
  * @connections
- * @connect{pin[0:LCNT], WINDOW_SIZE*4}
- * @connect{pout[0], WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4}
+ * @connect{pin[0:LCNT], CHUNK_CNT*CHUNK_SIZE*4}
+ * @connect{pout[0], CHUNK_CNT*BLOCK_SIZE*4}
  * @endconnections
  */
 template <template<int, int, int, int> class CONCAT,
-  int LCNT, int WINDOW_SIZE, int CHUNK_SIZE, int BLOCK_SIZE>
+  int LCNT, int CHUNK_CNT, int CHUNK_SIZE, int BLOCK_SIZE>
 class ConcatGraph : public adf::graph {
 
   public:
@@ -41,16 +42,16 @@ class ConcatGraph : public adf::graph {
     adf::port<output> pout[1];
 
     ConcatGraph() { 
-      k[0] = adf::kernel::create_object<CONCAT<LCNT, WINDOW_SIZE, CHUNK_SIZE, BLOCK_SIZE>>();
+      k[0] = adf::kernel::create_object<CONCAT<LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE>>();
       adf::source(k[0]) = "concat.cc";
       adf::headers(k[0]) = {"concat.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
       for (int i = 0; i < LCNT; i++)
-        adf::connect<adf::window<WINDOW_SIZE*4>> (pin[i], k[0].in[i]);
+        adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE*4>> (pin[i], k[0].in[i]);
       
-      // BLOCK_SIZE <= WINDOW_SIZE
-      adf::connect<adf::window<WINDOW_SIZE/CHUNK_SIZE*BLOCK_SIZE*4>> (k[0].out[0], pout[0]);
+      // BLOCK_SIZE <= CHUNK_CNT*CHUNK_SIZE
+      adf::connect<adf::window<CHUNK_CNT*BLOCK_SIZE*4>> (k[0].out[0], pout[0]);
     }
 
 };
