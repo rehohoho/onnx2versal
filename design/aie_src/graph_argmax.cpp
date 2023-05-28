@@ -2,11 +2,11 @@
 #include "graph_utils.h"
 
 
-template <template<int, int> class ARGMAX, int WINDOW_SIZE, int CHUNK_SIZE>
+template <template<int, int, int> class ARGMAX, int CHUNK_CNT, int CHUNK_SIZE, int CHUNK_SIZE_PAD>
 class ArgmaxGraphTest : public adf::graph {
 
   private:
-    ArgmaxGraph<ARGMAX, WINDOW_SIZE, CHUNK_SIZE> g;
+    ArgmaxGraph<ARGMAX, CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD> g;
 
   public:
     adf::input_plio plin[1];
@@ -19,29 +19,23 @@ class ArgmaxGraphTest : public adf::graph {
     ) { 
       plin[0] = adf::input_plio::create("plin0_argmax"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_argmax"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<WINDOW_SIZE*4>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<WINDOW_SIZE/CHUNK_SIZE*4>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE_PAD*4>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<CHUNK_CNT*4>> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
-ArgmaxGraphTest<ArgmaxScalar, 100, 10> fpscalar(
-  "fpscalar", "argmax_fpin.txt", "argmax_fpout_ArgmaxScalar.txt");
-ArgmaxGraphTest<ArgmaxScalar, 100, 10> fpscalar_rand(
-  "fpscalar_rand", "argmax_fpin_rand.txt", "argmax_fpout_ArgmaxScalar_rand.txt");
-
+// padded to vector boundary
+ArgmaxGraphTest<ArgmaxScalar, 10, 10, 12> argmaxScalar(
+  "argmaxScalar", "argmax_fpin.txt", "argmax_fpout_ArgmaxScalar_shape1x10.txt");
 
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
-	adfCheck(fpscalar.init(), "init fpscalar");
-  adfCheck(fpscalar.run(ITER_CNT), "run fpscalar");
-	adfCheck(fpscalar.end(), "end fpscalar");
-
-  adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
-  adfCheck(fpscalar_rand.run(ITER_CNT), "run fpscalar_rand");
-	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
+	adfCheck(argmaxScalar.init(), "init argmaxScalar");
+  adfCheck(argmaxScalar.run(ITER_CNT), "run argmaxScalar");
+	adfCheck(argmaxScalar.end(), "end argmaxScalar");
   return 0;
 }
 #endif
@@ -49,13 +43,9 @@ int main(int argc, char ** argv) {
 
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
-	adfCheck(fpscalar.init(), "init fpscalar");
-  get_graph_throughput_by_port(fpscalar, "plout[0]", fpscalar.plout[0], 10, sizeof(float), ITER_CNT);
-	adfCheck(fpscalar.end(), "end fpscalar");
-
-  adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
-  get_graph_throughput_by_port(fpscalar_rand, "plout[0]", fpscalar_rand.plout[0], 10, sizeof(float), ITER_CNT);
-	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
+	adfCheck(argmaxScalar.init(), "init argmaxScalar");
+  get_graph_throughput_by_port(argmaxScalar, "plout[0]", argmaxScalar.plout[0], 10, sizeof(float), ITER_CNT);
+	adfCheck(argmaxScalar.end(), "end argmaxScalar");
   return 0;
 }
 #endif
