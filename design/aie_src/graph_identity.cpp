@@ -26,8 +26,8 @@ class IdentityGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-IdentityGraphTest<IdentityScalar, 8> fpscalar(
-  "fpscalar", "concat_fpin.txt", "iden_fpout_IdentityScalar.txt");
+IdentityGraphTest<IdentityScalar, 64> fpscalar(
+  "fpscalar", "concat_fpin.txt", "concat_fpin.txt");
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
