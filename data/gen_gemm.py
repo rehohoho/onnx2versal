@@ -1,51 +1,34 @@
 import numpy as np
+
+from python.op_parsers import pad_lastdim, get_vector_boundary, save_tensor
+
 np.random.seed(0)
 
 M = 1
 K = 86
 N = 10
-PAD = (4 - N%4) % 4
-
-# arange input, weights, bias
-inp = np.arange(M*K)
-weights_mknk = np.arange(K*N)
-weights_mkkn = np.pad(weights_mknk.reshape(K, N), 
-                      ((0,0),(0,PAD)), "constant", constant_values=0)
-bias = np.ones(N)
-
-np.savetxt("gemm_fpin.txt", inp.reshape(-1, 2))
-np.savetxt("gemm_fpweights_mknk.txt", weights_mknk.reshape(-1, 2))
-np.savetxt("gemm_fpbias.txt", bias.reshape(-1, 2))
-print("weights_mknk\n", weights_mknk.flatten().tolist(), "\n\n\n")
-print("weights_mkkn\n", weights_mkkn.flatten().tolist(), "\n\n\n")
-print("bias\n", bias.flatten().tolist(), "\n\n\n")
 
 # random input, weights, bias
-inp_rand = np.random.random(M*K)
-weights_mknk_rand = np.random.random(K*N)
-weights_mkkn_rand = np.pad(weights_mknk_rand.reshape(K, N), 
-                           ((0,0),(0,PAD)), "constant", constant_values=0)
-bias_rand = np.random.random(N)
-
-np.savetxt("gemm_fpin_rand.txt", inp_rand.reshape(-1, 2))
-np.savetxt("gemm_fpweights_mknk_rand.txt", weights_mknk_rand.reshape(-1, 2))
-np.savetxt("gemm_fpbias_rand.txt", bias_rand.reshape(-1, 2))
-print("weights_mknk_rand\n", weights_mknk_rand.flatten().tolist(), "\n\n\n")
-print("weights_mkkn_rand\n", weights_mkkn_rand.flatten().tolist(), "\n\n\n")
-print("bias_rand\n", bias_rand.flatten().tolist(), "\n\n\n")
+inp = np.random.random(size=(M,K)).astype(np.float32)
+weights_mknk = np.random.random(size=(N,K)).astype(np.float32)
+weights_mkkn = np.random.random(size=(K,N)).astype(np.float32)
+bias = np.random.random(N).astype(np.float32)
 
 # result for mknk
-res_mknk = np.matmul(inp.reshape(1,86), weights_mknk.reshape(10,86).T) + bias
-res_mknk_rand = np.matmul(inp_rand.reshape(1,86), weights_mknk_rand.reshape(10,86).T) + bias_rand
-np.savetxt("gemm_fpout_GemmReluScalarMKNK.txt", res_mknk.reshape(-1, 2))
-np.savetxt("gemm_fpout_GemmReluScalarMKNK_rand.txt", res_mknk_rand.reshape(-1, 2))
-np.savetxt("gemm_fpout_GemmReluScalarGmemParamMKNK.txt", res_mknk.reshape(-1, 2))
-np.savetxt("gemm_fpout_GemmReluScalarGmemParamMKNK_rand.txt", res_mknk_rand.reshape(-1, 2))
+res_mknk = np.matmul(inp, weights_mknk.T) + bias
+save_tensor("gemm_fpout_GemmReluScalarMKNK_shape1x10.txt", res_mknk)
+save_tensor("gemm_fpout_GemmReluScalarGmemParamMKNK_shape1x10.txt", res_mknk)
 
 # result for mkkn
-res_mkkn = np.matmul(inp.reshape(1,86), weights_mknk.reshape(86,10)) + bias
-res_mkkn_rand = np.matmul(inp_rand.reshape(1,86), weights_mknk_rand.reshape(86,10)) + bias_rand
-np.savetxt("gemm_fpout_GemmReluScalarMKKN.txt", res_mkkn.reshape(-1, 2))
-np.savetxt("gemm_fpout_GemmReluScalarMKKN_rand.txt", res_mkkn_rand.reshape(-1, 2))
-np.savetxt("gemm_fpout_GemmReluMKKN.txt", res_mkkn.reshape(-1, 2))
-np.savetxt("gemm_fpout_GemmReluMKKN_rand.txt", res_mkkn_rand.reshape(-1, 2))
+res_mkkn = np.matmul(inp, weights_mkkn) + bias
+save_tensor("gemm_fpout_GemmReluScalarMKKN_shape1x10.txt", res_mkkn)
+save_tensor("gemm_fpout_GemmReluMKKN_shape1x10.txt", res_mkkn)
+
+weights_mkkn_pad = pad_lastdim(weights_mkkn, "gemm tw", get_vector_boundary(weights_mkkn))
+save_tensor("gemm_fpin.txt", inp)
+save_tensor("gemm_fpweights_mknk.txt", weights_mknk)
+save_tensor("gemm_fpbias.txt", bias)
+print("weights_mknk\n", weights_mknk.flatten().tolist(), "\n\n\n")
+print("weights_mkkn\n", weights_mkkn.flatten().tolist(), "\n\n\n")
+print("weights_mkkn_pad\n", weights_mkkn_pad.flatten().tolist(), "\n\n\n")
+print("bias\n", bias.flatten().tolist(), "\n\n\n")
