@@ -106,17 +106,17 @@ Collaboration diagram for GemmKernels:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluScalarGmemParamMKNK.html">GemmReluScalarGmemParamMKNK&lt; M, K, NCHUNK &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluScalarGmemParamMKNK.html">GemmReluScalarGmemParamMKNK&lt; M, K, N, _unused_NPAD &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for MK*NK, streams weights and biases, GemmReluScalarGmemParamMKNK&lt;1, 86, 10&gt; total = 19223.  <a href="classGemmReluScalarGmemParamMKNK.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluScalarMKNK.html">GemmReluScalarMKNK&lt; M, K, NCHUNK &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluScalarMKNK.html">GemmReluScalarMKNK&lt; M, K, N, _unused_NPAD &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for MK*NK, stores weights and biases, Running GemmReluScalarMKNK&lt;1, 86, 10&gt; total = 1939.  <a href="classGemmReluScalarMKNK.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluScalarMKKN.html">GemmReluScalarMKKN&lt; M, K, NCHUNK &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluScalarMKKN.html">GemmReluScalarMKKN&lt; M, K, N, NPAD &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for MK*KN, stores weights and biases, GemmReluScalarMKKN&lt;1, 86, 10&gt; total = 1939.  <a href="classGemmReluScalarMKKN.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluMKKN.html">GemmReluMKKN&lt; M, K, NCHUNK &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for MK*KN, stores weights and biases, requires K%2=0, NCHUNK%4=0 GemmReluMKKN&lt;1, 86, 10&gt; total = 366.  <a href="classGemmReluMKKN.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGemmReluMKKN.html">GemmReluMKKN&lt; M, K, N, NPAD &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%4=0 GemmReluMKKN&lt;1, 86, 10&gt; total = 366.  <a href="classGemmReluMKKN.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

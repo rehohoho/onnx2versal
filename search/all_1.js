@@ -2,9 +2,9 @@ var searchData=
 [
   ['concat_0',['Concat',['../group__Concat.html',1,'']]],
   ['concatgraph_1',['ConcatGraph',['../classConcatGraph.html',1,'']]],
-  ['concatgraph_3c_20concat_2c_20chunk_5fcount_2c_20b_20_2amchunk_20_2aout_5fw_20_2aout_5fw_2c_20concat_5fchunk_2c_20concat_5fblock_20_3e_2',['ConcatGraph&lt; CONCAT, CHUNK_COUNT, B *MCHUNK *OUT_W *OUT_W, CONCAT_CHUNK, CONCAT_BLOCK &gt;',['../classConcatGraph.html',1,'']]],
-  ['concatgraph_3c_20concat_2c_20chunk_5fcount_2c_20nchunk_2c_20nchunk_2c_20n_20_3e_3',['ConcatGraph&lt; CONCAT, CHUNK_COUNT, NCHUNK, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
-  ['concatgraph_3c_20concatvector_2c_20chunk_5fcount_2c_20nchunk_2c_20nchunk_2c_20n_20_3e_4',['ConcatGraph&lt; ConcatVector, CHUNK_COUNT, NCHUNK, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
+  ['concatgraph_3c_20concat_2c_20chunk_5fcount_2c_201_2c_20nchunk_2c_20n_20_3e_2',['ConcatGraph&lt; CONCAT, CHUNK_COUNT, 1, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
+  ['concatgraph_3c_20concat_2c_20chunk_5fcount_2c_20concat_5fchunk_5fcount_2c_20concat_5fchunk_2c_20concat_5fblock_20_3e_3',['ConcatGraph&lt; CONCAT, CHUNK_COUNT, CONCAT_CHUNK_COUNT, CONCAT_CHUNK, CONCAT_BLOCK &gt;',['../classConcatGraph.html',1,'']]],
+  ['concatgraph_3c_20concatvector_2c_20chunk_5fcount_2c_201_2c_20nchunk_2c_20n_20_3e_4',['ConcatGraph&lt; ConcatVector, CHUNK_COUNT, 1, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
   ['concatkernels_5',['ConcatKernels',['../group__ConcatKernels.html',1,'']]],
   ['concatscalar_6',['ConcatScalar',['../classConcatScalar.html',1,'']]],
   ['concatvector_7',['ConcatVector',['../classConcatVector.html',1,'']]],

@@ -109,9 +109,9 @@ Collaboration diagram for GemmReluMkknChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K,
 <div class="dyncontent">
 <div class="center"><img src="classGemmReluMkknChunkGraph__coll__graph.png" border="0" usemap="#aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map" alt="Collaboration graph"/></div>
 <map name="aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map" id="aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map">
-<area shape="rect" title="Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,..." alt="" coords="5,124,209,180"/>
-<area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="9,5,205,61"/>
-<area shape="poly" title=" " alt="" coords="110,76,110,123,104,123,104,76"/>
+<area shape="rect" title="Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,..." alt="" coords="20,109,224,165"/>
+<area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="5,5,239,46"/>
+<area shape="poly" title=" " alt="" coords="125,61,125,109,119,109,119,61"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -126,9 +126,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aaa212361ff5041fd8a53b1ff97ce2278"><td class="memItemLeft" align="right" valign="top"><a id="aaa212361ff5041fd8a53b1ff97ce2278" name="aaa212361ff5041fd8a53b1ff97ce2278"></a>
 adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>gemms</b> [CHUNK_COUNT]</td></tr>
 <tr class="separator:aaa212361ff5041fd8a53b1ff97ce2278"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41e6709512778f7301932d33d793bac7"><td class="memItemLeft" align="right" valign="top"><a id="a41e6709512778f7301932d33d793bac7" name="a41e6709512778f7301932d33d793bac7"></a>
-<a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, CHUNK_COUNT, NCHUNK, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
-<tr class="separator:a41e6709512778f7301932d33d793bac7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ab1ef9c37781c4d2bb2018648fdf5f3"><td class="memItemLeft" align="right" valign="top"><a id="a9ab1ef9c37781c4d2bb2018648fdf5f3" name="a9ab1ef9c37781c4d2bb2018648fdf5f3"></a>
+<a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, CHUNK_COUNT, 1, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
+<tr class="separator:a9ab1ef9c37781c4d2bb2018648fdf5f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3e236c9a0faaa5b91da8d4cde6e5bb9"><td class="memItemLeft" align="right" valign="top"><a id="ab3e236c9a0faaa5b91da8d4cde6e5bb9" name="ab3e236c9a0faaa5b91da8d4cde6e5bb9"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [CHUNK_COUNT]</td></tr>
 <tr class="separator:ab3e236c9a0faaa5b91da8d4cde6e5bb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,7 +139,7 @@ adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a2e0027f12e520f3dce87646019f1f6f3"><td class="memItemLeft" align="right" valign="top"><a id="a2e0027f12e520f3dce87646019f1f6f3" name="a2e0027f12e520f3dce87646019f1f6f3"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>CHUNK_COUNT</b> = (N_RND + NCHUNK - 1) / NCHUNK</td></tr>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><b>CHUNK_COUNT</b> = (N + NCHUNK - 1) / NCHUNK</td></tr>
 <tr class="separator:a2e0027f12e520f3dce87646019f1f6f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>

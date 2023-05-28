@@ -96,14 +96,14 @@ $(document).ready(function(){initNavTree('group__Argmax.html',''); initResizable
 </div><!--header-->
 <div class="contents">
 
-<p>Argmax over chunks of CHUNK_SIZE in WINDOW_SIZE vector.  
+<p>Argmax over CHUNK_CNT chunks of CHUNK_SIZE_PAD vector.  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for Argmax:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__Argmax.png" border="0" usemap="#agroup____Argmax" alt=""/></div>
 <map name="agroup____Argmax" id="agroup____Argmax">
-<area shape="rect" title="Argmax over chunks of CHUNK_SIZE in WINDOW_SIZE vector." alt="" coords="5,5,71,31"/>
+<area shape="rect" title="Argmax over CHUNK_CNT chunks of CHUNK_SIZE_PAD vector." alt="" coords="5,5,71,31"/>
 <area shape="rect" href="group__ArgmaxKernels.html" title=" " alt="" coords="119,5,228,31"/>
 </map>
 </div>
@@ -115,7 +115,7 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArgmaxGraph.html">ArgmaxGraph&lt; ARGMAX, WINDOW_SIZE, CHUNK_SIZE &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArgmaxGraph.html">ArgmaxGraph&lt; ARGMAX, CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph.  <a href="classArgmaxGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -123,8 +123,9 @@ Classes</h2></td></tr>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">ARGMAX</td><td>Argmax Kernel </td></tr>
-    <tr><td class="paramname">WINDOW_SIZE</td><td>size of window </td></tr>
-    <tr><td class="paramname">CHUNK_SIZE</td><td>size of chunk per iteration </td></tr>
+    <tr><td class="paramname">CHUNK_CNT</td><td>number of chunks </td></tr>
+    <tr><td class="paramname">CHUNK_SIZE</td><td>size of chunk per iteration to calculate </td></tr>
+    <tr><td class="paramname">CHUNK_SIZE_PAD</td><td>size of chunk, padded to vector boundary </td></tr>
   </table>
   </dd>
 </dl>

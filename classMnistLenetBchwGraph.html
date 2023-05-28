@@ -123,9 +123,9 @@ std::vector&lt; adf::output_plio &gt;&#160;</td><td class="memItemRight" valign=
 <div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int &gt; class CONV, template&lt; int, int, int, int &gt; class POOL, template&lt; int, int, int &gt; class GEMM, template&lt; int, int &gt; class ARGMAX, template&lt; int, int, int, int &gt; class CONCAT&gt;<br />
 class MnistLenetBchwGraph&lt; CONV, POOL, GEMM, ARGMAX, CONCAT &gt;</div><p>Profile information</p><ul>
 <li>Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt; total = 16665</li>
-<li>Running Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt; total = 901</li>
+<li>Running Maxpool2x2FloatBCHW::filter&lt;24, 12, 1, 6&gt; total = 901</li>
 <li>Running Conv5x5on8ReluBCHW&lt;12, 8, 1, 6, 16&gt; total = 25952</li>
-<li>Running Maxpool2x2BCHW::filter&lt;8, 4, 1, 16&gt; total = 291</li>
+<li>Running Maxpool2x2FloatBCHW::filter&lt;8, 4, 1, 16&gt; total = 291</li>
 <li>Running 8x GemmReluMKKN&lt;1, 256, 16&gt; total = 906</li>
 <li>Running ConcatVector&lt;8, 16, 16, 120&gt;::filter8 total = 126</li>
 <li>Running 3x GemmReluMKKN&lt;1, 120, 32&gt; total = 888</li>
