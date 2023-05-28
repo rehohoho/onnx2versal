@@ -26,7 +26,7 @@
  * @brief Scalar implementation for MK*NK, streams weights and biases, 
  * GemmReluScalarGmemParamMKNK<1, 86, 10> total = 19223
  */
-template <int M, int K, int N, int _unused_NPAD>
+template <int M, int K, int N>
 class GemmReluScalarGmemParamMKNK {
   public:
     void filter(
@@ -46,7 +46,7 @@ class GemmReluScalarGmemParamMKNK {
  * Running GemmReluScalarMKNK<1, 86, 10> total = 1939
  */
 // xA^T + b as per torch,nn.Linear
-template <int M, int K, int N, int _unused_NPAD>
+template <int M, int K, int N>
 class GemmReluScalarMKNK {
   
   private:
@@ -74,18 +74,18 @@ class GemmReluScalarMKNK {
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * GemmReluScalarMKKN<1, 86, 10> total = 1939
+ * GemmReluScalarMKKN<1, 86, 10> total = 2331
  */
-template <int M, int K, int N, int NPAD>
+template <int M, int K, int N>
 class GemmReluScalarMKKN {
   
   private:
-    alignas(32) float (&weights)[K*NPAD]; // KxN
-    alignas(32) float (&bias)[N];         // N
+    alignas(32) float (&weights)[K*N]; // KxN
+    alignas(32) float (&bias)[N];      // N
   
   public:
     GemmReluScalarMKKN (
-      float (&w)[NPAD*K],
+      float (&w)[N*K],
       float (&b)[N]
     ): weights(w), bias(b) {};
 
@@ -105,21 +105,21 @@ class GemmReluScalarMKKN {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%4=0
- * GemmReluMKKN<1, 86, 10> total = 366
+ * GemmReluMKKN<1, 86, 10> total = 368
  */
-template <int M, int K, int N, int NPAD>
+template <int M, int K, int N>
 class GemmReluMKKN {
   
   private:
-    alignas(32) float (&weights)[K*NPAD]; // KxN
-    alignas(32) float (&bias)[N];         // N
+    alignas(32) float (&weights)[K*N]; // KxN
+    alignas(32) float (&bias)[N];      // N
 
     static constexpr int K_REM8 = K%8;
     static constexpr int RUN_LASTCHUNK = K_REM8 > 0;
   
   public:
     GemmReluMKKN (
-      float (&w)[NPAD*K],
+      float (&w)[N*K],
       float (&b)[N]
     ): weights(w), bias(b) {};
 
@@ -129,7 +129,7 @@ class GemmReluMKKN {
     );
     
     static void registerKernelClass() {
-      assert(K%2==0 && NPAD%4==0);
+      assert(K%2==0 && N%4==0);
       REGISTER_FUNCTION(GemmReluMKKN::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

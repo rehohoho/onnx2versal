@@ -36,8 +36,8 @@
  * @connect{pout[0], M*N*4}
  * @endconnections
  */
-template <template<int, int, int, int> class GEMM, 
-  int M, int K, int N, int NPAD>
+template <template<int, int, int> class GEMM, 
+  int M, int K, int N>
 class GemmReluGraph : public adf::graph {
 
   private:
@@ -51,7 +51,7 @@ class GemmReluGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
-      k[0] = adf::kernel::create_object<GEMM<M, K, N, NPAD>>(weights, bias);
+      k[0] = adf::kernel::create_object<GEMM<M, K, N>>(weights, bias);
       adf::source(k[0]) = "gemm.cc";
       adf::headers(k[0]) = {"gemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -73,8 +73,8 @@ class GemmReluGraph : public adf::graph {
  * @connect{pout[0], M*N*4}
  * @endconnections
  */
-template <template<int, int, int, int> class GEMM, 
-  int M, int K, int N, int NPAD>
+template <template<int, int, int> class GEMM, 
+  int M, int K, int N>
 class GemmReluGmemParamGraph : public adf::graph {
 
   private:
@@ -85,7 +85,7 @@ class GemmReluGmemParamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     GemmReluGmemParamGraph() { 
-      k[0] = adf::kernel::create_object<GEMM<M, K, N, NPAD>>();
+      k[0] = adf::kernel::create_object<GEMM<M, K, N>>();
       adf::source(k[0]) = "gemm.cc";
       adf::headers(k[0]) = {"gemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -113,7 +113,7 @@ class GemmReluGmemParamGraph : public adf::graph {
  * @endconnections
  */
 template <
-  template<int, int, int, int> class GEMM, 
+  template<int, int, int> class GEMM, 
   template<int, int, int, int> class CONCAT, 
   int NCHUNK, int M, int K, int N>
 class GemmReluMknkChunkGraph : public adf::graph {
@@ -154,7 +154,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
         bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+chunkSize);
         bChunk.resize(NCHUNK, 0);
         
-        gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK, NCHUNK>>(wChunk, bChunk);
+        gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK>>(wChunk, bChunk);
         adf::source(gemms[i]) = "gemm.cc";
         adf::headers(gemms[i]) = {"gemm.h"};
         adf::runtime<ratio>(gemms[i]) = 0.6;
@@ -189,7 +189,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
  * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
  */
 template <
-  template<int, int, int, int> class GEMM, 
+  template<int, int, int> class GEMM, 
   template<int, int, int, int> class CONCAT, 
   int NCHUNK, int M, int K, int N>
 class GemmReluMkknChunkGraph : public adf::graph {
@@ -233,7 +233,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
         bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);
         bChunk.resize(NCHUNK, 0);
         
-        gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK, NCHUNK>>(wChunk, bChunk);
+        gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK>>(wChunk, bChunk);
         adf::source(gemms[i]) = "gemm.cc";
         adf::headers(gemms[i]) = {"gemm.h"};
         adf::runtime<ratio>(gemms[i]) = 0.6;

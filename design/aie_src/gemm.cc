@@ -3,15 +3,15 @@
 
 
 
-template <int M, int K, int N, int _unused_NPAD>
-void GemmReluScalarGmemParamMKNK<M, K, N, _unused_NPAD>::filter(
+template <int M, int K, int N>
+void GemmReluScalarGmemParamMKNK<M, K, N>::filter(
 	input_window<float>* in,      // MxK  (1x256)
   input_window<float>* weight,  // NxK  (120x256)
   input_window<float>* bias,    // N    (120)
   output_window<float>* out     // MxN  (1x120)
 ) {
   PROFILE_HEADER(printf(
-    "Running GemmReluScalarGmemParamMKNK<%d,%d,%d,%d>\n", M, K, N, _unused_NPAD));
+    "Running GemmReluScalarGmemParamMKNK<%d,%d,%d>\n", M, K, N));
   
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) {
@@ -33,13 +33,13 @@ void GemmReluScalarGmemParamMKNK<M, K, N, _unused_NPAD>::filter(
 }
 
 
-template <int M, int K, int N, int _unused_NPAD>
-void GemmReluScalarMKNK<M, K, N, _unused_NPAD>::filter(
+template <int M, int K, int N>
+void GemmReluScalarMKNK<M, K, N>::filter(
 	input_window<float>* in,      // MxK  (1x256)
   output_window<float>* out     // MxN  (1x120)
 ) {
   PROFILE_HEADER(printf(
-    "Running GemmReluScalarMKNK<%d,%d,%d,%d>\n", M, K, N, _unused_NPAD));
+    "Running GemmReluScalarMKNK<%d,%d,%d>\n", M, K, N));
 
   int weightIdx = 0;
 
@@ -64,14 +64,14 @@ void GemmReluScalarMKNK<M, K, N, _unused_NPAD>::filter(
 }
 
 
-template <int M, int K, int N, int NPAD>
-void GemmReluScalarMKKN<M, K, N, NPAD>::filter(
-	input_window<float>* in,      // MxK    inputs
-                                // KxNPAD weights
-  output_window<float>* out     // MxN    outputs
+template <int M, int K, int N>
+void GemmReluScalarMKKN<M, K, N>::filter(
+	input_window<float>* in,      // MxK  inputs
+                                // KxN  weights
+  output_window<float>* out     // MxN  outputs
 ) {
   PROFILE_HEADER(printf(
-    "Running GemmReluScalarMKKN<%d,%d,%d,%d>\n", M, K, N, NPAD));
+    "Running GemmReluScalarMKKN<%d,%d,%d>\n", M, K, N));
 
   int weightIdx = 0;
 
@@ -82,7 +82,7 @@ void GemmReluScalarMKKN<M, K, N, NPAD>::filter(
       for (int k = 0; k < K; k++) {
         float a = window_readincr(in);
         float b = weights[weightIdx];
-        weightIdx += NPAD;
+        weightIdx += N;
         res += a * b;
       }    
       if (res < 0) res = 0;
@@ -90,21 +90,20 @@ void GemmReluScalarMKKN<M, K, N, NPAD>::filter(
       window_incr(in, -K); // repeat same in row for next j
     }
     window_incr(in, K); // next in row for next N
-    window_incr(out, NPAD - N);
   }
 
   PROFILE_FOOTER;
 }
 
 
-template <int M, int K, int N, int NPAD>
-void GemmReluMKKN<M, K, N, NPAD>::filter(
-	input_window<float>* in,      // MxK    inputs
-                                // KxNPAD weights
-  output_window<float>* out     // MxN    outputs
+template <int M, int K, int N>
+void GemmReluMKKN<M, K, N>::filter(
+	input_window<float>* in,      // MxK  inputs
+                                // KxN  weights
+  output_window<float>* out     // MxN  outputs
 ) {
   PROFILE_HEADER(printf(
-    "Running GemmReluMKKN<%d,%d,%d,%d>\n", M, K, N, NPAD));
+    "Running GemmReluMKKN<%d,%d,%d>\n", M, K, N));
 
   float *a_ptr = (float *) in->ptr;
   float *w_ptr = (float *) weights;
@@ -117,7 +116,7 @@ void GemmReluMKKN<M, K, N, NPAD>::filter(
 #define MAC_ROW(matA_i) \
   matB = upd_w(matB, 0, *(v8float*) w_ptr); \
   acc1 = fpmac(acc1, matB, 0, 0x76543210, matA, matA_i, 0x00000000); \
-  matB = upd_w(matB, 1, *(v8float*) (w_ptr + 8)); w_ptr += NPAD; \
+  matB = upd_w(matB, 1, *(v8float*) (w_ptr + 8)); w_ptr += N; \
   acc2 = fpmac(acc2, matB, 8, 0x76543210, matA, matA_i, 0x00000000);
 
   for (int i = 0; i < M; i++) {
@@ -164,10 +163,10 @@ void GemmReluMKKN<M, K, N, NPAD>::filter(
         window_writeincr(out, acc2);
       }
 
-      w_ptr += -K*NPAD + 16;
+      w_ptr += -K*N + 16;
       a_ptr -= K;
     }
-    w_ptr -= NPAD;
+    w_ptr -= N;
     a_ptr += K;
     
   }
