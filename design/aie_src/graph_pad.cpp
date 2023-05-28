@@ -29,12 +29,12 @@ class PadGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 PadGraphTest<PadScalar, int16_t, 28, 28, 32> padScalar(
-  "padScalar", "pad_int16in.txt", "pad_int16out_PadScalar.txt");
+  "padScalar", "pad_int16in.txt", "pad_int16out_PadScalar_shape28x32.txt");
 PadGraphTest<PadScalar, int8_t, 28, 28, 32> padScalar_int8(
-  "padScalar_int8", "pad_int8in.txt", "pad_int8out_PadScalar.txt");
+  "padScalar_int8", "pad_int8in.txt", "pad_int8out_PadScalar_shape28x32.txt");
 
 PadGraphTest<PadVectorInt16, int16_t, 28, 28, 32> padVector(
-  "padVector", "pad_int16in.txt", "pad_int16out_PadVector.txt");
+  "padVector", "pad_int16in.txt", "pad_int16out_PadVector_shape28x32.txt");
 
 
 #ifdef __X86SIM__

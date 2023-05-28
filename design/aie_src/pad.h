@@ -53,7 +53,7 @@ class PadVectorInt16 {
     );
 
     static void registerKernelClass() {
-      assert(INP_W<=OUT_W);
+      assert(INP_W<=OUT_W && (std::is_same<TT, int16_t>::value));
       assert((std::is_same<TT, int16>::value));
       REGISTER_FUNCTION(PadVectorInt16::filter);
     }
