@@ -2,12 +2,12 @@
 #include "graph_utils.h"
 
 
-template <template<int> class DEQUANTIZE_LINEAR, int WINDOW_SIZE>
+template <template<int, int, int> class DEQUANTIZE_LINEAR,
+  int CHUNK_CNT, int CHUNK_SIZE, int CHUNK_SIZE_PAD>
 class DequantizeLinearScalarTest : public adf::graph {
 
   private:
-    DequantizeLinearGraph<DEQUANTIZE_LINEAR, WINDOW_SIZE> g;
-    static constexpr int PAD_WINSIZE = DequantizeLinearGraph<DEQUANTIZE_LINEAR, WINDOW_SIZE>::PAD_WINSIZE;
+    DequantizeLinearGraph<DEQUANTIZE_LINEAR, CHUNK_CNT, CHUNK_SIZE, CHUNK_SIZE_PAD> g;
 
   public:
     adf::input_plio plin[1];
@@ -22,18 +22,18 @@ class DequantizeLinearScalarTest : public adf::graph {
     ): g(y_scale, y_zero_point) { 
       plin[0] = adf::input_plio::create("plin0_dequantize_linear"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_dequantize_linear"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<PAD_WINSIZE>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<WINDOW_SIZE*4>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE_PAD>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE*4>> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
-DequantizeLinearScalarTest<DequantizeLinearScalar, 1*10> dequantizeLinearScalar(
+DequantizeLinearScalarTest<DequantizeLinearScalar, 24, 23, 32> dequantizeLinearScalar(
   "dequantizeLinearScalar", 
-  "k9dequantizeLinear_in.txt", 
-  "k9dequantizeLinear_goldenout.txt",
-  0.05811788, -128);
+  "dequantizelinear_int8in.txt", 
+  "dequantizelinear_fpout_DequantizeLinearScalar_shape24x23.txt",
+  0.00392156889, -128);
 
 
 #ifdef __X86SIM__

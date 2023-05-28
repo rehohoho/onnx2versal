@@ -18,7 +18,7 @@
 /**
  * @brief Scalar implementation, DequantizeLinearScalar<1*1*28*28> takes  cycles
  */
-template <int WINDOW_SIZE>
+template <int CHUNK_CNT, int CHUNK_SIZE, int CHUNK_SIZE_PAD>
 class DequantizeLinearScalar {
   
   private:
