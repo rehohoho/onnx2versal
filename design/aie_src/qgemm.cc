@@ -3,14 +3,14 @@
 #include "aie_api/aie.hpp"
 
 
-template <int M, int K, int N, int NPAD>
-void QgemmScalar<M, K, N, NPAD>::filter(
+template <int M, int K, int N>
+void QgemmScalar<M, K, N>::filter(
 	input_window<int8_t>* in,      // MxK
-                                 // KxNPAD
-  output_window<int8_t>* out     // MxNPAD
+                                 // KxN
+  output_window<int8_t>* out     // MxN
 ) {
   PROFILE_HEADER(printf(
-    "Running QgemmScalar<%d,%d,%d,%d>\n", M, K, N, NPAD));
+    "Running QgemmScalar<%d,%d,%d>\n", M, K, N));
 
   int weightIdx = 0;
 
@@ -21,7 +21,7 @@ void QgemmScalar<M, K, N, NPAD>::filter(
       for (int k = 0; k < K; k++) {
         int a = window_readincr(in);
         int b = weights[weightIdx];
-        weightIdx += NPAD;
+        weightIdx += N;
         res += (a-x_zero) * (b-w_zero);
       }
       res = y_zero + round(scale * res);
@@ -29,7 +29,6 @@ void QgemmScalar<M, K, N, NPAD>::filter(
       window_writeincr(out, (int8_t) res);
       window_incr(in, -K); // repeat same in row for next j
     }
-    window_incr(out, NPAD - N);
     window_incr(in, K); // next in row for next N
   }
 
@@ -37,10 +36,10 @@ void QgemmScalar<M, K, N, NPAD>::filter(
 }
 
 
-template <int M, int K, int N, int NPAD>
-QgemmVector<M,K,N,NPAD>::QgemmVector (
-  int8_t (&w)[K*NPAD],
-  int32_t (&b)[NPAD],
+template <int M, int K, int N>
+QgemmVector<M, K, N>::QgemmVector (
+  int8_t (&w)[K*N],
+  int32_t (&b)[N],
   float x_scale,
   float w_scale,
   float y_scale,
@@ -57,16 +56,15 @@ QgemmVector<M,K,N,NPAD>::QgemmVector (
   for (int j = 0; j < N; j+=16) {
     aieacc.from_vector(aie::load_v<16>(b_ptr), 0);
     for (int k = 0; k < K; k++) {
-      aieacc = aie::msc(aieacc, aie::load_v<16>(w_ptr), x_zero); w_ptr += NPAD;
+      aieacc = aie::msc(aieacc, aie::load_v<16>(w_ptr), x_zero); w_ptr += N;
     }
     aie::store_v(b_ptr, aieacc.to_vector<int32_t>(0)); 
     b_ptr += 16;
-    w_ptr += -K*NPAD + 16;
+    w_ptr += -K*N + 16;
   }
   
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  printf("scalebits %d\n", scalebits);
   scalebits = std::min(scalebits, 24); // since int32_t shift, int8_t y_zero_point
 
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
@@ -103,14 +101,14 @@ QgemmVector<M,K,N,NPAD>::QgemmVector (
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
-template <int M, int K, int N, int NPAD>
-void QgemmVector<M, K, N, NPAD>::filter(
+template <int M, int K, int N>
+void QgemmVector<M, K, N>::filter(
 	input_window<int8_t>* in,      // MxK
-                                 // KxNPAD
-  output_window<int8_t>* out     // MxNPAD
+                                 // KxN
+  output_window<int8_t>* out     // MxN
 ) {
   PROFILE_HEADER(printf(
-    "Running QgemmVector<%d,%d,%d,%d>\n", M, K, N, NPAD));
+    "Running QgemmVector<%d,%d,%d>\n", M, K, N));
 
   int8_t *in_ptr = (int8_t *) in->ptr;
   int8_t *w_ptr = (int8_t *) weights;
@@ -128,14 +126,14 @@ void QgemmVector<M, K, N, NPAD>::filter(
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
 
 #define LOAD_W \
-  wmat = upd_v(wmat, 0, *(v16int8 *) w_ptr); w_ptr += NPAD; \
-  wmat = upd_v(wmat, 1, *(v16int8 *) w_ptr); w_ptr += NPAD; \
-  wmat = upd_v(wmat, 2, *(v16int8 *) w_ptr); w_ptr += NPAD; \
-  wmat = upd_v(wmat, 3, *(v16int8 *) w_ptr); w_ptr += NPAD; \
-  wmat = upd_v(wmat, 4, *(v16int8 *) w_ptr); w_ptr += NPAD; \
-  wmat = upd_v(wmat, 5, *(v16int8 *) w_ptr); w_ptr += NPAD; \
-  wmat = upd_v(wmat, 6, *(v16int8 *) w_ptr); w_ptr += NPAD; \
-  wmat = upd_v(wmat, 7, *(v16int8 *) w_ptr); w_ptr += NPAD;
+  wmat = upd_v(wmat, 0, *(v16int8 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 1, *(v16int8 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 2, *(v16int8 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 3, *(v16int8 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 4, *(v16int8 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 5, *(v16int8 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 6, *(v16int8 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 7, *(v16int8 *) w_ptr); w_ptr += N;
 
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j+=16) {
@@ -155,10 +153,10 @@ void QgemmVector<M, K, N, NPAD>::filter(
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
       } // K-8
       if (RUN_LASTCHUNK) {
-        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += KREM2;
+        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += K_REM16;
         wmat = null_v128int8();
-        for (int p = 0; p < KREM2; p++) {
-          wmat = upd_v(wmat, p, *(v16int8 *) w_ptr); w_ptr += NPAD;
+        for (int p = 0; p < K_REM16; p++) {
+          wmat = upd_v(wmat, p, *(v16int8 *) w_ptr); w_ptr += N;
         }
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
       } // K
@@ -171,12 +169,12 @@ void QgemmVector<M, K, N, NPAD>::filter(
       out_ptr++;
 
       in_ptr -= K;           // reset
-      w_ptr += -K*NPAD + 16; // next
+      w_ptr += -K*N + 16; // next
     } // N
 
     in_ptr += K;
     b_ptr -= N/16*16; // reset
-    w_ptr -= NPAD;    // reset
+    w_ptr -= N;    // reset
   } // M
 
   PROFILE_FOOTER;

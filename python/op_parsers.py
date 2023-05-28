@@ -8,6 +8,13 @@ PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
 
 
+def round_away(x):
+  x = np.round(x, 3) # rounds 4.499996 and 4.496 to 4.5 first
+  a = np.abs(x)
+  b = np.floor(a) + np.floor(2*(a%1))
+  return np.sign(x)*b
+
+
 def dtype_to_cstr(np_dtype: np.dtype):
   if np_dtype == "float32":
     return "float_t"
@@ -34,9 +41,9 @@ def save_tensor(output_path: str,
                 tensor: np.ndarray):
     n_lines = PLIO_WIDTH//tensor.dtype.itemsize
     if tensor.size % n_lines != 0:
-      print(f"Warning: padding to write txt tensor.")
       tensor = tensor.flatten()
-      tensor = pad_lastdim(tensor, "pad to write", n_lines)
+      tensor = pad_lastdim(tensor, "to write", n_lines)
+    print(f"Saving tensor of shape {tensor.shape} into {output_path}")
     tensor = tensor.reshape(-1, n_lines)
     fmt = "%.9e"
     if "int" in str(tensor.dtype):
@@ -99,7 +106,6 @@ class OpParser:
   def save_txt(self, data_path: str):
     for outname, outtensor in self.filename_2_tensors.items():
       save_tensor(f"{data_path}/{outname}", outtensor)
-      print(f"Saved tensor of shape {outtensor.shape} into {outname}")
   
   def get_kernel_line(self) -> str:
     pass
@@ -198,7 +204,7 @@ class GemmOp(OpParser):
     self.tout = tout
 
     tw = tw.transpose(1,0) # heap
-    self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw, "Gemm weights", 4) # heap
+    self.varname_2_tensors[f"{self.name}_w"] = tw # chunk graph handles padding
     self.varname_2_tensors[f"{self.name}_b"] = tbias
   
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin #files

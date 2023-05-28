@@ -14,14 +14,14 @@
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * QgemmVector<1,84,10,16> takes 10680 cycles
+ * QgemmVector<1,84,16> takes 16966 cycles
  */
-template <int M, int K, int N, int NPAD>
+template <int M, int K, int N>
 class QgemmScalar {
   
   private:
-    alignas(32) int8_t (&weights)[NPAD*K]; // KxN (256x120)
-    alignas(32) int32_t (&bias)[NPAD];      // N   (120)
+    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
+    alignas(32) int32_t (&bias)[N];      // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
@@ -33,8 +33,8 @@ class QgemmScalar {
   
   public:
     QgemmScalar (
-      int8_t (&w)[K*NPAD],
-      int32_t (&b)[NPAD],
+      int8_t (&w)[K*N],
+      int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
@@ -59,15 +59,15 @@ class QgemmScalar {
 
 
 /**
- * @brief Vector implementation for MK*KN, stores weights and biases, requires NPAD%16=0
- * QgemmVector<1,84,10,16> takes 125 cycles
+ * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0
+ * QgemmVector<1,84,16> takes 125 cycles
  */
-template <int M, int K, int N, int NPAD>
+template <int M, int K, int N>
 class QgemmVector {
   
   private:
-    alignas(32) int8_t (&weights)[NPAD*K]; // KxN (256x120)
-    alignas(32) int32_t (&bias)[NPAD];      // N   (120)
+    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
+    alignas(32) int32_t (&bias)[N];      // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
@@ -80,15 +80,15 @@ class QgemmVector {
     int16_t scale;
     int32_t shift;
 
-    static constexpr int KREM = K%16;
-    static constexpr int RUN_8CHUNK = KREM >= 8;
-    static constexpr int KREM2 = RUN_8CHUNK ? KREM - 8 : KREM;
-    static constexpr int RUN_LASTCHUNK = KREM2 > 0;
+    static constexpr int K_REM16 = K%16;
+    static constexpr int RUN_8CHUNK = K_REM16 >= 8;
+    static constexpr int K_REM8 = RUN_8CHUNK ? K_REM16 - 8 : K_REM16;
+    static constexpr int RUN_LASTCHUNK = K_REM8 > 0;
   
   public:
     QgemmVector (
-      int8_t (&w)[K*NPAD],
-      int32_t (&b)[NPAD],
+      int8_t (&w)[K*N],
+      int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
@@ -103,7 +103,7 @@ class QgemmVector {
     );
     
     static void registerKernelClass() {
-      assert(NPAD % 16 == 0);
+      assert(N % 16 == 0);
       REGISTER_FUNCTION(QgemmVector::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
