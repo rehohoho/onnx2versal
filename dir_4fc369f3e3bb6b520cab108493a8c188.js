@@ -11,7 +11,6 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "graph_dequantize_linear.h", "graph__dequantize__linear_8h_source.html", null ],
     [ "graph_gemm.h", "graph__gemm_8h_source.html", null ],
     [ "graph_identity.h", "graph__identity_8h_source.html", null ],
-    [ "graph_lenet.h", "graph__lenet_8h_source.html", null ],
     [ "graph_pad.h", "graph__pad_8h_source.html", null ],
     [ "graph_pool.h", "graph__pool_8h_source.html", null ],
     [ "graph_qgemm.h", "graph__qgemm_8h_source.html", null ],

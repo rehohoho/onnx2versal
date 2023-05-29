@@ -99,24 +99,24 @@ Collaboration diagram for Pool2DKernels:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__Pool2DKernels.png" border="0" usemap="#agroup____Pool2DKernels" alt=""/></div>
 <map name="agroup____Pool2DKernels" id="agroup____Pool2DKernels">
-<area shape="rect" href="group__Pool2D.html" title="Pool2D function on BCHW, yielding BCH&#39;W&#39;, where H&#39;=H/factor, W&#39;=W/factor." alt="" coords="5,5,69,31"/>
+<area shape="rect" href="group__Pool2D.html" title="Pool2D function on BCHW, yielding BCH&#39;W&#39;, where H&#39;=H/factor, W&#39;=W/factor Scalar kernels allow W&#39;&lt;W/fa..." alt="" coords="5,5,69,31"/>
 <area shape="rect" title=" " alt="" coords="117,5,224,31"/>
 </map>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolScalarBHWC.html">MaxpoolScalarBHWC&lt; TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for BHWC. MaxpoolScalarBHWC::filter&lt;24, 12, 1, 6&gt; total = 7673.  <a href="classMaxpoolScalarBHWC.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolScalarBHWC.html">MaxpoolScalarBHWC&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for BHWC. MaxpoolScalarBHWC::filter&lt;24,32,16,1,6&gt; total = 7673.  <a href="classMaxpoolScalarBHWC.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolScalarBCHW.html">MaxpoolScalarBCHW&lt; TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for BHWC. MaxpoolScalarBCHW::filter&lt;24, 12, 1, 6&gt; total = 11302.  <a href="classMaxpoolScalarBCHW.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolScalarBCHW.html">MaxpoolScalarBCHW&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for BHWC. MaxpoolScalarBCHW::filter&lt;24,32,16,1,6&gt; total = 11302.  <a href="classMaxpoolScalarBCHW.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2FloatBCHW.html">Maxpool2x2FloatBCHW&lt; TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for BCHW with 2x2 kernel. Requires OUT_W%4=0. Maxpool2x2FloatBCHW::filter&lt;24, 12, 1, 6&gt; total = 901.  <a href="classMaxpool2x2FloatBCHW.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2FloatBCHW.html">Maxpool2x2FloatBCHW&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for BCHW with 2x2 kernel. Requires OUT_W%4=0. Maxpool2x2FloatBCHW::filter&lt;24,32,16,1,6&gt; total = 901.  <a href="classMaxpool2x2FloatBCHW.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2Int8BCHW.html">Maxpool2x2Int8BCHW&lt; TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for BCHW with 2x2 kernel. Requires OUT_W%4=0. Maxpool2x2FloatBCHW::filter&lt;24, 12, 1, 6&gt; total =.  <a href="classMaxpool2x2Int8BCHW.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2Int8BCHW.html">Maxpool2x2Int8BCHW&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for BCHW with 2x2 kernel. Requires INP_W%16=0, OUT_W%16=0 <a class="el" href="classMaxpool2x2Int8BCHW.html#a361a19b1c0de8c85d0e7e2ef3eaa9ebc">Maxpool2x2Int8BCHW::filter&lt;24,32,16,1,6&gt;</a> total = 360.  <a href="classMaxpool2x2Int8BCHW.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

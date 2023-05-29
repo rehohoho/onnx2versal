@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Maxpool2x2Int8BCHW&lt; TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt; Class Template Reference</title>
+<title>onnx2versal: Maxpool2x2Int8BCHW&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,37 +93,37 @@ $(document).ready(function(){initNavTree('classMaxpool2x2Int8BCHW.html',''); ini
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classMaxpool2x2Int8BCHW-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Maxpool2x2Int8BCHW&lt; TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pool2D.html">Pool2D</a> &raquo; <a class="el" href="group__Pool2DKernels.html">Pool2DKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">Maxpool2x2Int8BCHW&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pool2D.html">Pool2D</a> &raquo; <a class="el" href="group__Pool2DKernels.html">Pool2DKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for BCHW with 2x2 kernel. Requires OUT_W%4=0. Maxpool2x2FloatBCHW::filter&lt;24, 12, 1, 6&gt; total =.  
+<p>Vector implementation for BCHW with 2x2 kernel. Requires INP_W%16=0, OUT_W%16=0 <a class="el" href="classMaxpool2x2Int8BCHW.html#a361a19b1c0de8c85d0e7e2ef3eaa9ebc">Maxpool2x2Int8BCHW::filter&lt;24,32,16,1,6&gt;</a> total = 360.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="pool_8h_source.html">pool.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac1064fb919f2c063533f43baf6948b04"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2Int8BCHW.html#ac1064fb919f2c063533f43baf6948b04">filter</a> (input_window&lt; int8_t &gt; *in_window, output_window&lt; int8_t &gt; *out_window)</td></tr>
-<tr class="separator:ac1064fb919f2c063533f43baf6948b04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a361a19b1c0de8c85d0e7e2ef3eaa9ebc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2Int8BCHW.html#a361a19b1c0de8c85d0e7e2ef3eaa9ebc">filter</a> (input_window&lt; int8_t &gt; *in_window, output_window&lt; int8_t &gt; *out_window)</td></tr>
+<tr class="separator:a361a19b1c0de8c85d0e7e2ef3eaa9ebc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a98baa8cf1f02b4fee8218a78f339decb"><td class="memItemLeft" align="right" valign="top"><a id="a98baa8cf1f02b4fee8218a78f339decb" name="a98baa8cf1f02b4fee8218a78f339decb"></a>
+<tr class="memitem:a9d6c00c434bf91c1bf71e02f6a72bac9"><td class="memItemLeft" align="right" valign="top"><a id="a9d6c00c434bf91c1bf71e02f6a72bac9" name="a9d6c00c434bf91c1bf71e02f6a72bac9"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a98baa8cf1f02b4fee8218a78f339decb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a9d6c00c434bf91c1bf71e02f6a72bac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac1064fb919f2c063533f43baf6948b04" name="ac1064fb919f2c063533f43baf6948b04"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1064fb919f2c063533f43baf6948b04">&#9670;&#160;</a></span>filter()</h2>
+<a id="a361a19b1c0de8c85d0e7e2ef3eaa9ebc" name="a361a19b1c0de8c85d0e7e2ef3eaa9ebc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a361a19b1c0de8c85d0e7e2ef3eaa9ebc">&#9670;&#160;</a></span>filter()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename TT , int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C&gt; </div>
+template&lt;typename TT , int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMaxpool2x2Int8BCHW.html">Maxpool2x2Int8BCHW</a>&lt; TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt;::filter </td>
+          <td class="memname">void <a class="el" href="classMaxpool2x2Int8BCHW.html">Maxpool2x2Int8BCHW</a>&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt;::filter </td>
           <td>(</td>
           <td class="paramtype">input_window&lt; int8_t &gt; *&#160;</td>
           <td class="paramname"><em>in_window</em>, </td>

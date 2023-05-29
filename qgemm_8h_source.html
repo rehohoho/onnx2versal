@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('qgemm_8h_source.html',''); initResizab
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  </div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="keyword">alignas</span>(32) int8_t (&amp;weights)[N*K]; <span class="comment">// KxN (256x120)</span></div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[N];      <span class="comment">// N   (120)</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[N];     <span class="comment">// N   (120)</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="keywordtype">float</span> x_scale;</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="keywordtype">float</span> w_scale;</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="keywordtype">float</span> y_scale;</div>
@@ -146,7 +146,7 @@ $(document).ready(function(){initNavTree('qgemm_8h_source.html',''); initResizab
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>  </div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <span class="keyword">alignas</span>(32) int8_t (&amp;weights)[N*K]; <span class="comment">// KxN (256x120)</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[N];      <span class="comment">// N   (120)</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[N];     <span class="comment">// N   (120)</span></div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordtype">float</span> x_scale;</div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="keywordtype">float</span> w_scale;</div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="keywordtype">float</span> y_scale;</div>

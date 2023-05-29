@@ -96,14 +96,14 @@ $(document).ready(function(){initNavTree('group__Pool2D.html',''); initResizable
 </div><!--header-->
 <div class="contents">
 
-<p>Pool2D function on BCHW, yielding BCH'W', where H'=H/factor, W'=W/factor.  
+<p>Pool2D function on BCHW, yielding BCH'W', where H'=H/factor, W'=W/factor Scalar kernels allow W'&lt;W/factor.  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for Pool2D:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__Pool2D.png" border="0" usemap="#agroup____Pool2D" alt=""/></div>
 <map name="agroup____Pool2D" id="agroup____Pool2D">
-<area shape="rect" title="Pool2D function on BCHW, yielding BCH&#39;W&#39;, where H&#39;=H/factor, W&#39;=W/factor." alt="" coords="5,5,69,31"/>
+<area shape="rect" title="Pool2D function on BCHW, yielding BCH&#39;W&#39;, where H&#39;=H/factor, W&#39;=W/factor Scalar kernels allow W&#39;&lt;W/fa..." alt="" coords="5,5,69,31"/>
 <area shape="rect" href="group__Pool2DKernels.html" title=" " alt="" coords="117,5,224,31"/>
 </map>
 </div>
@@ -115,7 +115,7 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolGraph.html">MaxpoolGraph&lt; POOL, TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpoolGraph.html">MaxpoolGraph&lt; POOL, TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph.  <a href="classMaxpoolGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -124,11 +124,10 @@ Classes</h2></td></tr>
   <table class="tparams">
     <tr><td class="paramname">TT</td><td>input and output type </td></tr>
     <tr><td class="paramname">POOL</td><td>Pool Kernel </td></tr>
-    <tr><td class="paramname">INP_H</td><td>input height </td></tr>
-    <tr><td class="paramname">INP_W</td><td>input width for computation </td></tr>
-    <tr><td class="paramname">INP_W_PAD</td><td>input width of tensor </td></tr>
-    <tr><td class="paramname">OUT_W</td><td>output width for computation = INP_W - K/2 </td></tr>
-    <tr><td class="paramname">OUT_W_PAD</td><td>output width of tensor </td></tr>
+    <tr><td class="paramname">INP_H</td><td>input height, used to calculate pool factor </td></tr>
+    <tr><td class="paramname">INP_W</td><td>input width </td></tr>
+    <tr><td class="paramname">OUT_W</td><td>output height, used to calculate pool factor </td></tr>
+    <tr><td class="paramname">OUT_W</td><td>output width </td></tr>
     <tr><td class="paramname">B</td><td>batch size </td></tr>
     <tr><td class="paramname">C</td><td>input channels </td></tr>
   </table>

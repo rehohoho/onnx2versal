@@ -30,7 +30,6 @@ var annotated_dup =
     [ "MaxpoolGraph", "classMaxpoolGraph.html", null ],
     [ "MaxpoolScalarBCHW", "classMaxpoolScalarBCHW.html", null ],
     [ "MaxpoolScalarBHWC", "classMaxpoolScalarBHWC.html", null ],
-    [ "MnistLenetBchwGraph", "classMnistLenetBchwGraph.html", null ],
     [ "PadGraph", "classPadGraph.html", null ],
     [ "PadScalar", "classPadScalar.html", null ],
     [ "PadVectorInt16", "classPadVectorInt16.html", null ],

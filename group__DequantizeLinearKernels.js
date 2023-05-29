@@ -1,4 +1,4 @@
 var group__DequantizeLinearKernels =
 [
-    [ "DequantizeLinearScalar< WINDOW_SIZE >", "classDequantizeLinearScalar.html", null ]
+    [ "DequantizeLinearScalar< INP_SIZE, OUT_SIZE >", "classDequantizeLinearScalar.html", null ]
 ];

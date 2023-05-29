@@ -1,4 +1,4 @@
 var classMaxpool2x2Int8BCHW =
 [
-    [ "filter", "classMaxpool2x2Int8BCHW.html#ac1064fb919f2c063533f43baf6948b04", null ]
+    [ "filter", "classMaxpool2x2Int8BCHW.html#a361a19b1c0de8c85d0e7e2ef3eaa9ebc", null ]
 ];
