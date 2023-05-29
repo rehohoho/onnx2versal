@@ -103,6 +103,7 @@ Requirements and setup</h1>
 <h1><a class="anchor" id="autotoc_md14"></a>
 Train Lenet model on MNIST</h1>
 <div class="fragment"><div class="line">$ cd python/;python train.py</div>
+<div class="line"> </div>
 <div class="line">stdout:</div>
 <div class="line">accuracy: 0.xxx</div>
 <div class="line">Model finished training</div>
@@ -114,33 +115,35 @@ Train Lenet model on MNIST</h1>
 <div class="line">├── lenet_mnist.onnx</div>
 <div class="line">└── lenet_mnist.pkl</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md15"></a>
+Quantize the model (optional)</h1>
+<p>Quantizing the model improves performance at very slight expense of accuracy. Run the following to quantize the onnx model. For more details see <a href="https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html">https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html</a>.</p>
+<div class="fragment"><div class="line">cd ../models</div>
+<div class="line">python -m onnxruntime.quantization.preprocess --input lenet_mnist.onnx --output lenet_mnist_infer.onnx</div>
+<div class="line">cd ../python</div>
+<div class="line">python quantize_onnx.py ../models/lenet_mnist_infer.onnx ../models/lenet_mnist_int8.onnx </div>
+</div><!-- fragment --><p>For the CLI lines to execute below, substitute "lenet_mnist" with "lenet_mnist_int8" for all arguments if you intend to use the quantized model.</p>
+<h1><a class="anchor" id="autotoc_md16"></a>
 Generate files</h1>
-<div class="fragment"><div class="line">$ python generate.py</div>
-<div class="line"> </div>
-<div class="line">stdout:</div>
+<div class="fragment"><div class="line">$ python generate.py ../models/lenet_mnist.onnx</div>
+</div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Saving tensor of shape (1, 1, 28, 28) into ../data/input.txt</div>
 <div class="line">WARNING: fusing Conv+Relu</div>
 <div class="line">Padding Conv weights (6, 1, 5, 5) to (6, 1, 5, 8)</div>
-<div class="line">WARNING: fusing Conv+Relu</div>
-<div class="line">Padding Conv weights (16, 6, 5, 5) to (16, 6, 5, 8)</div>
+<div class="line">Saving tensor of shape (1, 1, 28, 28) into ../data/k0conv_in_shape1x1x28x28.txt</div>
+<div class="line">...</div>
 <div class="line">WARNING: Shape not implemented, skipping...</div>
 <div class="line">WARNING: Constant not implemented, skipping...</div>
-<div class="line">WARNING: Gather not implemented, skipping...</div>
-<div class="line">WARNING: Constant not implemented, skipping...</div>
-<div class="line">WARNING: Unsqueeze not implemented, skipping...</div>
-<div class="line">WARNING: Constant not implemented, skipping...</div>
-<div class="line">WARNING: Concat not implemented, skipping...</div>
-<div class="line">WARNING: Reshape not implemented, skipping...</div>
+<div class="line">...</div>
 <div class="line">Found matching output /Reshape_output_0 and k5pool output</div>
-<div class="line">Padding Gemm weights (84, 10) to (84, 12)</div>
+<div class="line">Disabled output padding, may result in choosing scalar op instead of vector.</div>
+<div class="line">...</div>
 <div class="line">Generating MNIST txt for 100 data points</div>
-<div class="line"> </div>
-<div class="line">files:</div>
-<div class="line">models/</div>
-<div class="line">├── lenet_mnist_inter.onnx</div>
+</div><!-- fragment --><p>Files (for float32 model): </p><div class="fragment"><div class="line">models/</div>
+<div class="line">├── lenet_mnist_inter.onnx              # generated onnx model to output at all layers</div>
 <div class="line">├── lenet_mnist.onnx</div>
 <div class="line">└── lenet_mnist.pkl</div>
 <div class="line">data/</div>
-<div class="line">├── input.txt</div>
+<div class="line">├── input.txt                           # generated input and output data to verify each kernel</div>
+<div class="line">├── input_host.txt</div>
 <div class="line">├── k0conv_goldenout.txt</div>
 <div class="line">├── k0conv_in.txt</div>
 <div class="line">├── k14gemm_goldenout.txt</div>
@@ -148,6 +151,7 @@ Generate files</h1>
 <div class="line">├── k16gemm_goldenout.txt</div>
 <div class="line">├── k16gemm_in.txt</div>
 <div class="line">├── k18gemm_goldenout.txt</div>
+<div class="line">├── k18gemm_goldenout_host.txt</div>
 <div class="line">├── k18gemm_in.txt</div>
 <div class="line">├── k2pool_goldenout.txt</div>
 <div class="line">├── k2pool_in.txt</div>
@@ -159,97 +163,91 @@ Generate files</h1>
 <div class="line">└── mnist_test_label.txt</div>
 <div class="line">design/</div>
 <div class="line">├── aie_src</div>
-<div class="line">│   └── graph_lenet_mnist.cpp</div>
+<div class="line">│   └── graph_lenet_mnist.cpp           # aiengine computation graph for aiecompiler</div>
 <div class="line">├── host_app_src</div>
-<div class="line">│   └── lenet_mnist_aie_app.cpp</div>
+<div class="line">│   └── lenet_mnist_aie_app.cpp         # host code to load data and run compiled graph</div>
 <div class="line">├── system_configs</div>
-<div class="line">│   ├── lenet_mnist.cfg</div>
+<div class="line">│   ├── lenet_mnist.cfg                 # configuration for v++ linking</div>
 <div class="line">│   └── lenet_mnist_output_inter.cfg</div>
 <div class="line">└── trafficgen</div>
-<div class="line">    ├── xtg_lenet_mnist_output_inter.py</div>
+<div class="line">    ├── xtg_lenet_mnist_output_inter.py # traffic generators for testing computation graph</div>
 <div class="line">    └── xtg_lenet_mnist.py</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md16"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md17"></a>
 Make options</h1>
 <p>See <a href="README.md#usage---simulation-verification-profiling-hardware-build">README Make Options</a></p>
-<h1><a class="anchor" id="autotoc_md17"></a>
+<h1><a class="anchor" id="autotoc_md18"></a>
+Functional verification</h1>
+<p><code>check.py</code> compares two directories and does a <code>numpy.assert.allclose</code> on matching filenames.</p>
+<h1><a class="anchor" id="autotoc_md19"></a>
+Performance verification</h1>
+<p><code>TARGET=hw_emu</code> with <code>DLOG=1</code> (default) will output cycles required for each kernel. <code>TARGET=hw</code> with <code>EN_TRACE=1</code> (not default) allows event tracing and timing.</p>
+<h1><a class="anchor" id="autotoc_md20"></a>
 Functional check: runs graph in x86simulator</h1>
-<p>(~1 min compile, ~0s run)<br  />
- For graph test, ITER_CNT is an argument into graph compilation (make graph) </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim</div>
-<div class="line"> </div>
-<div class="line">stdout:</div>
+<p>For graph test, ITER_CNT is an argument into graph compilation (make graph). Note x86simulator does not simulate hardware platform, outputs will not contain cycle information. The following tests a single sample and verifies all intermediate outputs. It takes ~1min to compile and runs quickly. </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim </div>
+</div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">...</div>
+<div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
+<div class="line">start = -1,end = -1,total = 0</div>
+<div class="line">Running Maxpool2x2FloatBCHW::filter&lt;24,24,12,12,1,6&gt;</div>
+<div class="line">start = -1,end = -1,total = 0</div>
 <div class="line">...</div>
 <div class="line">Checking 1/7: k5pool_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
 <div class="line">Checking 2/7: k0conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/7: k2pool_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/7: k18gemm_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/7: k16gemm_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/7: k3conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 7/7: k14gemm_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line"> </div>
-<div class="line">files:</div>
-<div class="line">reports_dir/</div>
+<div class="line">...</div>
+</div><!-- fragment --><p>Files (for float32 model): </p><div class="fragment"><div class="line">reports_dir/</div>
 <div class="line">└── lenet_mnist</div>
 <div class="line">    └── sw_emu</div>
 <div class="line">        └── x86simulator_output</div>
-<div class="line">            ├── k0conv_goldenout.txt</div>
+<div class="line">            ├── k0conv_goldenout.txt    # output files from computation graph</div>
 <div class="line">            ├── k14gemm_goldenout.txt</div>
 <div class="line">            ├── k16gemm_goldenout.txt</div>
 <div class="line">            ├── k18gemm_goldenout.txt</div>
 <div class="line">            ├── k2pool_goldenout.txt</div>
 <div class="line">            ├── k3conv_goldenout.txt</div>
 <div class="line">            ├── k5pool_goldenout.txt</div>
-<div class="line">            ├── x86sim.aierun_summary</div>
-<div class="line">            ├── x86sim_check.log</div>
-<div class="line">            └── x86simulator.log</div>
-</div><!-- fragment --><p><b>Traffic generator will have extra stdout and files (EXTIO=1)</b></p>
-<div class="fragment"><div class="line">extra stdout:</div>
-<div class="line">17:54:35: Creating ipc_axis_master_util for plin0_lenet_mnist_input...</div>
-<div class="line">17:54:36: Creating ipc_axis_slave_util for plout0_lenet_mnist_k18gemm...</div>
-<div class="line">17:54:36: Creating ipc_axis_slave_util for plout1_lenet_mnist_k0conv...</div>
+<div class="line">            ├── x86sim.aierun_summary   # logs for vitis_analyzer</div>
+<div class="line">            ├── x86sim_check.log        # logs from python verification script</div>
+<div class="line">            └── x86simulator.log        # logs from x86simulator</div>
+</div><!-- fragment --><p><b>Traffic generator for end-to-end test with more samples.</b><br  />
+ The following tests 100 samples and verifies final output only. Excess logs is silenced. </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim EXTIO=1 DOUT=0 DLOG=0 ITER_CNT=100</div>
+</div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">14:43:59: Creating ipc_axis_master_util for plin0_lenet_mnist_input...</div>
+<div class="line">14:43:59: Creating ipc_axis_slave_util for plout0_lenet_mnist_k18gemm...</div>
+<div class="line">14:43:59: Begin run...</div>
+<div class="line">14:43:59: Running master plin0_lenet_mnist_input</div>
+<div class="line">14:43:59: Running slave plout0_lenet_mnist_k18gemm</div>
+<div class="line">14:43:59: [plin0_lenet_mnist_input]: Sending 39200 float32 data...</div>
+<div class="line">14:44:00: [plout0_lenet_mnist_k18gemm]: read lines #0</div>
+<div class="line">14:44:01: [plout0_lenet_mnist_k18gemm]: read lines #1</div>
 <div class="line">...</div>
-<div class="line">17:54:36: Begin run...</div>
-<div class="line">17:54:36: Running master plin0_lenet_mnist_input</div>
-<div class="line">17:54:36: [plin0_lenet_mnist_input]: Sending 392 float32 data...</div>
-<div class="line">17:54:36: Running slave plout0_lenet_mnist_k18gemm</div>
-<div class="line">17:54:36: Running slave plout1_lenet_mnist_k0conv</div>
-<div class="line">...</div>
-<div class="line">17:54:36: [plout1_lenet_mnist_k0conv]: read lines #0</div>
-<div class="line">17:54:36: [plout2_lenet_mnist_k2pool]: read lines #0</div>
-<div class="line">...</div>
-<div class="line">Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/sw_emu/x86simulator_output/k18gemm_goldenout.txt</div>
-<div class="line">17:54:37: Slave plout1_lenet_mnist_k0conv finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/sw_emu/x86simulator_output/k0conv_goldenout.txt</div>
-<div class="line">17:54:37: Slave plout2_lenet_mnist_k2pool finished. Written to /home/ruien/workspace/test/</div>
-<div class="line">...</div>
-<div class="line">17:54:37: Master plin0_lenet_mnist_input finished.</div>
+<div class="line">14:45:25: Slave plout0_lenet_mnist_k18gemm finished. Written to /home/ruien/workspace/onnx2versal/reports_dir/lenet_mnist/sw_emu/x86simulator_output/k18gemm_goldenout_host.txt</div>
+<div class="line">14:45:25: Master plin0_lenet_mnist_input finished.</div>
 <div class="line">|INFO | plin0_lenet_mnist_input will connect to :: /tmp/unix_ruien:plin0_lenet_mnist_input</div>
 <div class="line">|INFO | plout0_lenet_mnist_k18gemm will connect to :: /tmp/unix_ruien:plout0_lenet_mnist_k18gemm</div>
-<div class="line">|INFO | plout3_lenet_mnist_k3conv will connect to :: /tmp/unix_ruien:plout3_lenet_mnist_k3conv</div>
-<div class="line">|INFO | plout1_lenet_mnist_k0conv will connect to :: /tmp/unix_ruien:plout1_lenet_mnist_k0conv</div>
-<div class="line">...</div>
-<div class="line"> </div>
-<div class="line">extra files:</div>
-<div class="line">reports_dir/</div>
+<div class="line">[init lenet_mnist]: success</div>
+<div class="line">[run lenet_mnist]: success</div>
+<div class="line">INFO: Connection with &#39;plin0_lenet_mnist_input&#39; closed.</div>
+<div class="line">[end lenet_mnist]: success</div>
+<div class="line">Simulation completed successfully returning zero</div>
+<div class="line">Checking directories /home/ruien/workspace/onnx2versal/reports_dir/lenet_mnist/sw_emu/x86simulator_output and /home/ruien/workspace/onnx2versal/data</div>
+<div class="line">Checking 1/1: k18gemm_goldenout_host.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+</div><!-- fragment --><p> Files (for float32 model): </p><div class="fragment"><div class="line">reports_dir/</div>
 <div class="line">└── lenet_mnist</div>
 <div class="line">    └── sw_emu</div>
 <div class="line">        └── x86simulator_output</div>
-<div class="line">             └── x86sim_filetraffic.log</div>
+<div class="line">             └── x86sim_filetraffic.log # logs from python traffic generator script</div>
 </div><!-- fragment --><p><b>Analyze graph compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/sw_emu/Work/graph_lenet_mnist.aiecompile_summary</div>
 </div><!-- fragment --><p> <b>Clean software graph build</b> </p><div class="fragment"><div class="line">TARGET=sw_emu GRAPH=lenet_mnist make clean</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md18"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md21"></a>
 Functional check: runs system software emulation</h1>
-<p>(x86 graph, sysC kernels, ~2 min compile)<br  />
- For system test, ITER_CNT is an argument into host app compilation (make application) </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
+<p>For system test, ITER_CNT is an argument into host app compilation (make application). Note this uses x86simulator files, outputs will not contain cycle information. It takes ~2 min to compile and runs quickly. </p><div class="fragment"><div class="line"># test 1 sample, verifies intermediates</div>
+<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
 <div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean_reports run_emu</div>
 <div class="line"> </div>
-<div class="line">stdout:</div>
-<div class="line">Initializing ADF API...</div>
+<div class="line"># test 100 samples, verifies final output only, silence excess logs</div>
+<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package DOUT=0 DLOG=0</div>
+<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean_reports run_emu ITER_CNT=100</div>
+</div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Initializing ADF API...</div>
 <div class="line"> </div>
 <div class="line">Config:</div>
 <div class="line">xclbin: a.xclbin</div>
@@ -269,7 +267,6 @@ Functional check: runs system software emulation</h1>
 <div class="line">[wait lenet_mnist]: success</div>
 <div class="line">Kernel Name: mm2s_0, CU Number: 0, Thread creation status: success</div>
 <div class="line">Kernel Name: s2mm_0, CU Number: 1, Thread creation status: success</div>
-<div class="line">Kernel Name: s2mm_1, CU Number: 2, Thread creation status: success</div>
 <div class="line">...</div>
 <div class="line">Kernel Name: mm2s_0, CU Number: 0, State: Start</div>
 <div class="line">Kernel Name: mm2s_0, CU Number: 0, State: Running</div>
@@ -278,14 +275,7 @@ Functional check: runs system software emulation</h1>
 <div class="line">...</div>
 <div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
 <div class="line">start = -1,end = -1,total = 0</div>
-<div class="line">Running Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt;</div>
-<div class="line">Kernel Name: s2mm_1, CU Number: 2, State: Idle</div>
-<div class="line">start = -1,end = -1,total = 0</div>
-<div class="line">Running Conv5x5on8ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
-<div class="line">Kernel Name: s2mm_2, CU Number: 3, State: Idle</div>
-<div class="line">start = -1,end = -1,total = 0</div>
-<div class="line">Running Maxpool2x2BCHW::filter&lt;8, 4, 1, 16&gt;</div>
-<div class="line">Kernel Name: s2mm_3, CU Number: 4, State: Idle</div>
+<div class="line">Running Maxpool2x2FloatBCHW::filter&lt;24, 12, 1, 6&gt;</div>
 <div class="line">start = -1,end = -1,total = 0</div>
 <div class="line">...</div>
 <div class="line">device process sw_emu_device done</div>
@@ -308,19 +298,8 @@ Functional check: runs system software emulation</h1>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
 <div class="line">Checking 2/7: k14gemm_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/7: k0conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/7: k5pool_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/7: k2pool_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/7: k3conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 7/7: k16gemm_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line"> </div>
-<div class="line">files:</div>
-<div class="line">reports_dir/</div>
+<div class="line">...</div>
+</div><!-- fragment --><p>Files (for float32 model) </p><div class="fragment"><div class="line">reports_dir/</div>
 <div class="line">└── lenet_mnist</div>
 <div class="line">    └── sw_emu</div>
 <div class="line">        └── x86simulator_output</div>
@@ -335,55 +314,26 @@ Functional check: runs system software emulation</h1>
 <div class="line">            └── x86sim_check.log</div>
 </div><!-- fragment --><p><b>Analyze system compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/sw_emu/vck190_lenet_mnist_aie.xsa.link_summary</div>
 </div><!-- fragment --><p> <b>Clean build</b> </p><div class="fragment"><div class="line">TARGET=sw_emu GRAPH=lenet_mnist make clean</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md19"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md22"></a>
 Functional/performance check: runs graph in aiesimulator</h1>
-<p>(with SysC ~4.5 min compile, ~8 min run)<br  />
- For graph test, ITER_CNT is an argument into graph compilation (make graph) </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph</div>
+<p>For graph test, ITER_CNT is an argument into graph compilation (make graph). aiesimulator is cycle accurate, <code>DOUT=1 (default)</code> ensures each kernel outputs cycle information. It takes ~5 min to compile and ~5 min to run. </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph</div>
 <div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make clean_reports aiesim_profile</div>
-<div class="line"> </div>
-<div class="line">stdout:</div>
-<div class="line">Waiting for core(s) of graph lenet_mnist to finish execution ...</div>
+</div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Waiting for core(s) of graph lenet_mnist to finish execution ...</div>
 <div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
 <div class="line">start = 3236,end = 20164,total = 16928</div>
-<div class="line">Running Maxpool2x2BCHW::filter&lt;24, 12, 1, 6&gt;</div>
+<div class="line">Running Maxpool2x2FloatBCHW::filter&lt;24, 12, 1, 6&gt;</div>
 <div class="line">start = 24570,end = 25471,total = 901</div>
-<div class="line">Running Conv5x5on8ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
-<div class="line">start = 26651,end = 52727,total = 26076</div>
-<div class="line">Running Maxpool2x2BCHW::filter&lt;8, 4, 1, 16&gt;</div>
-<div class="line">start = 54101,end = 54392,total = 291</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1, 256, 16&gt;</div>
-<div class="line">start = 54820,end = 55723,total = 903</div>
-<div class="line">start = 54824,end = 55727,total = 903</div>
-<div class="line">start = 54824,end = 55727,total = 903</div>
-<div class="line">start = 54828,end = 55731,total = 903</div>
-<div class="line">start = 54832,end = 55735,total = 903</div>
-<div class="line">start = 54836,end = 55739,total = 903</div>
-<div class="line">start = 54840,end = 55743,total = 903</div>
-<div class="line">start = 54844,end = 55747,total = 903</div>
-<div class="line">Running ConcatVector&lt;8, 16, 16, 120&gt;::filter8</div>
-<div class="line">start = 55947,end = 56073,total = 126</div>
-<div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
+<div class="line">...</div>
+<div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;                                # chunk graph splits computation</div>
 <div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1, 120, 32&gt;</div>
 <div class="line">start = 56393,end = 57281,total = 888</div>
 <div class="line">start = 56397,end = 57285,total = 888</div>
 <div class="line">start = 56401,end = 57289,total = 888</div>
-<div class="line">Running ConcatVector&lt;3, 32, 32, 84&gt;::filter3</div>
-<div class="line">start = 57437,end = 57510,total = 73</div>
-<div class="line">Running GemmReluMKKN&lt;1, 84, 48&gt;</div>
-<div class="line">start = 57782,end = 58755,total = 973</div>
-<div class="line">Running ConcatScalar&lt;1, 48, 48, 10&gt;::filter1</div>
-<div class="line">start = 58899,end = 59777,total = 878</div>
+<div class="line">...</div>
 <div class="line">core(s) are done executing</div>
 <div class="line">[wait graph]: success</div>
-<div class="line">plout[0]: Cycles 10 Throughput 1000000000.000000 samples/s</div>
+<div class="line">plout[0]: Cycles 10 Throughput 1000000000.000000 samples/s      # event api has some issues</div>
 <div class="line">Waiting for core(s) of graph lenet_mnist to finish execution ...</div>
 <div class="line">core(s) are done executing</div>
 <div class="line">[end lenet_mnist]: success</div>
@@ -399,19 +349,8 @@ Functional/performance check: runs graph in aiesimulator</h1>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
 <div class="line">Checking 2/7: k16gemm_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/7: k18gemm_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/7: k3conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/7: k0conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/7: k5pool_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 7/7: k2pool_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line"> </div>
-<div class="line">files:</div>
-<div class="line">reports_dir/</div>
+<div class="line">...</div>
+</div><!-- fragment --><p>Files (for float32 model) </p><div class="fragment"><div class="line">reports_dir/</div>
 <div class="line">└── lenet_mnist</div>
 <div class="line">    └── hw_emu</div>
 <div class="line">        └── aiesimulator_output</div>
@@ -432,53 +371,43 @@ Functional/performance check: runs graph in aiesimulator</h1>
 <div class="line">            ├── region_0x0_0x7fffffff.mmap.dat</div>
 <div class="line">            └── aiesim_check.log</div>
 </div><!-- fragment --><p><b>Traffic generator will have extra stdout and files (EXTIO=1)</b></p>
-<div class="fragment"><div class="line">extra stdout:</div>
-<div class="line">INFO::[ XTLM_IPC_AXIS_MASTER ] SIM-IPC&#39;s external process can be connected to instance :  plin0_lenet_mnist_input</div>
+<p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">INFO::[ XTLM_IPC_AXIS_MASTER ] SIM-IPC&#39;s external process can be connected to instance :  plin0_lenet_mnist_input</div>
 <div class="line">INFO::[ XTLM_IPC_AXIS_SLAVE ] SIM-IPC&#39;s external process can be connected to instance :  plout0_lenet_mnist_k18gemm</div>
-<div class="line">INFO::[ XTLM_IPC_AXIS_SLAVE ] SIM-IPC&#39;s external process can be connected to instance :  plout1_lenet_mnist_k0conv</div>
+<div class="line">...</div>
 <div class="line">[INFO]: Enabled Stream Switch Port Latency </div>
 <div class="line">18:45:08: Creating ipc_axis_master_util for plin0_lenet_mnist_input...</div>
 <div class="line">18:45:08: Creating ipc_axis_slave_util for plout0_lenet_mnist_k18gemm...</div>
-<div class="line">IP-INFO: [ps_i27_ps_main] IP started.</div>
-<div class="line">18:45:09: Creating ipc_axis_slave_util for plout1_lenet_mnist_k0conv...</div>
-<div class="line">18:45:09: Creating ipc_axis_slave_util for plout2_lenet_mnist_k2pool...</div>
 <div class="line">...</div>
 <div class="line">18:45:09: Begin run...</div>
 <div class="line">18:45:09: Running master plin0_lenet_mnist_input</div>
-<div class="line">18:45:09: [plin0_lenet_mnist_input]: Sending 392 float32 data...</div>
 <div class="line">18:45:09: Running slave plout0_lenet_mnist_k18gemm</div>
-<div class="line">18:45:09: Running slave plout1_lenet_mnist_k0conv</div>
+<div class="line">...</div>
+<div class="line">18:45:09: [plin0_lenet_mnist_input]: Sending 392 float32 data...</div>
 <div class="line">...</div>
 <div class="line">18:47:35: [plout1_lenet_mnist_k0conv]: read lines #0</div>
 <div class="line">18:47:46: [plout2_lenet_mnist_k2pool]: read lines #0</div>
 <div class="line">...</div>
 <div class="line">18:51:01: Slave plout0_lenet_mnist_k18gemm finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/hw_emu/aiesimulator_output/k18gemm_goldenout.txt</div>
 <div class="line">18:51:01: Slave plout1_lenet_mnist_k0conv finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/hw_emu/aiesimulator_output/k0conv_goldenout.txt</div>
-<div class="line">18:51:01: Slave plout2_lenet_mnist_k2pool finished. Written to /home/ruien/workspace/test/reports_dir/lenet_mnist/hw_emu/aiesimulator_output/k2pool_goldenout.txt</div>
 <div class="line">...</div>
 <div class="line">18:51:01: Master plin0_lenet_mnist_input finished.</div>
 <div class="line">WARNING::[ XTLM_IPC::006 ] plin0_lenet_mnist_input Closing Socket</div>
 <div class="line">WARNING::[ XTLM_IPC::006 ] plout5_lenet_mnist_k14gemm Closing Socket</div>
-<div class="line">WARNING::[ XTLM_IPC::006 ] plout6_lenet_mnist_k16gemm Closing Socket</div>
 <div class="line">...</div>
-<div class="line"> </div>
-<div class="line">extra files:</div>
-<div class="line">reports_dir/</div>
+</div><!-- fragment --><p>Extra files (for float32 model) </p><div class="fragment"><div class="line">reports_dir/</div>
 <div class="line">└── lenet_mnist</div>
 <div class="line">    └── hw_emu</div>
 <div class="line">        └── aiesimulator_output</div>
 <div class="line">            └── aiesim_filetraffic.log</div>
-</div><!-- fragment --><p><b>Analyze graph compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/hw_emu/Work/graph_lenet_mnist.aiecompile_summary</div>
+</div><!-- fragment --><p><b>Get throughput estimation</b> </p><div class="fragment"><div class="line">python throughput.py reports_dir/lenet_mnist_int8/hw_emu/aiesimulator_output/k9dequantizeLinear_goldenout_shape1x10.txt</div>
+</div><!-- fragment --><p> <b>Analyze graph compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/hw_emu/Work/graph_lenet_mnist.aiecompile_summary</div>
 </div><!-- fragment --><p> <b>Analyze profiled information after run (includes graph analysis)</b> </p><div class="fragment"><div class="line">vitis_analyzer reports_dir/lenet_mnist/hw_emu/aiesimulator_output/default.aierun_summary</div>
 </div><!-- fragment --><p> <b>Clean hardware emulation build</b> </p><div class="fragment"><div class="line">TARGET=hw_emu GRAPH=lenet_mnist make clean</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md20"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md23"></a>
 Functional/performance check: runs system in hardware emulation with QEMU</h1>
-<p>(sysC graph, kernels NoC, DDR, ~15min compile, ~30min run)<br  />
- For system test, ITER_CNT is an argument into host app compilation (make application) </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
+<p>For system test, ITER_CNT is an argument into host app compilation (make application). This uses same aiengine graph for computation and outputs cycle information per kernel. It takes ~15 min to compile and ~30 min to run for single sample. hw_emu is known to be very slow, do not use too much data. </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
 <div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph clean_reports run_emu</div>
-<div class="line"> </div>
-<div class="line">stdout:</div>
-<div class="line">Initializing ADF API...</div>
+</div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Initializing ADF API...</div>
 <div class="line"> </div>
 <div class="line">Config:</div>
 <div class="line">xclbin: a.xclbin</div>
@@ -555,24 +484,13 @@ Functional/performance check: runs system in hardware emulation with QEMU</h1>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
 <div class="line">Checking 2/7: k16gemm_goldenout.txt</div>
 <div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 3/7: k5pool_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 4/7: k2pool_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 5/7: k3conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 6/7: k0conv_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
-<div class="line">Checking 7/7: k18gemm_goldenout.txt</div>
-<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">...</div>
 <div class="line">INFO: TEST PASSED, RC=0</div>
 <div class="line"> </div>
 <div class="line">9 minutes and 36 seconds elapsed.</div>
 <div class="line"> </div>
 <div class="line">INFO: Embedded host run completed.</div>
-<div class="line"> </div>
-<div class="line"> </div>
-<div class="line">files: (in QEMU environment)</div>
+</div><!-- fragment --><p>Files (for float32 model) </p><div class="fragment"><div class="line">files: (in QEMU environment)</div>
 <div class="line">output/</div>
 <div class="line">└── lenet_mnist</div>
 <div class="line">    ├── k0conv_goldenout.txt</div>
@@ -584,17 +502,172 @@ Functional/performance check: runs system in hardware emulation with QEMU</h1>
 <div class="line">    └── k5pool_goldenout.txt</div>
 </div><!-- fragment --><p><b>Analyze system compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/hw_emu/vck190_lenet_mnist_aie.xsa.link_summary</div>
 </div><!-- fragment --><p> <b>Clean hardware emulation build</b> </p><div class="fragment"><div class="line">TARGET=hw_emu GRAPH=lenet_mnist make clean</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md21"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md24"></a>
 Test system on hardware</h1>
-<p>(~1h compile, ~6min flash, ~10s boot, ~0s run)<br  />
- <b>Hardware: create hardware image, flash the SD card</b> </p><div class="fragment"><div class="line">$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package</div>
+<p>It takes ~1 hour to compile, ~8 min to flash, and runs quickly.</p>
+<p><b>Hardware: create hardware image, flash the SD card</b></p>
+<div class="fragment"><div class="line"># test 1 sample, verify intermediates</div>
+<div class="line">$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package EN_TRACE=1</div>
 <div class="line">$ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress</div>
 <div class="line"> </div>
-<div class="line">stdout:</div>
+<div class="line"># test 100 samples, verify final output</div>
+<div class="line">$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package EN_TRACE=1 DOUT=0</div>
+<div class="line">$ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress</div>
+</div><!-- fragment --><p>Truncated stdout (for float32 model), 100 samples with final output only </p><div class="fragment"><div class="line">Initializing ADF API...</div>
 <div class="line"> </div>
-<div class="line">files:</div>
-<div class="line">outputs/</div>
-<div class="line">└── mnist_test_label.txt</div>
+<div class="line">Config:</div>
+<div class="line">xclbin: a.xclbin</div>
+<div class="line">iter_cnt: 100</div>
+<div class="line">data_dir: data/</div>
+<div class="line">out_dir: output/</div>
+<div class="line"> </div>
+<div class="line">[  321.289223] zocl-drm axi:zyxclmm_drm: zocl_create_client: created KDS client for pid(607), ret: 0</div>
+<div class="line">[  321.298144] zocl-drm axi:zyxclmm_drm: zocl_destroy_client: client exits pid(607)</div>
+<div class="line">...</div>
+<div class="line">[  321.817940] [drm] found kind 29(AIE_RESOURCES)</div>
+<div class="line">[  321.817958] [drm] found kind 8(IP_LAYOUT)</div>
+<div class="line">[  321.822415] [drm] found kind 9(DEBUG_IP_LAYOUT)</div>
+<div class="line">[  321.826428] [drm] found kind 25(AIE_METADATA)</div>
+<div class="line">[  321.830973] [drm] found kind 7(CONNECTIVITY)</div>
+<div class="line">[  321.835332] [drm] found kind 6(MEM_TOPOLOGY)</div>
+<div class="line">[  321.839680] [drm] Memory 0 is not reserved in device tree. Will allocate memory from CMA</div>
+<div class="line">[  321.860410] zocl_irq_intc ZOCL_CU_INTC.2.auto: zocl_irq_intc_add: managing IRQ 46</div>
+<div class="line">[  321.867950] cu_drv CU.3.auto: cu_probe: CU[0] created</div>
+<div class="line">...</div>
+<div class="line">[  321.886028] cu_drv CU.3.auto:  ffff0000046f5010 xrt_cu_intr_thread: CU[0] start</div>
+<div class="line">...</div>
+<div class="line">XAIEFAL: INFO: Resource group Avail is created.</div>
+<div class="line">XAIEFAL: INFO: Resource group Static is created.</div>
+<div class="line">XAIEFAL: INFO: Resource group Generic is created.</div>
+<div class="line">[  321.951985] [drm] bitstream 132ce03f-bd7d-3a1a-4e13-41b7650cdd76 locked, ref=1</div>
+<div class="line">[  321.952008] zocl-drm axi:zyxclmm_drm:  ffff000001bfdc10 kds_add_context: Client pid(607) add context Domain(65535) CU(0xffff) shared(true)</div>
+<div class="line">[  321.971758] zocl-drm axi:zyxclmm_drm:  ffff000001bfdc10 kds_del_context: Client pid(607) del context Domain(65535) CU(0xffff)</div>
+<div class="line">...</div>
+<div class="line">XRT build version: 2.14.0</div>
+<div class="line">Build hash: 43926231f7183688add2dccfd391b36a1f000bea</div>
+<div class="line">Build date: 2022-10-07 05:12:02</div>
+<div class="line">Git branch: 2022.2</div>
+<div class="line">PID: 607</div>
+<div class="line">UID: 0</div>
+<div class="line">[Wed Apr 12 02:37:29 2023 GMT]</div>
+<div class="line">HOST:</div>
+<div class="line">EXE: /run/media/mmcblk0p1/aie_xrt.elf</div>
+<div class="line">[XRT] WARNING: The xrt.ini flag &quot;aie_profile_core_metrics&quot; is deprecated  and will be removed in future release. Please use tile_based_aie_metrics under &quot;AIE_profile_settings&quot; section.</div>
+<div class="line">[XRT] WARNING: Only 3 out of 4 metrics were available for aie profiling due to resource constraints. AIE profiling uses performance counters which could be already used by AIE trace, ECC, etc.</div>
+<div class="line">Available metrics : ACTIVE_CORE GROUP_CORE_STALL_CORE INSTR_VECTOR_CORE</div>
+<div class="line">Unavailable metrics : GROUP_CORE_PROGRAM_FLOW</div>
+<div class="line">[XRT] WARNING: The xrt.ini flag &quot;aie_profile_memory_metrics&quot; is deprecated  and will be removed in future release. Please use tile_based_aie_memory_metrics under &quot;AIE_profile_settings&quot; section.</div>
+<div class="line">[XRT] WARNING: The xrt.ini flag &quot;aie_profile_interface_metrics&quot; is deprecated  and will be removed in future release. Please use tile_based_interface_tile_metrics under &quot;AIE_profile_settings&quot; section.</div>
+<div class="line">Input0 memory virtual addr 0x0xffff69d23000</div>
+<div class="line">[  321.983072] [drm] bitstream 132ce03f-bd7d-3a1a-4e13-41b7650cdd76 unlocked, ref=0</div>
+<div class="line">[  322.169737] [drm] bitstream 132ce03f-bd7d-3a1a-4e13-41b7650cdd76 locked, ref=1</div>
+<div class="line">[  322.177363] zocl-drm axi:zyxclmm_drm:  ffff000001bfdc10 kds_add_context: Client pid(607) add context Domain(0) CU(0x1) shared(true)</div>
+<div class="line">Output0 memory virtual addr 0x0xf[  322.197006] zocl-drm axi:zyxclmm_drm:  ffff000001bfdc10 kds_add_context: Client pid(607) add context Domain(0) CU(0x0) shared(true)</div>
+<div class="line">fff86c28000</div>
+<div class="line">[init lenet_mnist]: success</div>
+<div class="line">[  322.215820] aie aiepart_0_50: invalid resource req(24,0),mod:2,rsc:0,expect=1 not avail.</div>
+<div class="line">[AIE WARNING] _XAie_LinuxIO_RequestRsc():1170: Failed to request[  322.229089] zocl-drm axi:zyxclmm_drm:  ffff000001bfdc10 kds_del_context: Client pid(607) del context Domain(0) CU(0x1)</div>
+<div class="line"> resource 0</div>
+<div class="line">[AIE WARNING] _XAie_R[  322.242710] zocl-drm axi:zyxclmm_drm:  ffff000001bfdc10 kds_del_context: Client pid(607) del context Domain(0) CU(0x0)</div>
+<div class="line">scMgr_RequestRsc():722: Unable t[  322.256208] [drm] bitstream 132ce03f-bd7d-3a1a-4e13-41b7650cdd76 unlocked, ref=0</div>
+<div class="line">[  322.256364] FAT-fs (mmcblk0p1): error, fat_free_clusters: deleting FAT entry beyond EOF</div>
+<div class="line"> </div>
+<div class="line">XAIEFAL: WARN: perfcount _reser[  322.277114] FAT-fs (mmcblk0p1): Filesystem has been set read-only\</div>
+<div class="line">ve (24,0) Expect Mod= 2 resource not available.</div>
+<div class="line">[XRT] ERROR: ERROR: event::start_profiling: Failed to request performance counter resources.:[  322.296122] zocl-drm axi:zyxclmm_drm: zocl_destroy_client: client exits pid(607)</div>
+<div class="line"> Resource temporarily unavailable</div>
+<div class="line">[run graph]: success</div>
+<div class="line">[wait graph]: success</div>
+<div class="line">plout[0]: ERROR: Invalid handle. Only two performance counter in a AIE-PL interface tile. Event profile is not supported for x86sim.</div>
+<div class="line">[end lenet_mnist]: success</div>
+<div class="line">Waiting for dma hls to complete...</div>
+<div class="line">mm2s completed with status (4)</div>
+<div class="line">s2mm completed with status (4)</div>
+<div class="line">Closed runtime handlers and kernel handlers...</div>
+<div class="line">[  322.393929] zocl-drm axi:zyxclmm_drm: zocl_destroy_client: client exits pid(607)</div>
+<div class="line">Checking directories data and output</div>
+<div class="line">Checking 1/1: k18gemm_goldenout_host.txt</div>
+<div class="line">TEST (tolerance): OK! (rtol=1e-03, atol=1e-05)</div>
+<div class="line">INFO: TEST PASSED, RC=0</div>
+<div class="line"> </div>
+<div class="line">0 minutes and 3 seconds elapsed.</div>
+<div class="line"> </div>
+<div class="line">Wed Apr 12 02:37:31 UTC 2023</div>
+<div class="line"> </div>
+<div class="line">INFO: Embedded host run completed.</div>
+</div><!-- fragment --><p>Files (for float32 model), 100 samples with final output only </p><div class="fragment"><div class="line">outputs/</div>
+<div class="line">├── aie_profile_edge_heat_map_conflicts_input_bandwidths_chan0.csv</div>
+<div class="line">├── output</div>
+<div class="line">│   └── k18gemm_goldenout_host.txt</div>
+<div class="line">├── summary.csv</div>
+<div class="line">└── xrt.run_summary</div>
+</div><!-- fragment --><p><b>Analyze system compilation after compile</b> </p><div class="fragment"><div class="line">vitis_analyzer build/lenet_mnist/hw/vck190_lenet_mnist_aie.xsa.link_summary</div>
+</div><!-- fragment --><p> <b>Analyze system profile after run</b> </p><div class="fragment"><div class="line">copy file outputs from sd card to your local system</div>
+<div class="line">vitis_analyzer xrt.run_summary</div>
+</div><!-- fragment --><p> <b>Clean hardware emulation build</b> </p><div class="fragment"><div class="line">TARGET=hw_emu GRAPH=lenet_mnist make clean</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md25"></a>
+float32 vs int8 model tradeoff (WIP)</h1>
+<p>A comparison of the performance accuracy tradeoff is as follows. </p><div class="fragment"><div class="line">TBC</div>
+</div><!-- fragment --><p> aiesimulator cycle estimation per kernel </p><div class="fragment"><div class="line"># float32</div>
+<div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
+<div class="line">start = 3221,end = 20149,total = 16928</div>
+<div class="line">Running Maxpool2x2FloatBCHW::filter&lt;24,24,12,12,1,6&gt;</div>
+<div class="line">start = 24557,end = 25458,total = 901</div>
+<div class="line">Running Conv5x5on8ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
+<div class="line">start = 26639,end = 52715,total = 26076</div>
+<div class="line">Running Maxpool2x2FloatBCHW::filter&lt;8,8,4,4,1,16&gt;</div>
+<div class="line">start = 54090,end = 54381,total = 291</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
+<div class="line">start = 54809,end = 55712,total = 903</div>
+<div class="line">start = 54813,end = 55716,total = 903</div>
+<div class="line">start = 54813,end = 55716,total = 903</div>
+<div class="line">start = 54817,end = 55720,total = 903</div>
+<div class="line">start = 54821,end = 55724,total = 903</div>
+<div class="line">start = 54825,end = 55728,total = 903</div>
+<div class="line">start = 54829,end = 55732,total = 903</div>
+<div class="line">start = 54833,end = 55736,total = 903</div>
+<div class="line">Running ConcatVector&lt;8,1,16,120&gt;::filter8</div>
+<div class="line">start = 55936,end = 56062,total = 126</div>
+<div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
+<div class="line">start = 56382,end = 57270,total = 888</div>
+<div class="line">start = 56386,end = 57274,total = 888</div>
+<div class="line">start = 56390,end = 57278,total = 888</div>
+<div class="line">Running ConcatVector&lt;3,1,32,84&gt;::filter3</div>
+<div class="line">start = 57426,end = 57499,total = 73</div>
+<div class="line">Running GemmReluMKKN&lt;1,84,48&gt;</div>
+<div class="line">start = 57771,end = 58744,total = 973</div>
+<div class="line">Running ConcatScalar&lt;1,1,48,10&gt;::filter1</div>
+<div class="line">start = 58888,end = 59766,total = 878</div>
+<div class="line"> </div>
+<div class="line"># int8</div>
+<div class="line">Running QuantizeLinearVector&lt;28,28,32&gt;</div>
+<div class="line">start = 3035,end = 5492,total = 2457</div>
+<div class="line">Running QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt;</div>
+<div class="line">start = 5884,end = 10201,total = 4317</div>
+<div class="line">Running Maxpool2x2Int8BCHW::filter&lt;24,32,12,16,1,6&gt;</div>
+<div class="line">start = 11729,end = 12053,total = 324</div>
+<div class="line">Running QLinearConvVector&lt;12,16,8,16,1,6,16,5&gt;</div>
+<div class="line">start = 12521,end = 19227,total = 6706</div>
+<div class="line">Running MaxpoolScalarBCHW::filter&lt;8,16,4,4,1,16&gt;</div>
+<div class="line">start = 19960,end = 23554,total = 3594</div>
+<div class="line">Running QgemmVector&lt;1,256,128&gt;</div>
+<div class="line">start = 23790,end = 25977,total = 2187</div>
+<div class="line">Running QgemmVector&lt;1,128,96&gt;</div>
+<div class="line">start = 26173,end = 27057,total = 884</div>
+<div class="line">Running QgemmVector&lt;1,96,16&gt;</div>
+<div class="line">start = 27257,end = 27396,total = 139</div>
+<div class="line">Running DequantizeLinearScalar&lt;16,10&gt;</div>
+<div class="line">start = 27560,end = 27642,total = 82</div>
+<div class="line">...</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

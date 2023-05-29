@@ -40,13 +40,17 @@ var NAVTREE =
     [ "Lenet Example", "md_lenet__example.html", [
       [ "Requirements and setup", "md_lenet__example.html#autotoc_md13", null ],
       [ "Train Lenet model on MNIST", "md_lenet__example.html#autotoc_md14", null ],
-      [ "Generate files", "md_lenet__example.html#autotoc_md15", null ],
-      [ "Make options", "md_lenet__example.html#autotoc_md16", null ],
-      [ "Functional check: runs graph in x86simulator", "md_lenet__example.html#autotoc_md17", null ],
-      [ "Functional check: runs system software emulation", "md_lenet__example.html#autotoc_md18", null ],
-      [ "Functional/performance check: runs graph in aiesimulator", "md_lenet__example.html#autotoc_md19", null ],
-      [ "Functional/performance check: runs system in hardware emulation with QEMU", "md_lenet__example.html#autotoc_md20", null ],
-      [ "Test system on hardware", "md_lenet__example.html#autotoc_md21", null ]
+      [ "Quantize the model (optional)", "md_lenet__example.html#autotoc_md15", null ],
+      [ "Generate files", "md_lenet__example.html#autotoc_md16", null ],
+      [ "Make options", "md_lenet__example.html#autotoc_md17", null ],
+      [ "Functional verification", "md_lenet__example.html#autotoc_md18", null ],
+      [ "Performance verification", "md_lenet__example.html#autotoc_md19", null ],
+      [ "Functional check: runs graph in x86simulator", "md_lenet__example.html#autotoc_md20", null ],
+      [ "Functional check: runs system software emulation", "md_lenet__example.html#autotoc_md21", null ],
+      [ "Functional/performance check: runs graph in aiesimulator", "md_lenet__example.html#autotoc_md22", null ],
+      [ "Functional/performance check: runs system in hardware emulation with QEMU", "md_lenet__example.html#autotoc_md23", null ],
+      [ "Test system on hardware", "md_lenet__example.html#autotoc_md24", null ],
+      [ "float32 vs int8 model tradeoff (WIP)", "md_lenet__example.html#autotoc_md25", null ]
     ] ],
     [ "Modules", "modules.html", "modules" ],
     [ "Classes", "annotated.html", [
