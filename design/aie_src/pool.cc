@@ -4,14 +4,13 @@
 #include "kernel_utils.h"
 
 
-template <typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
-void MaxpoolScalarBHWC<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_W, int B, int C>
+void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_W, B, C>::filter(
   input_window<TT>* in,      // BHWC (1x24x24x6)
   output_window<TT>* out     // BPQC (1x12x12x6)
 ) {
   PROFILE_HEADER(printf(
-    "Running MaxpoolScalarBHWC::filter<%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C));
+    "Running MaxpoolScalarBHWC::filter<%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C));
 
   const int K = INP_W / OUT_W;
   const TT min = std::numeric_limits<TT>::lowest();
@@ -28,16 +27,15 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::fil
               arr[c] = (arr[c] < a) ? a : arr[c];
             }
           }
-          window_incr(in, C*(-K+INP_W_PAD)); // go back K, go down 1
+          window_incr(in, C*(-K+INP_W)); // go back K, go down 1
         }
         
         for (int c = 0; c < C; c++)
           window_writeincr(out, arr[c]);
 
-        window_incr(in, C*(-K*INP_W_PAD + K)); // go up K, go right K (next pos)
+        window_incr(in, C*(-K*INP_W + K)); // go up K, go right K (next pos)
       }
-      window_incr(out, OUT_W_PAD - OUT_W);
-      window_incr(in, C*(-INP_W + K*INP_W_PAD)); // go down K, go left INP_W, account for padding
+      window_incr(in, C*(-INP_W + K*INP_W)); // go down K, go left INP_W, account for padding
     }
   }
 
@@ -45,14 +43,13 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::fil
 }
 
 
-template <typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
-void MaxpoolScalarBCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_W, int B, int C>
+void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_W, B, C>::filter(
   input_window<TT>* in,      // BCHW (1x6x24x24)
   output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {
   PROFILE_HEADER(printf(
-    "Running MaxpoolScalarBCHW::filter<%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C));
+    "Running MaxpoolScalarBCHW::filter<%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C));
 
   const int K = INP_W / OUT_W;
   const TT min = std::numeric_limits<TT>::lowest();
@@ -68,13 +65,12 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::fil
               TT a = window_readincr(in);
               c = (a > c) ? a : c;
             }
-            window_incr(in, -K+INP_W_PAD); // left K, down 1
+            window_incr(in, -K+INP_W); // left K, down 1
           }
-          window_incr(in, -K*INP_W_PAD + K); // up K, right K
+          window_incr(in, -K*INP_W + K); // up K, right K
           window_writeincr(out, c);
         } // W
-        window_incr(out, OUT_W_PAD - OUT_W);
-        window_incr(in, -INP_W + K*INP_W_PAD); // down K, left INP_W, account for padding
+        window_incr(in, -INP_W + K*INP_W); // down K, left INP_W, account for padding
       } // H
     } // C
   } // B
@@ -83,22 +79,21 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::fil
 }
 
 
-template <typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
-void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_W, int B, int C>
+void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_W, B, C>::filter(
   input_window<float>* in_window,      // BCHW (1x6x24x24)
   output_window<float>* out_window     // BCPQ (1x6x12x12)
 ) {
   PROFILE_HEADER(printf(
-    "Running Maxpool2x2FloatBCHW::filter<%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C));
+    "Running Maxpool2x2FloatBCHW::filter<%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C));
 
   const int K = INP_W / OUT_W;
   const float min = std::numeric_limits<float>::lowest();
 
-  v8float *in0 = (v8float *) in_window->ptr + 0 * INP_W_PAD/8;
-  v8float *in1 = (v8float *) in_window->ptr + 1 * INP_W_PAD/8;
-  v8float *in2 = (v8float *) in_window->ptr + 2 * INP_W_PAD/8;
-  v8float *in3 = (v8float *) in_window->ptr + 3 * INP_W_PAD/8;
+  v8float *in0 = (v8float *) in_window->ptr + 0 * INP_W/8;
+  v8float *in1 = (v8float *) in_window->ptr + 1 * INP_W/8;
+  v8float *in2 = (v8float *) in_window->ptr + 2 * INP_W/8;
+  v8float *in3 = (v8float *) in_window->ptr + 3 * INP_W/8;
   v16float v = null_v16float();
 
   for (int b = 0; b < B; b++) {
@@ -118,21 +113,20 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::f
           res = fpmax(res, v, 0, 0xfdb97531);
 
           window_write(out_window, ext_v(res, 0));
-          window_incr(out_window, OUT_W_PAD);
+          window_incr(out_window, OUT_W);
           window_write(out_window, ext_v(res, 1));
-          window_incr(out_window, -OUT_W_PAD+4);
+          window_incr(out_window, -OUT_W+4);
           
           in0++;
           in1++;
           in2++;
           in3++;
         } // W
-        in0 += 4*INP_W_PAD/8 - INP_W/8; // account for padding
-        in1 += 4*INP_W_PAD/8 - INP_W/8;
-        in2 += 4*INP_W_PAD/8 - INP_W/8;
-        in3 += 4*INP_W_PAD/8 - INP_W/8;
-        window_incr(out_window, OUT_W_PAD - OUT_W);
-        window_incr(out_window, OUT_W_PAD);
+        in0 += 4*INP_W/8 - INP_W/8; // account for padding
+        in1 += 4*INP_W/8 - INP_W/8;
+        in2 += 4*INP_W/8 - INP_W/8;
+        in3 += 4*INP_W/8 - INP_W/8;
+        window_incr(out_window, OUT_W);
       } // H
     } // C
   } // B
@@ -152,21 +146,20 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::f
  * 
  * 128 int16 max
  */
-template <typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int B, int C>
-void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_W, int B, int C>
+void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_W, B, C>::filter(
   input_window<int8_t>* in_window,      // BCHW (1x6x24x24)
   output_window<int8_t>* out_window     // BCPQ (1x6x12x12)
 ) {
   PROFILE_HEADER(printf(
-    "Running Maxpool2x2Int8BCHW::filter<%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C));
+    "Running Maxpool2x2Int8BCHW::filter<%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C));
 
   const int K = INP_W / OUT_W;
   const int8_t min = std::numeric_limits<int8_t>::lowest();
   int8_t *out_ptr = (int8_t *) out_window->ptr;
 
-  v16int8 *in0 = (v16int8 *) in_window->ptr + 0 * INP_W_PAD/16;
-  v16int8 *in1 = (v16int8 *) in_window->ptr + 1 * INP_W_PAD/16;
+  v16int8 *in0 = (v16int8 *) in_window->ptr + 0 * INP_W/16;
+  v16int8 *in1 = (v16int8 *) in_window->ptr + 1 * INP_W/16;
   v64int16 v = null_v64int16();
   aie::vector<int16_t, 8> tmp = null_v8int16();
 
@@ -201,8 +194,8 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, B, C>::fi
           window_writeincr(out_window, pack(ext_w(res,0)));
         } // W
         
-        in0 += 2*INP_W_PAD/16 - (INP_W+15)/16; // account for padding
-        in1 += 2*INP_W_PAD/16 - (INP_W+15)/16;
+        in0 += 2*INP_W/16 - (INP_W+15)/16; // account for padding
+        in1 += 2*INP_W/16 - (INP_W+15)/16;
       } // H
     } // C
   } // B
