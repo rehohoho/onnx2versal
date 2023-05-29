@@ -21,7 +21,7 @@ class MnistDataReader(CalibrationDataReader):
                onnx_path: str):
     self.enum_data = None
 
-    self.torch_dataset = mnist.MNIST(root=DATA_PATH, train=False, 
+    self.torch_dataset = mnist.MNIST(root=args.data, train=False, 
                                      transform=ToTensor(), download=True)
     self.data_list = [self.torch_dataset[i][0].unsqueeze(0).numpy() 
                       for i in range(data_count)]
@@ -64,31 +64,27 @@ def benchmark(onnx_path: str, input_data: np.ndarray):
 
 
 if __name__ == "__main__":
-  """
-  See https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html
-  cd ../models
-  python -m onnxruntime.quantization.preprocess --input lenet_mnist.onnx --output lenet_mnist_infer.onnx
-  python -m onnxruntime.quantization.preprocess --help
-  cd ../python
-  python quantize_onnx.py
-  """
+  parser = argparse.ArgumentParser(description='Quantize ONNX model.')
+  parser.add_argument("onnx", nargs=1, type=str, help="required path to onnx file")
+  parser.add_argument("qonnx", nargs=1, type=str, help="required path to output quantized onnx file")
+  parser.add_argument("-data", type=str, default="../data", help="path to data directory")
+  parser.add_argument("-ndata", type=int, default=100, help="number of end to end data points")
+  args = parser.parse_args()
+  args.onnx = args.onnx[0]
+  args.qonnx = args.qonnx[0]
   
-  DATA_COUNT = 100
-  DATA_PATH = "../data"
-  ONNX_PATH = "../models/lenet_mnist_infer.onnx"
-  QONNX_PATH = "../models/lenet_mnist_int8.onnx"
   Q_FORMAT = QuantFormat.QOperator # QDQ alternative: dequantize -> op -> quantize
   Q_PER_CHANNEL = False
 
-  data_reader = MnistDataReader(data_path=DATA_PATH, 
-                                data_count=DATA_COUNT,
-                                onnx_path=ONNX_PATH)
+  data_reader = MnistDataReader(data_path=args.data, 
+                                data_count=args.ndata,
+                                onnx_path=args.onnx)
 
   # Calibrate and quantize model
   # Turn off model optimization during quantization
   quantize_static(
-    ONNX_PATH,
-    QONNX_PATH,
+    args.onnx,
+    args.qonnx,
     data_reader,
     quant_format=Q_FORMAT,
     per_channel=Q_PER_CHANNEL,
@@ -98,9 +94,9 @@ if __name__ == "__main__":
   print("Calibrated and quantized model saved.")
 
   print("benchmarking fp32 model...")
-  outs = benchmark(ONNX_PATH, data_reader.data_list[0])
+  outs = benchmark(args.onnx, data_reader.data_list[0])
 
   print("benchmarking int8 model...")
-  qouts = benchmark(QONNX_PATH, data_reader.data_list[0])
+  qouts = benchmark(args.qonnx, data_reader.data_list[0])
 
   np.testing.assert_allclose(outs[-1], qouts[-1], rtol=1e-03, atol=1e-05)

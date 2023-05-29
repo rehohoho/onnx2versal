@@ -26,7 +26,7 @@ if __name__ == "__main__":
   test_dataset = mnist.MNIST(root=DATA_PATH, train=False, transform=ToTensor(), download=True)
   train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE)
   test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
-  model = QuantizedLenet().to(device)
+  model = Lenet().to(device)
   sgd = SGD(model.parameters(), lr=1e-1)
   loss_fn = CrossEntropyLoss()
   prev_acc = 0
