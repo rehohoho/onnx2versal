@@ -34,7 +34,7 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
 
         window_incr(in, C*(-K*INP_W + K)); // go up K, go right K (next pos)
       }
-      window_incr(in, C*(-INP_W + K*INP_W)); // go down K, go left INP_W, account for padding
+      window_incr(in, C*(-OUT_W*K + K*INP_W)); // go down K, go left OUT_W*K, account for padding
     }
   }
 
@@ -68,7 +68,7 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
           window_incr(in, -K*INP_W + K); // up K, right K
           window_writeincr(out, c);
         } // W
-        window_incr(in, -INP_W + K*INP_W); // down K, left INP_W, account for padding
+        window_incr(in, -OUT_W*K  + K*INP_W); // down K, left OUT_W*K , account for padding
       } // H
     } // C
   } // B

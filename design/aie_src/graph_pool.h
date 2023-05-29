@@ -9,6 +9,7 @@
  * @defgroup Pool2D
  * 
  * @brief Pool2D function on BCHW, yielding BCH'W', where H'=H/factor, W'=W/factor
+ * Scalar kernels allow W'<W/factor.
  * 
  * @tparam TT         input and output type
  * @tparam POOL       Pool Kernel
