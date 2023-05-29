@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+from python.op_parsers import pad_lastdim, get_vector_boundary, save_tensor, round_away
+
 np.random.seed(0)
 
 
@@ -10,18 +12,12 @@ OUT_W = 32
 SCALE = 0.00392156889
 ZERO = -128
 
-def round_away(x):
-  x = np.round(x, 3) # rounds 4.499996 and 4.496 to 4.5 first
-  a = np.abs(x)
-  b = np.floor(a) + np.floor(2*(a%1))
-  return np.sign(x)*b
-
-tin = np.random.random(INP_H*INP_W).reshape(INP_H, INP_W)
+tin = np.random.random(size=(INP_H,INP_W)).astype(np.float32)
 tout = round_away(tin / SCALE) + ZERO
 tout = np.clip(tout, -128, 127).astype(np.int8)
 
-np.savetxt("quantizelinear_int8in.txt", tin.reshape(-1, 2))
-np.savetxt("quantizelinear_int8out_QuantizeLinearScalar_shape28x28.txt", tout.reshape(-1, 8), fmt="%d")
-np.savetxt("quantizelinear_int8out_QuantizeLinearVector_shape28x28.txt", tout.reshape(-1, 8), fmt="%d")
+save_tensor("quantizelinear_int8in.txt", tin)
+save_tensor("quantizelinear_int8out_QuantizeLinearScalar_shape28x28.txt", tout)
+save_tensor("quantizelinear_int8out_QuantizeLinearVector_shape28x28.txt", tout)
 print("SCALE\n", SCALE, "\n\n\n")
 print("ZERO\n", ZERO, "\n\n\n")

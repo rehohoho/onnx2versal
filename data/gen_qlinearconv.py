@@ -1,32 +1,10 @@
 import numpy as np
 import torch
 
+from python.op_parsers import pad_lastdim, get_vector_boundary, save_tensor, round_away
+
 np.random.seed(0)
 VECTOR_WORD_BOUNDARY = 16 # in bytes
-
-
-def round_away(x):
-  x = np.round(x, 3) # rounds 4.499996 and 4.496 to 4.5 first
-  a = np.abs(x)
-  b = np.floor(a) + np.floor(2*(a%1))
-  return np.sign(x)*b
-
-
-def pad_lastdim(tensor: np.ndarray, 
-                tensor_name: str, 
-                N: int,
-                value: int = 0):
-  lastdim = tensor.shape[-1]
-  pad_size = (N - lastdim%N) % N
-  if pad_size != 0:
-    print(f"Padding {tensor_name} {tensor.shape} to {*tensor.shape[:-1], lastdim+pad_size}")
-    pad_arr = (*((0,0) for _ in range(tensor.ndim-1)),(0,pad_size))
-    tensor = np.pad(tensor, pad_arr, "constant", constant_values=value)
-  return tensor
-
-
-def get_vector_boundary(tensor: np.ndarray):
-  return VECTOR_WORD_BOUNDARY // tensor.dtype.itemsize
 
 
 INP_W = 28
@@ -56,8 +34,8 @@ Y = torch.nn.functional.conv2d(
 Y = round_away(Y) + Y_zero_point
 Y = np.clip(Y, -128, 127).astype(np.int8)
 
-np.savetxt("qlinearconv_int8in.txt", X.reshape(-1, 8), fmt="%d")
-np.savetxt("qlinearconv_int8out_QLinearConvScalar_shape1x6x24x24.txt", Y.reshape(-1, 8), fmt="%d")
-np.savetxt("qlinearconv_int8out_QLinearConvVector_shape1x6x24x24.txt", Y.reshape(-1, 8), fmt="%d")
+save_tensor("qlinearconv_int8in.txt", X)
+save_tensor("qlinearconv_int8out_QLinearConvScalar_shape1x6x24x24.txt", Y)
+save_tensor("qlinearconv_int8out_QLinearConvVector_shape1x6x24x24.txt", Y)
 print("int8weights\n", W.flatten().tolist(), "\n\n\n")
 print("int8bias\n", B.flatten().tolist(), "\n\n\n")

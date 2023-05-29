@@ -21,7 +21,7 @@ class QgemmScalar {
   
   private:
     alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
-    alignas(32) int32_t (&bias)[N];      // N   (120)
+    alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
@@ -67,7 +67,7 @@ class QgemmVector {
   
   private:
     alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
-    alignas(32) int32_t (&bias)[N];      // N   (120)
+    alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
