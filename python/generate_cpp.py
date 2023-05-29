@@ -146,7 +146,6 @@ class CppGenerator:
           print(f"Found matching output {node.output[0]} and {op.name} output")
           self.nodeout_2_adfport[node.output[0]] = f"{op.name}.pout[0]"
           self.op_list[-1].disable_output_pad()
-          self.op_list[-1].save_txt(self.data_path)
         else:
           print(f"WARNING: {node.op_type} not implemented, skipping...")
       
@@ -167,6 +166,9 @@ class CppGenerator:
               f.write(tmp)
           else:
             save_tensor(out_path, tensor)
+      
+    self.op_list[0].disable_input_pad()
+    self.op_list[-1].disable_output_pad()
 
   def get_includes(self) -> str:
     include_list = set(i.get_include_line() for i in self.op_list)
