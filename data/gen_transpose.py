@@ -1,7 +1,16 @@
 import numpy as np
+
+from python.op_parsers import pad_lastdim, get_vector_boundary, save_tensor
+
 np.random.seed(0)
 
-C = 16
+B = 1
+H = 4
 W = 4
-np.savetxt("transpose_in.txt", np.arange(C*W*W).reshape(-1, 2))
-np.savetxt("transpose_in_rand.txt", np.random.random(C*W*W).reshape(-1, 2))
+C = 16
+
+fpin = np.random.random(size=(B,H,W,C)).astype(np.float32)
+fpout = fpin.transpose(0,3,1,2)
+
+save_tensor("transpose_fpin.txt", fpin)
+save_tensor("transpose_fpout_TransposeScalarBHWC2BCHW_shape1x4x4x16.txt", fpout)

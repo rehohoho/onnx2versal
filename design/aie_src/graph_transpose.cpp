@@ -29,9 +29,7 @@ class TransposeGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> fpscalar(
-  "fpscalar", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW.txt");
-TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> fpscalar_rand(
-  "fpscalar_rand", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW_rand.txt");
+  "fpscalar", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW_shape1x4x4x16.txt");
 
 
 #ifdef __X86SIM__
@@ -39,10 +37,6 @@ int main(int argc, char ** argv) {
   adfCheck(fpscalar.init(), "init fpscalar");
   adfCheck(fpscalar.run(ITER_CNT), "run fpscalar");
 	adfCheck(fpscalar.end(), "end fpscalar");
-
-  adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
-  adfCheck(fpscalar_rand.run(ITER_CNT), "run fpscalar_rand");
-	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
   return 0;
 }
 #endif
@@ -53,10 +47,6 @@ int main(int argc, char ** argv) {
   adfCheck(fpscalar.init(), "init fpscalar");
   get_graph_throughput_by_port(fpscalar, "plout[0]", fpscalar.plout[0], 1*4*4*16, sizeof(float_t), ITER_CNT);
 	adfCheck(fpscalar.end(), "end fpscalar");
-
-  adfCheck(fpscalar_rand.init(), "init fpscalar_rand");
-  get_graph_throughput_by_port(fpscalar_rand, "plout[0]", fpscalar_rand.plout[0], 1*4*4*16, sizeof(float_t), ITER_CNT);
-	adfCheck(fpscalar_rand.end(), "end fpscalar_rand");
   return 0;
 }
 #endif
