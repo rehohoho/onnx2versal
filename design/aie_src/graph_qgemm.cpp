@@ -40,11 +40,11 @@ std::vector<int32_t> bias {0, 166, 333, 500, 666, 833, 1000, 1166, 1333, 1500, 0
 
 QgemmGraphTest<QgemmScalar, 1, 84, 16> qgemmScalar(
   "qgemmScalar", weights, bias, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qgemm_int8in.txt", "qgemm_int8out_qgemmScalar_shape1x10.txt");
+  "qgemm_int8in.txt", "qgemm_int8out_shape1x10_qgemmScalar.txt");
 
 QgemmGraphTest<QgemmVector, 1, 84, 16> qgemmVector(
   "qgemmVector", weights, bias, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qgemm_int8in.txt", "qgemm_int8out_qgemmVector_shape1x10.txt");
+  "qgemm_int8in.txt", "qgemm_int8out_shape1x10_qgemmVector.txt");
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {

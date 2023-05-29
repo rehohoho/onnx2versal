@@ -35,7 +35,6 @@ tout = np.clip(tout, -128, 127).astype(np.int8)
 
 # save
 save_tensor("qgemm_int8in.txt", tin)
-save_tensor("qgemm_int8out_qgemmScalar_shape1x10.txt", tout)
-save_tensor("qgemm_int8out_qgemmVector_shape1x10.txt", tout)
+save_tensor("qgemm_int8out_shape1x10.txt", tout)
 print("int8weights\n", tw.flatten().tolist(), "\n\n\n")
 print("int8bias\n", tbias.flatten().tolist(), "\n\n\n")
