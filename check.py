@@ -73,10 +73,15 @@ if __name__ == "__main__":
     
     filepairs = []
     for res_fn in res_filenames:
-      data_basename = "_".join(res_fn.split("_")[:-1])+".txt"
-      data_path = os.path.join(DATA_DIR, data_basename)
+      data_path = os.path.join(DATA_DIR, res_fn)
       if os.path.exists(data_path):
         filepairs.append((os.path.join(OUT_DIR, res_fn), data_path))
+        continue
+      
+      data_basename = "_".join(res_fn.split("_")[:-1])+".txt"
+      parsed_data_path = os.path.join(DATA_DIR, data_basename)
+      if os.path.exists(parsed_data_path):
+        filepairs.append((os.path.join(OUT_DIR, res_fn), parsed_data_path))
 
     for i, (res_fn, data_fn) in enumerate(filepairs):
       print(f"Checking {i+1}/{len(filepairs)}: {res_fn.replace(OUT_DIR, '')} against {data_fn.replace(DATA_DIR, '')}")
