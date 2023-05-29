@@ -8,11 +8,11 @@ np.random.seed(0)
 
 INP_H = 24
 INP_W = 24
+OUT_H = 12
 OUT_W = 12
 B = 1
 C = 6
 
-OUT_H = INP_W//(INP_W//OUT_W)
 
 # float32
 fpin = np.random.random(size=(B,C,INP_H,INP_W)).astype(np.float32)

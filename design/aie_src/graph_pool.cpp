@@ -2,14 +2,13 @@
 #include "graph_utils.h"
 
 
-template <template<typename, int, int, int, int, int> class POOL,
-  typename TT, int INP_H, int INP_W, int OUT_W, int B, int C>
+template <template<typename, int, int, int, int, int, int> class POOL,
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
 class MaxpoolGraphTest : public adf::graph {
 
   private:
     static constexpr int TTSIZE = sizeof(TT);
-    static constexpr int K = INP_H/OUT_W;
-    MaxpoolGraph<POOL, TT, INP_H, INP_W, OUT_W, B, C> g;
+    MaxpoolGraph<POOL, TT, INP_H, INP_W, OUT_H, OUT_W, B, C> g;
 
   public:
     adf::input_plio plin[1];
@@ -23,23 +22,23 @@ class MaxpoolGraphTest : public adf::graph {
       plin[0] = adf::input_plio::create("plin0_maxpool"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_maxpool"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<B*INP_H*INP_W*C*TTSIZE>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<B*INP_H/K*OUT_W*C*TTSIZE>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<B*OUT_H*OUT_W*C*TTSIZE>> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
 // BCHW
-MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 24, 12, 1, 6> maxpoolScalarBCHW(
+MaxpoolGraphTest<MaxpoolScalarBCHW, float, 24, 24, 12, 12, 1, 6> maxpoolScalarBCHW(
   "maxpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_fpout_shape1x6x12x12_MaxpoolScalarBCHW.txt");
-MaxpoolGraphTest<Maxpool2x2FloatBCHW, float, 24, 24, 12, 1, 6> maxpool2x2BCHW(
+MaxpoolGraphTest<Maxpool2x2FloatBCHW, float, 24, 24, 12, 12, 1, 6> maxpool2x2BCHW(
   "maxpool2x2BCHW", "pool_fpin.txt", "poolBCHW_fpout_shape1x6x12x12_Maxpool2x2FloatBCHW.txt");
 
-MaxpoolGraphTest<Maxpool2x2Int8BCHW, int8_t, 24, 32, 16, 1, 6> maxpool2x2int8BCHW(
+MaxpoolGraphTest<Maxpool2x2Int8BCHW, int8_t, 24, 32, 12, 16, 1, 6> maxpool2x2int8BCHW(
   "maxpool2x2int8BCHW", "pool_int8in_pad.txt", "poolBCHW_int8out_shape1x6x12x12_Maxpool2x2Int8BCHW.txt");
 
 // BHWC
-MaxpoolGraphTest<MaxpoolScalarBHWC, float, 24, 24, 12, 1, 6> maxpoolScalarBHWC(
+MaxpoolGraphTest<MaxpoolScalarBHWC, float, 24, 24, 12, 12, 1, 6> maxpoolScalarBHWC(
   "maxpoolScalarBHWC", "pool_fpin.txt", "poolBHWC_fpout_shape1x12x12x6_MaxpoolScalarBHWC.txt");
 
 #ifdef __X86SIM__
