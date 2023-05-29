@@ -16,9 +16,10 @@
 
 
 /**
- * @brief Scalar implementation, DequantizeLinearScalar<1*1*28*28> takes  cycles
+ * @brief Scalar implementation,
+ * DequantizeLinearScalar<96,84> takes 296 cycles
  */
-template <int WINDOW_SIZE>
+template <int INP_SIZE, int OUT_SIZE>
 class DequantizeLinearScalar {
   
   private:
