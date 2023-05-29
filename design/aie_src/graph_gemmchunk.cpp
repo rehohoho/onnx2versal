@@ -78,16 +78,16 @@ std::vector<float> fpbias {0.5025093969698047, 0.028362934230075076, 0.559248300
 // MKNK, uses KPAD, no NPAD
 GemmReluMknkChunkGraphTest<GemmReluScalarMKNK, ConcatScalar, nchunk, 1, 86, 10> fpscalar_mknk(
   "fpscalar_mknk", fpweights_mknk, fpbias, 
-  "gemm_fpin.txt", "gemm_fpout_GemmReluScalarMKNK_shape1x10.txt");
+  "gemm_fpin.txt", "gemmMKNK_fpout_shape1x10_GemmReluScalarMKNK.txt");
 
 // MKKN, uses NPAD, no KPAD
 GemmReluMkknChunkGraphTest<GemmReluScalarMKKN, ConcatScalar, nchunk, 1, 86, 10> fpscalar_mkkn(
   "fpscalar_mkkn", fpweights_mkkn, fpbias, 
-  "gemm_fpin.txt", "gemm_fpout_GemmReluScalarMKKN_shape1x10.txt");
+  "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluScalarMKKN.txt");
 
 GemmReluMkknChunkGraphTest<GemmReluMKKN, ConcatScalar, nchunk, 1, 86, 10> fpvector_mkkn(
   "fpvector_mkkn", fpweights_mkkn, fpbias, 
-  "gemm_fpin.txt", "gemm_fpout_GemmReluMKKN_shape1x10.txt");
+  "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluMKKN.txt");
 
 
 #ifdef __X86SIM__

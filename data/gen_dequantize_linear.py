@@ -14,6 +14,6 @@ tin = np.random.randint(-128, 128, size=96).astype(np.int8)
 tout = ((tin.astype(int) - ZERO) * SCALE).astype(np.float32)
 
 save_tensor("dequantizelinear_int8in.txt", tin)
-save_tensor("dequantizelinear_fpout_DequantizeLinearScalar_shape96.txt", tout)
+save_tensor(f"dequantizelinear_fpout_shape{WINDOW_SIZE}.txt", tout)
 print("SCALE\n", SCALE, "\n\n\n")
 print("ZERO\n", ZERO, "\n\n\n")

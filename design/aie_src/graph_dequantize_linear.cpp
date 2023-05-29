@@ -31,7 +31,7 @@ class DequantizeLinearScalarTest : public adf::graph {
 DequantizeLinearScalarTest<DequantizeLinearScalar, 96> dequantizeLinearScalar(
   "dequantizeLinearScalar", 
   "dequantizelinear_int8in.txt", 
-  "dequantizelinear_fpout_DequantizeLinearScalar_shape96.txt",
+  "dequantizelinear_fpout_shape96_DequantizeLinearScalar.txt",
   0.00392156889, -128);
 
 

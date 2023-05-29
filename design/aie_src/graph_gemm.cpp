@@ -69,19 +69,19 @@ std::vector<float> fpbias {0.5025093969698047, 0.028362934230075076, 0.559248300
 // MKNK
 GemmReluGraphTest<GemmReluScalarMKNK, 1, 86, 10> gemmReluScalarMKNK(
   "gemmReluScalarMKNK", fpweights_mknk, fpbias, 
-  "gemm_fpin.txt", "gemm_fpout_GemmReluScalarMKNK_shape1x10.txt");
+  "gemm_fpin.txt", "gemmMKNK_fpout_shape1x10_GemmReluScalarMKNK.txt");
 GemmReluGmemParamGraphTest<GemmReluScalarGmemParamMKNK, 1, 86, 10> gemmReluScalarGmemParamMKNK(
   "gemmReluScalarGmemParamMKNK", "gemm_fpweights_mknk.txt", "gemm_fpbias.txt", 
-  "gemm_fpin.txt", "gemm_fpout_GemmReluScalarGmemParamMKNK_shape1x10.txt");
+  "gemm_fpin.txt", "gemmMKNK_fpout_shape1x10_GemmReluScalarGmemParamMKNK.txt");
 
 // MKKN
 GemmReluGraphTest<GemmReluScalarMKKN, 1, 86, 12> gemmReluScalarMKKN(
   "gemmReluScalarMKKN", fpweights_mkkn_pad, fpbias, 
-  "gemm_fpin.txt", "gemm_fpout_GemmReluScalarMKKN_shape1x10.txt");
+  "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluScalarMKKN.txt");
 
 GemmReluGraphTest<GemmReluMKKN, 1, 86, 12> gemmReluMKKN(
   "gemmReluMKKN", fpweights_mkkn_pad, fpbias, 
-  "gemm_fpin.txt", "gemm_fpout_GemmReluMKKN_shape1x10.txt");
+  "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluMKKN.txt");
 
 
 #ifdef __X86SIM__

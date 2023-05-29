@@ -16,13 +16,11 @@ bias = np.random.random(N).astype(np.float32)
 
 # result for mknk
 res_mknk = np.matmul(inp, weights_mknk.T) + bias
-save_tensor("gemm_fpout_GemmReluScalarMKNK_shape1x10.txt", res_mknk)
-save_tensor("gemm_fpout_GemmReluScalarGmemParamMKNK_shape1x10.txt", res_mknk)
+save_tensor(f"gemmMKNK_fpout_shape{M}x{N}.txt", res_mknk)
 
 # result for mkkn
 res_mkkn = np.matmul(inp, weights_mkkn) + bias
-save_tensor("gemm_fpout_GemmReluScalarMKKN_shape1x10.txt", res_mkkn)
-save_tensor("gemm_fpout_GemmReluMKKN_shape1x10.txt", res_mkkn)
+save_tensor(f"gemmMKKN_fpout_shape{M}x{N}.txt", res_mkkn)
 
 weights_mkkn_pad = pad_lastdim(weights_mkkn, "gemm tw", get_vector_boundary(weights_mkkn))
 save_tensor("gemm_fpin.txt", inp)
