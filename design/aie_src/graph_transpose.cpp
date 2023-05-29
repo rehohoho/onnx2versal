@@ -29,7 +29,7 @@ class TransposeGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 TransposeGraphTest<TransposeScalarBHWC2BCHW, 1, 4, 4, 16> fpscalar(
-  "fpscalar", "transpose_fpin.txt", "transpose_fpout_TransposeScalarBHWC2BCHW_shape1x4x4x16.txt");
+  "fpscalar", "transpose_fpin.txt", "transpose_fpout_shape1x16x4x4_TransposeScalarBHWC2BCHW.txt");
 
 
 #ifdef __X86SIM__

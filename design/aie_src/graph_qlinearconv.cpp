@@ -39,11 +39,11 @@ std::vector<int32_t> fpbias {0, 166, 333, 500, 666, 833};
 
 QLinearConvGraphTest<QLinearConvScalar, 28, 32, 24, 32, 1, 1, 6, 5> qLinearConvScalar(
   "qLinearConvScalar", fpweights, fpbias, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in.txt", "qlinearconv_int8out_QLinearConvScalar_shape1x6x24x24.txt");
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x24x24_QLinearConvScalar.txt");
 
 QLinearConvGraphTest<QLinearConvVector, 28, 32, 24, 32, 1, 1, 6, 5> qLinearConvVector(
   "qLinearConvVector", fpweights, fpbias, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in.txt", "qlinearconv_int8out_QLinearConvVector_shape1x6x24x24.txt");
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x24x24_QLinearConvVector.txt");
 
 
 #ifdef __X86SIM__

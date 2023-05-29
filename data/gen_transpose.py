@@ -13,4 +13,4 @@ fpin = np.random.random(size=(B,H,W,C)).astype(np.float32)
 fpout = fpin.transpose(0,3,1,2)
 
 save_tensor("transpose_fpin.txt", fpin)
-save_tensor("transpose_fpout_TransposeScalarBHWC2BCHW_shape1x4x4x16.txt", fpout)
+save_tensor(f"transpose_fpout_shape{B}x{C}x{H}x{W}.txt", fpout)
