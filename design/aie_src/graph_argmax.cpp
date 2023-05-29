@@ -28,7 +28,7 @@ class ArgmaxGraphTest : public adf::graph {
 // instance to be compiled and used in host within xclbin
 // padded to vector boundary
 ArgmaxGraphTest<ArgmaxScalar, 10, 10> argmaxScalar(
-  "argmaxScalar", "argmax_fpin.txt", "argmax_fpout_ArgmaxScalar_shape1x10.txt");
+  "argmaxScalar", "argmax_fpin.txt", "argmax_fpout_shape1x10_ArgmaxScalar.txt");
 
 
 #ifdef __X86SIM__

@@ -67,24 +67,24 @@ std::vector<float> fpbias {0.47558911708484375, 0.8200224358697518, 0.2981873596
 //BCHW
 ConvReluGraphTest<ConvReluScalarBCHW, 28, 24, 1, 1, 6, 5> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
-  "conv_fpin.txt", "conv_fpout_ConvReluScalarBCHW_shape1x6x24x24.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_ConvReluScalarBCHW.txt");
 
 ConvReluGraphTest<Conv5x5ReluBCHW, 28, 24, 1, 1, 6, 5> conv5x5ReluBCHW(
   "conv5x5ReluBCHW", fpweights, fpbias, 
-  "conv_fpin.txt", "conv_fpout_Conv5x5ReluBCHW_shape1x6x24x24.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_Conv5x5ReluBCHW.txt");
 
 ConvReluGraphTest<Conv5x5on8ReluBCHW, 28, 24, 1, 1, 6, 5> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
-  "conv_fpin.txt", "conv_fpout_Conv5x5on8ReluBCHW_shape1x6x24x24.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_Conv5x5on8ReluBCHW.txt");
 
 //BHWC
 ConvReluGraphTest<ConvReluScalarBHWC, 28, 24, 1, 1, 6, 5> convReluScalarBHWC(
   "convReluScalarBHWC", fpweights, fpbias, 
-  "conv_fpin.txt", "conv_fpout_ConvReluScalarBHWC_shape1x6x24x24.txt");
+  "conv_fpin.txt", "convbhwc_fpout_shape1x6x24x24_ConvReluScalarBHWC.txt");
 
 ConvReluGmemParamGraphTest<ConvReluScalarGmemParamBHWC, 28, 24, 1, 1, 6, 5> convReluScalarGmemParamBHWC(
   "convReluScalarGmemParamBHWC", "conv_fpweights.txt", "conv_fpbias.txt", 
-  "conv_fpin.txt", "conv_fpout_ConvReluScalarGmemParamBHWC_shape1x6x24x24.txt");
+  "conv_fpin.txt", "convbhwc_fpout_shape1x6x24x24_ConvReluScalarGmemParamBHWC.txt");
 
 
 #ifdef __X86SIM__

@@ -51,14 +51,14 @@ class ConcatGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 ConcatGraphTest<ConcatScalar, 5, 4, 16, 52> concatScalar(
-  "concatScalar", "concat_fpout_ConcatScalar_shape4x52.txt",
+  "concatScalar", "concat_fpout_shape4x52_ConcatScalar.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt"
 );
 
 ConcatGraphTest<ConcatVector, 5, 4, 16, 52> concatVector(
-  "concatVector", "concat_fpout_ConcatVector_shape4x52.txt",
+  "concatVector", "concat_fpout_shape4x52_ConcatVector.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt", "concat_fpin.txt",
   "concat_fpin.txt"
