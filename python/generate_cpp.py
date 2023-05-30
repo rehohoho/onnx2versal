@@ -4,10 +4,10 @@ import os
 import numpy as np
 import onnx
 from onnx import numpy_helper
-# from google.protobuf.json_format import MessageToJson
+# from google.protobuf.json_format import MessageToJson, MessageToDict
 
 from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, \
-  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp
+  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp, SoftmaxOp
 
 
 class CppGenerator:
@@ -62,8 +62,7 @@ class CppGenerator:
       raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
     
   def register_port(self, onnx_in_name: str, onnx_out_name: str, op: OpParser):
-    self.adf_connects.append(
-      f"  adf::connect<> ({self.nodeout_2_adfport[onnx_in_name]}, {op.name}.pin[0]);")
+    self.adf_connects.append(op.get_connect_line(self.nodeout_2_adfport[onnx_in_name]))
     self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
     if onnx_out_name in self.modelout_2_op:
       self.modelout_2_op[onnx_out_name] = op
@@ -103,19 +102,14 @@ class CppGenerator:
           onnx_out_name = node.output[0]
 
         op = GemmOp(f"k{i}gemm", is_relu=is_relu)
-        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)], 
+                           node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
+        self.register_port(node.input[0], onnx_out_name, op)
         
         if is_relu:
           i += 1
-
-        self.adf_connects.append(
-          f"for (int i = 0; i < {op.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
-          f"  adf::connect<> ({self.nodeout_2_adfport[node.input[0]]}, {op.name}.pin[i]);")
-        self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
-        if onnx_out_name in self.modelout_2_op:
-          self.modelout_2_op[onnx_out_name] = op
       
       elif node.op_type == "QuantizeLinear":
         op = QuantizeLinearOp(f"k{i}quantizelinear")
@@ -153,7 +147,7 @@ class CppGenerator:
         else:
           print(f"WARNING: {node.op_type} not implemented, skipping...")
       
-      if node.op_type == "MatMul":
+      elif node.op_type == "MatMul":
         if self.nodes[i+1].op_type != "Add": # lookahead
           raise NotImplementedError("No Add found after MatMul, no valid implementation.")
         
@@ -167,14 +161,21 @@ class CppGenerator:
         
         bias_name = self.nodes[i+1].input[1]
         op = GemmOp(f"k{i}gemm", is_relu=is_relu)
-        op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)],
+                           node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], onnx_out_name, op)
+
         i += 1 # add
-        
-        if is_relu:
-          i += 1
+        if is_relu: i += 1 # relu
+      
+      elif node.op_type == "Softmax":
+        op = SoftmaxOp(f"k{i}softmax")
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input[0], node.output[0], op)
       
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")
@@ -251,7 +252,7 @@ class CppGenerator:
     return "\n".join(weights)
   
   def get_callargs(self, is_output_inter: bool) -> str:
-    args = ['"input.txt"']
+    args = [f'"{inpname}.txt"' for inpname in self.modelin_2_tensor]
     args += [f'"{list(op.filename_2_tensors.keys())[-1]}"' for op in self.modelout_2_op.values()]
     args += [i.get_callarg_line() for i in self.op_list]
     if is_output_inter:

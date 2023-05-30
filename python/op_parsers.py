@@ -1,4 +1,4 @@
-from typing import List, Mapping
+from typing import List, Mapping, Any
 import math
 
 import numpy as np
@@ -68,6 +68,15 @@ def get_shape_str(tensor: np.ndarray):
   return f"shape{'x'.join(str(i) for i in tensor.shape)}"
 
 
+def get_attribute_dict(attributes: List[Any]):
+  attr_d = {}
+  for attr in attributes:
+    if attr.type == 1: attr_d[attr.name] = attr.f # FLOAT
+    elif attr.type == 2: attr_d[attr.name] = attr.i # INT
+    else: raise NotImplementedError(f"Unknown type {attr.f}")
+  return attr_d
+
+
 class OpParser:
   include_file: str
 
@@ -103,6 +112,9 @@ class OpParser:
   def get_callarg_line(self) -> str:
     return ", ".join(varname for varname in self.varname_2_tensors)
   
+  def get_connect_line(self, last_port: str) -> str:
+    return f"adf::connect<> ({last_port}, {self.name}.pin[0]);"
+  
   def save_txt(self, data_path: str):
     for outname, outtensor in self.filename_2_tensors.items():
       save_tensor(f"{data_path}/{outname}", outtensor)
@@ -121,6 +133,14 @@ class OpParser:
 
 class ArgmaxOp(OpParser):
   include_file: str = "graph_argmax.h"
+
+
+class ConcatOp(OpParser):
+  include_file: str = "graph_concat.h"
+  constraints: Mapping[str, str] = {
+    "ConcatScalar": [],
+    "ConcatVector": [("CHUNK_SIZE", 8), ("BLOCK_SIZE", 4)]
+  }
 
 
 class ConvOp(OpParser):
@@ -211,12 +231,14 @@ class GemmOp(OpParser):
     super().__init__(name)
     self.is_relu = is_relu
 
-  def register_params(self, tensors: List[np.ndarray]):
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 4
     tin, tw, tbias, tout = tensors
+    
+    attr_d = get_attribute_dict(attributes)
+    if attr_d.get("transA"): tin = tin.transpose()
+    if attr_d.get("transB"): tw = tw.transpose()
 
-    if tin.shape[1] == tw.shape[1]: # MxK * NxK
-      tw = tw.transpose(1,0)
     inM, inK = tin.shape
     wK, wN = tw.shape
     bN, = tbias.shape
@@ -226,8 +248,9 @@ class GemmOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
 
-    self.varname_2_tensors[f"{self.name}_w"] = tw # chunk graph handles padding
-    self.varname_2_tensors[f"{self.name}_b"] = tbias
+    # chunk graph handles padding
+    self.varname_2_tensors[f"{self.name}_w"] = tw * attr_d.get("alpha", 1)
+    self.varname_2_tensors[f"{self.name}_b"] = tbias * attr_d.get("beta", 1)
   
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
@@ -236,22 +259,32 @@ class GemmOp(OpParser):
     self.dtype = tw.dtype
     self.out_size = tout.size
 
+    self.chunkSize = int(MAX_FLOAT_PARAMS/self.K//4*4)
+
   def get_kernel_type(self) -> str:
-    graph = "GemmReluMkknChunkGraph"
     kernel = "GemmReluScalarMKKN"
-    concat_kernel = "ConcatScalar"
-    chunkSize = int(MAX_FLOAT_PARAMS/self.K//4*4)
-    if self.K % 2 == 0 and chunkSize % 4 == 0:
-      kernel = "GemmReluMKKN"
-    if chunkSize % 8 == 0 and self.N % 4 == 0:
-      concat_kernel = "ConcatVector"
-    if not self.is_relu:
-      kernel = kernel.replace("Relu", "")
     
-    return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N}>"
+    if self.chunkSize >= self.N:
+      graph = "GemmReluGraph"
+      if self.K % 2 == 0 and self.N % 4 == 0: kernel = "GemmReluMKKN"
+      if not self.is_relu: kernel = kernel.replace("Relu", "")
+      return f"{graph}<{kernel},{self.M},{self.K},{self.N}>"
+    else:
+      graph = "GemmReluMkknChunkGraph"
+      concat_kernel = "ConcatScalar"
+      if self.K % 2 == 0 and self.chunkSize % 4 == 0: kernel = "GemmReluMKKN"
+      if self.chunkSize % 8 == 0 and self.N % 4 == 0: concat_kernel = "ConcatVector"
+      if not self.is_relu: kernel = kernel.replace("Relu", "")
+      return f"{graph}<{kernel},{concat_kernel},{self.chunkSize},{self.M},{self.K},{self.N}>"
   
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
+  
+  def get_connect_line(self, last_port: str) -> str:
+    if self.chunkSize >= self.N:
+      return super().get_connect_line(last_port)
+    return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
+      f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
 
 
 class PoolOp(OpParser):
@@ -440,3 +473,39 @@ class QuantizeLinearOp(OpParser):
   def disable_input_pad(self):
     self.INP_W = self.inW
     super().disable_input_pad()
+
+
+class SoftmaxOp(OpParser):
+  """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for OUT_W
+  Assumes only output has to meet vector boundaries.
+  """
+  include_file: str = "graph_softmax.h"
+
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 2
+    
+    tin, tout = tensors
+    assert tin.size == tout.size
+
+    self.inW = tin.shape[-1]
+    self.tout = tout # reference copy to check against to compress graph
+
+    tin = pad_lastdim(tout, "SoftmaxOp tin", get_vector_boundary(tin)) # files
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    
+    tout = pad_lastdim(tout, "SoftmaxOp tout", get_vector_boundary(tout))
+    assert tout.shape[:-1] == tin.shape[:-1]
+    
+    self.INP_H, self.INP_W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
+    self.dtype = tout.dtype
+    self.out_size = tout.size
+  
+  def get_kernel_line(self) -> str:
+    graph = "SoftmaxGraph"
+    kernel = "SoftmaxScalar"
+    return f"{graph}<{kernel},{self.INP_H},{self.INP_W}> {self.name};"
+  
+  def disable_output_pad(self):
+    self.INP_W = self.inW
+    super().disable_output_pad()
