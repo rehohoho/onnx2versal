@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Mapping
 import math
 
 import numpy as np
@@ -207,15 +207,18 @@ class DequantizeLinearOp(OpParser):
 class GemmOp(OpParser):
   include_file: str = "graph_gemm.h"
 
+  def __init__(self, name: str, is_relu: bool):
+    super().__init__(name)
+    self.is_relu = is_relu
+
   def register_params(self, tensors: List[np.ndarray]):
-    """Expects NxK weights as per PyTorch
-    Returns KxN weights, with N padded so N%4=0
-    """
     assert len(tensors) == 4
     tin, tw, tbias, tout = tensors
 
+    if tin.shape[1] == tw.shape[1]: # MxK * NxK
+      tw = tw.transpose(1,0)
     inM, inK = tin.shape
-    wN, wK = tw.shape
+    wK, wN = tw.shape
     bN, = tbias.shape
     outM, outN = tout.shape
     
@@ -223,7 +226,7 @@ class GemmOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
 
-    self.varname_2_tensors[f"{self.name}_w"] = tw.transpose(1,0) # chunk graph handles padding
+    self.varname_2_tensors[f"{self.name}_w"] = tw # chunk graph handles padding
     self.varname_2_tensors[f"{self.name}_b"] = tbias
   
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
@@ -242,6 +245,8 @@ class GemmOp(OpParser):
       kernel = "GemmReluMKKN"
     if chunkSize % 8 == 0 and self.N % 4 == 0:
       concat_kernel = "ConcatVector"
+    if not self.is_relu:
+      kernel = kernel.replace("Relu", "")
     
     return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N}>"
   

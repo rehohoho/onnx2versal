@@ -70,7 +70,9 @@ class CppGenerator:
 
   # assumes nodes are in topological sorted order
   def parse(self):
-    for i, node in enumerate(self.nodes):
+    i = 0
+    while i < len(self.nodes):
+      node = self.nodes[i]
       
       if node.op_type == "Conv":
         if self.nodes[i+1].op_type != "Relu": # lookahead
@@ -79,32 +81,34 @@ class CppGenerator:
 
         onnx_out_name = self.nodes[i+1].output[0]
         op = ConvOp(f"k{i}conv")
-        op.register_params([self.get_tensor(i) for i in (*node.input, onnx_out_name)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], onnx_out_name, op)
+        i += 1
       
-      elif node.op_type == "Relu":
-        print(f"WARNING: skipping Relu") # handled by fusing with previous
-        pass
-            
       elif node.op_type == "MaxPool":
         op = PoolOp(f"k{i}pool")
-        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
 
       elif node.op_type == "Gemm":
-        if self.nodes[i+1].op_type != "Relu": # lookahead
-          raise NotImplementedError("No relu found after Gemm, no valid implementation.")
-        print(f"WARNING: fusing Gemm+Relu")
+        is_relu = self.nodes[i+1].op_type == "Relu" # lookahead
         
-        onnx_out_name = self.nodes[i+1].output[0]
-        op = GemmOp(f"k{i}gemm")
-        op.register_params([self.get_tensor(i) for i in (*node.input, onnx_out_name)])
+        if is_relu:
+          onnx_out_name = self.nodes[i+1].output[0]
+        else:
+          onnx_out_name = node.output[0]
+
+        op = GemmOp(f"k{i}gemm", is_relu=is_relu)
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
+        
+        if is_relu:
+          i += 1
 
         self.adf_connects.append(
           f"for (int i = 0; i < {op.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
@@ -115,28 +119,28 @@ class CppGenerator:
       
       elif node.op_type == "QuantizeLinear":
         op = QuantizeLinearOp(f"k{i}quantizelinear")
-        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
 
       elif node.op_type == "QLinearConv":
         op = QLinearConvOp(f"k{i}qlinearconv")
-        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
         
       elif node.op_type == "QGemm":
         op = QGemm(f"k{i}qgemm")
-        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
       
       elif node.op_type == "DequantizeLinear":
         op = DequantizeLinearOp(f"k{i}dequantizeLinear")
-        op.register_params([self.get_tensor(i) for i in (*node.input, *node.output)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
@@ -148,6 +152,29 @@ class CppGenerator:
           self.op_list[-1].disable_output_pad()
         else:
           print(f"WARNING: {node.op_type} not implemented, skipping...")
+      
+      if node.op_type == "MatMul":
+        if self.nodes[i+1].op_type != "Add": # lookahead
+          raise NotImplementedError("No Add found after MatMul, no valid implementation.")
+        
+        is_relu = self.nodes[i+2].op_type == "Relu"
+        
+        if is_relu:
+          print(f"WARNING: fusing MatMul+Add+Relu")
+          onnx_out_name = self.nodes[i+2].output[0]
+        else:
+          onnx_out_name = self.nodes[i+1].output[0]
+        
+        bias_name = self.nodes[i+1].input[1]
+        op = GemmOp(f"k{i}gemm", is_relu=is_relu)
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input[0], onnx_out_name, op)
+        i += 1 # add
+        
+        if is_relu:
+          i += 1
       
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")
@@ -166,6 +193,8 @@ class CppGenerator:
               f.write(tmp)
           else:
             save_tensor(out_path, tensor)
+        
+      i += 1
       
     self.op_list[0].disable_input_pad()
     self.op_list[-1].disable_output_pad()
