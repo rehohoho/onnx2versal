@@ -88,10 +88,9 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
   
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  scalebits = std::min(scalebits, 24); // since int32_t shift, int8_t y_zero_point
+  assert(scalebits <= 27); // K*K*int8*int8*scale <= acc48, for K=5
 
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
-  shift = float2fix((float) y_zero_point, scalebits); // scalebits <= 24,
 }
 
 /**
@@ -102,10 +101,10 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
  * int16*int8: 9177
  * int8*int8: 6724
  * precompute y_zero: 5174
- * two accs: ~4541
- * remove redundant add, scale vectors: 4225
+ * two accs: 4541
+ * use aieapi for acc+scalar, reduce vector spil: 4225
  * remove precomputing y_zero: ~4700
- * separate buffers for scaleshift: 4398
+ * move y_zero and precompute bias into acc: 3237
  * 
  * https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits
  * 24 selects 4*4=16, (4+2+1)*4=28 => rows (16,18),(17,19),(28,30),(29,30) before square
@@ -148,13 +147,12 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();
-  v16int32 accbuf1 = undef_v16int32();
-  v16int32 accbuf2 = undef_v16int32();
 
   v16acc48 acc1 = undef_v16acc48();
   v16acc48 acc2 = undef_v16acc48();
-  aie::accum<acc48,16> aieacc1;
-  aie::accum<acc48,16> aieacc2;
+  aie::accum<acc48,16> acc_shift;
+  aie::accum<acc48,16> acc_bias;
+  acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero_point), scalebits);
 
   int8_t *in_ptr = (int8_t *) in->ptr;
   v16int8 *w_ptr = (v16int8 *) weights;
@@ -169,11 +167,14 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
   // BHWM
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
+      
+      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
+      
       for (int h = 0; h < OUT_H; h+=2) {
         for (int w = 0; w < OUT_W; w+=16) {
 
-          acc1 = null_v16acc48();
-          acc2 = null_v16acc48();
+          acc1 = acc_bias;
+          acc2 = acc_bias;
         
           for (int c = 0; c < C; c++) { // computes 2x16 partial products over 5x5 kernel
             wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
@@ -204,17 +205,11 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
           }
           
           // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
-          acc1 = aie::add((aie::accum<acc48,16>) acc1, bias[m]);
-          acc2 = aie::add((aie::accum<acc48,16>) acc2, bias[m]);
-          accbuf1 = lsrs(acc1, 0);
-          accbuf2 = lsrs(acc2, 0);
-          aieacc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf1, scale);
-          aieacc2 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf2, scale);
-          aieacc1 = aie::add(aieacc1, shift);
-          aieacc2 = aie::add(aieacc2, shift);
-          *out_ptr = aieacc1.to_vector<int8_t>(scalebits);
+          acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
+          acc2 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc2, 0), scale);
+          *out_ptr = bsrs(acc1, scalebits);
           out_ptr += OUT_W/16;
-          *out_ptr = aieacc2.to_vector<int8_t>(scalebits);
+          *out_ptr = bsrs(acc2, scalebits);
           out_ptr += 1-OUT_W/16;
 
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16

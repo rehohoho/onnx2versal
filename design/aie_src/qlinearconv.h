@@ -77,7 +77,7 @@ class QLinearConvScalar {
 
 
 /**
- * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes 4317 cycles.
+ * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes 3237 cycles.
  * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
  * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0
  */
@@ -97,7 +97,6 @@ class QLinearConvVector {
     // precomputation
     int scalebits;
     int16_t scale;
-    int32_t shift;
 	
   public:
     QLinearConvVector (
