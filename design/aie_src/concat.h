@@ -169,7 +169,7 @@ class ConcatVector {
 			output_window<float>* out
 		);
 		static void registerKernelClass() {
-			assert(CHUNK_SIZE%8==0 && BLOCK_SIZE%4==0);
+			static_assert(CHUNK_SIZE%8==0 && BLOCK_SIZE%4==0);
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(ConcatVector::filter8);
 			} else if (LCNT == 7) {

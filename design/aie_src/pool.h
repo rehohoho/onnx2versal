@@ -74,7 +74,7 @@ class Maxpool2x2FloatBCHW {
       output_window<float>* out_window     // BCPQ (1x6x12x12)
     );
     static void registerKernelClass() {
-      assert(OUT_W%4==0 && K==2 && (std::is_same<TT, float>::value));
+      static_assert(OUT_W%4==0 && K==2 && (std::is_same<TT, float>::value));
       REGISTER_FUNCTION(Maxpool2x2FloatBCHW::filter);
     }
 };
@@ -96,7 +96,7 @@ class Maxpool2x2Int8BCHW {
       output_window<int8_t>* out_window     // BCPQ (1x6x12x12)
     );
     static void registerKernelClass() {
-      assert(INP_W%16==0 && OUT_W%16==0 && K==2 && (std::is_same<TT, int8_t>::value));
+      static_assert(INP_W%16==0 && OUT_W%16==0 && K==2 && (std::is_same<TT, int8_t>::value));
       REGISTER_FUNCTION(Maxpool2x2Int8BCHW::filter);
     }
 };

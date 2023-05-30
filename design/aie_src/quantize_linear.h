@@ -73,7 +73,7 @@ class QuantizeLinearVector {
 		);
 
 		static void registerKernelClass() {
-      assert(INP_W%4 == 0 && OUT_W%16 == 0);
+      static_assert(INP_W%4 == 0 && OUT_W%16 == 0);
 			REGISTER_FUNCTION(QuantizeLinearVector::filter);
 		}
 };

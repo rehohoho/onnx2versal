@@ -31,7 +31,7 @@ class PadScalar {
     );
 
     static void registerKernelClass() {
-      assert(INP_W<=OUT_W);
+      static_assert(INP_W<=OUT_W);
       REGISTER_FUNCTION(PadScalar::filter);
     }
 };
@@ -53,8 +53,8 @@ class PadVectorInt16 {
     );
 
     static void registerKernelClass() {
-      assert(INP_W<=OUT_W && (std::is_same<TT, int16_t>::value));
-      assert((std::is_same<TT, int16>::value));
+      static_assert(INP_W<=OUT_W && (std::is_same<TT, int16_t>::value));
+      static_assert((std::is_same<TT, int16>::value));
       REGISTER_FUNCTION(PadVectorInt16::filter);
     }
 };

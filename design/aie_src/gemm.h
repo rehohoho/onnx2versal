@@ -157,7 +157,7 @@ class GemmReluMKKN {
     );
     
     static void registerKernelClass() {
-      assert(K%2==0 && N%4==0);
+      static_assert(K%2==0 && N%4==0);
       REGISTER_FUNCTION(GemmReluMKKN::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -190,7 +190,7 @@ class GemmMKKN {
     );
     
     static void registerKernelClass() {
-      assert(K%2==0 && N%4==0);
+      static_assert(K%2==0 && N%4==0);
       REGISTER_FUNCTION(GemmMKKN::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

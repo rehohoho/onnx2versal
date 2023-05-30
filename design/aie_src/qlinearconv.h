@@ -117,7 +117,7 @@ class QLinearConvVector {
 		);
 
 		static void registerKernelClass() {
-      assert(INP_W%16==0 && OUT_W%16==0);
+      static_assert(INP_W%16==0 && OUT_W%16==0);
 			REGISTER_FUNCTION(QLinearConvVector::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

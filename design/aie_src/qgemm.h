@@ -103,7 +103,7 @@ class QgemmVector {
     );
     
     static void registerKernelClass() {
-      assert(N % 16 == 0);
+      static_assert(N % 16 == 0);
       REGISTER_FUNCTION(QgemmVector::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
