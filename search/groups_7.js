@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['transpose_0',['Transpose',['../group__Transpose.html',1,'']]],
-  ['transposekernels_1',['TransposeKernels',['../group__TransposeKernels.html',1,'']]]
+  ['softmax_0',['Softmax',['../group__Softmax.html',1,'']]],
+  ['softmaxkernels_1',['SoftmaxKernels',['../group__SoftmaxKernels.html',1,'']]]
 ];

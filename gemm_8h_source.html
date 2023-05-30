@@ -166,41 +166,96 @@ $(document).ready(function(){initNavTree('gemm_8h_source.html',''); initResizabl
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    };</div>
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>};</div>
 <div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span> </div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N&gt;</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno"><a class="line" href="classGemmReluMKKN.html">  111</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluMKKN.html">GemmReluMKKN</a> {</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>  </div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;weights)[K*N]; <span class="comment">// KxN</span></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[N];      <span class="comment">// N</span></div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> K_REM8 = K%8;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> RUN_LASTCHUNK = K_REM8 &gt; 0;</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>  </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <a class="code hl_class" href="classGemmReluMKKN.html">GemmReluMKKN</a> (</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>      <span class="keywordtype">float</span> (&amp;w)[N*K],</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>      <span class="keywordtype">float</span> (&amp;b)[N]</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    ): weights(w), bias(b) {};</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <span class="keywordtype">void</span> filter(</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>      input_window&lt;float&gt;* in,  <span class="comment">// MxK</span></div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>      output_window&lt;float&gt;* out <span class="comment">// MxN</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    );</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    </div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>      assert(K%2==0 &amp;&amp; N%4==0);</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>      REGISTER_FUNCTION(GemmReluMKKN::filter);</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>      REGISTER_PARAMETER(weights);</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>      REGISTER_PARAMETER(bias);</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    };</div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>};</div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="preprocessor">#endif </span><span class="comment">// GEMM_H_</span></div>
-<div class="ttc" id="aclassGemmReluMKKN_html"><div class="ttname"><a href="classGemmReluMKKN.html">GemmReluMKKN</a></div><div class="ttdoc">Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%4=0 GemmReluMKKN&lt;1,...</div><div class="ttdef"><b>Definition</b> gemm.h:111</div></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N&gt;</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno"><a class="line" href="classGemmScalarMKKN.html">  108</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmScalarMKKN.html">GemmScalarMKKN</a> {</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>  </div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;weights)[K*N]; <span class="comment">// KxN</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[N];      <span class="comment">// N</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <a class="code hl_class" href="classGemmScalarMKKN.html">GemmScalarMKKN</a> (</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>      <span class="keywordtype">float</span> (&amp;w)[N*K],</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>      <span class="keywordtype">float</span> (&amp;b)[N]</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    ): weights(w), bias(b) {};</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="keywordtype">void</span> filter(</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>      input_window&lt;float&gt;* in,  <span class="comment">// MxK</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>      output_window&lt;float&gt;* out <span class="comment">// MxN</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    );</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>      REGISTER_FUNCTION(GemmScalarMKKN::filter);</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>      REGISTER_PARAMETER(weights);</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>      REGISTER_PARAMETER(bias);</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    };</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>};</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span> </div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N&gt;</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno"><a class="line" href="classGemmReluMKKN.html">  139</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluMKKN.html">GemmReluMKKN</a> {</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>  </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;weights)[K*N]; <span class="comment">// KxN</span></div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[N];      <span class="comment">// N</span></div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> K_REM8 = K%8;</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> RUN_LASTCHUNK = K_REM8 &gt; 0;</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>  </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    <a class="code hl_class" href="classGemmReluMKKN.html">GemmReluMKKN</a> (</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>      <span class="keywordtype">float</span> (&amp;w)[N*K],</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>      <span class="keywordtype">float</span> (&amp;b)[N]</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    ): weights(w), bias(b) {};</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span> </div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    <span class="keywordtype">void</span> filter(</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>      input_window&lt;float&gt;* in,  <span class="comment">// MxK</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>      output_window&lt;float&gt;* out <span class="comment">// MxN</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    );</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    </div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>    <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>      <span class="keyword">static_assert</span>(K%2==0 &amp;&amp; N%4==0);</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>      REGISTER_FUNCTION(GemmReluMKKN::filter);</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>      REGISTER_PARAMETER(weights);</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>      REGISTER_PARAMETER(bias);</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    };</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>};</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N&gt;</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno"><a class="line" href="classGemmMKKN.html">  172</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmMKKN.html">GemmMKKN</a> {</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>  </div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;weights)[K*N]; <span class="comment">// KxN</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[N];      <span class="comment">// N</span></div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span> </div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> K_REM8 = K%8;</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> RUN_LASTCHUNK = K_REM8 &gt; 0;</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>  </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    <a class="code hl_class" href="classGemmMKKN.html">GemmMKKN</a> (</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>      <span class="keywordtype">float</span> (&amp;w)[N*K],</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>      <span class="keywordtype">float</span> (&amp;b)[N]</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    ): weights(w), bias(b) {};</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="keywordtype">void</span> filter(</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>      input_window&lt;float&gt;* in,  <span class="comment">// MxK</span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>      output_window&lt;float&gt;* out <span class="comment">// MxN</span></div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    );</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    </div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>      <span class="keyword">static_assert</span>(K%2==0 &amp;&amp; N%4==0);</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>      REGISTER_FUNCTION(GemmMKKN::filter);</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>      REGISTER_PARAMETER(weights);</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>      REGISTER_PARAMETER(bias);</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    };</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>};</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span><span class="preprocessor">#endif </span><span class="comment">// GEMM_H_</span></div>
+<div class="ttc" id="aclassGemmMKKN_html"><div class="ttname"><a href="classGemmMKKN.html">GemmMKKN</a></div><div class="ttdoc">Vector implementation without ReLU for MK*KN, stores weights and biases, requires K%2=0,...</div><div class="ttdef"><b>Definition</b> gemm.h:172</div></div>
+<div class="ttc" id="aclassGemmReluMKKN_html"><div class="ttname"><a href="classGemmReluMKKN.html">GemmReluMKKN</a></div><div class="ttdoc">Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%4=0 GemmReluMKKN&lt;1,...</div><div class="ttdef"><b>Definition</b> gemm.h:139</div></div>
 <div class="ttc" id="aclassGemmReluScalarGmemParamMKNK_html"><div class="ttname"><a href="classGemmReluScalarGmemParamMKNK.html">GemmReluScalarGmemParamMKNK</a></div><div class="ttdoc">Scalar implementation for MK*NK, streams weights and biases, GemmReluScalarGmemParamMKNK&lt;1,...</div><div class="ttdef"><b>Definition</b> gemm.h:30</div></div>
 <div class="ttc" id="aclassGemmReluScalarMKKN_html"><div class="ttname"><a href="classGemmReluScalarMKKN.html">GemmReluScalarMKKN</a></div><div class="ttdoc">Scalar implementation for MK*KN, stores weights and biases, GemmReluScalarMKKN&lt;1, 86,...</div><div class="ttdef"><b>Definition</b> gemm.h:80</div></div>
 <div class="ttc" id="aclassGemmReluScalarMKNK_html"><div class="ttname"><a href="classGemmReluScalarMKNK.html">GemmReluScalarMKNK</a></div><div class="ttdoc">Scalar implementation for MK*NK, stores weights and biases, Running GemmReluScalarMKNK&lt;1,...</div><div class="ttdef"><b>Definition</b> gemm.h:50</div></div>
+<div class="ttc" id="aclassGemmScalarMKKN_html"><div class="ttname"><a href="classGemmScalarMKKN.html">GemmScalarMKKN</a></div><div class="ttdoc">Scalar implementation without ReLU for MK*KN, stores weights and biases,.</div><div class="ttdef"><b>Definition</b> gemm.h:108</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

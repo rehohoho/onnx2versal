@@ -11,5 +11,6 @@ var modules =
     [ "Qgemm", "group__Qgemm.html", "group__Qgemm" ],
     [ "QLinearConv", "group__QLinearConv.html", "group__QLinearConv" ],
     [ "QuantizeLinear", "group__QuantizeLinear.html", "group__QuantizeLinear" ],
+    [ "Softmax", "group__Softmax.html", "group__Softmax" ],
     [ "Transpose", "group__Transpose.html", "group__Transpose" ]
 ];

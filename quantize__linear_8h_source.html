@@ -149,7 +149,7 @@ $(document).ready(function(){initNavTree('quantize__linear_8h_source.html',''); 
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        );</div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>      assert(INP_W%4 == 0 &amp;&amp; OUT_W%16 == 0);</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>      <span class="keyword">static_assert</span>(INP_W%4 == 0 &amp;&amp; OUT_W%16 == 0);</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>            REGISTER_FUNCTION(QuantizeLinearVector::filter);</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        }</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>};</div>

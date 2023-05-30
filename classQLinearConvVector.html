@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQLinearConvVector.html',''); init
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation, QLinearConvVector&lt;28,24,1,1,6,5&gt; takes 4317 cycles. Requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0.  
+<p>Vector implementation, QLinearConvVector&lt;28,24,1,1,6,5&gt; takes 3237 cycles. Requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>
@@ -144,7 +144,7 @@ template&lt;int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int
         </tr>
       </table>
 </div><div class="memdoc">
-<p>QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt; fp scale: ~40k fixed point scale: ~14k precompute x_zero_weight into bias: 11341 int16*int8: 9177 int8*int8: 6724 precompute y_zero: 5174 two accs: ~4541 remove redundant add, scale vectors: 4225 remove precomputing y_zero: ~4700 separate buffers for scaleshift: 4398</p>
+<p>QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt; fp scale: ~40k fixed point scale: ~14k precompute x_zero_weight into bias: 11341 int16*int8: 9177 int8*int8: 6724 precompute y_zero: 5174 two accs: 4541 use aieapi for acc+scalar, reduce vector spil: 4225 remove precomputing y_zero: ~4700 move y_zero and precompute bias into acc: 3237</p>
 <p><a href="https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits">https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits</a> 24 selects 4*4=16, (4+2+1)*4=28 =&gt; rows (16,18),(17,19),(28,30),(29,30) before square square executes on 4x2 matrix</p>
 <p>int8 * int8: Requires: x indexing %4, z indexing %2 expand 5 weights into 16 long vector [0,0,0,0, a,a, b,b, c,c, d,d, e,e, 0,0]</p>
 <p>acc0 += x4*z0 + x6*z1 x8*z2 + x10*z3 x12*z4 acc1 += x5*z1 + x7*z2 x9*z3 + x11*z4 x13*z5 acc2 += x0 x2 x4*z2 + x6*z3 x8*z4 + x10*z5 x12*z6 acc3 += x1 x3 x5*z3 + x7*z4 x9*z5 + x11*z6 x13*z7</p>

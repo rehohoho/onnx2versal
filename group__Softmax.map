@@ -1,0 +1,4 @@
+<map id="Softmax" name="Softmax">
+<area shape="rect" id="Node000001" title="Softmax over CHUNK_CNT chunks of CHUNK_SIZE vector. See https://github.com/onnx/onnx/blob/main/docs/O..." alt="" coords="5,5,75,31"/>
+<area shape="rect" id="Node000002" href="$group__SoftmaxKernels.html" title=" " alt="" coords="123,5,236,31"/>
+</map>

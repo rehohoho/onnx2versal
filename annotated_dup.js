@@ -15,6 +15,7 @@ var annotated_dup =
     [ "ConvReluScalarGmemParamBHWC", "classConvReluScalarGmemParamBHWC.html", null ],
     [ "DequantizeLinearGraph", "classDequantizeLinearGraph.html", null ],
     [ "DequantizeLinearScalar", "classDequantizeLinearScalar.html", null ],
+    [ "GemmMKKN", "classGemmMKKN.html", null ],
     [ "GemmReluGmemParamGraph", "classGemmReluGmemParamGraph.html", null ],
     [ "GemmReluGraph", "classGemmReluGraph.html", null ],
     [ "GemmReluMKKN", "classGemmReluMKKN.html", null ],
@@ -23,6 +24,7 @@ var annotated_dup =
     [ "GemmReluScalarGmemParamMKNK", "classGemmReluScalarGmemParamMKNK.html", null ],
     [ "GemmReluScalarMKKN", "classGemmReluScalarMKKN.html", null ],
     [ "GemmReluScalarMKNK", "classGemmReluScalarMKNK.html", null ],
+    [ "GemmScalarMKKN", "classGemmScalarMKKN.html", null ],
     [ "IdentityGraph", "classIdentityGraph.html", null ],
     [ "IdentityScalar", "classIdentityScalar.html", null ],
     [ "Maxpool2x2FloatBCHW", "classMaxpool2x2FloatBCHW.html", null ],
@@ -42,6 +44,8 @@ var annotated_dup =
     [ "QuantizeLinearGraph", "classQuantizeLinearGraph.html", null ],
     [ "QuantizeLinearScalar", "classQuantizeLinearScalar.html", null ],
     [ "QuantizeLinearVector", "classQuantizeLinearVector.html", null ],
+    [ "SoftmaxGraph", "classSoftmaxGraph.html", null ],
+    [ "SoftmaxScalar", "classSoftmaxScalar.html", null ],
     [ "TransposeGraph", "classTransposeGraph.html", null ],
     [ "TransposeScalarBHWC2BCHW", "classTransposeScalarBHWC2BCHW.html", null ]
 ];
