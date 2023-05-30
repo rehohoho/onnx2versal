@@ -11,11 +11,27 @@ import torch.onnx
 import onnxruntime
 
 from model import Lenet, QuantizedLenet
+from op_parsers import save_tensor
+
+
+def get_n_data(dataset: torch.utils.data.Dataset,
+               data_count: int):
+  data = None
+  print(f"Generating MNIST txt for {data_count} data points")
+  for x, y in dataset:
+    if data is None:
+      data = x.unsqueeze(0)
+    else:
+      data = torch.concat((data, x.unsqueeze(0)))
+    if data.shape[0] >= data_count:
+      break
+  return data
 
 
 if __name__ == "__main__":
   BATCH_SIZE = 256
   ALL_EPOCH = 1
+  OUTPUT_DATACOUNT = 100
   DATA_PATH = "../data"
   PKL_PATH = "../models/lenet_mnist.pkl"
   ONNX_PATH = "../models/lenet_mnist.onnx"
@@ -92,3 +108,9 @@ if __name__ == "__main__":
 
   np.testing.assert_allclose(torch_out.detach().numpy(), ort_outs[-1], rtol=1e-03, atol=1e-05)
   print("Exported model has been tested with ONNXRuntime, and the result looks good!")
+
+  # Save data for verification
+  # Single sample for intermediate outputs, multiple for end to end
+  e2e_data = get_n_data(test_dataset, OUTPUT_DATACOUNT).numpy()
+  save_tensor(f"{DATA_PATH}/{ort_session.get_inputs()[0].name}_host.txt", e2e_data)
+  save_tensor(f"{DATA_PATH}/{ort_session.get_inputs()[0].name}.txt", e2e_data[0])

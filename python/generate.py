@@ -1,15 +1,12 @@
 import argparse
-import sys
 
-import numpy as np
-import torch
-from torchvision.datasets import mnist
-from torchvision.transforms import ToTensor
 import onnx
 from onnx import helper
 import onnxruntime
 
 from generate_cpp import CppGenerator
+from op_parsers import save_tensor
+from check import load_txt
 
 
 def generate_inter_graph(onnx_path: str,
@@ -25,41 +22,35 @@ def generate_inter_graph(onnx_path: str,
   return output_names
 
 
-def get_n_data(dataset: torch.utils.data.Dataset,
-               data_count: int):
-  data = None
-  print(f"Generating MNIST txt for {data_count} data points")
-  for x, y in dataset:
-    if data is None:
-      data = x.unsqueeze(0)
-    else:
-      data = torch.concat((data, x.unsqueeze(0)))
-    if data.shape[0] >= data_count:
-      break
-  return data
-
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Generate Versal project files from ONNX model.')
-  parser.add_argument("onnx", nargs=1, type=str, help="required path to onnx file")
-  parser.add_argument("-data", type=str, default="../data", help="path to data directory")
+  parser.add_argument("onnx",             nargs=1, help="required path to onnx file")
+  parser.add_argument("single_input_npy", nargs=1, help="path to single input tensor .npy")
+  parser.add_argument("many_input_npy",   nargs=1, help="path to multiple input tensor .npy")
+  parser.add_argument("-data", default="../data", help="path to data directory")
   parser.add_argument("-ndata", type=int, default=100, help="number of end to end data points")
   parser.add_argument("-is_output_all", action="store_true", help="whether to output for all layers")
   args = parser.parse_args()
   args.onnx = args.onnx[0]
-
-  # Data
-  dataset = mnist.MNIST(root=args.data, train=False, transform=ToTensor(), download=True)
-  input_tensor = dataset[0][0].unsqueeze(0)
+  args.single_input_npy = args.single_input_npy[0]
+  args.many_input_npy = args.many_input_npy[0]
   
   # Update ONNX to output intermediate tensors
   onnx_inter_path = args.onnx.replace(".onnx", "_inter.onnx")
   output_names = generate_inter_graph(onnx_path=args.onnx, 
                                       onnx_inter_path=onnx_inter_path)
-
-  # ONNX Runtime
   ort_session = onnxruntime.InferenceSession(onnx_inter_path)
-  ort_inputs = {ort_session.get_inputs()[0].name: input_tensor.numpy()}
+
+  # Load data, shape according to model def, run with ONNX Runtime
+  input_shape = ort_session.get_inputs()[0].shape
+  input_shape = [i if isinstance(i, int) else -1 for i in input_shape]
+  input_dtype = ort_session.get_inputs()[0].type.replace("tensor(", "").strip(")")
+  if input_dtype == "float":
+    input_dtype = "float32"
+  single_input = load_txt(args.single_input_npy).reshape(input_shape).astype(input_dtype)
+  many_inputs = load_txt(args.many_input_npy).reshape(input_shape).astype(input_dtype)
+  
+  ort_inputs = {ort_session.get_inputs()[0].name: single_input}
   ort_outs = ort_session.run(None, ort_inputs)
 
   # Generate graph info
@@ -68,7 +59,7 @@ if __name__ == '__main__':
   cppGenerator = CppGenerator(data_path=args.data, 
                               onnx_path=args.onnx, 
                               data_count=args.ndata,
-                              input_tensors=[input_tensor.numpy()], 
+                              input_tensors=[single_input], 
                               output_tensors=output_tensors, 
                               is_output_all=args.is_output_all)
   cppGenerator.parse()
@@ -78,12 +69,11 @@ if __name__ == '__main__':
   cppGenerator.generate_host_cpp()
 
   # Generate end-to-end data
-  data = get_n_data(dataset, args.ndata)
   ort_session = onnxruntime.InferenceSession(args.onnx)
-  ort_inputs = {ort_session.get_inputs()[0].name: data.numpy()}
+  ort_inputs = {ort_session.get_inputs()[0].name: many_inputs}
   ort_outs = ort_session.run(None, ort_inputs)
   
   model_input_path = f"{args.data}/{list(cppGenerator.modelin_2_tensor.keys())[0]}_host.txt"
   model_output_path = f"{args.data}/{list(cppGenerator.modelout_2_op.values())[0].name}_goldenout_host.txt"
-  np.savetxt(model_input_path, data.numpy().reshape(-1, 2), fmt="%.7g")
-  np.savetxt(model_output_path, ort_outs[-1].reshape(-1, 2), fmt="%.7g")
+  save_tensor(model_input_path, many_inputs)
+  save_tensor(model_output_path, ort_outs[-1])
