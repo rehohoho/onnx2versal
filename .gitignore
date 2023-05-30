@@ -33,6 +33,9 @@ data/lenet_mnist*.txt
 # docs
 docs/
 
+# models
+models/
+
 # generated lenet_mnist
 design/aie_src/graph_lenet_mnist*.cpp
 design/host_app_src/lenet_mnist*_aie_app.cpp

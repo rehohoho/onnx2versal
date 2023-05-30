@@ -2,3 +2,7 @@ onnx
 onnxruntime
 torch
 torchvision
+tensorflow
+scikit-learn
+matplotlib
+tf2onnx
