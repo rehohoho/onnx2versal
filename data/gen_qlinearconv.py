@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import torch
 
@@ -38,6 +40,14 @@ Y = torch.nn.functional.conv2d(
   torch.Tensor(tbias[:])).numpy() * X_scale*W_scale/Y_scale
 Y = round_away(Y) + Y_zero_point
 Y = np.clip(Y, -128, 127).astype(np.int8)
+
+# Fixed point arithmetic implementation
+scale = X_scale*W_scale/Y_scale
+scalebits = abs(int(math.log(scale, 2))) + 16
+Y_fix = Y.astype(int) * int(scale * 2**scalebits)
+Y_fix = ((Y_fix + 2**(scalebits - 1)) >> scalebits) + Y_zero_point
+Y_fix = np.clip(Y, -128, 127).astype(np.int8)
+assert np.all(Y == Y_fix)
 
 save_tensor("qlinearconv_int8in.txt", tin)
 save_tensor(f"qlinearconv_int8out_shape{B}x{M}x{OUT_H}x{OUT_W}.txt", Y)

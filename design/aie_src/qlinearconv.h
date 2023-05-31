@@ -122,6 +122,54 @@ class QLinearConvVector {
       REGISTER_PARAMETER(bias);
 		}
 };
+
+
+/**
+ * @brief Vector implementation, QLinearConvVectorScale32bit<28,24,1,1,6,5> takes 7063 cycles.
+ * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
+ * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0
+ */
+template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
+class QLinearConvVectorScale32bit {
+  
+  private:
+    alignas(32) int8_t (&weights)[M*C*K*16];
+    alignas(32) int32_t (&bias)[M];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    int8_t x_zero_point;
+    int8_t w_zero_point;
+    int8_t y_zero_point;
+
+    // precomputation
+    int scalebits;
+    int32_t scale;
+	
+  public:
+    QLinearConvVectorScale32bit (
+      int8_t (&w)[M*C*K*16],
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero_point,
+      int8_t w_zero_point,
+      int8_t y_zero_point
+    );
+
+		void filter(
+			input_window<int8_t>* in,
+			output_window<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert(INP_W%16==0 && OUT_W%16==0);
+			REGISTER_FUNCTION(QLinearConvVectorScale32bit::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
 /** @}*/
 
 

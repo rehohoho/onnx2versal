@@ -45,6 +45,9 @@ QLinearConvGraphTest<QLinearConvVector, 28, 32, 24, 32, 1, 1, 6, 5> qLinearConvV
   "qLinearConvVector", fpweights, fpbias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x24x24_QLinearConvVector.txt");
 
+QLinearConvGraphTest<QLinearConvVectorScale32bit, 28, 32, 24, 32, 1, 1, 6, 5> qLinearConvVectorScale32bit(
+  "qLinearConvVectorScale32bit", fpweights, fpbias, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x24x24_QLinearConvVectorScale32bit.txt");
 
 #ifdef __X86SIM__
 int main(int argc, char ** argv) {
@@ -55,6 +58,10 @@ int main(int argc, char ** argv) {
   adfCheck(qLinearConvVector.init(), "init qLinearConvVector");
   adfCheck(qLinearConvVector.run(ITER_CNT), "run qLinearConvVector");
 	adfCheck(qLinearConvVector.end(), "end qLinearConvVector");
+
+  adfCheck(qLinearConvVectorScale32bit.init(), "init qLinearConvVectorScale32bit");
+  adfCheck(qLinearConvVectorScale32bit.run(ITER_CNT), "run qLinearConvVectorScale32bit");
+	adfCheck(qLinearConvVectorScale32bit.end(), "end qLinearConvVectorScale32bit");
   return 0;
 }
 #endif
@@ -63,12 +70,16 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
   adfCheck(qLinearConvScalar.init(), "init qLinearConvScalar");
-  get_graph_throughput_by_port(qLinearConvScalar, "plout[0]", qLinearConvScalar.plout[0], 1*6*32*32, sizeof(int8_t), ITER_CNT);
+  get_graph_throughput_by_port(qLinearConvScalar, "plout[0]", qLinearConvScalar.plout[0], 1*6*24*32, sizeof(int8_t), ITER_CNT);
 	adfCheck(qLinearConvScalar.end(), "end qLinearConvScalar");
 
   adfCheck(qLinearConvVector.init(), "init qLinearConvVector");
-  get_graph_throughput_by_port(qLinearConvVector, "plout[0]", qLinearConvVector.plout[0], 1*6*32*32, sizeof(int8_t), ITER_CNT);
+  get_graph_throughput_by_port(qLinearConvVector, "plout[0]", qLinearConvVector.plout[0], 1*6*24*32, sizeof(int8_t), ITER_CNT);
 	adfCheck(qLinearConvVector.end(), "end qLinearConvVector");
+
+  adfCheck(qLinearConvVectorScale32bit.init(), "init qLinearConvVectorScale32bit");
+  get_graph_throughput_by_port(qLinearConvVectorScale32bit, "plout[0]", qLinearConvVectorScale32bit.plout[0], 1*6*24*32, sizeof(int8_t), ITER_CNT);
+	adfCheck(qLinearConvVectorScale32bit.end(), "end qLinearConvVectorScale32bit");
   return 0;
 }
 #endif

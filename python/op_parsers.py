@@ -9,7 +9,7 @@ VECTOR_WORD_BOUNDARY = 16 # in bytes
 
 
 def round_away(x):
-  x = np.round(x, 3) # rounds 4.499996 and 4.496 to 4.5 first
+  x = np.round(x, 4) # rounds 4.499996 and 4.496 to 4.5 first
   a = np.abs(x)
   b = np.floor(a) + np.floor(2*(a%1))
   return np.sign(x)*b

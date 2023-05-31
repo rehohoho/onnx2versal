@@ -228,3 +228,140 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
 
   PROFILE_FOOTER;
 }
+
+
+template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
+QLinearConvVectorScale32bit<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVectorScale32bit(
+  int8_t (&w)[M*C*K*16],
+  int32_t (&b)[M],
+  float x_scale,
+  float w_scale,
+  float y_scale,
+  int8_t x_zero_point,
+  int8_t w_zero_point,
+  int8_t y_zero_point
+):
+  weights(w), bias(b), 
+  x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
+  x_zero_point(x_zero_point), w_zero_point(w_zero_point), y_zero_point(y_zero_point)
+{ 
+  v16int8 *w_ptr = (v16int8 *) weights;
+  
+  for (int m = 0; m < M; m++) {
+    int res = 0;
+    for (int c = 0; c < C; c++) {
+      for (int p = 0; p < K; p++) {
+        v16int16 wvec = unpack(*w_ptr); w_ptr++;
+        for (int q = 4; q < 4 + K*2; q+=2) {
+          res += x_zero_point * ext_elem(wvec, q);
+        }
+      }
+    }
+    bias[m] -= res;
+  }
+  
+  scalebits = 31; // shift for float2fix in [-32:31]
+  scale = float2fix(x_scale*w_scale/y_scale, scalebits);
+}
+
+
+template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
+void QLinearConvVectorScale32bit<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
+	input_window<int8_t>* in,
+  output_window<int8_t>* out
+) {
+  PROFILE_HEADER(printf(
+    "Running QLinearConvVectorScale32bit<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C, M, K));
+  
+  v64int8 wvec = null_v64int8();
+  v32int8 data = null_v32int8();
+
+  v16acc48 acc1 = undef_v16acc48();
+  v16acc48 acc2 = undef_v16acc48();
+  aie::accum<acc80,8> acc_shift1;
+  aie::accum<acc48,16> acc_bias;
+  acc_shift1.from_vector(aie::broadcast<int16_t, 8>(y_zero_point), scalebits);
+
+  int8_t *in_ptr = (int8_t *) in->ptr;
+  v16int8 *w_ptr = (v16int8 *) weights;
+  v16int8 *out_ptr = (v16int8 *) out->ptr;
+
+#define MAC_ROW(acc) \
+  acc = mac16(acc, wvec, 0, 0x00000000, 4, 0x1032, data, 0, 0x76543210, 2, 0x2110);
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  // BHWM
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) { 
+      
+      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
+      
+      for (int h = 0; h < OUT_H; h+=2) {
+        for (int w = 0; w < OUT_W; w+=16) {
+
+          acc1 = acc_bias;
+          acc2 = acc_bias;
+        
+          for (int c = 0; c < C; c++) { // computes 2x16 partial products over 5x5 kernel
+            wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
+            
+            wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
+
+            wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
+
+            wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+            MAC_ROW(acc2);
+
+            wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
+            MAC_ROW(acc1);
+            data = *(v32int8 *) in_ptr; in_ptr += INP_H*INP_W - 5*INP_W; // channel +1, up 5
+            MAC_ROW(acc2);
+          }
+          
+          v8int32 accbuf1_1 = lsrs(ext_lo(acc1), 0);
+          auto aieacc1_1 = aie::mac(acc_shift1, (aie::vector<int32_t,8>) accbuf1_1, scale);
+          v8int32 accbuf1_2 = lsrs(ext_hi(acc1), 0);
+          auto aieacc1_2 = aie::mac(acc_shift1, (aie::vector<int32_t,8>) accbuf1_2, scale);
+          auto aieacc1 = aie::concat(aieacc1_1, aieacc1_2);
+          
+          v8int32 accbuf2_1 = lsrs(ext_lo(acc2), 0);
+          auto aieacc2_1 = aie::mac(acc_shift1, (aie::vector<int32_t,8>) accbuf2_1, scale);
+          v8int32 accbuf2_2 = lsrs(ext_hi(acc2), 0);
+          auto aieacc2_2 = aie::mac(acc_shift1, (aie::vector<int32_t,8>) accbuf2_2, scale);
+          auto aieacc2 = aie::concat(aieacc2_1, aieacc2_2);
+          
+          *out_ptr = aieacc1.to_vector<int8_t>(scalebits);
+          out_ptr += OUT_W/16;
+          *out_ptr = aieacc2.to_vector<int8_t>(scalebits);
+          out_ptr += 1-OUT_W/16;
+
+          in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
+          w_ptr -= C*5;
+        } // W
+        
+        in_ptr += 2*INP_W - OUT_W; // go left OUT_W, down 2
+        out_ptr += OUT_W/16;
+      } // H
+      in_ptr -= OUT_H*INP_W; // go up OUT_H
+      w_ptr += C*5;
+    } // M
+  } // B
+
+#undef MAC_ROW
+
+  PROFILE_FOOTER;
+}
