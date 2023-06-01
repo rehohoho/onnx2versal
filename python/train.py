@@ -7,34 +7,16 @@ from torch.optim import SGD
 from torch.utils.data import DataLoader
 from torchvision.datasets import mnist
 from torchvision.transforms import ToTensor
-import torch.onnx
-import onnxruntime
 
 from model import Lenet, QuantizedLenet
-from op_parsers import save_tensor
-
-
-def get_n_data(dataset: torch.utils.data.Dataset,
-               data_count: int):
-  data = None
-  print(f"Generating MNIST txt for {data_count} data points")
-  for x, y in dataset:
-    if data is None:
-      data = x.unsqueeze(0)
-    else:
-      data = torch.concat((data, x.unsqueeze(0)))
-    if data.shape[0] >= data_count:
-      break
-  return data
 
 
 if __name__ == "__main__":
   BATCH_SIZE = 256
   ALL_EPOCH = 1
-  OUTPUT_DATACOUNT = 100
+  OUTPUT_DATACOUNT = 10000
   DATA_PATH = "../data"
   PKL_PATH = "../models/lenet_mnist.pkl"
-  ONNX_PATH = "../models/lenet_mnist.onnx"
 
   # Setup data, model, optimizer, loss_fn
   device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -84,33 +66,10 @@ if __name__ == "__main__":
   
   print("Model finished training")
 
-  # ONNX export
-  torch.onnx.export(
-    model,                            # model being run
-    test_x,                           # model input (or a tuple for multiple inputs)
-    ONNX_PATH,                        # where to save the model
-    export_params=True,               # store the trained parameter weights in model file
-    do_constant_folding=True,         # whether to execute constant folding for optimization
-    input_names = ["input"],          # model's input names
-    output_names = ["output"],        # model's output names
-    dynamic_axes={"input" : {0 : "batch_size"},    # variable length axes
-                  "output" : {0 : "batch_size"}})
-  print("Converted to onnx")
-
-  # Compare ONNX Runtime and PyTorch results
-  data, label = next(iter(test_loader))
-  input_tensor = data[0].unsqueeze(0)
-  torch_out = model.forward(input_tensor)
-
-  ort_session = onnxruntime.InferenceSession(ONNX_PATH)
-  ort_inputs = {ort_session.get_inputs()[0].name: input_tensor.numpy()}
-  ort_outs = ort_session.run(None, ort_inputs)
-
-  np.testing.assert_allclose(torch_out.detach().numpy(), ort_outs[-1], rtol=1e-03, atol=1e-05)
-  print("Exported model has been tested with ONNXRuntime, and the result looks good!")
-
   # Save data for verification
   # Single sample for intermediate outputs, multiple for end to end
-  e2e_data = get_n_data(test_dataset, OUTPUT_DATACOUNT).numpy()
-  save_tensor(f"{DATA_PATH}/{ort_session.get_inputs()[0].name}_host.txt", e2e_data)
-  save_tensor(f"{DATA_PATH}/{ort_session.get_inputs()[0].name}.txt", e2e_data[0])
+  e2e_data = test_dataset.data[:OUTPUT_DATACOUNT].unsqueeze(axis=1).numpy()
+  e2e_labels = test_dataset.targets[:OUTPUT_DATACOUNT].numpy()
+  np.save(f"{DATA_PATH}/MNIST/X_test.npy", e2e_data)
+  np.save(f"{DATA_PATH}/MNIST/Y_test.npy", e2e_labels)
+  print(f"Saved data and labels to {DATA_PATH}/MNIST/X_test.npy and {DATA_PATH}/MNIST/Y_test.npy")
