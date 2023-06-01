@@ -1,4 +1,3 @@
-import os
 import argparse
 import time
 
@@ -6,79 +5,61 @@ import numpy as np
 import onnxruntime
 from onnxruntime.quantization import QuantFormat, QuantType, quantize_static
 from onnxruntime.quantization import CalibrationDataReader
-from torch.utils.data import DataLoader
-from torchvision.datasets import mnist
-from torchvision.transforms import ToTensor
-from PIL import Image
-
-from generate import get_n_data
 
 
-class MnistDataReader(CalibrationDataReader):
+class NumpyDataReader(CalibrationDataReader):
   def __init__(self, 
-               data_path: str, 
-               data_count: int, 
-               onnx_path: str):
+               onnx_path: str,
+               input_arrs: np.ndarray):
     self.enum_data = None
+    self.data_list = [input_arrs[[i]] for i in range(input_arrs.shape[0])]
 
-    self.torch_dataset = mnist.MNIST(root=args.data, train=False, 
-                                     transform=ToTensor(), download=True)
-    self.data_list = [self.torch_dataset[i][0].unsqueeze(0).numpy() 
-                      for i in range(data_count)]
-    self.datasize = len(self.data_list)
-
-    # Use inference session to get input shape.
     session = onnxruntime.InferenceSession(onnx_path, None)
     self.input_name = session.get_inputs()[0].name
-
+  
   def get_next(self):
     if self.enum_data is None:
       self.enum_data = iter(
-        [{self.input_name: data} for data in self.data_list]
-      )
+        [{self.input_name: data} for data in self.data_list])
     return next(self.enum_data, None)
 
   def rewind(self):
     self.enum_data = None
-    
 
-def benchmark(onnx_path: str, input_data: np.ndarray):
+
+def run_model(onnx_path: str, 
+              input_arrs: np.ndarray):
   session = onnxruntime.InferenceSession(onnx_path)
   input_name = session.get_inputs()[0].name
-  input_shape = [i if isinstance(i, int) else 1
-                 for i in session.get_inputs()[0].shape]
   
-  total = 0.0
-  runs = 10
+  # Warm up
+  _ = session.run([], {session.get_inputs()[0].name: input_arrs[[0]]})
+  
+  start = time.perf_counter()
+  out = session.run([], {input_name: input_arrs})
+  end = (time.perf_counter() - start) * 1000
+  print(f"{onnx_path} took: {end:.2f}ms")
 
-  # Warming up
-  _ = session.run([], {session.get_inputs()[0].name: input_data})
-  for i in range(runs):
-    start = time.perf_counter()
-    out = session.run([], {input_name: input_data})
-    end = (time.perf_counter() - start) * 1000
-    total += end
-  total /= runs
-  print(f"Avg: {total:.2f}ms over {runs} runs")
   return out
 
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Quantize ONNX model.')
-  parser.add_argument("onnx", nargs=1, type=str, help="required path to onnx file")
-  parser.add_argument("qonnx", nargs=1, type=str, help="required path to output quantized onnx file")
+  parser.add_argument("onnx",      nargs=1, help="required path to onnx file")
+  parser.add_argument("qonnx",     nargs=1, help="required path to output quantized onnx file")
+  parser.add_argument("input_npy", nargs=1, help="path to input data .npy, assume first dim is batch")
   parser.add_argument("-data", type=str, default="../data", help="path to data directory")
-  parser.add_argument("-ndata", type=int, default=100, help="number of end to end data points")
+  parser.add_argument("-is_class", action="store_true", help="whether to argmax during run_model")
   args = parser.parse_args()
   args.onnx = args.onnx[0]
   args.qonnx = args.qonnx[0]
+  args.input_npy = args.input_npy[0]
   
   Q_FORMAT = QuantFormat.QOperator # QDQ alternative: dequantize -> op -> quantize
   Q_PER_CHANNEL = False
 
-  data_reader = MnistDataReader(data_path=args.data, 
-                                data_count=args.ndata,
-                                onnx_path=args.onnx)
+  input_arrs = np.load(args.input_npy)
+  data_reader = NumpyDataReader(onnx_path=args.onnx, input_arrs=input_arrs)
 
   # Calibrate and quantize model
   # Turn off model optimization during quantization
@@ -93,10 +74,27 @@ if __name__ == "__main__":
   )
   print("Calibrated and quantized model saved.")
 
-  print("benchmarking fp32 model...")
-  outs = benchmark(args.onnx, data_reader.data_list[0])
+  # Assume single output
+  out = run_model(onnx_path=args.onnx, input_arrs=input_arrs)[-1]
+  qout = run_model(onnx_path=args.qonnx, input_arrs=input_arrs)[-1]
 
-  print("benchmarking int8 model...")
-  qouts = benchmark(args.qonnx, data_reader.data_list[0])
+  # Output statistics
+  close_count = np.isclose(out, qout, rtol=1e-03, atol=1e-05).sum()
+  close_perc = 100*close_count/qout.size
+  print(f"Matched elements: {close_count} / {qout.size} ({close_perc}%)")
+  
+  error = np.abs(out - qout)
+  ref = np.abs(qout)
+  nonzero = np.nonzero(ref)
+  
+  relerr = np.max(error[nonzero] / ref[nonzero])
+  abserr = np.max(error[nonzero])
+  print(f"Max absolute difference: {abserr}\nMax relative difference: {relerr}")
 
-  np.testing.assert_allclose(outs[-1], qouts[-1], rtol=1e-03, atol=1e-05)
+  # Output classification statistics
+  print("\nRunning argmax on last dim...")
+  out_cls = out.argmax(-1)
+  qout_cls = qout.argmax(-1)
+  match_count = (out_cls == qout_cls).sum()
+  match_perc = 100*match_count/qout_cls.size
+  print(f"Matched elements: {match_count} / {qout_cls.size} ({match_perc}%)")
