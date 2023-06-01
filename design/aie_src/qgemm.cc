@@ -65,10 +65,8 @@ QgemmVector<M, K, N>::QgemmVector (
   
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  scalebits = std::min(scalebits, 24); // since int32_t shift, int8_t y_zero_point
-
+  assert(scalebits <= 48 - log(K)/log(2) - 16); // K*int8*int8*scale <= acc48
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
-  shift = float2fix((float) y_zero, scalebits); // scalebits <= 24
 };
 
 /**
@@ -117,8 +115,9 @@ void QgemmVector<M, K, N>::filter(
 
   v128int8 wmat = null_v128int8();
   v32int8 inmat = null_v32int8();
-  v16int32 accbuf1 = undef_v16int32();
   aie::accum<acc48,16> aieacc1;
+  aie::accum<acc48,16> acc_shift1;
+  acc_shift1.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
 
   v16acc48 acc1 = undef_v16acc48();
 
@@ -161,14 +160,12 @@ void QgemmVector<M, K, N>::filter(
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
       } // K
 
-      acc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
-      accbuf1 = lsrs(acc1, 0);
-      aieacc1 = aie::mul<acc48>((aie::vector<int32_t,16>) accbuf1, scale);
-      aieacc1 = aie::add(aieacc1, shift);
+      aieacc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
+      aieacc1 = aie::mac(acc_shift1, aieacc1.to_vector<int32_t>(0), scale);
       *out_ptr = aieacc1.to_vector<int8_t>(scalebits);
       out_ptr++;
 
-      in_ptr -= K;           // reset
+      in_ptr -= K;        // reset
       w_ptr += -K*N + 16; // next
     } // N
 

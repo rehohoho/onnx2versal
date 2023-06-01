@@ -8,13 +8,24 @@
 /** 
  * @defgroup QgemmKernels
  * @ingroup Qgemm
+ * - y = saturate ((x / y_scale) + y_zero_point)
+ * - Bias must be quantized using scale = x_scale * w_scale and zero_point = 0
+ * 
+ * Computation
+ * - x    = (qx - qx_zero) * qx_scale
+ * - bias = qbias * x_scale * w_scale
+ * - y    = x*w + bias
+ * 
+ * (qy-qy_zero)*qy_scale 
+ * - = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale + qbias*qx_scale*qw_scale
+ * - = [(qx-qx_zero) * (qw-qw_zero) + qbias] * qx_scale*qw_scale
  * 
  * @{
  */
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * QgemmVector<1,84,16> takes 16966 cycles
+ * QgemmScalar<1,84,16> takes 16966 cycles
  */
 template <int M, int K, int N>
 class QgemmScalar {
@@ -60,7 +71,7 @@ class QgemmScalar {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0
- * QgemmVector<1,84,16> takes 125 cycles
+ * QgemmVector<1,84,16> takes 135 cycles
  */
 template <int M, int K, int N>
 class QgemmVector {
