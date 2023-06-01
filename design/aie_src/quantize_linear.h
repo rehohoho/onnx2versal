@@ -10,7 +10,7 @@
  * @ingroup QuantizeLinear
  * 
  * https://github.com/onnx/onnx/blob/main/docs/Operators.md#QuantizeLinear
- * y = saturate ((x / y_scale) + y_zero_point)
+ * y = saturate ((x / y_scale) + y_zero)
  * 
  * @{
  */
@@ -24,13 +24,13 @@ class QuantizeLinearScalar {
   
   private:
     float y_scale;
-    int y_zero_point; // same type as output
+    int y_zero; // same type as output
 	
   public:
     QuantizeLinearScalar (
       float y_scale,
-      int y_zero_point
-    ): y_scale(y_scale), y_zero_point(y_zero_point) {};
+      int y_zero
+    ): y_scale(y_scale), y_zero(y_zero) {};
 
 		void filter(
 			input_window<float>* in,
@@ -44,7 +44,7 @@ class QuantizeLinearScalar {
 
 
 /**
- * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 2457 cycles,
+ * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 1945 cycles,
  * requires INP_W%4==0, OUT_W%16==0
  */
 template <int INP_H, int INP_W, int OUT_W>
@@ -52,19 +52,17 @@ class QuantizeLinearVector {
   
   private:
     float y_scale;
-    int y_zero_point; // same type as output
+    int8_t y_zero; // same type as output
 
     // precompute
-    int bitshift = 16;
-
-    unsigned int select_mask;
+    int xbitshift = 16; // ybitshift in [0:16], acc48 result
+    int ybitshift;
     int16_t y_scale_inv_int;
-    int32_t shift;
 	
   public:
     QuantizeLinearVector (
       float y_scale,
-      int y_zero_point
+      int8_t y_zero
     );
 
 		void filter(

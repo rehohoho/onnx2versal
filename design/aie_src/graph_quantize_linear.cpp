@@ -17,8 +17,8 @@ class QuantizerLinearTest : public adf::graph {
       const std::string& INP_TXT, 
       const std::string& OUT_TXT,
       float y_scale,
-      int y_zero_point
-    ): g(y_scale, y_zero_point) { 
+      int8_t y_zero
+    ): g(y_scale, y_zero) { 
       plin[0] = adf::input_plio::create("plin0_quantize_linear"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_quantize_linear"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<INP_H*INP_W*4>> (plin[0].out[0], g.pin[0]);

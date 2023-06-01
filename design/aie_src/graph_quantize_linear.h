@@ -10,7 +10,7 @@
  * 
  * @brief Linear quantization operator. It consumes a high precision tensor, a scale, and 
  * a zero point to compute the low precision / quantized tensor. The quantization formula 
- * is y = saturate ((x / y_scale) + y_zero_point). For saturation, it saturates to [0, 255] 
+ * is y = saturate ((x / y_scale) + y_zero). For saturation, it saturates to [0, 255] 
  * if it's uint8, or [-128, 127] if it's int8. For (x / y_scale), it's rounding to the 
  * nearest even. 
  * 
@@ -43,9 +43,9 @@ class QuantizeLinearGraph : public adf::graph {
 
     QuantizeLinearGraph(
       float y_scale,
-      int y_zero_point
+      int8_t y_zero
     ) { 
-      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<INP_H, INP_W, OUT_W>>(y_scale, y_zero_point);
+      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<INP_H, INP_W, OUT_W>>(y_scale, y_zero);
       adf::source(k[0]) = "quantize_linear.cc";
       adf::headers(k[0]) = {"quantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
