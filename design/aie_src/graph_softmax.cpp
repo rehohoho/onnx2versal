@@ -2,11 +2,12 @@
 #include "graph_utils.h"
 
 
-template <template<int, int> class SOFTMAX, int CHUNK_CNT, int CHUNK_SIZE>
+template <template<int, int, int> class SOFTMAX,
+  int INP_H, int INP_W, int INP_W_PAD>
 class SoftmaxGraphTest : public adf::graph {
 
   private:
-    SoftmaxGraph<SOFTMAX, CHUNK_CNT, CHUNK_SIZE> g;
+    SoftmaxGraph<SOFTMAX, INP_H, INP_W, INP_W_PAD> g;
 
   public:
     adf::input_plio plin[1];
@@ -19,15 +20,15 @@ class SoftmaxGraphTest : public adf::graph {
     ) { 
       plin[0] = adf::input_plio::create("plin0_softmax"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_softmax"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE*4>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<CHUNK_CNT*CHUNK_SIZE*4>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<INP_H*INP_W_PAD*4>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<INP_H*INP_W_PAD*4>> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
 // padded to vector boundary
-SoftmaxGraphTest<SoftmaxScalar, 10, 10> softmaxScalar(
+SoftmaxGraphTest<SoftmaxScalar, 10, 10, 12> softmaxScalar(
   "softmaxScalar", "softmax_fpin.txt", "softmax_fpout_shape10x10_SoftmaxScalar.txt");
 
 

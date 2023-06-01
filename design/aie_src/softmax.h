@@ -7,15 +7,17 @@
 /** 
  * @defgroup SoftmaxKernels
  * @ingroup Softmax
+ * - Softmax(input, axis) = Exp(input) / ReduceSum(Exp(input), axis=axis, keepdims=1)
  * 
  * @{
  */
 
 
 /**
- * @brief Scalar implementation, SoftmaxScalar<10, 10> takes  cycles
+ * @brief Scalar implementation, 
+ * SoftmaxScalar<10, 10> takes 250322 cycles
  */
-template <int CHUNK_COUNT, int CHUNK_SIZE>
+template <int INP_H, int INP_W, int INP_W_PAD>
 class SoftmaxScalar {
 	public:
 		void filter(
