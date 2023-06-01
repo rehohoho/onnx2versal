@@ -106,11 +106,14 @@ Collaboration diagram for SoftmaxKernels:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSoftmaxScalar.html">SoftmaxScalar&lt; CHUNK_COUNT, CHUNK_SIZE &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, SoftmaxScalar&lt;10, 10&gt; takes cycles.  <a href="classSoftmaxScalar.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSoftmaxScalar.html">SoftmaxScalar&lt; INP_H, INP_W, INP_W_PAD &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, SoftmaxScalar&lt;10, 10&gt; takes 250322 cycles.  <a href="classSoftmaxScalar.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<ul>
+<li>Softmax(input, axis) = Exp(input) / ReduceSum(Exp(input), axis=axis, keepdims=1) </li>
+</ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

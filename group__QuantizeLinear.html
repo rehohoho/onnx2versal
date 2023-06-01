@@ -96,7 +96,7 @@ $(document).ready(function(){initNavTree('group__QuantizeLinear.html',''); initR
 </div><!--header-->
 <div class="contents">
 
-<p>Linear quantization operator. It consumes a high precision tensor, a scale, and a zero point to compute the low precision / quantized tensor. The quantization formula is y = saturate ((x / y_scale) + y_zero_point). For saturation, it saturates to [0, 255] if it's uint8, or [-128, 127] if it's int8. For (x / y_scale), it's rounding to the nearest even.  
+<p>Linear quantization operator. It consumes a high precision tensor, a scale, and a zero point to compute the low precision / quantized tensor. The quantization formula is y = saturate ((x / y_scale) + y_zero). For saturation, it saturates to [0, 255] if it's uint8, or [-128, 127] if it's int8. For (x / y_scale), it's rounding to the nearest even.  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for QuantizeLinear:</div>

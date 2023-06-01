@@ -15,6 +15,7 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "graph_pool.h", "graph__pool_8h_source.html", null ],
     [ "graph_qgemm.h", "graph__qgemm_8h_source.html", null ],
     [ "graph_qlinearconv.h", "graph__qlinearconv_8h_source.html", null ],
+    [ "graph_qlinearsoftmax.h", "graph__qlinearsoftmax_8h_source.html", null ],
     [ "graph_quantize_linear.h", "graph__quantize__linear_8h_source.html", null ],
     [ "graph_softmax.h", "graph__softmax_8h_source.html", null ],
     [ "graph_transpose.h", "graph__transpose_8h_source.html", null ],
@@ -25,6 +26,7 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "pool.h", "pool_8h_source.html", null ],
     [ "qgemm.h", "qgemm_8h_source.html", null ],
     [ "qlinearconv.h", "qlinearconv_8h_source.html", null ],
+    [ "qlinearsoftmax.h", "qlinearsoftmax_8h_source.html", null ],
     [ "quantize_linear.h", "quantize__linear_8h_source.html", null ],
     [ "softmax.h", "softmax_8h_source.html", null ],
     [ "transpose.h", "transpose_8h_source.html", null ]

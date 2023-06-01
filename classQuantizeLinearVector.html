@@ -97,16 +97,16 @@ $(document).ready(function(){initNavTree('classQuantizeLinearVector.html',''); i
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation, QuantizeLinearVector&lt;1*1*28*28&gt; takes 2457 cycles, requires INP_W%4==0, OUT_W%16==0.  
+<p>Vector implementation, QuantizeLinearVector&lt;1*1*28*28&gt; takes 1945 cycles, requires INP_W%4==0, OUT_W%16==0.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="quantize__linear_8h_source.html">quantize_linear.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9e542f422ef8ce89571a293a8f159a23"><td class="memItemLeft" align="right" valign="top"><a id="a9e542f422ef8ce89571a293a8f159a23" name="a9e542f422ef8ce89571a293a8f159a23"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QuantizeLinearVector</b> (float y_scale, int y_zero_point)</td></tr>
-<tr class="separator:a9e542f422ef8ce89571a293a8f159a23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a459ddacea9d53c5eb911d74d2bf2130b"><td class="memItemLeft" align="right" valign="top"><a id="a459ddacea9d53c5eb911d74d2bf2130b" name="a459ddacea9d53c5eb911d74d2bf2130b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QuantizeLinearVector</b> (float y_scale, int8_t y_zero)</td></tr>
+<tr class="separator:a459ddacea9d53c5eb911d74d2bf2130b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef7fb768e749b50d49a4974f605b571c"><td class="memItemLeft" align="right" valign="top"><a id="aef7fb768e749b50d49a4974f605b571c" name="aef7fb768e749b50d49a4974f605b571c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
 <tr class="separator:aef7fb768e749b50d49a4974f605b571c"><td class="memSeparator" colspan="2">&#160;</td></tr>

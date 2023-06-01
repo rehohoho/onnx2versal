@@ -10,9 +10,14 @@ var searchData=
   ['qlinearconvkernels_7',['QLinearConvKernels',['../group__QLinearConvKernels.html',1,'']]],
   ['qlinearconvscalar_8',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
   ['qlinearconvvector_9',['QLinearConvVector',['../classQLinearConvVector.html',1,'']]],
-  ['quantizelinear_10',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
-  ['quantizelineargraph_11',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearkernels_12',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
-  ['quantizelinearscalar_13',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
-  ['quantizelinearvector_14',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
+  ['qlinearconvvectorscale32bit_10',['QLinearConvVectorScale32bit',['../classQLinearConvVectorScale32bit.html',1,'']]],
+  ['qlinearsoftmax_11',['Qlinearsoftmax',['../group__Qlinearsoftmax.html',1,'']]],
+  ['qlinearsoftmaxgraph_12',['QlinearsoftmaxGraph',['../classQlinearsoftmaxGraph.html',1,'']]],
+  ['qlinearsoftmaxkernels_13',['QlinearsoftmaxKernels',['../group__QlinearsoftmaxKernels.html',1,'']]],
+  ['qlinearsoftmaxscalar_14',['QlinearsoftmaxScalar',['../classQlinearsoftmaxScalar.html',1,'']]],
+  ['quantizelinear_15',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
+  ['quantizelineargraph_16',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearkernels_17',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
+  ['quantizelinearscalar_18',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearvector_19',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
 ];

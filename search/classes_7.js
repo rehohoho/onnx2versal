@@ -6,7 +6,10 @@ var searchData=
   ['qlinearconvgraph_3',['QLinearConvGraph',['../classQLinearConvGraph.html',1,'']]],
   ['qlinearconvscalar_4',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
   ['qlinearconvvector_5',['QLinearConvVector',['../classQLinearConvVector.html',1,'']]],
-  ['quantizelineargraph_6',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearscalar_7',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
-  ['quantizelinearvector_8',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
+  ['qlinearconvvectorscale32bit_6',['QLinearConvVectorScale32bit',['../classQLinearConvVectorScale32bit.html',1,'']]],
+  ['qlinearsoftmaxgraph_7',['QlinearsoftmaxGraph',['../classQlinearsoftmaxGraph.html',1,'']]],
+  ['qlinearsoftmaxscalar_8',['QlinearsoftmaxScalar',['../classQlinearsoftmaxScalar.html',1,'']]],
+  ['quantizelineargraph_9',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearscalar_10',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearvector_11',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
 ];

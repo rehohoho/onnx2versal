@@ -1,4 +1,4 @@
 var group__SoftmaxKernels =
 [
-    [ "SoftmaxScalar< CHUNK_COUNT, CHUNK_SIZE >", "classSoftmaxScalar.html", null ]
+    [ "SoftmaxScalar< INP_H, INP_W, INP_W_PAD >", "classSoftmaxScalar.html", null ]
 ];

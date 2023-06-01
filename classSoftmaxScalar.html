@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: SoftmaxScalar&lt; CHUNK_COUNT, CHUNK_SIZE &gt; Class Template Reference</title>
+<title>onnx2versal: SoftmaxScalar&lt; INP_H, INP_W, INP_W_PAD &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,26 +93,26 @@ $(document).ready(function(){initNavTree('classSoftmaxScalar.html',''); initResi
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classSoftmaxScalar-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">SoftmaxScalar&lt; CHUNK_COUNT, CHUNK_SIZE &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Softmax.html">Softmax</a> &raquo; <a class="el" href="group__SoftmaxKernels.html">SoftmaxKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">SoftmaxScalar&lt; INP_H, INP_W, INP_W_PAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Softmax.html">Softmax</a> &raquo; <a class="el" href="group__SoftmaxKernels.html">SoftmaxKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation, SoftmaxScalar&lt;10, 10&gt; takes cycles.  
+<p>Scalar implementation, SoftmaxScalar&lt;10, 10&gt; takes 250322 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="softmax_8h_source.html">softmax.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a84867da237548a4667f722cda6e46801"><td class="memItemLeft" align="right" valign="top"><a id="a84867da237548a4667f722cda6e46801" name="a84867da237548a4667f722cda6e46801"></a>
+<tr class="memitem:a26d32c1bfc85341c43ce3e28b1166281"><td class="memItemLeft" align="right" valign="top"><a id="a26d32c1bfc85341c43ce3e28b1166281" name="a26d32c1bfc85341c43ce3e28b1166281"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:a84867da237548a4667f722cda6e46801"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a26d32c1bfc85341c43ce3e28b1166281"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a9c1309fe4f11da8a499e84672367bfde"><td class="memItemLeft" align="right" valign="top"><a id="a9c1309fe4f11da8a499e84672367bfde" name="a9c1309fe4f11da8a499e84672367bfde"></a>
+<tr class="memitem:a8dc9f59325a918852e06653e51536a51"><td class="memItemLeft" align="right" valign="top"><a id="a8dc9f59325a918852e06653e51536a51" name="a8dc9f59325a918852e06653e51536a51"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a9c1309fe4f11da8a499e84672367bfde"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a8dc9f59325a918852e06653e51536a51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="softmax_8h_source.html">softmax.h</a></li>
