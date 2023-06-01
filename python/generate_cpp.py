@@ -7,7 +7,7 @@ from onnx import numpy_helper
 # from google.protobuf.json_format import MessageToJson, MessageToDict
 
 from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, \
-  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp, SoftmaxOp
+  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp, QLinearSoftmaxOp, SoftmaxOp
 
 
 class CppGenerator:
@@ -127,7 +127,8 @@ class CppGenerator:
         
       elif node.op_type == "QGemm":
         op = QGemm(f"k{i}qgemm")
-        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)],
+                           node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
@@ -173,6 +174,13 @@ class CppGenerator:
       elif node.op_type == "Softmax":
         op = SoftmaxOp(f"k{i}softmax")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input[0], node.output[0], op)
+      
+      elif node.op_type == "QLinearSoftmax":
+        op = QLinearSoftmaxOp(f"k{i}qlinearsoftmax")
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)

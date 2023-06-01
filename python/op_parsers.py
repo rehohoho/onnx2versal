@@ -238,6 +238,8 @@ class GemmOp(OpParser):
     attr_d = get_attribute_dict(attributes)
     if attr_d.get("transA"): tin = tin.transpose()
     if attr_d.get("transB"): tw = tw.transpose()
+    if attr_d.get("alpha", 1) != 1: raise NotImplementedError("Gemm alpha not implemented yet.")
+    if attr_d.get("beta", 1) != 1: raise NotImplementedError("Gemm beta not implemented yet.")
 
     inM, inK = tin.shape
     wK, wN = tw.shape
@@ -249,9 +251,9 @@ class GemmOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
 
     # chunk graph handles padding
-    self.varname_2_tensors[f"{self.name}_w"] = tw * attr_d.get("alpha", 1)
-    self.varname_2_tensors[f"{self.name}_b"] = tbias * attr_d.get("beta", 1)
-  
+    self.varname_2_tensors[f"{self.name}_w"] = tw * np.array(attr_d.get("alpha", 1), dtype=tw.dtype)
+    self.varname_2_tensors[f"{self.name}_b"] = tbias
+
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
@@ -337,12 +339,18 @@ class QGemm(OpParser):
   """
   include_file: str = "graph_qgemm.h"
 
-  def register_params(self, tensors: List[np.ndarray]):
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 10
     tin, tin_scale, tin_zero, tw, tw_scale, tw_zero, tbias, tout_scale, tout_zero, tout = tensors
 
+    attr_d = get_attribute_dict(attributes)
+    if attr_d.get("transA"): tin = tin.transpose()
+    if attr_d.get("transB"): tw = tw.transpose()
+    if attr_d.get("alpha", 1) != 1: raise NotImplementedError("QGemm alpha not implemented yet.")
+    if attr_d.get("beta", 1) != 1: raise NotImplementedError("QGemm beta not implemented yet.")
+
     inM, inK = tin.shape
-    wN, wK = tw.shape
+    wK, wN = tw.shape
     bN, = tbias.shape
     outM, outN = tout.shape
     
@@ -352,8 +360,10 @@ class QGemm(OpParser):
     self.tout = tout # reference copy to check against to compress graph
   
     vector_size = get_vector_boundary(tin)
-    self.varname_2_tensors[f"{self.name}_w"] = pad_lastdim(tw.T, "QGemm weights", vector_size) # heap
-    self.varname_2_tensors[f"{self.name}_b"] = pad_lastdim(tbias, "QGemm bias", vector_size)
+    tw = pad_lastdim(tw, "QGemm weights", vector_size) # heap
+    tbias = pad_lastdim(tbias, "QGemm bias", vector_size)
+    self.varname_2_tensors[f"{self.name}_w"] = tw
+    self.varname_2_tensors[f"{self.name}_b"] = tbias
     self.varname_2_tensors[f"{self.name}_xscale"] = tin_scale
     self.varname_2_tensors[f"{self.name}_wscale"] = tw_scale
     self.varname_2_tensors[f"{self.name}_yscale"] = tout_scale
@@ -429,8 +439,56 @@ class QLinearConvOp(OpParser):
     
   def get_kernel_line(self) -> str:
     graph = "QLinearConvGraph"
-    kernel = "QLinearConvVector"
+    kernel = "QLinearConvVectorScale32bit"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
+
+
+class QLinearSoftmaxOp(OpParser):
+  """Use input tensor for INP_H, pad width to vector boundary for INP_W,
+  Use output tensor for OUT_H, pad width to vector boundary for OUT_W
+  """
+  include_file: str = "graph_qlinearsoftmax.h"
+
+  def register_lastdim(self, tensors: List[np.ndarray]):
+    tin, tin_scale, tin_zero, tout_scale, tout_zero, tout = tensors
+    self.INP_W = tin.shape[-1]
+
+    self.varname_2_tensors[f"{self.name}_xscale"] = tin_scale # heap
+    self.varname_2_tensors[f"{self.name}_yscale"] = tout_scale
+    self.varname_2_tensors[f"{self.name}_xzero"] = tin_zero
+    self.varname_2_tensors[f"{self.name}_yzero"] = tout_zero
+    
+    tin = pad_lastdim(tin, "QlinearsoftmaxOp tin", get_vector_boundary(tin)) # files
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    
+    self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
+
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
+    assert len(tensors) == 6
+    tin, tin_scale, tin_zero, tout_scale, tout_zero, tout = tensors
+
+    assert tin.size == tout.size and tin_scale.shape == () and tin_zero.shape == () and \
+      tout_scale.shape == () and tout_zero.shape == ()
+
+    self.tout = tout # reference copy to check against to compress graph
+
+    attr_d = get_attribute_dict(attributes)
+    axis = attr_d.get("axis", -1)
+    if axis == 0:
+      raise NotImplementedError("QLinearSoftmax not implemented for axis that is not last.")
+    elif axis == -1 or axis == tin.ndim - 1:
+      self.register_lastdim(tensors)
+    else:
+      raise NotImplementedError("QLinearSoftmax not implemented for axis that is not last.")    
+    
+    self.dtype = tout.dtype
+    self.out_size = tout.size
+    
+  def get_kernel_line(self) -> str:
+    graph = "QlinearsoftmaxGraph"
+    kernel = "QlinearsoftmaxScalar"
+    return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
 
 class QuantizeLinearOp(OpParser):
@@ -492,10 +550,7 @@ class SoftmaxOp(OpParser):
 
     tin = pad_lastdim(tout, "SoftmaxOp tin", get_vector_boundary(tin)) # files
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
-    
-    tout = pad_lastdim(tout, "SoftmaxOp tout", get_vector_boundary(tout))
-    assert tout.shape[:-1] == tin.shape[:-1]
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
     self.INP_H, self.INP_W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
