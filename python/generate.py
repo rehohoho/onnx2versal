@@ -1,12 +1,12 @@
 import argparse
 
+import numpy as np
 import onnx
 from onnx import helper
 import onnxruntime
 
 from generate_cpp import CppGenerator
 from op_parsers import save_tensor
-from check import load_txt
 
 
 def generate_inter_graph(onnx_path: str,
@@ -24,16 +24,13 @@ def generate_inter_graph(onnx_path: str,
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Generate Versal project files from ONNX model.')
-  parser.add_argument("onnx",             nargs=1, help="required path to onnx file")
-  parser.add_argument("single_input_npy", nargs=1, help="path to single input tensor .npy")
-  parser.add_argument("many_input_npy",   nargs=1, help="path to multiple input tensor .npy")
+  parser.add_argument("onnx",      nargs=1, help="required path to onnx file")
+  parser.add_argument("input_npy", nargs=1, help="path to input data .npy, assume first dim is batch")
   parser.add_argument("-data", default="../data", help="path to data directory")
-  parser.add_argument("-ndata", type=int, default=100, help="number of end to end data points")
   parser.add_argument("-is_output_all", action="store_true", help="whether to output for all layers")
   args = parser.parse_args()
   args.onnx = args.onnx[0]
-  args.single_input_npy = args.single_input_npy[0]
-  args.many_input_npy = args.many_input_npy[0]
+  args.input_npy = args.input_npy[0]
   
   # Update ONNX to output intermediate tensors
   onnx_inter_path = args.onnx.replace(".onnx", "_inter.onnx")
@@ -42,13 +39,9 @@ if __name__ == '__main__':
   ort_session = onnxruntime.InferenceSession(onnx_inter_path)
 
   # Load data, shape according to model def, run with ONNX Runtime
-  input_shape = ort_session.get_inputs()[0].shape
-  input_shape = [i if isinstance(i, int) else -1 for i in input_shape]
-  input_dtype = ort_session.get_inputs()[0].type.replace("tensor(", "").strip(")")
-  if input_dtype == "float":
-    input_dtype = "float32"
-  single_input = load_txt(args.single_input_npy).reshape(input_shape).astype(input_dtype)
-  many_inputs = load_txt(args.many_input_npy).reshape(input_shape).astype(input_dtype)
+  many_inputs = np.load(args.input_npy)
+  single_input = many_inputs[[0]]
+  data_count = many_inputs.shape[0]
   
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}
   ort_outs = ort_session.run(None, ort_inputs)
@@ -58,7 +51,7 @@ if __name__ == '__main__':
 
   cppGenerator = CppGenerator(data_path=args.data, 
                               onnx_path=args.onnx, 
-                              data_count=args.ndata,
+                              data_count=data_count,
                               input_tensors=[single_input], 
                               output_tensors=output_tensors, 
                               is_output_all=args.is_output_all)
