@@ -6,3 +6,4 @@ tensorflow
 scikit-learn
 matplotlib
 tf2onnx
+scipy

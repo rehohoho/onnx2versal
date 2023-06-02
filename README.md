@@ -12,7 +12,7 @@ See documentation at https://rehohoho.github.io/onnx2versal/: actual kernel and 
 * Python 3
 
 ## Setup
-Setup python environment. Anaconda/miniconda is an option. Install the requirements in your environment.
+Setup python environment. Anaconda/miniconda is an option. Install the requirements in your environment. Run `conda activate o2v` before scripts in `./python`.
 ```
 conda create -n o2v python=3.10 -y
 conda activate o2v

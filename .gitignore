@@ -22,6 +22,8 @@ data/MNIST
 data/k*_goldenout*.txt
 data/k*_in*.txt
 data/input*.txt
+data/fc*
+*.npy
 
 # python
 *.pyc
@@ -36,12 +38,14 @@ docs/
 # models
 models/
 
-# generated lenet_mnist
+# generated examples
 design/aie_src/graph_lenet_mnist*.cpp
-design/host_app_src/lenet_mnist*_aie_app.cpp
-design/system_configs/lenet_mnist*.cfg
-design/system_configs/lenet_mnist*_output_inter.cfg
-design/trafficgen/xtg_lenet_mnist*.py
-design/trafficgen/xtg_lenet_mnist*_output_inter.py
+design/aie_src/graph_hls4ml*.cpp
+design/host_app_src/lenet_mnist*
+design/host_app_src/hls4ml*
+design/system_configs/lenet_mnist*
+design/system_configs/hls4ml*
+design/trafficgen/xtg_lenet_mnist*
+design/trafficgen/xtg_hls4ml*
 
 out*/
