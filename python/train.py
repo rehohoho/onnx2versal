@@ -16,6 +16,7 @@ if __name__ == "__main__":
   ALL_EPOCH = 1
   OUTPUT_DATACOUNT = 10000
   DATA_PATH = "../data"
+  ONNX_PATH = "../models/lenet_mnist.onnx"
   PKL_PATH = "../models/lenet_mnist.pkl"
 
   # Setup data, model, optimizer, loss_fn
@@ -66,10 +67,21 @@ if __name__ == "__main__":
   
   print("Model finished training")
 
+  torch.onnx.export(
+    model,                            # model being run
+    test_x,                           # model input (or a tuple for multiple inputs)
+    ONNX_PATH,                        # where to save the model
+    export_params=True,               # store the trained parameter weights in model file
+    do_constant_folding=True,         # whether to execute constant folding for optimization
+    input_names = ["input"],          # model's input names
+    output_names = ["output"],        # model's output names
+    dynamic_axes={"input" : {0 : "batch_size"},    # variable length axes
+                  "output" : {0 : "batch_size"}})
+  print("Converted to onnx")
+
   # Save data for verification
   # Single sample for intermediate outputs, multiple for end to end
-  e2e_data = test_dataset.data[:OUTPUT_DATACOUNT].unsqueeze(axis=1).numpy()
-  e2e_labels = test_dataset.targets[:OUTPUT_DATACOUNT].numpy()
+  e2e_data, e2e_labels = next(iter(DataLoader(test_dataset, batch_size=OUTPUT_DATACOUNT)))
   np.save(f"{DATA_PATH}/MNIST/X_test.npy", e2e_data)
   np.save(f"{DATA_PATH}/MNIST/Y_test.npy", e2e_labels)
   print(f"Saved data and labels to {DATA_PATH}/MNIST/X_test.npy and {DATA_PATH}/MNIST/Y_test.npy")

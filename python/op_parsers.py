@@ -248,45 +248,49 @@ class GemmOp(OpParser):
     
     assert inM == outM and inK == wK and wN == bN and bN == outN
 
+    self.unpadded_N = wN
     self.tout = tout # reference copy to check against to compress graph
 
     # chunk graph handles padding
-    self.varname_2_tensors[f"{self.name}_w"] = tw * np.array(attr_d.get("alpha", 1), dtype=tw.dtype)
+    tw = pad_lastdim(tw, "Gemm tw", get_vector_boundary(tw))
+    self.varname_2_tensors[f"{self.name}_w"] = tw
+    tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
     self.varname_2_tensors[f"{self.name}_b"] = tbias
 
-    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
+    tin = pad_lastdim(tin, "Gemm tin", get_vector_boundary(tin)) # files
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
-    self.M, self.K, self.N = inM, inK, wN # config
+    self.M, self.K, self.N = inM, inK, tw.shape[1] # config
     self.dtype = tw.dtype
     self.out_size = tout.size
 
-    self.chunkSize = int(MAX_FLOAT_PARAMS/self.K//4*4)
-
   def get_kernel_type(self) -> str:
+    # TODO: non-chunk graph after chunkgraph yields placement error
+    graph = "GemmReluMkknChunkGraph"
     kernel = "GemmReluScalarMKKN"
+    concat_kernel = "ConcatScalar"
     
-    if self.chunkSize >= self.N:
-      graph = "GemmReluGraph"
-      if self.K % 2 == 0 and self.N % 4 == 0: kernel = "GemmReluMKKN"
-      if not self.is_relu: kernel = kernel.replace("Relu", "")
-      return f"{graph}<{kernel},{self.M},{self.K},{self.N}>"
-    else:
-      graph = "GemmReluMkknChunkGraph"
-      concat_kernel = "ConcatScalar"
-      if self.K % 2 == 0 and self.chunkSize % 4 == 0: kernel = "GemmReluMKKN"
-      if self.chunkSize % 8 == 0 and self.N % 4 == 0: concat_kernel = "ConcatVector"
-      if not self.is_relu: kernel = kernel.replace("Relu", "")
-      return f"{graph}<{kernel},{concat_kernel},{self.chunkSize},{self.M},{self.K},{self.N}>"
+    chunkSize = int(MAX_FLOAT_PARAMS/self.K//4*4)
+    if chunkSize >= self.N: chunkSize = self.N
+    if self.K % 2 == 0 and chunkSize % 4 == 0: kernel = "GemmReluMKKN"
+    if chunkSize % 8 == 0 and self.N % 4 == 0: concat_kernel = "ConcatVector"
+    if not self.is_relu: kernel = kernel.replace("Relu", "")
+    return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N}>"
   
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
   
   def get_connect_line(self, last_port: str) -> str:
-    if self.chunkSize >= self.N:
-      return super().get_connect_line(last_port)
     return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
       f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
+  
+  def disable_output_pad(self):
+    self.N = self.unpadded_N
+    self.varname_2_tensors[f"{self.name}_w"] = self.varname_2_tensors[f"{self.name}_w"][...,:self.N]
+    self.varname_2_tensors[f"{self.name}_b"] = self.varname_2_tensors[f"{self.name}_b"][...,:self.N]
+    self.out_size = self.tout.size
+    super().disable_output_pad()
 
 
 class PoolOp(OpParser):
@@ -545,22 +549,18 @@ class SoftmaxOp(OpParser):
     tin, tout = tensors
     assert tin.size == tout.size
 
-    self.inW = tin.shape[-1]
     self.tout = tout # reference copy to check against to compress graph
+    self.INP_W = tin.shape[-1]
 
     tin = pad_lastdim(tout, "SoftmaxOp tin", get_vector_boundary(tin)) # files
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
-    self.INP_H, self.INP_W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
+    self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
     self.out_size = tout.size
   
   def get_kernel_line(self) -> str:
     graph = "SoftmaxGraph"
     kernel = "SoftmaxScalar"
-    return f"{graph}<{kernel},{self.INP_H},{self.INP_W}> {self.name};"
-  
-  def disable_output_pad(self):
-    self.INP_W = self.inW
-    super().disable_output_pad()
+    return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
