@@ -28,8 +28,10 @@ class SoftmaxGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 // padded to vector boundary
-SoftmaxGraphTest<SoftmaxScalar, 10, 10, 12> softmaxScalar(
+SoftmaxGraphTest<SoftmaxScalar, 10, 10, 16> softmaxScalar(
   "softmaxScalar", "softmax_fpin.txt", "softmax_fpout_shape10x10_SoftmaxScalar.txt");
+SoftmaxGraphTest<SoftmaxVector, 10, 10, 16> softmaxVector(
+  "softmaxVector", "softmax_fpin.txt", "softmax_fpout_shape10x10_SoftmaxVector.txt");
 
 
 #ifdef __X86SIM__
@@ -37,6 +39,10 @@ int main(int argc, char ** argv) {
 	adfCheck(softmaxScalar.init(), "init softmaxScalar");
   adfCheck(softmaxScalar.run(ITER_CNT), "run softmaxScalar");
 	adfCheck(softmaxScalar.end(), "end softmaxScalar");
+
+  adfCheck(softmaxVector.init(), "init softmaxVector");
+  adfCheck(softmaxVector.run(ITER_CNT), "run softmaxVector");
+	adfCheck(softmaxVector.end(), "end softmaxVector");
   return 0;
 }
 #endif
@@ -45,8 +51,12 @@ int main(int argc, char ** argv) {
 #ifdef __AIESIM__
 int main(int argc, char ** argv) {
 	adfCheck(softmaxScalar.init(), "init softmaxScalar");
-  get_graph_throughput_by_port(softmaxScalar, "plout[0]", softmaxScalar.plout[0], 10, sizeof(float), ITER_CNT);
+  get_graph_throughput_by_port(softmaxScalar, "plout[0]", softmaxScalar.plout[0], 10*10, sizeof(float), ITER_CNT);
 	adfCheck(softmaxScalar.end(), "end softmaxScalar");
+
+  adfCheck(softmaxVector.init(), "init softmaxVector");
+  get_graph_throughput_by_port(softmaxVector, "plout[0]", softmaxVector.plout[0], 10*10, sizeof(float), ITER_CNT);
+	adfCheck(softmaxVector.end(), "end softmaxVector");
   return 0;
 }
 #endif
