@@ -1,4 +1,7 @@
 var group__SoftmaxKernels =
 [
-    [ "SoftmaxScalar< INP_H, INP_W, INP_W_PAD >", "classSoftmaxScalar.html", null ]
+    [ "SoftmaxScalar< INP_H, INP_W, INP_W_PAD >", "classSoftmaxScalar.html", null ],
+    [ "SoftmaxVector< INP_H, INP_W, INP_W_PAD >", "classSoftmaxVector.html", null ],
+    [ "fastexp", "group__SoftmaxKernels.html#ga2da98f105ca964668f0e153bc52ab4c6", null ],
+    [ "fastexp2", "group__SoftmaxKernels.html#ga292fae1f34487843be05b58ecdb4db35", null ]
 ];

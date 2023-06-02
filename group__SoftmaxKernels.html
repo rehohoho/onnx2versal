@@ -90,7 +90,8 @@ $(document).ready(function(){initNavTree('group__SoftmaxKernels.html',''); initR
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">SoftmaxKernels<div class="ingroups"><a class="el" href="group__Softmax.html">Softmax</a></div></div></div>
 </div><!--header-->
 <div class="contents">
@@ -107,13 +108,50 @@ Collaboration diagram for SoftmaxKernels:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSoftmaxScalar.html">SoftmaxScalar&lt; INP_H, INP_W, INP_W_PAD &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, SoftmaxScalar&lt;10, 10&gt; takes 250322 cycles.  <a href="classSoftmaxScalar.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, SoftmaxScalar&lt;10,10,16&gt; takes.  <a href="classSoftmaxScalar.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSoftmaxVector.html">SoftmaxVector&lt; INP_H, INP_W, INP_W_PAD &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, SoftmaxVector&lt;10,10,16&gt; takes 1123 cycles requires INP_W_PAD%8=0.  <a href="classSoftmaxVector.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga2da98f105ca964668f0e153bc52ab4c6"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__SoftmaxKernels.html#ga2da98f105ca964668f0e153bc52ab4c6">fastexp</a> (float val)</td></tr>
+<tr class="memdesc:ga2da98f105ca964668f0e153bc52ab4c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">See <a href="https://nic.schraudolph.org/pubs/Schraudolph99.pdf">https://nic.schraudolph.org/pubs/Schraudolph99.pdf</a>.  <br /></td></tr>
+<tr class="separator:ga2da98f105ca964668f0e153bc52ab4c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga292fae1f34487843be05b58ecdb4db35"><td class="memItemLeft" align="right" valign="top"><a id="ga292fae1f34487843be05b58ecdb4db35" name="ga292fae1f34487843be05b58ecdb4db35"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>fastexp2</b> (float val, int precision)</td></tr>
+<tr class="memdesc:ga292fae1f34487843be05b58ecdb4db35"><td class="mdescLeft">&#160;</td><td class="mdescRight">approximation with (1 + x/256)^256 <br /></td></tr>
+<tr class="separator:ga292fae1f34487843be05b58ecdb4db35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <ul>
 <li>Softmax(input, axis) = Exp(input) / ReduceSum(Exp(input), axis=axis, keepdims=1) </li>
 </ul>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ga2da98f105ca964668f0e153bc52ab4c6" name="ga2da98f105ca964668f0e153bc52ab4c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga2da98f105ca964668f0e153bc52ab4c6">&#9670;&#160;</a></span>fastexp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double fastexp </td>
+          <td>(</td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>val</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>out = in * y + (b - c) where</p><ul>
+<li>y = 2**20/math.log(2)</li>
+<li>b = 1023 * 2**20</li>
+<li>c = 2**20 * math.log(3 / (8*math.log(2)) + 0.5) / math.log(2) </li>
+</ul>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

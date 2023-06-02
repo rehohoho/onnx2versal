@@ -49,6 +49,7 @@ var annotated_dup =
     [ "QuantizeLinearVector", "classQuantizeLinearVector.html", null ],
     [ "SoftmaxGraph", "classSoftmaxGraph.html", null ],
     [ "SoftmaxScalar", "classSoftmaxScalar.html", null ],
+    [ "SoftmaxVector", "classSoftmaxVector.html", null ],
     [ "TransposeGraph", "classTransposeGraph.html", null ],
     [ "TransposeScalarBHWC2BCHW", "classTransposeScalarBHWC2BCHW.html", null ]
 ];
