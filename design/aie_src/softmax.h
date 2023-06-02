@@ -60,14 +60,12 @@ class SoftmaxScalar {
 
 
 /**
- * @brief Vector implementation, 
- * SoftmaxVector<10,10,16> takes 1082 cycles
+ * @brief Vector implementation for single axis, 
+ * SoftmaxSingleaxis<10,10,16> takes 1241 cycles
  * requires INP_W_PAD%8=0
  */
 template <int INP_H, int INP_W, int INP_W_PAD>
-class SoftmaxVector {
-	private:
-
+class SoftmaxSingleaxis {
 	public:
 		void filter(
 			input_window<float>* in,
@@ -76,7 +74,27 @@ class SoftmaxVector {
 
 		static void registerKernelClass() {
 			static_assert(INP_W_PAD % 8 == 0);
-			REGISTER_FUNCTION(SoftmaxVector::filter);
+			REGISTER_FUNCTION(SoftmaxSingleaxis::filter);
+		}
+};
+
+
+/**
+ * @brief Vector implementation for multiple axis, 
+ * SoftmaxMultiaxis<10,10,16> takes 1082 cycles
+ * requires INP_H%2==0 && INP_W_PAD%8=0
+ */
+template <int INP_H, int INP_W, int INP_W_PAD>
+class SoftmaxMultiaxis {
+	public:
+		void filter(
+			input_window<float>* in,
+			output_window<float>* out
+		);
+
+		static void registerKernelClass() {
+			static_assert(INP_H % 2 == 0 && INP_W_PAD % 8 == 0);
+			REGISTER_FUNCTION(SoftmaxMultiaxis::filter);
 		}
 };
 /** @}*/

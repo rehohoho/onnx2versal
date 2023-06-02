@@ -61,15 +61,65 @@ void SoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
 }
 
 
-// 1417 with single aie::mac_square
-// 1082 with two fpmacs
 template <int INP_H, int INP_W, int INP_W_PAD>
-void SoftmaxVector<INP_H, INP_W, INP_W_PAD>::filter(
+void SoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<float>* in,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running SoftmaxVector<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
+    "Running SoftmaxSingleaxis<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
+
+  float *out_ptr = (float *) out->ptr; 
+
+  float exp_v[INP_W_PAD];
+  float scale = 0.00390625;
+  float exp_scale;
+  float *exp_v_ptr;
+
+  aie::vector<float,8> in_v;
+  aie::accum<accfloat,8> ones;
+  ones.from_vector(aie::broadcast<float,8>(1), 0);
+
+  for (int i = 0; i < INP_H; i++) {
+    exp_scale = INP_W - INP_W_PAD;
+    exp_v_ptr = (float *) exp_v;
+
+    aie::vector<float,8> sum = aie::zeros<float,8>();
+
+    for (int j = 0; j < INP_W; j+=8) {  
+      in_v = window_readincr_v8(in);
+
+      // compute using fastexp2 method
+      in_v = aie::mac(ones, in_v, scale).to_vector<float>(0);
+      for (int k = 0; k < 8; k++)
+        in_v = aie::mul_square(in_v);
+      
+      sum = aie::add(sum, in_v);
+      aie::store_v(exp_v_ptr, in_v); exp_v_ptr += 8;
+    }
+
+    exp_scale += aie::reduce_add(sum);
+    exp_scale = inv(exp_scale);
+
+    exp_v_ptr = (float *) exp_v;
+    for (int j = 0; j < INP_W; j+=8) {
+      in_v = aie::load_v<8>(exp_v_ptr); exp_v_ptr += 8;
+      in_v = aie::mul(in_v, exp_scale);
+      aie::store_v(out_ptr, in_v); out_ptr += 8;
+    }
+  }
+
+  PROFILE_FOOTER;
+}
+
+
+template <int INP_H, int INP_W, int INP_W_PAD>
+void SoftmaxMultiaxis<INP_H, INP_W, INP_W_PAD>::filter(
+	input_window<float>* in,
+  output_window<float>* out
+) {
+  PROFILE_HEADER(printf(
+    "Running SoftmaxMultiaxis<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
 
   float exp_v1[INP_W_PAD];
   float exp_v2[INP_W_PAD];
