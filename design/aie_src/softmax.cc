@@ -62,6 +62,7 @@ void SoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
 
 
 // 1417 with single aie::mac_square
+// 1082 with two fpmacs
 template <int INP_H, int INP_W, int INP_W_PAD>
 void SoftmaxVector<INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<float>* in,
@@ -90,6 +91,9 @@ void SoftmaxVector<INP_H, INP_W, INP_W_PAD>::filter(
     exp_scale2 = INP_W - INP_W_PAD;
     exp_v1_ptr = (v8float *) exp_v1;
     exp_v2_ptr = (v8float *) exp_v2;
+
+    v8float exp_v1_sum = null_v8float();
+    v8float exp_v2_sum = null_v8float();
     
     for (int j = 0; j < INP_W_PAD; j+=8) {  
       x1 = window_read_v8(in);
@@ -100,21 +104,22 @@ void SoftmaxVector<INP_H, INP_W, INP_W_PAD>::filter(
       window_incr(in, -INP_W_PAD+8);
 
       // compute using fastexp2 method
-      data = upd_w(data, 0, x1);
       for (int k = 0; k < 8; k++) chess_flatten_loop {
+        data = upd_w(data, 0, x1);
         x1 = fpmul(data, 0, 0x76543210, 0, 0x76543210);
         data = upd_w(data, 1, x2);
         x2 = fpmul(data, 8, 0x76543210, 8, 0x76543210);
-        data = upd_w(data, 0, x1);
       }
-      exp_scale1 += aie::reduce_add((aie::vector<float,8>) x1);
+      exp_v1_sum = fpadd(exp_v1_sum, x1);
       *exp_v1_ptr = x1; exp_v1_ptr++;
-      exp_scale2 += aie::reduce_add((aie::vector<float,8>) x2);
+      exp_v2_sum = fpadd(exp_v2_sum, x2);
       *exp_v2_ptr = x2; exp_v2_ptr++;
     }
 
+    exp_scale1 += aie::reduce_add((aie::vector<float,8>) exp_v1_sum);
     exp_scale1 = inv(exp_scale1);
     exp_v1_ptr = (v8float *) exp_v1;
+    exp_scale2 += aie::reduce_add((aie::vector<float,8>) exp_v2_sum);
     exp_scale2 = inv(exp_scale2);
     exp_v2_ptr = (v8float *) exp_v2;
 

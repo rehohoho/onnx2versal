@@ -61,7 +61,7 @@ class SoftmaxScalar {
 
 /**
  * @brief Vector implementation, 
- * SoftmaxVector<10,10,16> takes 1123 cycles
+ * SoftmaxVector<10,10,16> takes 1082 cycles
  * requires INP_W_PAD%8=0
  */
 template <int INP_H, int INP_W, int INP_W_PAD>
