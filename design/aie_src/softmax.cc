@@ -39,19 +39,19 @@ void SoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
   PROFILE_HEADER(printf(
     "Running SoftmaxScalar<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
 
-  float exp_v[INP_W];
-  float exp_scale;
+  float exp_v1[INP_W];
+  float exp_scale1;
 
   for (int i = 0; i < INP_H; i++) {
-    exp_scale = 0;
+    exp_scale1 = 0;
     for (int j = 0; j < INP_W; j++) {
       float a = window_readincr(in);
-      exp_v[j] = fastexp2(a, 8);
-      exp_scale += exp_v[j];
+      exp_v1[j] = fastexp2(a, 8);
+      exp_scale1 += exp_v1[j];
     }
-    exp_scale = inv(exp_scale);
+    exp_scale1 = inv(exp_scale1);
     for (int j = 0; j < INP_W; j++) {
-      window_writeincr(out, exp_v[j] * exp_scale);
+      window_writeincr(out, exp_v1[j] * exp_scale1);
     }
     window_incr(in, INP_W_PAD - INP_W);
     window_incr(out, INP_W_PAD - INP_W);
@@ -61,6 +61,7 @@ void SoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
 }
 
 
+// 1417 with single aie::mac_square
 template <int INP_H, int INP_W, int INP_W_PAD>
 void SoftmaxVector<INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<float>* in,
@@ -69,40 +70,66 @@ void SoftmaxVector<INP_H, INP_W, INP_W_PAD>::filter(
   PROFILE_HEADER(printf(
     "Running SoftmaxVector<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
 
-  float scale = 0.00390625;
-  float exp_v[INP_W_PAD];
-  float exp_scale;
+  float exp_v1[INP_W_PAD];
+  float exp_v2[INP_W_PAD];
+  float exp_scale1;
+  float exp_scale2;
 
-  float *exp_v_ptr;
-  float *out_ptr = (float *) out->ptr;
+  v8float *exp_v1_ptr;
+  v8float *exp_v2_ptr;
+  v8float *out_ptr = (v8float *) out->ptr;
 
-  aie::vector<float,8> in_v;
-  aie::accum<accfloat,8> ones;
-  ones.from_vector(aie::broadcast<float,8>(1), 0);
+  v16float data = undef_v16float();
+  v8float x1 = undef_v8float();
+  v8float x2 = undef_v8float();
+  v8float ones = aie::broadcast<float,8>(1);
+  v8float scale = aie::broadcast<float,8>(0.00390625);
 
-  for (int i = 0; i < INP_H; i++) {
-    exp_scale = INP_W - INP_W_PAD;
-    exp_v_ptr = (float *) exp_v;
+  for (int i = 0; i < INP_H; i+=2) {
+    exp_scale1 = INP_W - INP_W_PAD;
+    exp_scale2 = INP_W - INP_W_PAD;
+    exp_v1_ptr = (v8float *) exp_v1;
+    exp_v2_ptr = (v8float *) exp_v2;
     
-    for (int j = 0; j < INP_W; j+=8) {  
-      in_v = window_readincr_v8(in);
+    for (int j = 0; j < INP_W_PAD; j+=8) {  
+      x1 = window_read_v8(in);
+      x1 = fpmac(ones, x1, scale);
+      window_incr(in, INP_W_PAD);
+      x2 = window_read_v8(in);
+      x2 = fpmac(ones, x2, scale);
+      window_incr(in, -INP_W_PAD+8);
 
       // compute using fastexp2 method
-      in_v = aie::mac(ones, in_v, scale).to_vector<float>(0);
-      for (int k = 0; k < 8; k++)
-        in_v = aie::mul_square(in_v);
-      aie::store_v(exp_v_ptr, in_v); exp_v_ptr += 8;
-      exp_scale += aie::reduce_add(in_v);
+      data = upd_w(data, 0, x1);
+      for (int k = 0; k < 8; k++) chess_flatten_loop {
+        x1 = fpmul(data, 0, 0x76543210, 0, 0x76543210);
+        data = upd_w(data, 1, x2);
+        x2 = fpmul(data, 8, 0x76543210, 8, 0x76543210);
+        data = upd_w(data, 0, x1);
+      }
+      exp_scale1 += aie::reduce_add((aie::vector<float,8>) x1);
+      *exp_v1_ptr = x1; exp_v1_ptr++;
+      exp_scale2 += aie::reduce_add((aie::vector<float,8>) x2);
+      *exp_v2_ptr = x2; exp_v2_ptr++;
     }
 
-    exp_scale = inv(exp_scale);
-    
-    exp_v_ptr = (float *) exp_v;
-    for (int j = 0; j < INP_W; j+=8) {
-      in_v = aie::load_v<8>(exp_v_ptr); exp_v_ptr += 8;
-      in_v = aie::mul(in_v, exp_scale);
-      aie::store_v(out_ptr, in_v); out_ptr += 8;
+    exp_scale1 = inv(exp_scale1);
+    exp_v1_ptr = (v8float *) exp_v1;
+    exp_scale2 = inv(exp_scale2);
+    exp_v2_ptr = (v8float *) exp_v2;
+
+    v8float exp_scale1_v = aie::broadcast<float, 8>(exp_scale1);
+    v8float exp_scale2_v = aie::broadcast<float, 8>(exp_scale2);
+
+    for (int j = 0; j < INP_W_PAD; j+=8) {
+      x1 = fpmul(*exp_v1_ptr, exp_scale1_v); exp_v1_ptr++;
+      *out_ptr = x1; out_ptr += INP_W_PAD/8;
+      x2 = fpmul(*exp_v2_ptr, exp_scale2_v); exp_v2_ptr++;
+      *out_ptr = x2; out_ptr += -INP_W_PAD/8 + 1;
     }
+    
+    out_ptr += INP_W_PAD/8;
+    window_incr(in, INP_W_PAD);
   }
 
   PROFILE_FOOTER;
