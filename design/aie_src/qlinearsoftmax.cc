@@ -47,7 +47,7 @@ QlinearsoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::QlinearsoftmaxSingleaxis (
   fastexp_scale = float2fix(x_scale/256, EXP_BITSHIFT);
   fastexp_shift = float2fix(-x_zero*x_scale/256+1, EXP_BITSHIFT);
 
-  long long exp_shift = fastexp_shift;
+  long long exp_shift = fastexp_shift + float2fix(x_zero*x_scale/256, EXP_BITSHIFT);
   for (int i = 0; i < 8; i++)
     exp_shift = (exp_shift*exp_shift) >> EXP_BITSHIFT;
   expsum_offset = (int32_t) exp_shift; // for in[i] = 0
@@ -80,7 +80,6 @@ void QlinearsoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::filter(
   aie::accum<acc48,16> y_zeros;
   fastexp_shifts.from_vector(aie::broadcast<int32_t,16>(fastexp_shift), 0);
   y_zeros.from_vector(aie::broadcast<int8_t,16>(y_zero), EXP_BITSHIFT+OUT_BITSHIFT);
-  
 
   for (int i = 0; i < INP_H; i++) {
     exp_v_ptr = (int32_t *) exp_v;

@@ -20,7 +20,7 @@ tout = scipy.special.softmax((qtin.astype(int) - X_zero_point) * X_scale, axis=1
 qtout = round_away(tout/Y_scale) + Y_zero_point
 qtout = np.clip(qtout, -128, 127).astype(np.int8)
 
-qtin = pad_lastdim(qtin, "qlinearsoftmax qtin", get_vector_boundary(qtin))
+qtin = pad_lastdim(qtin, "qlinearsoftmax qtin", get_vector_boundary(qtin), value=X_zero_point)
 INP_W_PAD = qtin.shape[-1]
 save_tensor(f"qlinearsoftmax_int8in.txt", qtin)
 save_tensor(f"qlinearsoftmax_int8out_shape{INP_H}x{INP_W}.txt", qtout)

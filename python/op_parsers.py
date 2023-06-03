@@ -462,7 +462,7 @@ class QLinearSoftmaxOp(OpParser):
     self.varname_2_tensors[f"{self.name}_xzero"] = tin_zero
     self.varname_2_tensors[f"{self.name}_yzero"] = tout_zero
     
-    tin = pad_lastdim(tin, "QlinearsoftmaxOp tin", get_vector_boundary(tin)) # files
+    tin = pad_lastdim(tin, "QlinearsoftmaxOp tin", get_vector_boundary(tin), value=tin_zero) # files
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
@@ -492,6 +492,8 @@ class QLinearSoftmaxOp(OpParser):
   def get_kernel_line(self) -> str:
     graph = "QlinearsoftmaxGraph"
     kernel = "QlinearsoftmaxScalar"
+    if self.INP_W_PAD % 16 == 0:
+      kernel = "QlinearsoftmaxSingleaxis"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
 
@@ -552,7 +554,7 @@ class SoftmaxOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
     self.INP_W = tin.shape[-1]
 
-    tin = pad_lastdim(tout, "SoftmaxOp tin", get_vector_boundary(tin)) # files
+    tin = pad_lastdim(tout, "SoftmaxOp tin", 8) # files
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
@@ -563,4 +565,8 @@ class SoftmaxOp(OpParser):
   def get_kernel_line(self) -> str:
     graph = "SoftmaxGraph"
     kernel = "SoftmaxScalar"
+    if self.INP_W_PAD % 8 == 0 and self.INP_H % 2 == 0:
+      kernel = "SoftmaxMultiaxis"
+    elif self.INP_W_PAD % 8 == 0:
+      kernel = "SoftmaxSingleaxis"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
