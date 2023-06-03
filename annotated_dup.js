@@ -44,12 +44,14 @@ var annotated_dup =
     [ "QLinearConvVectorScale32bit", "classQLinearConvVectorScale32bit.html", null ],
     [ "QlinearsoftmaxGraph", "classQlinearsoftmaxGraph.html", null ],
     [ "QlinearsoftmaxScalar", "classQlinearsoftmaxScalar.html", null ],
+    [ "QlinearsoftmaxSingleaxis", "classQlinearsoftmaxSingleaxis.html", null ],
     [ "QuantizeLinearGraph", "classQuantizeLinearGraph.html", null ],
     [ "QuantizeLinearScalar", "classQuantizeLinearScalar.html", null ],
     [ "QuantizeLinearVector", "classQuantizeLinearVector.html", null ],
     [ "SoftmaxGraph", "classSoftmaxGraph.html", null ],
+    [ "SoftmaxMultiaxis", "classSoftmaxMultiaxis.html", null ],
     [ "SoftmaxScalar", "classSoftmaxScalar.html", null ],
-    [ "SoftmaxVector", "classSoftmaxVector.html", null ],
+    [ "SoftmaxSingleaxis", "classSoftmaxSingleaxis.html", null ],
     [ "TransposeGraph", "classTransposeGraph.html", null ],
     [ "TransposeScalarBHWC2BCHW", "classTransposeScalarBHWC2BCHW.html", null ]
 ];

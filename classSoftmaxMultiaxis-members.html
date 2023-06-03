@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QlinearsoftmaxKernels</title>
+<title>onnx2versal: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('group__QlinearsoftmaxKernels.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classSoftmaxMultiaxis.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -89,38 +89,15 @@ $(document).ready(function(){initNavTree('group__QlinearsoftmaxKernels.html','')
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
-  <div class="headertitle"><div class="title">QlinearsoftmaxKernels<div class="ingroups"><a class="el" href="group__Qlinearsoftmax.html">Qlinearsoftmax</a></div></div></div>
+  <div class="headertitle"><div class="title">SoftmaxMultiaxis&lt; INP_H, INP_W, INP_W_PAD &gt; Member List</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="dynheader">
-Collaboration diagram for QlinearsoftmaxKernels:</div>
-<div class="dyncontent">
-<div class="center"><img src="group__QlinearsoftmaxKernels.png" border="0" usemap="#agroup____QlinearsoftmaxKernels" alt=""/></div>
-<map name="agroup____QlinearsoftmaxKernels" id="agroup____QlinearsoftmaxKernels">
-<area shape="rect" href="group__Qlinearsoftmax.html" title="Qlinearsoftmax over INP_H chunks of INP_W_PAD vector. See https://github.com/onnx/onnx/blob/main/docs..." alt="" coords="5,5,114,31"/>
-<area shape="rect" title=" " alt="" coords="162,5,314,31"/>
-</map>
-</div>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQlinearsoftmaxScalar.html">QlinearsoftmaxScalar&lt; INP_H, INP_W, INP_W_PAD &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation. QlinearsoftmaxScalar&lt;10,20,32&gt; takes 517922 cycles.  <a href="classQlinearsoftmaxScalar.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQlinearsoftmaxSingleaxis.html">QlinearsoftmaxSingleaxis&lt; INP_H, INP_W, INP_W_PAD &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for single axis, QlinearsoftmaxSingleaxis&lt;10,10,16&gt; takes 2257 cycles requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.  <a href="classQlinearsoftmaxSingleaxis.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<ul>
-<li>qy = saturate ((y / y_scale) + y_zero_point) =&gt; x = (qx - qx_zero) * qx_scale</li>
-<li>Softmax(input, axis) = Exp(input) / ReduceSum(Exp(input), axis=axis, keepdims=1)</li>
-</ul>
-<p>For exp(x) ~= (1 + x/256)**256, Let x1 = 1+x/256 = 1 + (qx-qx_zero)*qx_scale/256 = qx*qx_scale/256 - qx_zero*qx_scale/256 + 1 Then x' = x1*x1 (8 times)</p>
-<p>For y = exp(x)/div, qy = exp(x)/div/qy_scale + qy_zero </p>
-</div><!-- contents -->
+
+<p>This is the complete list of members for <a class="el" href="classSoftmaxMultiaxis.html">SoftmaxMultiaxis&lt; INP_H, INP_W, INP_W_PAD &gt;</a>, including all inherited members.</p>
+<table class="directory">
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>filter</b>(input_window&lt; float &gt; *in, output_window&lt; float &gt; *out) (defined in <a class="el" href="classSoftmaxMultiaxis.html">SoftmaxMultiaxis&lt; INP_H, INP_W, INP_W_PAD &gt;</a>)</td><td class="entry"><a class="el" href="classSoftmaxMultiaxis.html">SoftmaxMultiaxis&lt; INP_H, INP_W, INP_W_PAD &gt;</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="odd"><td class="entry"><b>registerKernelClass</b>() (defined in <a class="el" href="classSoftmaxMultiaxis.html">SoftmaxMultiaxis&lt; INP_H, INP_W, INP_W_PAD &gt;</a>)</td><td class="entry"><a class="el" href="classSoftmaxMultiaxis.html">SoftmaxMultiaxis&lt; INP_H, INP_W, INP_W_PAD &gt;</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">static</span></td></tr>
+</table></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

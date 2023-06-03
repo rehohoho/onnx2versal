@@ -15,9 +15,10 @@ var searchData=
   ['qlinearsoftmaxgraph_12',['QlinearsoftmaxGraph',['../classQlinearsoftmaxGraph.html',1,'']]],
   ['qlinearsoftmaxkernels_13',['QlinearsoftmaxKernels',['../group__QlinearsoftmaxKernels.html',1,'']]],
   ['qlinearsoftmaxscalar_14',['QlinearsoftmaxScalar',['../classQlinearsoftmaxScalar.html',1,'']]],
-  ['quantizelinear_15',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
-  ['quantizelineargraph_16',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearkernels_17',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
-  ['quantizelinearscalar_18',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
-  ['quantizelinearvector_19',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
+  ['qlinearsoftmaxsingleaxis_15',['QlinearsoftmaxSingleaxis',['../classQlinearsoftmaxSingleaxis.html',1,'']]],
+  ['quantizelinear_16',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
+  ['quantizelineargraph_17',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearkernels_18',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
+  ['quantizelinearscalar_19',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearvector_20',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
 ];
