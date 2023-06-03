@@ -9,13 +9,14 @@ np.random.seed(0)
 INP_H = 10
 INP_W = 20
 
-X_scale = 0.2
+X_scale = 0.004
 Y_scale = 0.003
-X_zero_point = 0
+X_zero_point = -128
 Y_zero_point = -128
 
-qtin = np.random.randint(-128, 128, size=(INP_H,INP_W)).astype(np.int8)
-tout = scipy.special.softmax((qtin - X_zero_point) * X_scale, axis=1)
+# qtin = np.random.randint(-128, 128, size=(INP_H,INP_W)).astype(np.int8)
+qtin = np.arange(-128, 128).astype(np.int8)[:INP_H*INP_W].reshape(INP_H, INP_W)
+tout = scipy.special.softmax((qtin.astype(int) - X_zero_point) * X_scale, axis=1)
 qtout = round_away(tout/Y_scale) + Y_zero_point
 qtout = np.clip(qtout, -128, 127).astype(np.int8)
 

@@ -33,9 +33,15 @@ class QlinearsoftmaxGraphTest : public adf::graph {
 // instance to be compiled and used in host within xclbin
 QlinearsoftmaxGraphTest<QlinearsoftmaxScalar,10,20,32> qlinearsoftmaxScalar(
   "qlinearsoftmaxScalar", 
-  0.2, 0.003, 0, -128,
+  0.004, 0.003, -128, -128,
   "qlinearsoftmax_int8in.txt", 
-  "qlinearsoftmax_int8out_shape10x20.txt");
+  "qlinearsoftmax_int8out_shape10x20_QlinearsoftmaxScalar.txt");
+
+QlinearsoftmaxGraphTest<QlinearsoftmaxSingleaxis,10,20,32> qlinearsoftmaxSingleaxis(
+  "qlinearsoftmaxSingleaxis", 
+  0.004, 0.003, -128, -128,
+  "qlinearsoftmax_int8in.txt", 
+  "qlinearsoftmax_int8out_shape10x20_QlinearsoftmaxSingleaxis.txt");
 
 
 #ifdef __X86SIM__
@@ -43,6 +49,10 @@ int main(int argc, char ** argv) {
 	adfCheck(qlinearsoftmaxScalar.init(), "init qlinearsoftmaxScalar");
   adfCheck(qlinearsoftmaxScalar.run(ITER_CNT), "run qlinearsoftmaxScalar");
 	adfCheck(qlinearsoftmaxScalar.end(), "end qlinearsoftmaxScalar");
+
+  adfCheck(qlinearsoftmaxSingleaxis.init(), "init qlinearsoftmaxSingleaxis");
+  adfCheck(qlinearsoftmaxSingleaxis.run(ITER_CNT), "run qlinearsoftmaxSingleaxis");
+	adfCheck(qlinearsoftmaxSingleaxis.end(), "end qlinearsoftmaxSingleaxis");
   return 0;
 }
 #endif
@@ -53,6 +63,10 @@ int main(int argc, char ** argv) {
 	adfCheck(qlinearsoftmaxScalar.init(), "init qlinearsoftmaxScalar");
   get_graph_throughput_by_port(qlinearsoftmaxScalar, "plout[0]", qlinearsoftmaxScalar.plout[0], 10*20, sizeof(int8_t), ITER_CNT);
 	adfCheck(qlinearsoftmaxScalar.end(), "end qlinearsoftmaxScalar");
+
+  adfCheck(qlinearsoftmaxSingleaxis.init(), "init qlinearsoftmaxSingleaxis");
+  get_graph_throughput_by_port(qlinearsoftmaxSingleaxis, "plout[0]", qlinearsoftmaxSingleaxis.plout[0], 10*20, sizeof(int8_t), ITER_CNT);
+	adfCheck(qlinearsoftmaxSingleaxis.end(), "end qlinearsoftmaxSingleaxis");
   return 0;
 }
 #endif
