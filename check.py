@@ -36,7 +36,14 @@ def is_file_match(res_path: str,
       print(f"TEST: OK!")
       return True
     else:
+      error = np.abs(res_arr - data_arr)
+      ref = np.abs(data_arr)
+      nonzero = np.nonzero(ref)
+      
+      relerr = np.max(error[nonzero] / ref[nonzero])
+      abserr = np.max(error[nonzero])
       print(f"TEST: FAILED! Only {close_count}/{res_arr.size} passed.")
+      print(f"Max absolute difference: {abserr}\nMax relative difference: {relerr}")
       if is_throw_err == 0: import ipdb;ipdb.set_trace()
   
   else:
