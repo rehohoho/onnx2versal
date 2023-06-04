@@ -51,7 +51,7 @@ class DequantizeLinearGraph : public adf::graph {
       adf::runtime<ratio>(k[0]) = 0.6;
       
       adf::connect<adf::window<INP_SIZE>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<INP_SIZE*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<OUT_SIZE*4>> (k[0].out[0], pout[0]);
     }
 
 };

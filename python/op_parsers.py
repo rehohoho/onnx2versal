@@ -208,7 +208,7 @@ class DequantizeLinearOp(OpParser):
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
-    tout = pad_lastdim(tin, "DequantizeLinearOp tin", get_vector_boundary(tout)) # config
+    tout = pad_lastdim(tout, "DequantizeLinearOp tin", get_vector_boundary(tout)) # config
     self.INP_SIZE, self.OUT_SIZE = tin.size, tout.size # config
     self.dtype = tout.dtype
     self.out_size = tout.size
@@ -493,7 +493,7 @@ class QLinearSoftmaxOp(OpParser):
     graph = "QlinearsoftmaxGraph"
     kernel = "QlinearsoftmaxScalar"
     if self.INP_W_PAD % 16 == 0:
-      kernel = "QlinearsoftmaxSingleaxis"
+      kernel = "QlinearsoftmaxFloatmul" # accuracy option
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
 

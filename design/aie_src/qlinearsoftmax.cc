@@ -2,6 +2,14 @@
 #include "kernel_utils.h"
 
 
+float fastexp2(float val, int precision) {
+  float ans = (1 + val*0.00390625);
+  for (int i = 0; i < precision; i++)
+    ans *= ans;
+  return ans;
+}
+
+
 template <int INP_H, int INP_W, int INP_W_PAD>
 void QlinearsoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<int8_t>* in,
@@ -19,7 +27,7 @@ void QlinearsoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
     for (int j = 0; j < INP_W; j++) {
       float x = window_readincr(in);
       x = (x - x_zero) * x_scale;
-      exp_v[j] = expf(x); // can over and underflow
+      exp_v[j] = fastexp2(x, 8); // can over and underflow
       exp_sum += exp_v[j];
     }
     exp_sum = inv(exp_sum);
@@ -79,7 +87,7 @@ void QlinearsoftmaxFloatmul<INP_H, INP_W, INP_W_PAD>::filter(
   aie::accum<acc48,8> y_zeros;
   aie::accum<acc48,8> res1;
   aie::accum<acc48,8> res2;
-  y_zeros.from_vector(aie::broadcast<int16_t,8>(y_zero), 24);
+  y_zeros.from_vector(aie::broadcast<int16_t,8>(y_zero), EXP_BITSHIFT+OUT_BITSHIFT-12);
 
   for (int i = 0; i < INP_H; i++) {
     aie::vector<float,8> sum = aie::zeros<float,8>();
@@ -106,20 +114,22 @@ void QlinearsoftmaxFloatmul<INP_H, INP_W, INP_W_PAD>::filter(
     
     expsum = INP_W - INP_W_PAD + aie::reduce_add(sum);
     expsum = inv(expsum) * y_scale_inv;
-    int16_t intexpsum = float2fix(expsum, EXP_BITSHIFT);
+    int32_t intexpsum = float2fix(expsum, OUT_BITSHIFT); // necessary for precision
 
     exp_v_ptr = (float *) exp_v;
     for (int j = 0; j < INP_W; j+=16) {
       x1 = aie::load_v<8>(exp_v_ptr); exp_v_ptr += 8;
-      intx1 = float2fix(x1, OUT_BITSHIFT);
-      res1 = aie::mac(y_zeros, intx1, intexpsum);
+      intx1 = float2fix(x1, EXP_BITSHIFT);
+      intx1 = aie::mul(intx1, intexpsum).to_vector<int32_t>(12); // acc48 to int32
+      res1 = aie::add(y_zeros, intx1);
       
       x2 = aie::load_v<8>(exp_v_ptr); exp_v_ptr += 8;
-      intx2 = float2fix(x2, OUT_BITSHIFT);
-      res2 = aie::mac(y_zeros, intx2, intexpsum);
+      intx2 = float2fix(x2, EXP_BITSHIFT);
+      intx2 = aie::mul(intx2, intexpsum).to_vector<int32_t>(12);
+      res2 = aie::add(y_zeros, intx2);
 
       auto res = aie::concat(res1, res2);
-      aie::store_v(out_ptr, res.to_vector<int8_t>(OUT_BITSHIFT+EXP_BITSHIFT)); out_ptr += 16;
+      aie::store_v(out_ptr, res.to_vector<int8_t>(EXP_BITSHIFT+OUT_BITSHIFT-12)); out_ptr += 16;
 
     }
   

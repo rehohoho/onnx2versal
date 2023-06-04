@@ -22,7 +22,7 @@
 
 /**
  * @brief Scalar implementation.
- * QlinearsoftmaxScalar<10,20,32> takes 517922 cycles
+ * QlinearsoftmaxScalar<10,20,32> takes 517922 cycles for expf, cycles 158931 for fastexp2.
  */
 template <int INP_H, int INP_W, int INP_W_PAD>
 class QlinearsoftmaxScalar {
@@ -55,8 +55,8 @@ class QlinearsoftmaxScalar {
 
 
 /**
- * @brief Vector implementation, float multiplication for exp estimation
- * QlinearsoftmaxFloatmul<10,10,16> takes 3684 cycles
+ * @brief Vector implementation using fastexp2 method, float multiplication for exp estimation
+ * QlinearsoftmaxFloatmul<10,10,16> takes 3891 cycles
  * requires INP_W_PAD%16=0.
  */
 template <int INP_H, int INP_W, int INP_W_PAD>
@@ -68,8 +68,8 @@ class QlinearsoftmaxFloatmul {
     int8_t x_zero;
     int8_t y_zero;
 
-    int OUT_BITSHIFT = 16;
-    int EXP_BITSHIFT = 8;
+    int EXP_BITSHIFT = 18;
+    int OUT_BITSHIFT = 10;
 
     // precompute
     float fastexp_scale;
@@ -96,7 +96,7 @@ class QlinearsoftmaxFloatmul {
 
 
 /**
- * @brief Vector implementation for single axis, 
+ * @brief Vector implementation using fastexp2 method for single axis, 
  * QlinearsoftmaxSingleaxis<10,10,16> takes 2257 cycles
  * requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.
  */
