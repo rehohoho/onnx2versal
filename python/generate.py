@@ -27,6 +27,7 @@ if __name__ == '__main__':
   parser.add_argument("onnx",      nargs=1, help="required path to onnx file")
   parser.add_argument("input_npy", nargs=1, help="path to input data .npy, assume first dim is batch")
   parser.add_argument("-data", default="../data", help="path to data directory")
+  parser.add_argument("-ndata", default=1000, help="number of samples for end to end test")
   parser.add_argument("-is_output_all", action="store_true", help="whether to output for all layers")
   args = parser.parse_args()
   args.onnx = args.onnx[0]
@@ -39,9 +40,8 @@ if __name__ == '__main__':
   ort_session = onnxruntime.InferenceSession(onnx_inter_path)
 
   # Load data, shape according to model def, run with ONNX Runtime
-  many_inputs = np.load(args.input_npy)
+  many_inputs = np.load(args.input_npy)[:args.ndata]
   single_input = many_inputs[[0]]
-  data_count = many_inputs.shape[0]
   
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}
   ort_outs = ort_session.run(None, ort_inputs)
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
   cppGenerator = CppGenerator(data_path=args.data, 
                               onnx_path=args.onnx, 
-                              data_count=data_count,
+                              data_count=args.ndata,
                               input_tensors=[single_input], 
                               output_tensors=output_tensors, 
                               is_output_all=args.is_output_all)
@@ -66,7 +66,7 @@ if __name__ == '__main__':
   ort_inputs = {ort_session.get_inputs()[0].name: many_inputs}
   ort_outs = ort_session.run(None, ort_inputs)
   
-  model_input_path = f"{args.data}/{list(cppGenerator.modelin_2_tensor.keys())[0]}_host.txt"
-  model_output_path = f"{args.data}/{list(cppGenerator.modelout_2_op.values())[0].name}_goldenout_host.txt"
+  model_input_path = f"{args.data}/host_{list(cppGenerator.modelin_2_tensor.keys())[0]}.txt"
+  model_output_path = f"{args.data}/host_{list(cppGenerator.modelout_2_op.keys())[0]}.txt"
   save_tensor(model_input_path, many_inputs)
   save_tensor(model_output_path, ort_outs[-1])

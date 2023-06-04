@@ -353,25 +353,25 @@ int main(int argc, char ** argv) {{
       f.write(self.generate_cpp_graph_str())
   
   def get_xtg_masters(self, is_output_inter: bool) -> str:
+    file_prefix = ""
+    if not is_output_inter:
+      file_prefix = "host_"
     masters = [
-      f'("plin{i}_{self.graph_name}_{inpname}", f"{{args.input_dir}}/{inpname}.txt", 64, ' + \
+      f'("plin{i}_{self.graph_name}_{inpname}", f"{{args.input_dir}}/{file_prefix}{inpname}.txt", 64, ' + \
       f'"{str(self.modelin_2_tensor[inpname].dtype)}")'
       for i, inpname in enumerate(self.modelin_2_tensor)
     ]
-    if not is_output_inter:
-      masters = [i.replace(".txt", "_host.txt") for i in masters]
     return "    " + ",\n".join(masters).replace("\n", "\n    ")
   
   def get_xtg_slaves(self, is_output_inter: bool) -> str:
     slaves = []
-    for i, op in enumerate(self.modelout_2_op.values()):
+    for out_name, op in self.modelout_2_op.items():
       size = op.out_size
-      filename = list(op.filename_2_tensors.keys())[-1]
       if not is_output_inter:
         size *= self.data_count
-        filename = filename.replace(".txt", "_host.txt")
+        out_name = f"host_{out_name}"
       slaves += [
-        f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{filename}", ' + \
+        f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{out_name}.txt", ' + \
         f'64, "{str(op.dtype)}", {size})'
         for i, op in enumerate(self.modelout_2_op.values())
       ]
@@ -482,10 +482,10 @@ param=hw_emu.enableProfiling=false
       for i, inpname in enumerate(self.modelin_2_tensor)
     ]
     outfiles += [
-      f'#define OUTPUT{i}_FILENAME "{list(op.filename_2_tensors.keys())[-1]}"'
-      for i, op in enumerate(self.modelout_2_op.values())
+      f'#define OUTPUT{i}_FILENAME "{out_name}.txt"'
+      for i, out_name in enumerate(self.modelout_2_op.keys())
     ]
-    outfiles_host = [i.replace(".txt", "_host.txt") for i in outfiles]
+    outfiles_host = [i.replace('FILENAME "', 'FILENAME "host_') for i in outfiles]
     outfiles = ["#ifdef __OUTPUT_INTER__"] + outfiles + ["#else"] + outfiles_host + ["#endif"]
     
     n_outs = len(self.modelout_2_op)
@@ -563,7 +563,7 @@ xrtKernelClose(out{i}_khdl);
 #ifdef __IS_SW_EMU__
 xrtBOSync(out{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);
 #endif
-write_arr_to_file(out_dir+OUTPUT{i}_FILENAME, out{i}_bomapped, iter_cnt*{op.out_size});
+write_arr_to_file<{dtype_to_cstr(op.dtype)}>(out_dir+OUTPUT{i}_FILENAME, out{i}_bomapped, iter_cnt*{op.out_size});
 xrtBOFree(out{i}_bohdl);"""
       for i, op in enumerate(self.modelout_2_op.values())
     ]
@@ -600,7 +600,7 @@ xrtRunClose(inter{i}_rhdl);
 xrtKernelClose(inter{i}_khdl);""")
       optout_syncs.append(
         f"xrtBOSync(inter{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);")
-      optout_writes.append(f"""write_arr_to_file(out_dir+INTER{i}_FILENAME, inter{i}_bomapped, iter_cnt*{op.out_size});
+      optout_writes.append(f"""write_arr_to_file<{dtype_to_cstr(op.dtype)}>(out_dir+INTER{i}_FILENAME, inter{i}_bomapped, iter_cnt*{op.out_size});
 xrtBOFree(inter{i}_bohdl);""")
       i += 1
     optout_syncs.append("#endif")
@@ -623,9 +623,11 @@ xrtBOFree(inter{i}_bohdl);""")
 #define V_PER_LINE      2
 {self.get_host_datafiles()}
 
+
+template <typename TT>
 void write_arr_to_file(
    const std::string& filename,
-   const float* bomapped,
+   const TT* bomapped,
    const size_t bosize
 ) {{
    std::ofstream file;
