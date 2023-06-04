@@ -37,6 +37,99 @@ void QlinearsoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
 
 
 template <int INP_H, int INP_W, int INP_W_PAD>
+QlinearsoftmaxFloatmul<INP_H, INP_W, INP_W_PAD>::QlinearsoftmaxFloatmul (
+  float x_scale,
+  float y_scale,
+  int8_t x_zero,
+  int8_t y_zero
+): x_scale(x_scale), y_scale(y_scale), x_zero(x_zero), y_zero(y_zero) {
+  fastexp_scale = x_scale/256;
+  fastexp_shift = -x_zero*x_scale/256+1;
+};
+
+
+template <int INP_H, int INP_W, int INP_W_PAD>
+void QlinearsoftmaxFloatmul<INP_H, INP_W, INP_W_PAD>::filter(
+	input_window<int8_t>* in,
+  output_window<int8_t>* out
+) {
+  PROFILE_HEADER(printf(
+    "Running QlinearsoftmaxFloatmul<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  float exp_v[INP_W_PAD];
+  float c = 0.00390625;
+  float y_scale_inv = inv(y_scale);
+  float expsum;
+  
+  float *exp_v_ptr;
+  int8_t *out_ptr = (int8_t *) out->ptr; 
+
+  aie::vector<float,8> x1 = undef_v8float();
+  aie::vector<float,8> x2 = undef_v8float();
+  aie::vector<int32_t,8> intx1 = undef_v8int32();
+  aie::vector<int32_t,8> intx2 = undef_v8int32();
+  v16int16 raw_in_v = undef_v16int16();
+
+  aie::accum<accfloat,8> fastexp_shifts;
+  fastexp_shifts.from_vector(aie::broadcast<float,8>(fastexp_shift), 0);
+  
+  aie::accum<acc48,8> y_zeros;
+  aie::accum<acc48,8> res1;
+  aie::accum<acc48,8> res2;
+  y_zeros.from_vector(aie::broadcast<int16_t,8>(y_zero), 24);
+
+  for (int i = 0; i < INP_H; i++) {
+    aie::vector<float,8> sum = aie::zeros<float,8>();
+    exp_v_ptr = (float *) exp_v;
+
+    for (int j = 0; j < INP_W_PAD; j+=16) {
+
+      raw_in_v = unpack(window_readincr_v16(in));
+      x1 = fix2float(ext_v(raw_in_v, 0), 0);
+      x1 = aie::mac(fastexp_shifts, x1, fastexp_scale).to_vector<float>(0);
+      
+      x2 = fix2float(ext_v(raw_in_v, 1), 0);
+      x2 = aie::mac(fastexp_shifts, x2, fastexp_scale).to_vector<float>(0);
+
+      for (int k = 0; k < 8; k++) {
+        x1 = aie::mul_square(x1);
+        x2 = aie::mul_square(x2);
+      }
+      sum = aie::add(sum, x1);
+      aie::store_v(exp_v_ptr, x1); exp_v_ptr += 8;
+      sum = aie::add(sum, x2);
+      aie::store_v(exp_v_ptr, x2); exp_v_ptr += 8;
+    }
+    
+    expsum = INP_W - INP_W_PAD + aie::reduce_add(sum);
+    expsum = inv(expsum) * y_scale_inv;
+    int16_t intexpsum = float2fix(expsum, EXP_BITSHIFT);
+
+    exp_v_ptr = (float *) exp_v;
+    for (int j = 0; j < INP_W; j+=16) {
+      x1 = aie::load_v<8>(exp_v_ptr); exp_v_ptr += 8;
+      intx1 = float2fix(x1, OUT_BITSHIFT);
+      res1 = aie::mac(y_zeros, intx1, intexpsum);
+      
+      x2 = aie::load_v<8>(exp_v_ptr); exp_v_ptr += 8;
+      intx2 = float2fix(x2, OUT_BITSHIFT);
+      res2 = aie::mac(y_zeros, intx2, intexpsum);
+
+      auto res = aie::concat(res1, res2);
+      aie::store_v(out_ptr, res.to_vector<int8_t>(OUT_BITSHIFT+EXP_BITSHIFT)); out_ptr += 16;
+
+    }
+  
+  } // INP_H
+
+  PROFILE_FOOTER;
+}
+
+
+template <int INP_H, int INP_W, int INP_W_PAD>
 QlinearsoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::QlinearsoftmaxSingleaxis (
   float x_scale,
   float y_scale,

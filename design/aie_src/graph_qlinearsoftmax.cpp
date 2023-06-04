@@ -37,6 +37,12 @@ QlinearsoftmaxGraphTest<QlinearsoftmaxScalar,10,20,32> qlinearsoftmaxScalar(
   "qlinearsoftmax_int8in.txt", 
   "qlinearsoftmax_int8out_shape10x20_QlinearsoftmaxScalar.txt");
 
+QlinearsoftmaxGraphTest<QlinearsoftmaxFloatmul,10,20,32> qlinearsoftmaxFloatmul(
+  "qlinearsoftmaxFloatmul", 
+  0.004, 0.003, -128, -128,
+  "qlinearsoftmax_int8in.txt", 
+  "qlinearsoftmax_int8out_shape10x20_QlinearsoftmaxFloatmul.txt");
+
 QlinearsoftmaxGraphTest<QlinearsoftmaxSingleaxis,10,20,32> qlinearsoftmaxSingleaxis(
   "qlinearsoftmaxSingleaxis", 
   0.004, 0.003, -128, -128,
@@ -49,6 +55,10 @@ int main(int argc, char ** argv) {
 	adfCheck(qlinearsoftmaxScalar.init(), "init qlinearsoftmaxScalar");
   adfCheck(qlinearsoftmaxScalar.run(ITER_CNT), "run qlinearsoftmaxScalar");
 	adfCheck(qlinearsoftmaxScalar.end(), "end qlinearsoftmaxScalar");
+
+  adfCheck(qlinearsoftmaxFloatmul.init(), "init qlinearsoftmaxFloatmul");
+  adfCheck(qlinearsoftmaxFloatmul.run(ITER_CNT), "run qlinearsoftmaxFloatmul");
+	adfCheck(qlinearsoftmaxFloatmul.end(), "end qlinearsoftmaxFloatmul");
 
   adfCheck(qlinearsoftmaxSingleaxis.init(), "init qlinearsoftmaxSingleaxis");
   adfCheck(qlinearsoftmaxSingleaxis.run(ITER_CNT), "run qlinearsoftmaxSingleaxis");
@@ -63,6 +73,10 @@ int main(int argc, char ** argv) {
 	adfCheck(qlinearsoftmaxScalar.init(), "init qlinearsoftmaxScalar");
   get_graph_throughput_by_port(qlinearsoftmaxScalar, "plout[0]", qlinearsoftmaxScalar.plout[0], 10*20, sizeof(int8_t), ITER_CNT);
 	adfCheck(qlinearsoftmaxScalar.end(), "end qlinearsoftmaxScalar");
+
+  adfCheck(qlinearsoftmaxFloatmul.init(), "init qlinearsoftmaxFloatmul");
+  get_graph_throughput_by_port(qlinearsoftmaxFloatmul, "plout[0]", qlinearsoftmaxFloatmul.plout[0], 10*20, sizeof(int8_t), ITER_CNT);
+	adfCheck(qlinearsoftmaxFloatmul.end(), "end qlinearsoftmaxFloatmul");
 
   adfCheck(qlinearsoftmaxSingleaxis.init(), "init qlinearsoftmaxSingleaxis");
   get_graph_throughput_by_port(qlinearsoftmaxSingleaxis, "plout[0]", qlinearsoftmaxSingleaxis.plout[0], 10*20, sizeof(int8_t), ITER_CNT);

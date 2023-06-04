@@ -55,6 +55,47 @@ class QlinearsoftmaxScalar {
 
 
 /**
+ * @brief Vector implementation, float multiplication for exp estimation
+ * QlinearsoftmaxFloatmul<10,10,16> takes 3684 cycles
+ * requires INP_W_PAD%16=0.
+ */
+template <int INP_H, int INP_W, int INP_W_PAD>
+class QlinearsoftmaxFloatmul {
+	
+  private:
+    float x_scale;
+    float y_scale;
+    int8_t x_zero;
+    int8_t y_zero;
+
+    int OUT_BITSHIFT = 16;
+    int EXP_BITSHIFT = 8;
+
+    // precompute
+    float fastexp_scale;
+    float fastexp_shift;
+
+  public:
+    QlinearsoftmaxFloatmul (
+      float x_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t y_zero
+    );
+
+		void filter(
+			input_window<int8_t>* in,
+			output_window<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+			static_assert(INP_W_PAD % 16 == 0);
+			REGISTER_FUNCTION(QlinearsoftmaxFloatmul::filter);
+		}
+};
+
+
+/**
  * @brief Vector implementation for single axis, 
  * QlinearsoftmaxSingleaxis<10,10,16> takes 2257 cycles
  * requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.
