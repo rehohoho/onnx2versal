@@ -10,6 +10,12 @@ from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, \
   ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp, QLinearSoftmaxOp, SoftmaxOp
 
 
+def get_filename(filename: str, is_dout: bool = True):
+  filename = os.path.splitext(filename)[0]
+  suffix = "" if is_dout else "_host"
+  return f"{filename}{suffix}.txt"
+
+
 class CppGenerator:
 
   def __init__(self,
@@ -42,8 +48,8 @@ class CppGenerator:
     self.modelout_2_op = {i.name: None for i in model.graph.output}
 
     # save inputs
-    for input_name, input_tensor in self.modelin_2_tensor.items():
-      save_tensor(f"{self.data_path}/{input_name}.txt", input_tensor)
+    for inp_name, input_tensor in self.modelin_2_tensor.items():
+      save_tensor(f"{self.data_path}/{get_filename(inp_name)}", input_tensor)
 
     # store I/O tensors and model parameters
     self.input_tensors: List[np.ndarray] = input_tensors
@@ -216,7 +222,7 @@ class CppGenerator:
     return "    " + "\n".join(i.get_kernel_line() for i in self.op_list).replace("\n", "\n    ")
 
   def get_args(self) -> str:
-    args = [f"const std::string& {inpname}" for inpname in self.modelin_2_tensor]
+    args = [f"const std::string& {inp_name}" for inp_name in self.modelin_2_tensor]
     args += [f"const std::string& {op.name}_out" for op in self.modelout_2_op.values()]
     args += [i.get_arg_line() for i in self.op_list]
     args += [f"const std::string& {op.name}_out = std::string()" for op in self.op_list 
@@ -231,8 +237,8 @@ class CppGenerator:
   
   def get_plins(self) -> str:
     plins = [
-      f'plin[{i}] = adf::input_plio::create("plin{i}_"+id+"_{inpname}", PLIO64_ARG({inpname}));'
-      for i, inpname in enumerate(self.modelin_2_tensor)
+      f'plin[{i}] = adf::input_plio::create("plin{i}_"+id+"_{inp_name}", PLIO64_ARG({inp_name}));'
+      for i, inp_name in enumerate(self.modelin_2_tensor)
     ]
     return "      " + "\n".join(plins).replace("\n", "\n      ")
   
@@ -259,12 +265,12 @@ class CppGenerator:
     weights = [i for i in weights if i != ""]
     return "\n".join(weights)
   
-  def get_callargs(self, is_output_inter: bool) -> str:
-    args = [f'"{inpname}.txt"' for inpname in self.modelin_2_tensor]
-    args += [f'"{list(op.filename_2_tensors.keys())[-1]}"' for op in self.modelout_2_op.values()]
+  def get_callargs(self, is_dout: bool) -> str:
+    args = [f'"{get_filename(inp_name)}"' for inp_name in self.modelin_2_tensor]
+    args += [f'"{op.get_output_filename()}"' for op in self.modelout_2_op.values()]
     args += [i.get_callarg_line() for i in self.op_list]
-    if is_output_inter:
-      args += [f'"{list(op.filename_2_tensors.keys())[-1]}"' for op in self.op_list 
+    if is_dout:
+      args += [f'"{op.get_output_filename()}"' for op in self.op_list 
                if op not in self.modelout_2_op.values()]
     args = [i for i in args if i != ""]
     return "  " + ",\n".join(args).replace("\n", "\n  ")
@@ -318,12 +324,12 @@ class {self.graph_name.capitalize()} : public adf::graph {{
 #ifdef __OUTPUT_INTER__
 {self.graph_name.capitalize()} {self.graph_name} (
   "{self.graph_name}",
-{self.get_callargs(is_output_inter=True)}
+{self.get_callargs(is_dout=True)}
 );
 #else
 {self.graph_name.capitalize()} {self.graph_name} (
   "{self.graph_name}",
-{self.get_callargs(is_output_inter=False)}
+{self.get_callargs(is_dout=False)}
 );
 #endif
 
@@ -352,40 +358,34 @@ int main(int argc, char ** argv) {{
     with open(f"../design/aie_src/graph_{self.graph_name}.cpp", "w") as f:
       f.write(self.generate_cpp_graph_str())
   
-  def get_xtg_masters(self, is_output_inter: bool) -> str:
-    file_prefix = ""
-    if not is_output_inter:
-      file_prefix = "host_"
+  def get_xtg_masters(self, is_dout: bool) -> str:
     masters = [
-      f'("plin{i}_{self.graph_name}_{inpname}", f"{{args.input_dir}}/{file_prefix}{inpname}.txt", 64, ' + \
-      f'"{str(self.modelin_2_tensor[inpname].dtype)}")'
-      for i, inpname in enumerate(self.modelin_2_tensor)
+      f'("plin{i}_{self.graph_name}_{inp_name}", f"{{args.input_dir}}/{get_filename(inp_name, is_dout)}", 64, ' + \
+      f'"{str(self.modelin_2_tensor[inp_name].dtype)}")'
+      for i, inp_name in enumerate(self.modelin_2_tensor)
     ]
     return "    " + ",\n".join(masters).replace("\n", "\n    ")
   
-  def get_xtg_slaves(self, is_output_inter: bool) -> str:
+  def get_xtg_slaves(self, is_dout: bool) -> str:
     slaves = []
     for out_name, op in self.modelout_2_op.items():
-      size = op.out_size
-      if not is_output_inter:
-        size *= self.data_count
-        out_name = f"host_{out_name}"
+      size = op.out_size if is_dout else op.out_size * self.data_count
       slaves += [
-        f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{out_name}.txt", ' + \
+        f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{get_filename(op.get_output_filename(), is_dout)}", ' + \
         f'64, "{str(op.dtype)}", {size})'
         for i, op in enumerate(self.modelout_2_op.values())
       ]
 
-    if is_output_inter:
+    if is_dout:
       i = len(self.modelout_2_op)
       for op in self.op_list:
         if op in self.modelout_2_op.values(): continue
         slaves.append(
-          f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{list(op.filename_2_tensors.keys())[-1]}", 64, "{str(op.dtype)}", {op.out_size})')
+          f'("plout{i}_{self.graph_name}_{op.name}", f"{{args.output_dir}}/{op.get_output_filename()}", 64, "{str(op.dtype)}", {op.out_size})')
         i += 1
     return "    " + ",\n".join(slaves).replace("\n", "\n    ")
   
-  def generate_xtg_python_str(self, is_output_inter: bool):
+  def generate_xtg_python_str(self, is_dout: bool):
     return f"""
 import argparse
 import logging
@@ -402,11 +402,11 @@ if __name__ == "__main__":
   logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 
   master_list = [
-{self.get_xtg_masters(is_output_inter=is_output_inter)}
+{self.get_xtg_masters(is_dout=is_dout)}
   ]
 
   slave_list = [
-{self.get_xtg_slaves(is_output_inter=is_output_inter)}
+{self.get_xtg_slaves(is_dout=is_dout)}
   ]
   
   design = ExternalTraffic(master_list, slave_list)
@@ -415,9 +415,9 @@ if __name__ == "__main__":
 
   def generate_xtg_python(self):
     with open(f"../design/trafficgen/xtg_{self.graph_name}.py", "w") as f:
-      f.write(self.generate_xtg_python_str(is_output_inter=False))
+      f.write(self.generate_xtg_python_str(is_dout=False))
     with open(f"../design/trafficgen/xtg_{self.graph_name}_output_inter.py", "w") as f:
-      f.write(self.generate_xtg_python_str(is_output_inter=True))
+      f.write(self.generate_xtg_python_str(is_dout=True))
   
   def get_cfg_input_kernels(self) -> str:
     mm2s_names = {}
@@ -434,10 +434,10 @@ if __name__ == "__main__":
     
     return header
   
-  def get_cfg_output_kernels(self, is_output_inter: bool) -> str:
+  def get_cfg_output_kernels(self, is_dout: bool) -> str:
     s2mm_names = {}
     ops = list(self.modelout_2_op.values())
-    if is_output_inter:
+    if is_dout:
       ops += [op for op in self.op_list if op not in self.modelout_2_op.values()]
     for i, op in enumerate(ops):
       dtype = str(op.dtype)
@@ -454,14 +454,14 @@ if __name__ == "__main__":
   
   def get_cfg_input_scs(self) -> str:
     in_scs = [
-      f"stream_connect={tensor.dtype}_mm2s_{i}.s:ai_engine_0.plin{i}_{self.graph_name}_{inpname}"
-      for i, (inpname, tensor) in enumerate(self.modelin_2_tensor.items())
+      f"stream_connect={tensor.dtype}_mm2s_{i}.s:ai_engine_0.plin{i}_{self.graph_name}_{inp_name}"
+      for i, (inp_name, tensor) in enumerate(self.modelin_2_tensor.items())
     ]
     return "\n".join(in_scs)
 
-  def get_cfg_output_scs(self, is_output_inter: bool) -> str:
+  def get_cfg_output_scs(self, is_dout: bool) -> str:
     ops = list(self.modelout_2_op.values())
-    if is_output_inter:
+    if is_dout:
       ops += [op for op in self.op_list if op not in self.modelout_2_op.values()]
     out_scs = [
       f"stream_connect=ai_engine_0.plout{i}_{self.graph_name}_{op.name}:{op.dtype}_s2mm_{i}.s"
@@ -469,15 +469,15 @@ if __name__ == "__main__":
     ]
     return "\n".join(out_scs)  
   
-  def generate_cfg_str(self, is_output_inter: bool):
+  def generate_cfg_str(self, is_dout: bool):
     return f"""
 [connectivity]
 {self.get_cfg_input_kernels()}
-{self.get_cfg_output_kernels(is_output_inter=is_output_inter)}
+{self.get_cfg_output_kernels(is_dout=is_dout)}
 
 #Connections For LeNET Insts 0...
 {self.get_cfg_input_scs()}
-{self.get_cfg_output_scs(is_output_inter=is_output_inter)}
+{self.get_cfg_output_scs(is_dout=is_dout)}
 
 [advanced]
 # Disable Profiling in hw_emu so that it is faster...
@@ -486,25 +486,34 @@ param=hw_emu.enableProfiling=false
 
   def generate_cfg(self):
     with open(f"../design/system_configs/{self.graph_name}.cfg", "w") as f:
-      f.write(self.generate_cfg_str(is_output_inter=False))
+      f.write(self.generate_cfg_str(is_dout=False))
     with open(f"../design/system_configs/{self.graph_name}_output_inter.cfg", "w") as f:
-      f.write(self.generate_cfg_str(is_output_inter=True))
+      f.write(self.generate_cfg_str(is_dout=True))
 
   def get_host_datafiles(self) -> str:
-    outfiles = [
-      f'#define INPUT{i}_FILENAME "{inpname}.txt"'
-      for i, inpname in enumerate(self.modelin_2_tensor)
+    outfiles = ["#ifdef __OUTPUT_INTER__"]
+    outfiles += [
+      f'#define INPUT{i}_FILENAME "{get_filename(inp_name)}"'
+      for i, inp_name in enumerate(self.modelin_2_tensor)
     ]
     outfiles += [
-      f'#define OUTPUT{i}_FILENAME "{out_name}.txt"'
-      for i, out_name in enumerate(self.modelout_2_op.keys())
+      f'#define OUTPUT{i}_FILENAME "{get_filename(op.get_output_filename())}"'
+      for i, op in enumerate(self.modelout_2_op.values())
     ]
-    outfiles_host = [i.replace('FILENAME "', 'FILENAME "host_') for i in outfiles]
-    outfiles = ["#ifdef __OUTPUT_INTER__"] + outfiles + ["#else"] + outfiles_host + ["#endif"]
+    outfiles += ["#else"]
+    outfiles += [
+      f'#define INPUT{i}_FILENAME "{get_filename(inp_name, False)}"'
+      for i, inp_name in enumerate(self.modelin_2_tensor)
+    ]
+    outfiles += [
+      f'#define OUTPUT{i}_FILENAME "{get_filename(op.get_output_filename(), False)}"'
+      for i, op in enumerate(self.modelout_2_op.values())
+    ]
+    outfiles += ["#endif"]
     
     n_outs = len(self.modelout_2_op)
     outfiles += [
-      f'#define INTER{n_outs+i}_FILENAME "{list(op.filename_2_tensors.keys())[-1]}"'
+      f'#define INTER{n_outs+i}_FILENAME "{op.get_output_filename()}"'
       for i, op in enumerate(self.op_list) if op not in self.modelout_2_op.values()
     ]
     return "\n".join(outfiles)
@@ -513,8 +522,8 @@ param=hw_emu.enableProfiling=false
     inp_inits = []
     inp_initsyncs = ["", "#ifdef __IS_SW_EMU__"]
     
-    for i, input_name in enumerate(self.modelin_2_tensor):
-      input_tensor = self.modelin_2_tensor[input_name]
+    for i, inp_name in enumerate(self.modelin_2_tensor):
+      input_tensor = self.modelin_2_tensor[inp_name]
       size = input_tensor.size
       dtype = input_tensor.dtype
       ctype = dtype_to_cstr(dtype)

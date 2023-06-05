@@ -5,7 +5,7 @@ import onnx
 from onnx import helper
 import onnxruntime
 
-from generate_cpp import CppGenerator
+from generate_cpp import CppGenerator, get_filename
 from op_parsers import save_tensor
 
 
@@ -66,7 +66,10 @@ if __name__ == '__main__':
   ort_inputs = {ort_session.get_inputs()[0].name: many_inputs}
   ort_outs = ort_session.run(None, ort_inputs)
   
-  model_input_path = f"{args.data}/host_{list(cppGenerator.modelin_2_tensor.keys())[0]}.txt"
-  model_output_path = f"{args.data}/host_{list(cppGenerator.modelout_2_op.keys())[0]}.txt"
+  inp_filename = get_filename(list(cppGenerator.modelin_2_tensor.keys())[0], False)
+  model_input_path = f"{args.data}/{inp_filename}"
+  out_op = list(cppGenerator.modelout_2_op.values())[-1]
+  out_filename = get_filename(out_op.get_output_filename(), False)
+  model_output_path = f"{args.data}/{out_filename}"
   save_tensor(model_input_path, many_inputs)
   save_tensor(model_output_path, ort_outs[-1])

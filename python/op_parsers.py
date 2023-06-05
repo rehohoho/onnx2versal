@@ -84,6 +84,8 @@ class OpParser:
     self.name = name
     self.varname_2_tensors = {}  # generate files
     self.filename_2_tensors = {} # output txt
+
+    self.tout = None             # reference copy to compare with
   
   def get_include_line(self) -> str:
     return f'#include "{self.include_file}"'
@@ -114,6 +116,11 @@ class OpParser:
   
   def get_connect_line(self, last_port: str) -> str:
     return f"adf::connect<> ({last_port}, {self.name}.pin[0]);"
+
+  def get_output_filename(self) -> str:
+    if len(self.filename_2_tensors) == 0:
+      raise ValueError(f"No output filename for {self.name}.")
+    return list(self.filename_2_tensors.keys())[-1]
   
   def save_txt(self, data_path: str):
     for outname, outtensor in self.filename_2_tensors.items():
@@ -275,8 +282,7 @@ class GemmOp(OpParser):
     if chunkSize >= self.N: chunkSize = self.N
     if self.K % 2 == 0 and chunkSize % 4 == 0: kernel = "GemmReluMKKN"
     if chunkSize % 8 == 0 and self.N % 4 == 0: concat_kernel = "ConcatVector"
-    if not self.is_relu: kernel = kernel.replace("Relu", "")
-    return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N}>"
+    return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
   
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
