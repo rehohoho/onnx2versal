@@ -521,17 +521,8 @@ param=hw_emu.enableProfiling=false
       inp_inits.append(f"""xrtBufferHandle in{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{size}*sizeof({ctype}), 0, 0);
 auto in{i}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(in{i}_bohdl));
 printf("Input{i} memory virtual addr 0x%p\\n", in{i}_bomapped);
+read_arr_from_file(data_dir+INPUT{i}_FILENAME, in{i}_bomapped, iter_cnt*{size});
 
-std::ifstream inp_file;
-inp_file.open(data_dir+INPUT{i}_FILENAME, std::ifstream::in);
-if (!inp_file) printf("Unable to open %s.\\n", (data_dir+INPUT{i}_FILENAME).c_str());
-{ctype} d;
-for (int j = 0; j < iter_cnt*{size}; j+=V_PER_LINE) {{
-  for (int k = 0; k < V_PER_LINE; k++) {{
-      inp_file >> d;
-      in{i}_bomapped[j+k] = d;
-  }}
-}}
 xrtKernelHandle in{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{dtype}_mm2s:{{{dtype}_mm2s_{i}}}");
 xrtRunHandle in{i}_rhdl = xrtRunOpen(in{i}_khdl); 
 xrtRunSetArg(in{i}_rhdl, 0, in{i}_bohdl);
@@ -578,7 +569,7 @@ xrtKernelClose(out{i}_khdl);
 #ifdef __IS_SW_EMU__
 xrtBOSync(out{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);
 #endif
-write_arr_to_file<{dtype_to_cstr(op.dtype)}>(out_dir+OUTPUT{i}_FILENAME, out{i}_bomapped, iter_cnt*{op.out_size});
+write_arr_to_file(out_dir+OUTPUT{i}_FILENAME, out{i}_bomapped, iter_cnt*{op.out_size});
 xrtBOFree(out{i}_bohdl);"""
       for i, op in enumerate(self.modelout_2_op.values())
     ]
@@ -615,7 +606,7 @@ xrtRunClose(inter{i}_rhdl);
 xrtKernelClose(inter{i}_khdl);""")
       optout_syncs.append(
         f"xrtBOSync(inter{i}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);")
-      optout_writes.append(f"""write_arr_to_file<{dtype_to_cstr(op.dtype)}>(out_dir+INTER{i}_FILENAME, inter{i}_bomapped, iter_cnt*{op.out_size});
+      optout_writes.append(f"""write_arr_to_file(out_dir+INTER{i}_FILENAME, inter{i}_bomapped, iter_cnt*{op.out_size});
 xrtBOFree(inter{i}_bohdl);""")
       i += 1
     optout_syncs.append("#endif")
@@ -624,6 +615,7 @@ xrtBOFree(inter{i}_bohdl);""")
   def generate_host_cpp_str(self) -> str:
     return f"""
 #include <fstream>
+#include <type_traits>
 
 #include "graph_{self.graph_name}.cpp"
 
@@ -635,22 +627,48 @@ xrtBOFree(inter{i}_bohdl);""")
 #include "adf/adf_api/XRTConfig.h"
 
 
-#define V_PER_LINE      2
+#define PLIO_BYTEWIDTH  8
 {self.get_host_datafiles()}
+
+
+template <typename TT>
+void read_arr_from_file(
+   const std::string& filename,
+   TT* bomapped,
+   const size_t bosize
+) {{
+   std::ifstream inp_file;
+   inp_file.open(filename, std::ifstream::in);
+   if (!inp_file) printf("Unable to open %s.\\n", filename.c_str());
+   
+   int v_per_line = PLIO_BYTEWIDTH / sizeof(TT);
+   TT d;
+   for (int j = 0; j < bosize; j+=v_per_line) {{
+     for (int k = 0; k < v_per_line; k++) {{
+         inp_file >> d;
+         bomapped[j+k] = d;
+     }}
+   }}
+}}
 
 
 template <typename TT>
 void write_arr_to_file(
    const std::string& filename,
-   const TT* bomapped,
+   TT* bomapped,
    const size_t bosize
 ) {{
    std::ofstream file;
    file.open(filename, std::ofstream::out);
    if (!file) printf("Unable to open %s\\n", filename.c_str());
-   for (int j = 0; j < bosize; j+=V_PER_LINE) {{
-      for (int k = 0; k < V_PER_LINE; k++) {{
-         file << bomapped[j+k] << " ";
+
+   typedef typename std::conditional<(std::is_same<TT, float>::value), 
+                                     float, int>::type fout_dtype;
+   int v_per_line = PLIO_BYTEWIDTH / sizeof(TT);
+
+   for (int j = 0; j < bosize; j+=v_per_line) {{
+      for (int k = 0; k < v_per_line; k++) {{
+         file << (fout_dtype) bomapped[j+k] << " ";
       }}
       file << std::endl;
    }}
