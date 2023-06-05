@@ -516,28 +516,29 @@ param=hw_emu.enableProfiling=false
     for i, input_name in enumerate(self.modelin_2_tensor):
       input_tensor = self.modelin_2_tensor[input_name]
       size = input_tensor.size
-      dtype = dtype_to_cstr(input_tensor.dtype)
-      inp_inits.append(f"""xrtBufferHandle in{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{size}*sizeof({dtype}), 0, 0);
-auto in{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(in{i}_bohdl));
+      dtype = input_tensor.dtype
+      ctype = dtype_to_cstr(dtype)
+      inp_inits.append(f"""xrtBufferHandle in{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{size}*sizeof({ctype}), 0, 0);
+auto in{i}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(in{i}_bohdl));
 printf("Input{i} memory virtual addr 0x%p\\n", in{i}_bomapped);
 
 std::ifstream inp_file;
 inp_file.open(data_dir+INPUT{i}_FILENAME, std::ifstream::in);
 if (!inp_file) printf("Unable to open %s.\\n", (data_dir+INPUT{i}_FILENAME).c_str());
-{dtype} d;
+{ctype} d;
 for (int j = 0; j < iter_cnt*{size}; j+=V_PER_LINE) {{
   for (int k = 0; k < V_PER_LINE; k++) {{
       inp_file >> d;
       in{i}_bomapped[j+k] = d;
   }}
 }}
-xrtKernelHandle in{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "mm2s:{{mm2s_{i}}}");
+xrtKernelHandle in{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{dtype}_mm2s:{{{dtype}_mm2s_{i}}}");
 xrtRunHandle in{i}_rhdl = xrtRunOpen(in{i}_khdl); 
 xrtRunSetArg(in{i}_rhdl, 0, in{i}_bohdl);
 xrtRunSetArg(in{i}_rhdl, 2, iter_cnt*{size});
 xrtRunStart(in{i}_rhdl);""")
       inp_initsyncs.append(
-        f"xrtBOSync(in{i}_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, iter_cnt*{size}*sizeof({dtype}), 0);"
+        f"xrtBOSync(in{i}_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, iter_cnt*{size}*sizeof({ctype}), 0);"
       )
     
     inp_initsyncs.append("#endif")
@@ -556,12 +557,12 @@ xrtBOFree(in{i}_bohdl);"""
   def get_host_output_inits(self) -> str:
     out_inits = []
     for i, op in enumerate(self.modelout_2_op.values()):
-      dtype = dtype_to_cstr(op.dtype)
-      out_inits.append(f"""xrtBufferHandle out{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({dtype}), 0, 0);
-auto out{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(out{i}_bohdl));
+      ctype = dtype_to_cstr(op.dtype)
+      out_inits.append(f"""xrtBufferHandle out{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({ctype}), 0, 0);
+auto out{i}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(out{i}_bohdl));
 printf("Output{i} memory virtual addr 0x%p\\n", out{i}_bomapped);
 
-xrtKernelHandle out{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{{s2mm_{i}}}");
+xrtKernelHandle out{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{op.dtype}_s2mm:{{{op.dtype}_s2mm_{i}}}");
 xrtRunHandle out{i}_rhdl = xrtRunOpen(out{i}_khdl); 
 xrtRunSetArg(out{i}_rhdl, 0, out{i}_bohdl);
 xrtRunSetArg(out{i}_rhdl, 2, iter_cnt*{op.out_size});
@@ -588,12 +589,12 @@ xrtBOFree(out{i}_bohdl);"""
     i = len(self.modelout_2_op)
     for op in self.op_list:
       if op in self.modelout_2_op.values(): continue
-      dtype = dtype_to_cstr(op.dtype)
+      ctype = dtype_to_cstr(op.dtype)
       optout_inits.append(f"""
-xrtBufferHandle inter{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({dtype}), 0, 0);
-auto inter{i}_bomapped = reinterpret_cast<{dtype}*>(xrtBOMap(inter{i}_bohdl));
+xrtBufferHandle inter{i}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({ctype}), 0, 0);
+auto inter{i}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(inter{i}_bohdl));
 printf("Inter{i} memory virtual addr 0x%p\\n", inter{i}_bomapped);
-xrtKernelHandle inter{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "s2mm:{{s2mm_{i}}}");
+xrtKernelHandle inter{i}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{op.dtype}_s2mm:{{{op.dtype}_s2mm_{i}}}");
 xrtRunHandle inter{i}_rhdl = xrtRunOpen(inter{i}_khdl);
 xrtRunSetArg(inter{i}_rhdl, 0, inter{i}_bohdl);
 xrtRunSetArg(inter{i}_rhdl, 2, iter_cnt*{op.out_size});
