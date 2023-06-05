@@ -420,39 +420,53 @@ if __name__ == "__main__":
       f.write(self.generate_xtg_python_str(is_output_inter=True))
   
   def get_cfg_input_kernels(self) -> str:
-    tmp = f"nk=mm2s:{len(self.modelin_2_tensor)}:"
-    for i in range(len(self.modelin_2_tensor)):
-      tmp += f"mm2s_{i},"
-    return tmp.strip(",")
+    mm2s_names = {}
+    for i, tensor in enumerate(self.modelin_2_tensor.values()):
+      dtype = tensor.dtype
+      if dtype not in mm2s_names:
+        mm2s_names[dtype] = []
+      mm2s_names[dtype].append(f"{dtype}_mm2s_{i}")
+    
+    header = ""
+    for dtype, typed_mm2s_names in mm2s_names.items():
+      header += f"nk={dtype}_mm2s:{len(typed_mm2s_names)}:{','.join(typed_mm2s_names)}"
+      header += "\n"
+    
+    return header
   
   def get_cfg_output_kernels(self, is_output_inter: bool) -> str:
-    out_cnt = len(self.modelout_2_op)
+    s2mm_names = {}
+    ops = list(self.modelout_2_op.values())
     if is_output_inter:
-      out_cnt = len(self.op_list)
+      ops += [op for op in self.op_list if op not in self.modelout_2_op.values()]
+    for i, op in enumerate(ops):
+      dtype = str(op.dtype)
+      if dtype not in s2mm_names: 
+        s2mm_names[dtype] = []
+      s2mm_names[dtype].append(f"{dtype}_s2mm_{i}")
+
+    header = ""
+    for dtype, typed_s2mm_names in s2mm_names.items():
+      header += f"nk={dtype}_s2mm:{len(typed_s2mm_names)}:{','.join(typed_s2mm_names)}"
+      header += "\n"
     
-    tmp = f"nk=s2mm:{out_cnt}:"
-    for i in range(out_cnt):
-      tmp += f"s2mm_{i},"
-    return tmp.strip(",")
+    return header
   
   def get_cfg_input_scs(self) -> str:
     in_scs = [
-      f"stream_connect=mm2s_{i}.s:ai_engine_0.plin{i}_{self.graph_name}_{inpname}"
-      for i, inpname in enumerate(self.modelin_2_tensor)
+      f"stream_connect={tensor.dtype}_mm2s_{i}.s:ai_engine_0.plin{i}_{self.graph_name}_{inpname}"
+      for i, (inpname, tensor) in enumerate(self.modelin_2_tensor.items())
     ]
     return "\n".join(in_scs)
 
   def get_cfg_output_scs(self, is_output_inter: bool) -> str:
-    out_scs = [
-      f"stream_connect=ai_engine_0.plout{i}_{self.graph_name}_{op.name}:s2mm_{i}.s"
-      for i, op in enumerate(self.modelout_2_op.values())
-    ]
+    ops = list(self.modelout_2_op.values())
     if is_output_inter:
-      i = len(self.modelout_2_op)
-      for op in self.op_list:
-        if op in self.modelout_2_op.values(): continue
-        out_scs.append(f"stream_connect=ai_engine_0.plout{i}_{self.graph_name}_{op.name}:s2mm_{i}.s")
-        i += 1
+      ops += [op for op in self.op_list if op not in self.modelout_2_op.values()]
+    out_scs = [
+      f"stream_connect=ai_engine_0.plout{i}_{self.graph_name}_{op.name}:{op.dtype}_s2mm_{i}.s"
+      for i, op in enumerate(ops)
+    ]
     return "\n".join(out_scs)  
   
   def generate_cfg_str(self, is_output_inter: bool):
