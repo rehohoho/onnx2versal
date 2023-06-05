@@ -1,4 +1,4 @@
-from parser import Parser, get_filename
+from parser import Parser
 
 
 class CppGenerator:
@@ -59,7 +59,7 @@ class CppGenerator:
     return "\n".join(weights)
   
   def get_callargs(self, is_dout: bool) -> str:
-    args = [f'"{get_filename(inp_name)}"' for inp_name in self.p.modelin_2_tensor]
+    args = [f'"{self.p.get_filename(inp_name)}"' for inp_name in self.p.modelin_2_tensor]
     args += [f'"{op.get_output_filename()}"' for op in self.p.modelout_2_op.values()]
     args += [i.get_callarg_line() for i in self.p.op_list]
     if is_dout:

@@ -1,5 +1,5 @@
 from op_parsers import dtype_to_cstr
-from parser import Parser, get_filename
+from parser import Parser
 
 
 class HostGenerator:
@@ -11,20 +11,20 @@ class HostGenerator:
   def get_host_datafiles(self) -> str:
     outfiles = ["#ifdef __OUTPUT_INTER__"]
     outfiles += [
-      f'#define INPUT{i}_FILENAME "{get_filename(inp_name)}"'
+      f'#define INPUT{i}_FILENAME "{self.p.get_filename(inp_name)}"'
       for i, inp_name in enumerate(self.p.modelin_2_tensor)
     ]
     outfiles += [
-      f'#define OUTPUT{i}_FILENAME "{get_filename(op.get_output_filename())}"'
+      f'#define OUTPUT{i}_FILENAME "{self.p.get_filename(op.get_output_filename())}"'
       for i, op in enumerate(self.p.modelout_2_op.values())
     ]
     outfiles += ["#else"]
     outfiles += [
-      f'#define INPUT{i}_FILENAME "{get_filename(inp_name, False)}"'
+      f'#define INPUT{i}_FILENAME "{self.p.get_filename(inp_name, False)}"'
       for i, inp_name in enumerate(self.p.modelin_2_tensor)
     ]
     outfiles += [
-      f'#define OUTPUT{i}_FILENAME "{get_filename(op.get_output_filename(), False)}"'
+      f'#define OUTPUT{i}_FILENAME "{self.p.get_filename(op.get_output_filename(), False)}"'
       for i, op in enumerate(self.p.modelout_2_op.values())
     ]
     outfiles += ["#endif"]

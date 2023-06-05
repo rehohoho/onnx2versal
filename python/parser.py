@@ -10,12 +10,6 @@ from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, \
   ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp, QLinearSoftmaxOp, SoftmaxOp
 
 
-def get_filename(filename: str, is_dout: bool = True):
-  filename = os.path.splitext(filename)[0]
-  suffix = "" if is_dout else "_host"
-  return f"{filename}{suffix}.txt"
-
-
 class Parser:
 
   def __init__(self,
@@ -49,7 +43,7 @@ class Parser:
 
     # save inputs
     for inp_name, input_tensor in self.modelin_2_tensor.items():
-      save_tensor(f"{self.data_path}/{get_filename(inp_name)}", input_tensor)
+      save_tensor(f"{self.data_path}/{self.get_filename(inp_name)}", input_tensor)
 
     # store I/O tensors and model parameters
     self.input_tensors: List[np.ndarray] = input_tensors
@@ -57,6 +51,18 @@ class Parser:
       init.name: init for init in model.graph.initializer}
     self.output_tensors: Mapping[str, np.ndarray] = output_tensors
   
+  def get_filename(self, filename: str, is_dout: bool = True):
+    filename = os.path.splitext(filename)[0]
+    suffix = "" if is_dout else "_host"
+
+    fn_list = filename.split("shape")
+    if len(fn_list) == 2 and not is_dout:
+      shape_list = fn_list[1].split("x")
+      shape_list[0] = f"{self.data_count}"
+      filename = fn_list[0] + "shape" + "x".join(shape_list)
+    
+    return f"{filename}{suffix}.txt"
+
   def get_tensor(self, name: str):
     if name in self.modelin_2_tensor:
       return self.modelin_2_tensor[name]

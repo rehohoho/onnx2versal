@@ -1,4 +1,4 @@
-from parser import Parser, get_filename
+from parser import Parser
 
 
 class XtgGenerator:
@@ -8,29 +8,36 @@ class XtgGenerator:
     self.p = parser
   
   def get_xtg_masters(self, is_dout: bool) -> str:
-    masters = [
-      f'("plin{i}_{self.p.graph_name}_{inp_name}", f"{{args.input_dir}}/{get_filename(inp_name, is_dout)}", 64, ' + \
-      f'"{str(self.p.modelin_2_tensor[inp_name].dtype)}")'
-      for i, inp_name in enumerate(self.p.modelin_2_tensor)
-    ]
+    masters = []
+    for i, inp_name in enumerate(self.p.modelin_2_tensor):
+      plin_name = f"plin{i}_{self.p.graph_name}_{inp_name}"
+      out_filename = self.p.get_filename(inp_name, is_dout)
+      masters.append(
+        f'("{plin_name}", f"{{args.input_dir}}/{out_filename}", 64, ' + \
+        f'"{str(self.p.modelin_2_tensor[inp_name].dtype)}")'
+      )
     return "    " + ",\n".join(masters).replace("\n", "\n    ")
   
   def get_xtg_slaves(self, is_dout: bool) -> str:
     slaves = []
-    for out_name, op in self.p.modelout_2_op.items():
+    for _, op in self.p.modelout_2_op.items():
       size = op.out_size if is_dout else op.out_size * self.p.data_count
-      slaves += [
-        f'("plout{i}_{self.p.graph_name}_{op.name}", f"{{args.output_dir}}/{get_filename(op.get_output_filename(), is_dout)}", ' + \
-        f'64, "{str(op.dtype)}", {size})'
-        for i, op in enumerate(self.p.modelout_2_op.values())
-      ]
+      for i, op in enumerate(self.p.modelout_2_op.values()):
+        plout_name = f"plout{i}_{self.p.graph_name}_{op.name}"
+        out_filename = self.p.get_filename(op.get_output_filename(), is_dout)
+        slaves.append(
+          f'("{plout_name}", f"{{args.output_dir}}/{out_filename}", ' + \
+          f'64, "{str(op.dtype)}", {size})'
+        )
 
     if is_dout:
       i = len(self.p.modelout_2_op)
       for op in self.p.op_list:
         if op in self.p.modelout_2_op.values(): continue
+        plout_name = f"plout{i}_{self.p.graph_name}_{op.name}"
         slaves.append(
-          f'("plout{i}_{self.p.graph_name}_{op.name}", f"{{args.output_dir}}/{op.get_output_filename()}", 64, "{str(op.dtype)}", {op.out_size})')
+          f'("{plout_name}", f"{{args.output_dir}}/{op.get_output_filename()}", ' + \
+          f'64, "{str(op.dtype)}", {op.out_size})')
         i += 1
     return "    " + ",\n".join(slaves).replace("\n", "\n    ")
   

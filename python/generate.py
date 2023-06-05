@@ -5,7 +5,7 @@ import onnx
 from onnx import helper
 import onnxruntime
 
-from parser import Parser, get_filename
+from parser import Parser
 from generator_cpp import CppGenerator
 from generator_xtg import XtgGenerator
 from generator_cfg import CfgGenerator
@@ -70,10 +70,11 @@ if __name__ == '__main__':
   ort_inputs = {ort_session.get_inputs()[0].name: many_inputs}
   ort_outs = ort_session.run(None, ort_inputs)
   
-  inp_filename = get_filename(list(parser.modelin_2_tensor.keys())[0], False)
+  inp_filename = parser.get_filename(list(parser.modelin_2_tensor.keys())[0], False)
   model_input_path = f"{args.data}/{inp_filename}"
-  out_op = list(parser.modelout_2_op.values())[-1]
-  out_filename = get_filename(out_op.get_output_filename(), False)
-  model_output_path = f"{args.data}/{out_filename}"
   save_tensor(model_input_path, many_inputs)
+
+  out_op = list(parser.modelout_2_op.values())[-1]
+  out_filename = parser.get_filename(out_op.get_output_filename(), False)
+  model_output_path = f"{args.data}/{out_filename}"
   save_tensor(model_output_path, ort_outs[-1])
