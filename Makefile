@@ -145,12 +145,18 @@ WORK_DIR := Work
 #	dma_hls.[hw_emu | hw].xo.compile_summary  
 #	v++_dma_hls.[hw_emu | hw].log
 #	_x
-KERNEL1 := s2mm
-KERNEL2 := mm2s
+KERNEL1 := float32_s2mm
+KERNEL2 := float32_mm2s
+KERNEL3 := int8_s2mm
+KERNEL4 := int8_mm2s
 KERNEL1_XO  := $(KERNEL1).$(TARGET)
 KERNEL2_XO  := $(KERNEL2).$(TARGET)
-KERNEL1_SRC := $(PL_SRC_REPO)/float_s2mm.cpp
-KERNEL2_SRC := $(PL_SRC_REPO)/float_mm2s.cpp
+KERNEL3_XO  := $(KERNEL3).$(TARGET)
+KERNEL4_XO  := $(KERNEL4).$(TARGET)
+KERNEL1_SRC := $(PL_SRC_REPO)/float32_s2mm.cpp
+KERNEL2_SRC := $(PL_SRC_REPO)/float32_mm2s.cpp
+KERNEL3_SRC := $(PL_SRC_REPO)/int8_s2mm.cpp
+KERNEL4_SRC := $(PL_SRC_REPO)/int8_mm2s.cpp
 
 TRAFFICGEN_WIDTH := 32
 
@@ -165,7 +171,9 @@ ifeq ($(EXTIO), 1)
 								$(XILINX_VITIS)/data/emulation/XO/sim_ipc_axis_slave_$(TRAFFICGEN_WIDTH).xo
 else
 	KERNEL_XOS := $(BUILD_TARGET_DIR)/$(KERNEL1_XO).xo \
-							  $(BUILD_TARGET_DIR)/$(KERNEL2_XO).xo
+							  $(BUILD_TARGET_DIR)/$(KERNEL2_XO).xo \
+							  $(BUILD_TARGET_DIR)/$(KERNEL3_XO).xo \
+							  $(BUILD_TARGET_DIR)/$(KERNEL4_XO).xo
 endif
 
 kernels: $(KERNEL_XOS)
@@ -177,6 +185,14 @@ $(BUILD_TARGET_DIR)/$(KERNEL1_XO).xo:
 $(BUILD_TARGET_DIR)/$(KERNEL2_XO).xo:
 	mkdir -p $(BUILD_TARGET_DIR); cd $(BUILD_TARGET_DIR); \
 	v++ --target $(TARGET) $(VPP_FLAGS) -c --hls.clock $(VPP_CLOCK_FREQ):$(KERNEL2) -k $(KERNEL2) $(KERNEL2_SRC) -o $@
+
+$(BUILD_TARGET_DIR)/$(KERNEL3_XO).xo:
+	mkdir -p $(BUILD_TARGET_DIR); cd $(BUILD_TARGET_DIR); \
+	v++ --target $(TARGET) $(VPP_FLAGS) -c --hls.clock $(VPP_CLOCK_FREQ):$(KERNEL3) -k $(KERNEL3) $(KERNEL3_SRC) -o $@
+
+$(BUILD_TARGET_DIR)/$(KERNEL4_XO).xo:
+	mkdir -p $(BUILD_TARGET_DIR); cd $(BUILD_TARGET_DIR); \
+	v++ --target $(TARGET) $(VPP_FLAGS) -c --hls.clock $(VPP_CLOCK_FREQ):$(KERNEL4) -k $(KERNEL4) $(KERNEL4_SRC) -o $@
 
 # =========================================================
 # Step 2. AI Engine SDF Graph File and Work/ Directory 
@@ -332,6 +348,8 @@ ifeq ($(DOUT), 1)
 else
 	VPP_LINK_FLAGS += --clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL1)_0 \
 										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL2)_0 \
+										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL3)_0 \
+										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL4)_0 \
 										--config $(SYSTEM_CONFIGS_REPO)/$(GRAPH).cfg
 endif
 
@@ -339,6 +357,8 @@ ifeq ($(EN_TRACE),1)
    ifeq ($(TARGET),hw)
       VPP_LINK_FLAGS += --profile.data $(KERNEL1):all:all \
                         --profile.data $(KERNEL2):all:all \
+                        --profile.data $(KERNEL3):all:all \
+                        --profile.data $(KERNEL4):all:all \
                         --profile.trace_memory DDR
    endif
 endif
@@ -443,6 +463,7 @@ PKG_FLAGS := -t $(TARGET) \
              --temp_dir $(BUILD_TARGET_DIR)/_x \
              -f $(PLATFORM) \
 						 --package.defer_aie_run \
+						 --package.enable_aie_debug \
 						 $(BUILD_TARGET_DIR)/$(XSA) $(LIBADF_A)
 
 ifeq ($(TARGET), sw_emu)

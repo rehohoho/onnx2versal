@@ -7,7 +7,7 @@ typedef float dout_t;
 extern "C" {
 
 
-void mm2s(dinp_t* mem, hls::stream<dout_t>& s, int size) {
+void float32_s2mm(dinp_t* mem, hls::stream<dout_t>& s, int size) {
 #pragma HLS INTERFACE m_axi port=mem offset=slave bundle=gmem
 #pragma HLS INTERFACE axis port=s
 #pragma HLS INTERFACE s_axilite port=mem bundle=control
@@ -16,8 +16,9 @@ void mm2s(dinp_t* mem, hls::stream<dout_t>& s, int size) {
 
 	for(int i = 0; i < size; i++) {
 #pragma HLS PIPELINE II=1
-		dout_t x = mem[i];
-		s.write(x);
+		dout_t x = s.read();
+		mem[i] = x;
+		std::cout << x << " " << std::endl;
 	}
 }
 
