@@ -5,7 +5,11 @@ import onnx
 from onnx import helper
 import onnxruntime
 
-from generate_cpp import CppGenerator, get_filename
+from parser import Parser, get_filename
+from generator_cpp import CppGenerator
+from generator_xtg import XtgGenerator
+from generator_cfg import CfgGenerator
+from generator_host import HostGenerator
 from op_parsers import save_tensor
 
 
@@ -49,26 +53,26 @@ if __name__ == '__main__':
   # Generate graph info
   output_tensors = {outname: out for outname, out in zip(output_names, ort_outs)}
 
-  cppGenerator = CppGenerator(data_path=args.data, 
+  parser = Parser(data_path=args.data, 
                               onnx_path=args.onnx, 
                               data_count=args.ndata,
                               input_tensors=[single_input], 
                               output_tensors=output_tensors, 
                               is_output_all=args.is_output_all)
-  cppGenerator.parse()
-  cppGenerator.generate_cpp_graph()
-  cppGenerator.generate_xtg_python()
-  cppGenerator.generate_cfg()
-  cppGenerator.generate_host_cpp()
+  parser.parse()
+  CppGenerator(parser).generate_cpp_graph()
+  XtgGenerator(parser).generate_xtg_python()
+  CfgGenerator(parser).generate_cfg()
+  HostGenerator(parser).generate_host_cpp()
 
   # Generate end-to-end data
   ort_session = onnxruntime.InferenceSession(args.onnx)
   ort_inputs = {ort_session.get_inputs()[0].name: many_inputs}
   ort_outs = ort_session.run(None, ort_inputs)
   
-  inp_filename = get_filename(list(cppGenerator.modelin_2_tensor.keys())[0], False)
+  inp_filename = get_filename(list(parser.modelin_2_tensor.keys())[0], False)
   model_input_path = f"{args.data}/{inp_filename}"
-  out_op = list(cppGenerator.modelout_2_op.values())[-1]
+  out_op = list(parser.modelout_2_op.values())[-1]
   out_filename = get_filename(out_op.get_output_filename(), False)
   model_output_path = f"{args.data}/{out_filename}"
   save_tensor(model_input_path, many_inputs)
