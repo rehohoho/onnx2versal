@@ -560,10 +560,12 @@ class SoftmaxOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
     self.INP_W = tin.shape[-1]
 
-    tin = pad_lastdim(tout, "SoftmaxOp tin", 8) # files
+    tin = pad_lastdim(tin, "SoftmaxOp tin", 8) # files
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
+    tout = pad_lastdim(tout, "SoftmaxOp tout", 8)
+
     self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
     self.out_size = tout.size

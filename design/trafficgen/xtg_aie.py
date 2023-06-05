@@ -127,7 +127,7 @@ class ExternalTraffic:
 
     with open(file_path) as f:
       L = f.readlines()
-      logging.info(f"[{ipc_name}]: Sending {len(L)} {dtype} data...")
+      logging.info(f"[{ipc_name}]: Sending {len(L)} lines of {dtype} data...")
       
       for i, line in enumerate(L):
         values = line.split()
@@ -182,6 +182,9 @@ class ExternalTraffic:
       for d in raw:
         data += [np.int16(d & 0xFFFF), d >> 16]
     
+    if len(data) % repeat_count != 0:
+      data += [0] * ((repeat_count - len(data) % repeat_count) % repeat_count)
+
     tmp = ""
     with open(file_path, 'w') as f:
       for i, d in enumerate(data):

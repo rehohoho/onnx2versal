@@ -1,4 +1,5 @@
 import argparse
+import re
 import os
 import sys
 
@@ -25,7 +26,7 @@ def is_file_match(res_path: str,
   data_arr = load_txt(data_path)
 
   if "shape" in data_path:
-    shape = os.path.splitext(data_path)[0].split("shape")[-1].split("x")
+    shape = re.findall(r"(?<=shape).*?(?=[_,.])", data_path)[-1].split("x")
     shape = [int(i) for i in shape]
     res_arr = res_arr.reshape(*shape[:-1], -1)[..., :shape[-1]]
     data_arr = data_arr.reshape(*shape[:-1], -1)[..., :shape[-1]]
