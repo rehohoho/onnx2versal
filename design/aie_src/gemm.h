@@ -26,7 +26,7 @@
  * @brief Scalar implementation for MK*NK, streams weights and biases, 
  * GemmReluScalarGmemParamMKNK<1, 86, 10> total = 19223
  */
-template <int M, int K, int N>
+template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarGmemParamMKNK {
   public:
     void filter(
@@ -46,7 +46,7 @@ class GemmReluScalarGmemParamMKNK {
  * Running GemmReluScalarMKNK<1, 86, 10> total = 1939
  */
 // xA^T + b as per torch,nn.Linear
-template <int M, int K, int N>
+template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarMKNK {
   
   private:
@@ -76,7 +76,7 @@ class GemmReluScalarMKNK {
  * @brief Scalar implementation for MK*KN, stores weights and biases,
  * GemmReluScalarMKKN<1, 86, 10> total = 2331
  */
-template <int M, int K, int N>
+template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarMKKN {
   
   private:
@@ -101,41 +101,13 @@ class GemmReluScalarMKKN {
     };
 };
 
-/**
- * @brief Scalar implementation without ReLU for MK*KN, stores weights and biases,
- */
-template <int M, int K, int N>
-class GemmScalarMKKN {
-  
-  private:
-    alignas(32) float (&weights)[K*N]; // KxN
-    alignas(32) float (&bias)[N];      // N
-  
-  public:
-    GemmScalarMKKN (
-      float (&w)[N*K],
-      float (&b)[N]
-    ): weights(w), bias(b) {};
-
-    void filter(
-      input_window<float>* in,  // MxK
-      output_window<float>* out // MxN
-    );
-    
-    static void registerKernelClass() {
-      REGISTER_FUNCTION(GemmScalarMKKN::filter);
-      REGISTER_PARAMETER(weights);
-      REGISTER_PARAMETER(bias);
-    };
-};
-
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, 
  * requires K%2=0, N%4=0
  * GemmReluMKKN<1, 86, 10> total = 368
  */
-template <int M, int K, int N>
+template <int M, int K, int N, int IS_RELU>
 class GemmReluMKKN {
   
   private:
@@ -159,39 +131,6 @@ class GemmReluMKKN {
     static void registerKernelClass() {
       static_assert(K%2==0 && N%4==0);
       REGISTER_FUNCTION(GemmReluMKKN::filter);
-      REGISTER_PARAMETER(weights);
-      REGISTER_PARAMETER(bias);
-    };
-};
-
-/**
- * @brief Vector implementation without ReLU for MK*KN, stores weights and biases, 
- * requires K%2=0, N%4=0
- */
-template <int M, int K, int N>
-class GemmMKKN {
-  
-  private:
-    alignas(32) float (&weights)[K*N]; // KxN
-    alignas(32) float (&bias)[N];      // N
-
-    static constexpr int K_REM8 = K%8;
-    static constexpr int RUN_LASTCHUNK = K_REM8 > 0;
-  
-  public:
-    GemmMKKN (
-      float (&w)[N*K],
-      float (&b)[N]
-    ): weights(w), bias(b) {};
-
-    void filter(
-      input_window<float>* in,  // MxK
-      output_window<float>* out // MxN
-    );
-    
-    static void registerKernelClass() {
-      static_assert(K%2==0 && N%4==0);
-      REGISTER_FUNCTION(GemmMKKN::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
     };

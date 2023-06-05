@@ -3,14 +3,14 @@
 
 
 template <
-  template<int, int, int> class GEMM, 
+  template<int, int, int, int> class GEMM, 
   template<int, int, int, int> class CONCAT, 
-  int NCHUNK, int M, int K, int N>
+  int NCHUNK, int M, int K, int N, int IS_RELU>
 class GemmReluMknkChunkGraphTest : public adf::graph {
 
   private:
-    GemmReluMknkChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N> g;
-    static const int CHUNK_COUNT = GemmReluMknkChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N>::CHUNK_COUNT;
+    GemmReluMknkChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU> g;
+    static const int CHUNK_COUNT = GemmReluMknkChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU>::CHUNK_COUNT;
 
   public:
     adf::input_plio plin[CHUNK_COUNT];
@@ -36,14 +36,14 @@ class GemmReluMknkChunkGraphTest : public adf::graph {
 
 
 template <
-  template<int, int, int> class GEMM, 
+  template<int, int, int, int> class GEMM, 
   template<int, int, int, int> class CONCAT, 
-  int NCHUNK, int M, int K, int N>
+  int NCHUNK, int M, int K, int N, int IS_RELU>
 class GemmReluMkknChunkGraphTest : public adf::graph {
 
   private:
-    GemmReluMkknChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N> g;
-    static const int CHUNK_COUNT = GemmReluMkknChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N>::CHUNK_COUNT;
+    GemmReluMkknChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU> g;
+    static const int CHUNK_COUNT = GemmReluMkknChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU>::CHUNK_COUNT;
 
   public:
     adf::input_plio plin[CHUNK_COUNT];
@@ -76,16 +76,16 @@ std::vector<float> fpbias {0.5025093969698047, 0.028362934230075076, 0.559248300
 
 
 // MKNK, uses KPAD, no NPAD
-GemmReluMknkChunkGraphTest<GemmReluScalarMKNK, ConcatScalar, nchunk, 1, 86, 10> fpscalar_mknk(
+GemmReluMknkChunkGraphTest<GemmReluScalarMKNK, ConcatScalar, nchunk, 1, 86, 10, 1> fpscalar_mknk(
   "fpscalar_mknk", fpweights_mknk, fpbias, 
   "gemm_fpin.txt", "gemmMKNK_fpout_shape1x10_GemmReluScalarMKNK.txt");
 
 // MKKN, uses NPAD, no KPAD
-GemmReluMkknChunkGraphTest<GemmReluScalarMKKN, ConcatScalar, nchunk, 1, 86, 10> fpscalar_mkkn(
+GemmReluMkknChunkGraphTest<GemmReluScalarMKKN, ConcatScalar, nchunk, 1, 86, 10, 1> fpscalar_mkkn(
   "fpscalar_mkkn", fpweights_mkkn, fpbias, 
   "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluScalarMKKN.txt");
 
-GemmReluMkknChunkGraphTest<GemmReluMKKN, ConcatScalar, nchunk, 1, 86, 10> fpvector_mkkn(
+GemmReluMkknChunkGraphTest<GemmReluMKKN, ConcatScalar, nchunk, 1, 86, 10, 1> fpvector_mkkn(
   "fpvector_mkkn", fpweights_mkkn, fpbias, 
   "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluMKKN.txt");
 

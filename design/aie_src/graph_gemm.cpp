@@ -2,12 +2,12 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int> class GEMM, 
-  int M, int K, int N>
+template <template<int, int, int, int> class GEMM, 
+  int M, int K, int N, int IS_RELU>
 class GemmReluGraphTest : public adf::graph {
 
   private:
-    GemmReluGraph<GEMM, M, K, N> g;
+    GemmReluGraph<GEMM, M, K, N, IS_RELU> g;
 
   public:
     adf::input_plio plin[1];
@@ -29,12 +29,12 @@ class GemmReluGraphTest : public adf::graph {
 };
 
 
-template <template<int, int, int> class GEMM, 
-  int M, int K, int N>
+template <template<int, int, int, int> class GEMM, 
+  int M, int K, int N, int IS_RELU>
 class GemmReluGmemParamGraphTest : public adf::graph {
 
   private:
-    GemmReluGmemParamGraph<GEMM, M, K, N> g;
+    GemmReluGmemParamGraph<GEMM, M, K, N, IS_RELU> g;
 
   public:
     adf::input_plio plin[3];
@@ -67,19 +67,19 @@ std::vector<float> fpweights_mkkn_pad {0.7186263799667358, 0.33597755432128906, 
 std::vector<float> fpbias {0.5025093969698047, 0.028362934230075076, 0.5592483000339074, 0.8742827749512302, 0.7047321944166701, 0.6229683229783043, 0.9559617507082513, 0.9582793338421058, 0.8242664697032286, 0.607741847385851};
 
 // MKNK
-GemmReluGraphTest<GemmReluScalarMKNK, 1, 86, 10> gemmReluScalarMKNK(
+GemmReluGraphTest<GemmReluScalarMKNK, 1, 86, 10, 1> gemmReluScalarMKNK(
   "gemmReluScalarMKNK", fpweights_mknk, fpbias, 
   "gemm_fpin.txt", "gemmMKNK_fpout_shape1x10_GemmReluScalarMKNK.txt");
-GemmReluGmemParamGraphTest<GemmReluScalarGmemParamMKNK, 1, 86, 10> gemmReluScalarGmemParamMKNK(
+GemmReluGmemParamGraphTest<GemmReluScalarGmemParamMKNK, 1, 86, 10, 1> gemmReluScalarGmemParamMKNK(
   "gemmReluScalarGmemParamMKNK", "gemm_fpweights_mknk.txt", "gemm_fpbias.txt", 
   "gemm_fpin.txt", "gemmMKNK_fpout_shape1x10_GemmReluScalarGmemParamMKNK.txt");
 
 // MKKN
-GemmReluGraphTest<GemmReluScalarMKKN, 1, 86, 12> gemmReluScalarMKKN(
+GemmReluGraphTest<GemmReluScalarMKKN, 1, 86, 12, 1> gemmReluScalarMKKN(
   "gemmReluScalarMKKN", fpweights_mkkn_pad, fpbias, 
   "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluScalarMKKN.txt");
 
-GemmReluGraphTest<GemmReluMKKN, 1, 86, 12> gemmReluMKKN(
+GemmReluGraphTest<GemmReluMKKN, 1, 86, 12, 1> gemmReluMKKN(
   "gemmReluMKKN", fpweights_mkkn_pad, fpbias, 
   "gemm_fpin.txt", "gemmMKKN_fpout_shape1x10_GemmReluMKKN.txt");
 
