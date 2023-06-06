@@ -1,6 +1,7 @@
 #ifndef __CONCAT_GRAPH_H__
 #define __CONCAT_GRAPH_H__
 
+#include <assert.h>
 #include <adf.h>
 #include "concat.h"
 
@@ -41,6 +42,7 @@ class ConcatGraph : public adf::graph {
     adf::port<output> pout[1];
 
     ConcatGraph() { 
+      static_assert(LCNT <= 8);
       k[0] = adf::kernel::create_object<CONCAT<LCNT, H, INP_W, OUT_W>>();
       adf::source(k[0]) = "concat.cc";
       adf::headers(k[0]) = {"concat.h"};
@@ -62,15 +64,15 @@ class ConcatTwiceGraph : public adf::graph {
 
   public:
     static constexpr int CONCAT_CNT = (LCNT+7)/8;
-    static constexpr int LCNT_REM = LCNT % 8;
+    static constexpr int LCNT_REM = (LCNT % 8 == 0) ? 8 : LCNT % 8;
     static constexpr int INNER_OUT_W = INP_W * 8;
-    static constexpr int REM_OUT_W = OUT_W % INNER_OUT_W;
     adf::kernel k[CONCAT_CNT];
     adf::kernel klast;
     adf::port<input> pin[LCNT];
     adf::port<output> pout[1];
 
     ConcatTwiceGraph() { 
+      static_assert(LCNT <= 64);
       klast = adf::kernel::create_object<CONCAT<CONCAT_CNT, H, INNER_OUT_W, OUT_W>>();
       adf::source(klast) = "concat.cc";
       adf::headers(klast) = {"concat.h"};
