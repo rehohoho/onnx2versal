@@ -28,6 +28,8 @@ void GemmReluScalarGmemParamMKNK<M, K, N, IS_RELU>::filter(
       window_incr(in, -K); // repeat same in row for next j
     }
     window_incr(in, K); // next row
+    window_incr(weight, -N*K);
+    window_incr(bias, -N);
   }
 
   PROFILE_FOOTER;
@@ -42,9 +44,10 @@ void GemmReluScalarMKNK<M, K, N, IS_RELU>::filter(
   PROFILE_HEADER(printf(
     "Running GemmReluScalarMKNK<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
 
-  int weightIdx = 0;
+  int weightIdx;
 
   for (int i = 0; i < M; i++) {
+    weightIdx = 0;
     for (int j = 0; j < N; j++) {
       float res = bias[j];
       for (int k = 0; k < K; k++) {
@@ -169,7 +172,7 @@ void GemmReluMKKN<M, K, N, IS_RELU>::filter(
       w_ptr += -K*N + 16;
       a_ptr -= K;
     }
-    w_ptr -= N;
+    w_ptr -= (N+15)/16*16;
     a_ptr += K;
     
   }

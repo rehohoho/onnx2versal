@@ -24,7 +24,7 @@
 
 /**
  * @brief Scalar implementation for MK*NK, streams weights and biases, 
- * GemmReluScalarGmemParamMKNK<1, 86, 10> total = 19223
+ * GemmReluScalarGmemParamMKNK<2, 36, 10> total = 16449
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarGmemParamMKNK {
@@ -43,7 +43,7 @@ class GemmReluScalarGmemParamMKNK {
 
 /**
  * @brief Scalar implementation for MK*NK, stores weights and biases,
- * Running GemmReluScalarMKNK<1, 86, 10> total = 1939
+ * Running GemmReluScalarMKNK<2, 36, 10> total = 1874
  */
 // xA^T + b as per torch,nn.Linear
 template <int M, int K, int N, int IS_RELU>
@@ -74,7 +74,7 @@ class GemmReluScalarMKNK {
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * GemmReluScalarMKKN<1, 86, 10> total = 2331
+ * GemmReluScalarMKKN<2, 36, 10> total = 2242
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarMKKN {
@@ -104,8 +104,8 @@ class GemmReluScalarMKKN {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, 
- * requires K%2=0, N%4=0
- * GemmReluMKKN<1, 86, 10> total = 368
+ * requires K%4=0, N%4=0
+ * GemmReluMKKN<2, 36, 10> total = 441
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluMKKN {
@@ -129,7 +129,7 @@ class GemmReluMKKN {
     );
     
     static void registerKernelClass() {
-      static_assert(K%2==0 && N%4==0);
+      static_assert(K%4==0 && N%4==0);
       REGISTER_FUNCTION(GemmReluMKKN::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

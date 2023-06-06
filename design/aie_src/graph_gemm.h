@@ -228,7 +228,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    ConcatGraph<CONCAT, CHUNK_COUNT, 1, NCHUNK, N> concat_g;
+    ConcatTwiceGraph<CONCAT, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];

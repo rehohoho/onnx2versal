@@ -4,8 +4,8 @@ from python.op_parsers import pad_lastdim, get_vector_boundary, save_tensor
 
 np.random.seed(0)
 
-M = 1
-K = 86
+M = 2
+K = 36
 N = 10
 
 # random input, weights, bias
