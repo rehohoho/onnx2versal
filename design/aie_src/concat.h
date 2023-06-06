@@ -16,7 +16,7 @@
 /**
  * @brief Scalar implementation, ConcatScalar<5, 64, 16, 52> takes 650 cycles
  */
-template <int LCNT, int CHUNK_CNT, int CHUNK_SIZE, int BLOCK_SIZE>
+template <int LCNT, int H, int INP_W, int OUT_W>
 class ConcatScalar {
 	public:
 		void filter8(
@@ -102,10 +102,10 @@ class ConcatScalar {
 
 
 /**
- * @brief Vector implementation, Requires CHUNK_SIZE%8=0, BLOCK_SIZE%4=0.
+ * @brief Vector implementation, Requires INP_W%8=0, OUT_W%4=0.
  * ConcatVector<5, 64, 16, 52> takes 232 cycles.
  */
-template <int LCNT, int CHUNK_CNT, int CHUNK_SIZE, int BLOCK_SIZE>
+template <int LCNT, int H, int INP_W, int OUT_W>
 class ConcatVector {
 	public:
 		void filter8(
@@ -169,7 +169,7 @@ class ConcatVector {
 			output_window<float>* out
 		);
 		static void registerKernelClass() {
-			static_assert(CHUNK_SIZE%8==0 && BLOCK_SIZE%4==0);
+			static_assert(INP_W%8==0 && OUT_W%4==0);
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(ConcatVector::filter8);
 			} else if (LCNT == 7) {
