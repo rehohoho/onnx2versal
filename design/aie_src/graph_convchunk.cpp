@@ -3,15 +3,15 @@
 
 
 template <
-  template<int, int, int, int, int, int> class CONV, 
+  template<int, int, int, int, int, int, int> class CONV, 
   template<int, int, int, int> class CONCAT, 
   int IS_BCHW, int IS_KPAD,
-  int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
+  int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluChunkGraphTest : public adf::graph {
 
   private:
-    ConvReluChunkGraph<CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K> g;
-    static const int CHUNK_COUNT = ConvReluChunkGraph<CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K>::CHUNK_COUNT;
+    ConvReluChunkGraph<CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K, IS_RELU> g;
+    static const int CHUNK_COUNT = ConvReluChunkGraph<CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K, IS_RELU>::CHUNK_COUNT;
 
   public:
     adf::input_plio plin[CHUNK_COUNT];
@@ -42,20 +42,20 @@ std::vector<float> fpweights_pad {0.1024137584524164, 0.156383348867963, 0.30419
 std::vector<float> fpbias {0.47558911708484375, 0.8200224358697518, 0.2981873596630641, 0.1509348973110416, 0.3302670356968992, 0.813880141920636};
 
 // BCHW
-ConvReluChunkGraphTest<ConvReluScalarBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 1, 6, 5> convReluScalarBCHW(
+ConvReluChunkGraphTest<ConvReluScalarBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 1, 6, 5, 1> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_ConvReluScalarBCHW.txt");
 
-ConvReluChunkGraphTest<Conv5x5ReluBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 1, 6, 5> conv5x5ReluBCHW(
+ConvReluChunkGraphTest<Conv5x5ReluBCHW, ConcatVector, 1, 0, mchunk, 28, 24, 1, 1, 6, 5, 1> conv5x5ReluBCHW(
   "conv5x5ReluBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_Conv5x5ReluBCHW.txt");
 
-ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, ConcatVector, 1, 1, mchunk, 28, 24, 1, 1, 6, 5> conv5x5on8ReluBCHW(
+ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, ConcatVector, 1, 1, mchunk, 28, 24, 1, 1, 6, 5, 1> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_Conv5x5on8ReluBCHW.txt");
 
 // BHWC, ConcatVector requires CONCAT_BLOCK=M%4=0
-ConvReluChunkGraphTest<ConvReluScalarBHWC, ConcatScalar, 0, 0, mchunk, 28, 24, 1, 1, 6, 5> convReluScalarBHWC(
+ConvReluChunkGraphTest<ConvReluScalarBHWC, ConcatScalar, 0, 0, mchunk, 28, 24, 1, 1, 6, 5, 1> convReluScalarBHWC(
   "convReluScalarBHWC", fpweights, fpbias, 
   "conv_fpin.txt", "convbhwc_fpout_shape1x6x24x24_ConvReluScalarBHWC.txt");
 

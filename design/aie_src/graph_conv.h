@@ -40,8 +40,8 @@
  * @connect{pout[0], B*M*OUT_W*OUT_W*4}
  * @endconnections
  */
-template <template<int, int, int, int, int, int> class CONV, 
-  int INP_W, int OUT_W, int B, int C, int M, int K>
+template <template<int, int, int, int, int, int, int> class CONV, 
+  int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluGraph : public adf::graph {
 
   private:
@@ -55,7 +55,7 @@ class ConvReluGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
-      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K>>(weights, bias);
+      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K, IS_RELU>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -64,10 +64,12 @@ class ConvReluGraph : public adf::graph {
       adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], pout[0]);
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
-      adf::location<adf::parameter>(k[0].param[0]) = tilePos; // weight (<= 16384B)
-      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0x0000);
-      adf::location<adf::parameter>(k[0].param[1]) = tilePos; // bias   (<= 4096B)
-      adf::location<adf::parameter>(k[0].param[1]) = adf::offset(0x4000); 
+      adf::location<adf::parameter>(k[0].param[0]) = tilePos;
+      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
+      adf::location<adf::parameter>(k[0].param[1]) = tilePos;
+      // weights can be padded, not necessarily MCKK
+      // separate bank not required for weights vs bias
+      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((weights.size()*4+31)/32*32); // separate bank
     }
 
 };
@@ -83,8 +85,8 @@ class ConvReluGraph : public adf::graph {
  * @connect{pout[0], B*M*OUT_W*OUT_W*4}
  * @endconnections
  */
-template <template<int, int, int, int, int, int> class CONV, 
-  int INP_W, int OUT_W, int B, int C, int M, int K>
+template <template<int, int, int, int, int, int, int> class CONV, 
+  int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluGmemParamGraph : public adf::graph {
 
   private:
@@ -95,7 +97,7 @@ class ConvReluGmemParamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     ConvReluGmemParamGraph() { 
-      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K>>();
+      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K, IS_RELU>>();
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -123,10 +125,10 @@ class ConvReluGmemParamGraph : public adf::graph {
  * @endconnections
  */
 template <
-  template<int, int, int, int, int, int> class CONV, 
+  template<int, int, int, int, int, int, int> class CONV, 
   template<int, int, int, int> class CONCAT, 
   int IS_BCHW, int IS_KPAD,
-  int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K>
+  int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluChunkGraph : public adf::graph {
 
   private:
@@ -170,7 +172,7 @@ class ConvReluChunkGraph : public adf::graph {
         bChunk = std::vector<float>(bias.begin()+i*MCHUNK, bias.begin()+i*MCHUNK+chunkSize);
         bChunk.resize(MCHUNK, 0);
 
-        convs[i] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, MCHUNK, K>>(wChunk, bChunk);
+        convs[i] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, MCHUNK, K, IS_RELU>>(wChunk, bChunk);
         adf::source(convs[i]) = "conv.cc";
         adf::headers(convs[i]) = {"conv.h"};
         adf::runtime<ratio>(convs[i]) = 0.6;

@@ -2,12 +2,12 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int> class CONV, 
-  int INP_W, int OUT_W, int B, int C, int M, int K>
+template <template<int, int, int, int, int, int, int> class CONV, 
+  int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluGraphTest : public adf::graph {
 
   private:
-    ConvReluGraph<CONV, INP_W, OUT_W, B, C, M, K> g;
+    ConvReluGraph<CONV, INP_W, OUT_W, B, C, M, K, IS_RELU> g;
 
   public:
     adf::input_plio plin[1];
@@ -28,12 +28,12 @@ class ConvReluGraphTest : public adf::graph {
 };
 
 
-template <template<int, int, int, int, int, int> class CONV, 
-  int INP_W, int OUT_W, int B, int C, int M, int K>
+template <template<int, int, int, int, int, int, int> class CONV, 
+  int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluGmemParamGraphTest : public adf::graph {
 
   private:
-    ConvReluGmemParamGraph<CONV, INP_W, OUT_W, B, C, M, K> g;
+    ConvReluGmemParamGraph<CONV, INP_W, OUT_W, B, C, M, K, IS_RELU> g;
 
   public:
     adf::input_plio plin[3];
@@ -65,24 +65,24 @@ std::vector<float> fpweights_pad {0.1024137584524164, 0.156383348867963, 0.30419
 std::vector<float> fpbias {0.47558911708484375, 0.8200224358697518, 0.2981873596630641, 0.1509348973110416, 0.3302670356968992, 0.813880141920636};
 
 //BCHW
-ConvReluGraphTest<ConvReluScalarBCHW, 28, 24, 1, 1, 6, 5> convReluScalarBCHW(
+ConvReluGraphTest<ConvReluScalarBCHW, 28, 24, 1, 1, 6, 5, 1> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_ConvReluScalarBCHW.txt");
 
-ConvReluGraphTest<Conv5x5ReluBCHW, 28, 24, 1, 1, 6, 5> conv5x5ReluBCHW(
+ConvReluGraphTest<Conv5x5ReluBCHW, 28, 24, 1, 1, 6, 5, 1> conv5x5ReluBCHW(
   "conv5x5ReluBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_Conv5x5ReluBCHW.txt");
 
-ConvReluGraphTest<Conv5x5on8ReluBCHW, 28, 24, 1, 1, 6, 5> conv5x5on8ReluBCHW(
+ConvReluGraphTest<Conv5x5on8ReluBCHW, 28, 24, 1, 1, 6, 5, 1> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x6x24x24_Conv5x5on8ReluBCHW.txt");
 
 //BHWC
-ConvReluGraphTest<ConvReluScalarBHWC, 28, 24, 1, 1, 6, 5> convReluScalarBHWC(
+ConvReluGraphTest<ConvReluScalarBHWC, 28, 24, 1, 1, 6, 5, 1> convReluScalarBHWC(
   "convReluScalarBHWC", fpweights, fpbias, 
   "conv_fpin.txt", "convbhwc_fpout_shape1x6x24x24_ConvReluScalarBHWC.txt");
 
-ConvReluGmemParamGraphTest<ConvReluScalarGmemParamBHWC, 28, 24, 1, 1, 6, 5> convReluScalarGmemParamBHWC(
+ConvReluGmemParamGraphTest<ConvReluScalarGmemParamBHWC, 28, 24, 1, 1, 6, 5, 1> convReluScalarGmemParamBHWC(
   "convReluScalarGmemParamBHWC", "conv_fpweights.txt", "conv_fpbias.txt", 
   "conv_fpin.txt", "convbhwc_fpout_shape1x6x24x24_ConvReluScalarGmemParamBHWC.txt");
 
