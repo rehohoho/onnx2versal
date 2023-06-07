@@ -42,6 +42,25 @@ class GemmReluScalarGmemParamMKNK {
 
 
 /**
+ * @brief Scalar implementation for MK*KN, streams weights and biases, 
+ * GemmReluScalarGmemParamMKNK<2, 36, 10> total = 16590
+ */
+template <int M, int K, int N, int IS_RELU>
+class GemmReluScalarGmemParamMKKN {
+  public:
+    void filter(
+      input_window<float>* in,      // MxK
+      input_window<float>* weight,  // NxK
+      input_window<float>* bias,    // N 
+      output_window<float>* out     // MxN
+    );
+    static void registerKernelClass() {
+      REGISTER_FUNCTION(GemmReluScalarGmemParamMKKN::filter);
+    };
+};
+
+
+/**
  * @brief Scalar implementation for MK*NK, stores weights and biases,
  * Running GemmReluScalarMKNK<2, 36, 10> total = 1874
  */

@@ -37,6 +37,41 @@ void GemmReluScalarGmemParamMKNK<M, K, N, IS_RELU>::filter(
 
 
 template <int M, int K, int N, int IS_RELU>
+void GemmReluScalarGmemParamMKKN<M, K, N, IS_RELU>::filter(
+	input_window<float>* in,      // MxK
+  input_window<float>* weight,  // KxN
+  input_window<float>* bias,    // N  
+  output_window<float>* out     // MxN
+) {
+  PROFILE_HEADER(printf(
+    "Running GemmReluScalarGmemParamMKKN<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
+  
+  for (int i = 0; i < M; i++) {
+    for (int j = 0; j < N; j++) {
+      float res = window_readincr(bias);
+      for (int k = 0; k < K; k++) {
+        float a = window_readincr(in);
+        float b = window_read(weight);
+        window_incr(weight, N);
+        res += a * b;
+      }
+
+      if (IS_RELU)
+        if (res < 0) res = 0;
+      window_writeincr(out, res);
+      window_incr(in, -K);
+      window_incr(weight, -K*N+1);
+    }
+    window_incr(in, K);
+    window_incr(weight, -N);
+    window_incr(bias, -N);
+  }
+
+  PROFILE_FOOTER;
+}
+
+
+template <int M, int K, int N, int IS_RELU>
 void GemmReluScalarMKNK<M, K, N, IS_RELU>::filter(
 	input_window<float>* in,      // MxK  (1x256)
   output_window<float>* out     // MxN  (1x120)
