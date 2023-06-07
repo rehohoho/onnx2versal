@@ -35,7 +35,7 @@ For the CLI lines to execute below, substitute "lenet_mnist" with "lenet_mnist_i
 
 ## Generate files
 ```
-$ python generate.py ../models/lenet_mnist.onnx
+$ python generate.py ../models/lenet_mnist.onnx ../data/MNIST/X_test.npy
 ```
 
 Truncated stdout (for float32 model)
@@ -105,7 +105,7 @@ See [README Make Options](README.md#usage---simulation-verification-profiling-ha
 ## Functional check: runs graph in x86simulator 
 For graph test, ITER_CNT is an argument into graph compilation (make graph). Note x86simulator does not simulate hardware platform, outputs will not contain cycle information. The following tests a single sample and verifies all intermediate outputs. It takes ~1min to compile and runs quickly.
 ```
-$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim 
+$ TARGET=sw_emu GRAPH=lenet_mnist make clean graph clean_reports aiesim 
 ```
 
 Truncated stdout (for float32 model)
@@ -144,7 +144,7 @@ reports_dir/
 <b>Traffic generator for end-to-end test with more samples.</b><br />
 The following tests 100 samples and verifies final output only. Excess logs is silenced.
 ```
-$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim EXTIO=1 DOUT=0 DLOG=0 ITER_CNT=100
+$ TARGET=sw_emu GRAPH=lenet_mnist make clean graph clean_reports aiesim DOUT=0 DLOG=0 EXTIO=1 ITER_CNT=1000
 ```
 
 Truncated stdout (for float32 model)
@@ -195,12 +195,10 @@ TARGET=sw_emu GRAPH=lenet_mnist make clean
 For system test, ITER_CNT is an argument into host app compilation (make application). Note this uses x86simulator files, outputs will not contain cycle information. It takes ~2 min to compile and runs quickly.
 ```
 # test 1 sample, verifies intermediates
-$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package
-$ TARGET=sw_emu GRAPH=lenet_mnist make clean_reports run_emu
+$ TARGET=sw_emu GRAPH=lenet_mnist make clean graph kernels xsa application package clean_reports run_emu
 
-# test 100 samples, verifies final output only, silence excess logs
-$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package DOUT=0 DLOG=0
-$ TARGET=sw_emu GRAPH=lenet_mnist make clean_reports run_emu ITER_CNT=100
+# test 1000 samples, verifies final output only, silence excess logs
+$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package clean_reports run_emu DOUT=0 DLOG=0 ITER_CNT=1000
 ```
 
 Truncated stdout (for float32 model)
@@ -290,8 +288,7 @@ TARGET=sw_emu GRAPH=lenet_mnist make clean
 ## Functional/performance check: runs graph in aiesimulator 
 For graph test, ITER_CNT is an argument into graph compilation (make graph). aiesimulator is cycle accurate, `DOUT=1 (default)` ensures each kernel outputs cycle information. It takes ~5 min to compile and ~5 min to run.
 ```
-$ TARGET=hw_emu GRAPH=lenet_mnist make graph
-$ TARGET=hw_emu GRAPH=lenet_mnist make clean_reports aiesim_profile
+$ TARGET=hw_emu GRAPH=lenet_mnist make clean graph clean_reports aiesim_profile
 
 ```
 
@@ -416,8 +413,7 @@ TARGET=hw_emu GRAPH=lenet_mnist make clean
 ## Functional/performance check: runs system in hardware emulation with QEMU
 For system test, ITER_CNT is an argument into host app compilation (make application). This uses same aiengine graph for computation and outputs cycle information per kernel. It takes ~15 min to compile and ~30 min to run for single sample. hw_emu is known to be very slow, do not use too much data.
 ```
-$ TARGET=hw_emu GRAPH=lenet_mnist make graph kernels xsa application package
-$ TARGET=hw_emu GRAPH=lenet_mnist make graph clean_reports run_emu
+$ TARGET=hw_emu GRAPH=lenet_mnist make graph kernels xsa application package clean_reports run_emu
 ```
 
 Truncated stdout (for float32 model)
@@ -537,11 +533,11 @@ It takes ~1 hour to compile, ~8 min to flash, and runs quickly.
 
 ```
 # test 1 sample, verify intermediates
-$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package EN_TRACE=1
+$ TARGET=hw GRAPH=lenet_mnist make clean graph kernels xsa application package EN_TRACE=1
 $ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress
 
 # test 100 samples, verify final output
-$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package EN_TRACE=1 DOUT=0
+$ TARGET=hw GRAPH=lenet_mnist make clean graph kernels xsa application package EN_TRACE=1 DOUT=0
 $ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress
 ```
 
@@ -653,73 +649,4 @@ vitis_analyzer xrt.run_summary
 <b>Clean hardware emulation build</b>
 ```
 TARGET=hw_emu GRAPH=lenet_mnist make clean
-```
-
-## float32 vs int8 model tradeoff (WIP)
-A comparison of the performance accuracy tradeoff is as follows.
-```
-TBC
-```
-aiesimulator cycle estimation per kernel
-```
-# float32
-Running Conv5x5on8ReluBCHW<28, 24, 1, 1, 6>
-start = 3221,end = 20149,total = 16928
-Running Maxpool2x2FloatBCHW::filter<24,24,12,12,1,6>
-start = 24557,end = 25458,total = 901
-Running Conv5x5on8ReluBCHW<12, 8, 1, 6, 16>
-start = 26639,end = 52715,total = 26076
-Running Maxpool2x2FloatBCHW::filter<8,8,4,4,1,16>
-start = 54090,end = 54381,total = 291
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-start = 54809,end = 55712,total = 903
-start = 54813,end = 55716,total = 903
-start = 54813,end = 55716,total = 903
-start = 54817,end = 55720,total = 903
-start = 54821,end = 55724,total = 903
-start = 54825,end = 55728,total = 903
-start = 54829,end = 55732,total = 903
-start = 54833,end = 55736,total = 903
-Running ConcatVector<8,1,16,120>::filter8
-start = 55936,end = 56062,total = 126
-Running GemmReluMKKN<1,120,32>
-Running GemmReluMKKN<1,120,32>
-Running GemmReluMKKN<1,120,32>
-start = 56382,end = 57270,total = 888
-start = 56386,end = 57274,total = 888
-start = 56390,end = 57278,total = 888
-Running ConcatVector<3,1,32,84>::filter3
-start = 57426,end = 57499,total = 73
-Running GemmReluMKKN<1,84,48>
-start = 57771,end = 58744,total = 973
-Running ConcatScalar<1,1,48,10>::filter1
-start = 58888,end = 59766,total = 878
-
-# int8
-Running QuantizeLinearVector<28,28,32>
-start = 3035,end = 5492,total = 2457
-Running QLinearConvVector<28,32,24,32,1,1,6,5>
-start = 5884,end = 10201,total = 4317
-Running Maxpool2x2Int8BCHW::filter<24,32,12,16,1,6>
-start = 11729,end = 12053,total = 324
-Running QLinearConvVector<12,16,8,16,1,6,16,5>
-start = 12521,end = 19227,total = 6706
-Running MaxpoolScalarBCHW::filter<8,16,4,4,1,16>
-start = 19960,end = 23554,total = 3594
-Running QgemmVector<1,256,128>
-start = 23790,end = 25977,total = 2187
-Running QgemmVector<1,128,96>
-start = 26173,end = 27057,total = 884
-Running QgemmVector<1,96,16>
-start = 27257,end = 27396,total = 139
-Running DequantizeLinearScalar<16,10>
-start = 27560,end = 27642,total = 82
-...
 ```

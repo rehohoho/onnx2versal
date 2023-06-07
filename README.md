@@ -1,9 +1,13 @@
 ﻿# onnx2versal
 
-This repo holds AIE kernels/graphs and generator scripts to create system level design given a ONNX model and some data. Verify, profile and run your ONNX models on Versal machines! 
+This repo holds AIE kernels/graphs and generator scripts to create system level design given `model.onnx` and `data.npy`. Verify, profile and run your ONNX models on Versal machines! The pipeline only converts to AIE kernels currently.
 
-See example at [Lenet Example](lenet_example.md) <br />
-See documentation at https://rehohoho.github.io/onnx2versal/: actual kernel and graph details relevant only if you are developing on this repo.
+* See end to end example at [Lenet Example](lenet_example.md) <br />
+* See profiling of examples at [Profile](profile.md) <br />
+* See jupyter notebooks that run through the same examples at 
+    * Conversion to Onnx [pytorch2onnx notebook](python/part1_pytorch2onnx.ipynb), [tf2onnx notebook](python/part1_tf2onnx.ipynb)
+    * Onnx2Versal [onnx2versal notebook](python/part2_onnx2versal.ipynb) <br />
+* See documentation for AIE kernels and graphs used at https://rehohoho.github.io/onnx2versal/
 
 ## Requirements
 * Vitis Software Platform 2022.2
@@ -31,30 +35,68 @@ export PYTHON3_LOCATION=/usr/bin
 
 ## Usage - Generate
 
-**Inputs**
 ```
-models/my_model.onnx
-some data to run through ONNX model
-```
-
-**Runnables**
-```
-python/generate.py
+# takes onnx model and numpy tensor, with batch as first dimension
+$ python/generate.py ./models/my_model.onnx ./data/data.npy
 ```
 
-**Outputs**
+Example truncated stdout
 ```
-design/aie_src/graph_[net_name].cpp               # main .cpp to be compiled by aiecompiler
-design/host_app_src/[net_name]_aie_app.cpp        # host .cpp for PS
-design/system_configs/[net_name]_output_inter.cfg # config files for v++ system linking
-design/system_configs/[net_name].cfg
-design/traffic_gen/xtg_[net_name]_output_inter.py # external traffic generator files for tests
-design/traffic_gen/xtg_[net_name].py
+Saving tensor of shape (1, 1, 28, 28) into ../data/input.txt
+WARNING: fusing Conv+Relu
+Padding Conv weights (6, 1, 5, 5) to (6, 1, 5, 8)
+Saving tensor of shape (1, 1, 28, 28) into ../data/k0conv_in_shape1x1x28x28.txt
+...
+WARNING: Shape not implemented, skipping...
+WARNING: Constant not implemented, skipping...
+...
+Found matching output /Reshape_output_0 and k5pool output
+Disabled output padding, may result in choosing scalar op instead of vector.
+...
+Generating MNIST txt for 100 data points
+```
+
+Example generated files
+```
+models/
+├── lenet_mnist_inter.onnx              # generated onnx model to output at all layers
+├── lenet_mnist.onnx
+└── lenet_mnist.pkl
+data/
+├── input.txt                           # generated input data
+├── input_host.txt                      # generated batch input data for e2e test
+├── k0conv_goldenout.txt                # intermediate inputs and outputs for verification
+├── k0conv_in.txt
+├── k14gemm_goldenout.txt
+├── k14gemm_in.txt
+├── k16gemm_goldenout.txt
+├── k16gemm_in.txt
+├── k18gemm_goldenout.txt               # generated output data
+├── k18gemm_goldenout_host.txt          # generated batch output data for e2e host
+├── k18gemm_in.txt
+├── k2pool_goldenout.txt
+├── k2pool_in.txt
+├── k3conv_goldenout.txt
+├── k3conv_in.txt
+├── k5pool_goldenout.txt
+├── k5pool_in.txt
+design/
+├── aie_src
+│   └── graph_lenet_mnist.cpp           # aiengine computation graph for aiecompiler
+├── host_app_src
+│   └── lenet_mnist_aie_app.cpp         # host code to load data and run compiled graph
+├── system_configs
+│   ├── lenet_mnist.cfg                 # configuration for v++ linking
+│   └── lenet_mnist_output_inter.cfg
+└── trafficgen
+    ├── xtg_lenet_mnist_output_inter.py # traffic generators for testing computation graph
+    └── xtg_lenet_mnist.py
 ```
 
 ## Usage - Simulation, Verification, Profiling, Hardware Build
 `make help` for full details. Only key (and probably insufficient) examples here. <br />
 <b>If you run into issues running the make, try to run each recipe one by one.</b>
+
 ```
 OPTIONS:
 Use the make recipes with required values for options mentioned below-
