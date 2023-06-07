@@ -99,18 +99,18 @@ Collaboration diagram for ConcatKernels:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__ConcatKernels.png" border="0" usemap="#agroup____ConcatKernels" alt=""/></div>
 <map name="agroup____ConcatKernels" id="agroup____ConcatKernels">
-<area shape="rect" href="group__Concat.html" title="Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE. No CHUNK_SIZE_PAD for ..." alt="" coords="5,5,68,31"/>
+<area shape="rect" href="group__Concat.html" title="Concatenates chunks of H*INP_W from LCNT lanes then truncate to H*OUT_W." alt="" coords="5,5,68,31"/>
 <area shape="rect" title=" " alt="" coords="116,5,222,31"/>
 </map>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConcatScalar.html">ConcatScalar&lt; LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConcatScalar.html">ConcatScalar&lt; LCNT, H, INP_W, OUT_W &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, ConcatScalar&lt;5, 64, 16, 52&gt; takes 650 cycles.  <a href="classConcatScalar.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConcatVector.html">ConcatVector&lt; LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, Requires CHUNK_SIZE%8=0, BLOCK_SIZE%4=0. ConcatVector&lt;5, 64, 16, 52&gt; takes 232 cycles.  <a href="classConcatVector.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConcatVector.html">ConcatVector&lt; LCNT, H, INP_W, OUT_W &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, Requires INP_W%8=0, OUT_W%4=0. ConcatVector&lt;5, 64, 16, 52&gt; takes 232 cycles.  <a href="classConcatVector.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

@@ -1,4 +1,4 @@
-<map id="GemmReluMknkChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N &gt;" name="GemmReluMknkChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N &gt;">
+<map id="GemmReluMknkChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU &gt;" name="GemmReluMknkChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU &gt;">
 <area shape="rect" id="Node000001" title="Multiinstance graph for MxK times NxK that stores weights and biases. Requires NxK weight,..." alt="" coords="20,109,224,165"/>
 <area shape="rect" id="Node000002" href="$classConcatGraph.html" title=" " alt="" coords="5,5,239,46"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="125,61,125,109,119,109,119,61"/>

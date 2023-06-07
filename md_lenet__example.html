@@ -124,7 +124,7 @@ Quantize the model (optional)</h1>
 </div><!-- fragment --><p>For the CLI lines to execute below, substitute "lenet_mnist" with "lenet_mnist_int8" for all arguments if you intend to use the quantized model.</p>
 <h1><a class="anchor" id="autotoc_md16"></a>
 Generate files</h1>
-<div class="fragment"><div class="line">$ python generate.py ../models/lenet_mnist.onnx</div>
+<div class="fragment"><div class="line">$ python generate.py ../models/lenet_mnist.onnx ../data/MNIST/X_test.npy</div>
 </div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Saving tensor of shape (1, 1, 28, 28) into ../data/input.txt</div>
 <div class="line">WARNING: fusing Conv+Relu</div>
 <div class="line">Padding Conv weights (6, 1, 5, 5) to (6, 1, 5, 8)</div>
@@ -183,7 +183,7 @@ Performance verification</h1>
 <p><code>TARGET=hw_emu</code> with <code>DLOG=1</code> (default) will output cycles required for each kernel. <code>TARGET=hw</code> with <code>EN_TRACE=1</code> (not default) allows event tracing and timing.</p>
 <h1><a class="anchor" id="autotoc_md20"></a>
 Functional check: runs graph in x86simulator</h1>
-<p>For graph test, ITER_CNT is an argument into graph compilation (make graph). Note x86simulator does not simulate hardware platform, outputs will not contain cycle information. The following tests a single sample and verifies all intermediate outputs. It takes ~1min to compile and runs quickly. </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim </div>
+<p>For graph test, ITER_CNT is an argument into graph compilation (make graph). Note x86simulator does not simulate hardware platform, outputs will not contain cycle information. The following tests a single sample and verifies all intermediate outputs. It takes ~1min to compile and runs quickly. </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean graph clean_reports aiesim </div>
 </div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">...</div>
 <div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
 <div class="line">start = -1,end = -1,total = 0</div>
@@ -209,7 +209,7 @@ Functional check: runs graph in x86simulator</h1>
 <div class="line">            ├── x86sim_check.log        # logs from python verification script</div>
 <div class="line">            └── x86simulator.log        # logs from x86simulator</div>
 </div><!-- fragment --><p><b>Traffic generator for end-to-end test with more samples.</b><br  />
- The following tests 100 samples and verifies final output only. Excess logs is silenced. </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph clean_reports aiesim EXTIO=1 DOUT=0 DLOG=0 ITER_CNT=100</div>
+ The following tests 100 samples and verifies final output only. Excess logs is silenced. </p><div class="fragment"><div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean graph clean_reports aiesim DOUT=0 DLOG=0 EXTIO=1 ITER_CNT=1000</div>
 </div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">14:43:59: Creating ipc_axis_master_util for plin0_lenet_mnist_input...</div>
 <div class="line">14:43:59: Creating ipc_axis_slave_util for plout0_lenet_mnist_k18gemm...</div>
 <div class="line">14:43:59: Begin run...</div>
@@ -241,12 +241,10 @@ Functional check: runs graph in x86simulator</h1>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md21"></a>
 Functional check: runs system software emulation</h1>
 <p>For system test, ITER_CNT is an argument into host app compilation (make application). Note this uses x86simulator files, outputs will not contain cycle information. It takes ~2 min to compile and runs quickly. </p><div class="fragment"><div class="line"># test 1 sample, verifies intermediates</div>
-<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
-<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean_reports run_emu</div>
+<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean graph kernels xsa application package clean_reports run_emu</div>
 <div class="line"> </div>
-<div class="line"># test 100 samples, verifies final output only, silence excess logs</div>
-<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package DOUT=0 DLOG=0</div>
-<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make clean_reports run_emu ITER_CNT=100</div>
+<div class="line"># test 1000 samples, verifies final output only, silence excess logs</div>
+<div class="line">$ TARGET=sw_emu GRAPH=lenet_mnist make graph kernels xsa application package clean_reports run_emu DOUT=0 DLOG=0 ITER_CNT=1000</div>
 </div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Initializing ADF API...</div>
 <div class="line"> </div>
 <div class="line">Config:</div>
@@ -316,8 +314,7 @@ Functional check: runs system software emulation</h1>
 </div><!-- fragment --><p> <b>Clean build</b> </p><div class="fragment"><div class="line">TARGET=sw_emu GRAPH=lenet_mnist make clean</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md22"></a>
 Functional/performance check: runs graph in aiesimulator</h1>
-<p>For graph test, ITER_CNT is an argument into graph compilation (make graph). aiesimulator is cycle accurate, <code>DOUT=1 (default)</code> ensures each kernel outputs cycle information. It takes ~5 min to compile and ~5 min to run. </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph</div>
-<div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make clean_reports aiesim_profile</div>
+<p>For graph test, ITER_CNT is an argument into graph compilation (make graph). aiesimulator is cycle accurate, <code>DOUT=1 (default)</code> ensures each kernel outputs cycle information. It takes ~5 min to compile and ~5 min to run. </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make clean graph clean_reports aiesim_profile</div>
 </div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Waiting for core(s) of graph lenet_mnist to finish execution ...</div>
 <div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
 <div class="line">start = 3236,end = 20164,total = 16928</div>
@@ -405,8 +402,7 @@ Functional/performance check: runs graph in aiesimulator</h1>
 </div><!-- fragment --><p> <b>Clean hardware emulation build</b> </p><div class="fragment"><div class="line">TARGET=hw_emu GRAPH=lenet_mnist make clean</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md23"></a>
 Functional/performance check: runs system in hardware emulation with QEMU</h1>
-<p>For system test, ITER_CNT is an argument into host app compilation (make application). This uses same aiengine graph for computation and outputs cycle information per kernel. It takes ~15 min to compile and ~30 min to run for single sample. hw_emu is known to be very slow, do not use too much data. </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph kernels xsa application package</div>
-<div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph clean_reports run_emu</div>
+<p>For system test, ITER_CNT is an argument into host app compilation (make application). This uses same aiengine graph for computation and outputs cycle information per kernel. It takes ~15 min to compile and ~30 min to run for single sample. hw_emu is known to be very slow, do not use too much data. </p><div class="fragment"><div class="line">$ TARGET=hw_emu GRAPH=lenet_mnist make graph kernels xsa application package clean_reports run_emu</div>
 </div><!-- fragment --><p>Truncated stdout (for float32 model) </p><div class="fragment"><div class="line">Initializing ADF API...</div>
 <div class="line"> </div>
 <div class="line">Config:</div>
@@ -507,11 +503,11 @@ Test system on hardware</h1>
 <p>It takes ~1 hour to compile, ~8 min to flash, and runs quickly.</p>
 <p><b>Hardware: create hardware image, flash the SD card</b></p>
 <div class="fragment"><div class="line"># test 1 sample, verify intermediates</div>
-<div class="line">$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package EN_TRACE=1</div>
+<div class="line">$ TARGET=hw GRAPH=lenet_mnist make clean graph kernels xsa application package EN_TRACE=1</div>
 <div class="line">$ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress</div>
 <div class="line"> </div>
 <div class="line"># test 100 samples, verify final output</div>
-<div class="line">$ TARGET=hw GRAPH=lenet_mnist make graph kernels xsa application package EN_TRACE=1 DOUT=0</div>
+<div class="line">$ TARGET=hw GRAPH=lenet_mnist make clean graph kernels xsa application package EN_TRACE=1 DOUT=0</div>
 <div class="line">$ sudo dd if=build/lenet_mnist/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress</div>
 </div><!-- fragment --><p>Truncated stdout (for float32 model), 100 samples with final output only </p><div class="fragment"><div class="line">Initializing ADF API...</div>
 <div class="line"> </div>
@@ -605,69 +601,6 @@ Test system on hardware</h1>
 </div><!-- fragment --><p> <b>Analyze system profile after run</b> </p><div class="fragment"><div class="line">copy file outputs from sd card to your local system</div>
 <div class="line">vitis_analyzer xrt.run_summary</div>
 </div><!-- fragment --><p> <b>Clean hardware emulation build</b> </p><div class="fragment"><div class="line">TARGET=hw_emu GRAPH=lenet_mnist make clean</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md25"></a>
-float32 vs int8 model tradeoff (WIP)</h1>
-<p>A comparison of the performance accuracy tradeoff is as follows. </p><div class="fragment"><div class="line">TBC</div>
-</div><!-- fragment --><p> aiesimulator cycle estimation per kernel </p><div class="fragment"><div class="line"># float32</div>
-<div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
-<div class="line">start = 3221,end = 20149,total = 16928</div>
-<div class="line">Running Maxpool2x2FloatBCHW::filter&lt;24,24,12,12,1,6&gt;</div>
-<div class="line">start = 24557,end = 25458,total = 901</div>
-<div class="line">Running Conv5x5on8ReluBCHW&lt;12, 8, 1, 6, 16&gt;</div>
-<div class="line">start = 26639,end = 52715,total = 26076</div>
-<div class="line">Running Maxpool2x2FloatBCHW::filter&lt;8,8,4,4,1,16&gt;</div>
-<div class="line">start = 54090,end = 54381,total = 291</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,256,16&gt;</div>
-<div class="line">start = 54809,end = 55712,total = 903</div>
-<div class="line">start = 54813,end = 55716,total = 903</div>
-<div class="line">start = 54813,end = 55716,total = 903</div>
-<div class="line">start = 54817,end = 55720,total = 903</div>
-<div class="line">start = 54821,end = 55724,total = 903</div>
-<div class="line">start = 54825,end = 55728,total = 903</div>
-<div class="line">start = 54829,end = 55732,total = 903</div>
-<div class="line">start = 54833,end = 55736,total = 903</div>
-<div class="line">Running ConcatVector&lt;8,1,16,120&gt;::filter8</div>
-<div class="line">start = 55936,end = 56062,total = 126</div>
-<div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
-<div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
-<div class="line">start = 56382,end = 57270,total = 888</div>
-<div class="line">start = 56386,end = 57274,total = 888</div>
-<div class="line">start = 56390,end = 57278,total = 888</div>
-<div class="line">Running ConcatVector&lt;3,1,32,84&gt;::filter3</div>
-<div class="line">start = 57426,end = 57499,total = 73</div>
-<div class="line">Running GemmReluMKKN&lt;1,84,48&gt;</div>
-<div class="line">start = 57771,end = 58744,total = 973</div>
-<div class="line">Running ConcatScalar&lt;1,1,48,10&gt;::filter1</div>
-<div class="line">start = 58888,end = 59766,total = 878</div>
-<div class="line"> </div>
-<div class="line"># int8</div>
-<div class="line">Running QuantizeLinearVector&lt;28,28,32&gt;</div>
-<div class="line">start = 3035,end = 5492,total = 2457</div>
-<div class="line">Running QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt;</div>
-<div class="line">start = 5884,end = 10201,total = 4317</div>
-<div class="line">Running Maxpool2x2Int8BCHW::filter&lt;24,32,12,16,1,6&gt;</div>
-<div class="line">start = 11729,end = 12053,total = 324</div>
-<div class="line">Running QLinearConvVector&lt;12,16,8,16,1,6,16,5&gt;</div>
-<div class="line">start = 12521,end = 19227,total = 6706</div>
-<div class="line">Running MaxpoolScalarBCHW::filter&lt;8,16,4,4,1,16&gt;</div>
-<div class="line">start = 19960,end = 23554,total = 3594</div>
-<div class="line">Running QgemmVector&lt;1,256,128&gt;</div>
-<div class="line">start = 23790,end = 25977,total = 2187</div>
-<div class="line">Running QgemmVector&lt;1,128,96&gt;</div>
-<div class="line">start = 26173,end = 27057,total = 884</div>
-<div class="line">Running QgemmVector&lt;1,96,16&gt;</div>
-<div class="line">start = 27257,end = 27396,total = 139</div>
-<div class="line">Running DequantizeLinearScalar&lt;16,10&gt;</div>
-<div class="line">start = 27560,end = 27642,total = 82</div>
-<div class="line">...</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

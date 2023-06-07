@@ -12,13 +12,14 @@ var searchData=
   ['qlinearconvvector_9',['QLinearConvVector',['../classQLinearConvVector.html',1,'']]],
   ['qlinearconvvectorscale32bit_10',['QLinearConvVectorScale32bit',['../classQLinearConvVectorScale32bit.html',1,'']]],
   ['qlinearsoftmax_11',['Qlinearsoftmax',['../group__Qlinearsoftmax.html',1,'']]],
-  ['qlinearsoftmaxgraph_12',['QlinearsoftmaxGraph',['../classQlinearsoftmaxGraph.html',1,'']]],
-  ['qlinearsoftmaxkernels_13',['QlinearsoftmaxKernels',['../group__QlinearsoftmaxKernels.html',1,'']]],
-  ['qlinearsoftmaxscalar_14',['QlinearsoftmaxScalar',['../classQlinearsoftmaxScalar.html',1,'']]],
-  ['qlinearsoftmaxsingleaxis_15',['QlinearsoftmaxSingleaxis',['../classQlinearsoftmaxSingleaxis.html',1,'']]],
-  ['quantizelinear_16',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
-  ['quantizelineargraph_17',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearkernels_18',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
-  ['quantizelinearscalar_19',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
-  ['quantizelinearvector_20',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
+  ['qlinearsoftmaxfloatmul_12',['QlinearsoftmaxFloatmul',['../classQlinearsoftmaxFloatmul.html',1,'']]],
+  ['qlinearsoftmaxgraph_13',['QlinearsoftmaxGraph',['../classQlinearsoftmaxGraph.html',1,'']]],
+  ['qlinearsoftmaxkernels_14',['QlinearsoftmaxKernels',['../group__QlinearsoftmaxKernels.html',1,'']]],
+  ['qlinearsoftmaxscalar_15',['QlinearsoftmaxScalar',['../classQlinearsoftmaxScalar.html',1,'']]],
+  ['qlinearsoftmaxsingleaxis_16',['QlinearsoftmaxSingleaxis',['../classQlinearsoftmaxSingleaxis.html',1,'']]],
+  ['quantizelinear_17',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
+  ['quantizelineargraph_18',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearkernels_19',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
+  ['quantizelinearscalar_20',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearvector_21',['QuantizeLinearVector',['../classQuantizeLinearVector.html',1,'']]]
 ];

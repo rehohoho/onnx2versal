@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: ConvReluGraph&lt; CONV, INP_W, OUT_W, B, C, M, K &gt; Class Template Reference</title>
+<title>onnx2versal: ConvReluGraph&lt; CONV, INP_W, OUT_W, B, C, M, K, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classConvReluGraph.html',''); initResi
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classConvReluGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">ConvReluGraph&lt; CONV, INP_W, OUT_W, B, C, M, K &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
+  <div class="headertitle"><div class="title">ConvReluGraph&lt; CONV, INP_W, OUT_W, B, C, M, K, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -106,22 +106,22 @@ $(document).ready(function(){initNavTree('classConvReluGraph.html',''); initResi
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a68a1d6b23fdc16553c653a4461c04b1f"><td class="memItemLeft" align="right" valign="top"><a id="a68a1d6b23fdc16553c653a4461c04b1f" name="a68a1d6b23fdc16553c653a4461c04b1f"></a>
+<tr class="memitem:aeba369e7086970b5cd68da68956ea4e3"><td class="memItemLeft" align="right" valign="top"><a id="aeba369e7086970b5cd68da68956ea4e3" name="aeba369e7086970b5cd68da68956ea4e3"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ConvReluGraph</b> (std::vector&lt; float &gt; weights, std::vector&lt; float &gt; bias)</td></tr>
-<tr class="separator:a68a1d6b23fdc16553c653a4461c04b1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aeba369e7086970b5cd68da68956ea4e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a92c89982e53c4b22c33acd10b4e28a3b"><td class="memItemLeft" align="right" valign="top"><a id="a92c89982e53c4b22c33acd10b4e28a3b" name="a92c89982e53c4b22c33acd10b4e28a3b"></a>
+<tr class="memitem:a9e685a1436af7e9dd7748a9e2b812270"><td class="memItemLeft" align="right" valign="top"><a id="a9e685a1436af7e9dd7748a9e2b812270" name="a9e685a1436af7e9dd7748a9e2b812270"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:a92c89982e53c4b22c33acd10b4e28a3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac50e396b6d8e4d5e36a2419f1e3f77c4"><td class="memItemLeft" align="right" valign="top"><a id="ac50e396b6d8e4d5e36a2419f1e3f77c4" name="ac50e396b6d8e4d5e36a2419f1e3f77c4"></a>
+<tr class="separator:a9e685a1436af7e9dd7748a9e2b812270"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a146be36b9e5ec37139b2ba1765c032"><td class="memItemLeft" align="right" valign="top"><a id="a7a146be36b9e5ec37139b2ba1765c032" name="a7a146be36b9e5ec37139b2ba1765c032"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:ac50e396b6d8e4d5e36a2419f1e3f77c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a7a146be36b9e5ec37139b2ba1765c032"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int &gt; class CONV, int INP_W, int OUT_W, int B, int C, int M, int K&gt;<br />
-class ConvReluGraph&lt; CONV, INP_W, OUT_W, B, C, M, K &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int, int &gt; class CONV, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU&gt;<br />
+class ConvReluGraph&lt; CONV, INP_W, OUT_W, B, C, M, K, IS_RELU &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>

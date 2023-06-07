@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: GemmReluMKKN&lt; M, K, N &gt; Class Template Reference</title>
+<title>onnx2versal: GemmReluMKKN&lt; M, K, N, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classGemmReluMKKN.html',''); initResiz
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classGemmReluMKKN-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">GemmReluMKKN&lt; M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Gemm.html">Gemm</a> &raquo; <a class="el" href="group__GemmKernels.html">GemmKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">GemmReluMKKN&lt; M, K, N, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Gemm.html">Gemm</a> &raquo; <a class="el" href="group__GemmKernels.html">GemmKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for MK*KN, stores weights and biases, requires K%2=0, N%4=0 GemmReluMKKN&lt;1, 86, 10&gt; total = 368.  
+<p>Vector implementation for MK*KN, stores weights and biases, requires K%4=0, N%4=0 GemmReluMKKN&lt;2, 36, 10&gt; total = 441.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="gemm_8h_source.html">gemm.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad69634779a83d6e29deabbc2ca777629"><td class="memItemLeft" align="right" valign="top"><a id="ad69634779a83d6e29deabbc2ca777629" name="ad69634779a83d6e29deabbc2ca777629"></a>
+<tr class="memitem:a0710a8481559cb152372f87b8a7d5c4c"><td class="memItemLeft" align="right" valign="top"><a id="a0710a8481559cb152372f87b8a7d5c4c" name="a0710a8481559cb152372f87b8a7d5c4c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>GemmReluMKKN</b> (float(&amp;w)[N *K], float(&amp;b)[N])</td></tr>
-<tr class="separator:ad69634779a83d6e29deabbc2ca777629"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a762f7e46f7df12ef6bb5d4c6987015fe"><td class="memItemLeft" align="right" valign="top"><a id="a762f7e46f7df12ef6bb5d4c6987015fe" name="a762f7e46f7df12ef6bb5d4c6987015fe"></a>
+<tr class="separator:a0710a8481559cb152372f87b8a7d5c4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3762d9292c6dc077a7c9b85be13d0c8f"><td class="memItemLeft" align="right" valign="top"><a id="a3762d9292c6dc077a7c9b85be13d0c8f" name="a3762d9292c6dc077a7c9b85be13d0c8f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:a762f7e46f7df12ef6bb5d4c6987015fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a3762d9292c6dc077a7c9b85be13d0c8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a1e5766f5f913685e757d17482c1733c6"><td class="memItemLeft" align="right" valign="top"><a id="a1e5766f5f913685e757d17482c1733c6" name="a1e5766f5f913685e757d17482c1733c6"></a>
+<tr class="memitem:a648db375dacc1acaf8a58b7086a67f8b"><td class="memItemLeft" align="right" valign="top"><a id="a648db375dacc1acaf8a58b7086a67f8b" name="a648db375dacc1acaf8a58b7086a67f8b"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a1e5766f5f913685e757d17482c1733c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a648db375dacc1acaf8a58b7086a67f8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="gemm_8h_source.html">gemm.h</a></li>

@@ -1,11 +1,7 @@
 var searchData=
 [
-  ['qgemm_0',['Qgemm',['../group__Qgemm.html',1,'']]],
-  ['qgemmkernels_1',['QgemmKernels',['../group__QgemmKernels.html',1,'']]],
-  ['qlinearconv_2',['QLinearConv',['../group__QLinearConv.html',1,'']]],
-  ['qlinearconvkernels_3',['QLinearConvKernels',['../group__QLinearConvKernels.html',1,'']]],
-  ['qlinearsoftmax_4',['Qlinearsoftmax',['../group__Qlinearsoftmax.html',1,'']]],
-  ['qlinearsoftmaxkernels_5',['QlinearsoftmaxKernels',['../group__QlinearsoftmaxKernels.html',1,'']]],
-  ['quantizelinear_6',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
-  ['quantizelinearkernels_7',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]]
+  ['pad_0',['Pad',['../group__Pad.html',1,'']]],
+  ['padkernels_1',['PadKernels',['../group__PadKernels.html',1,'']]],
+  ['pool2d_2',['Pool2D',['../group__Pool2D.html',1,'']]],
+  ['pool2dkernels_3',['Pool2DKernels',['../group__Pool2DKernels.html',1,'']]]
 ];

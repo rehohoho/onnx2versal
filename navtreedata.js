@@ -49,9 +49,9 @@ var NAVTREE =
       [ "Functional check: runs system software emulation", "md_lenet__example.html#autotoc_md21", null ],
       [ "Functional/performance check: runs graph in aiesimulator", "md_lenet__example.html#autotoc_md22", null ],
       [ "Functional/performance check: runs system in hardware emulation with QEMU", "md_lenet__example.html#autotoc_md23", null ],
-      [ "Test system on hardware", "md_lenet__example.html#autotoc_md24", null ],
-      [ "float32 vs int8 model tradeoff (WIP)", "md_lenet__example.html#autotoc_md25", null ]
+      [ "Test system on hardware", "md_lenet__example.html#autotoc_md24", null ]
     ] ],
+    [ "Profiling", "md_profile.html", null ],
     [ "Modules", "modules.html", "modules" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],

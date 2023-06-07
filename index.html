@@ -92,9 +92,20 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
   <div class="headertitle"><div class="title">onnx2versal </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_README"></a> This repo holds AIE kernels/graphs and generator scripts to create system level design given a ONNX model and some data. Verify, profile and run your ONNX models on Versal machines!</p>
-<p>See example at <a class="el" href="md_lenet__example.html">Lenet Example</a> <br  />
- See documentation at <a href="https://rehohoho.github.io/onnx2versal/:">https://rehohoho.github.io/onnx2versal/:</a> actual kernel and graph details relevant only if you are developing on this repo.</p>
+<div class="textblock"><p><a class="anchor" id="md_README"></a> This repo holds AIE kernels/graphs and generator scripts to create system level design given a ONNX model and some data. Verify, profile and run your ONNX models on Versal machines! The pipelines only converts to AIE kernels currently.</p>
+<ul>
+<li>See end to end example at <a class="el" href="md_lenet__example.html">Lenet Example</a> <br  />
+</li>
+<li>See profiling of examples at <a class="el" href="md_profile.html">Profile</a> <br  />
+</li>
+<li>See jupyter notebooks that run through the same examples at<ul>
+<li>Conversion to Onnx <a href="python/part1_pytorch2onnx.ipynb">pytorch2onnx notebook</a>, <a href="python/part1_tf2onnx.ipynb">tf2onnx notebook</a></li>
+<li>Onnx2Versal <a href="python/part2_onnx2versal.ipynb">onnx2versal notebook</a> <br  />
+</li>
+</ul>
+</li>
+<li>See documentation for AIE kernels and graphs used at <a href="https://rehohoho.github.io/onnx2versal/">https://rehohoho.github.io/onnx2versal/</a></li>
+</ul>
 <h1><a class="anchor" id="autotoc_md1"></a>
 Requirements</h1>
 <ul>
@@ -116,19 +127,58 @@ Setup</h1>
 <div class="line">export PYTHON3_LOCATION=/usr/bin</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md3"></a>
 Usage - Generate</h1>
-<p><b>Inputs</b> </p><div class="fragment"><div class="line">models/my_model.onnx</div>
-<div class="line">some data to run through ONNX model</div>
-</div><!-- fragment --><p><b>Runnables</b> </p><div class="fragment"><div class="line">python/generate.py</div>
-</div><!-- fragment --><p><b>Outputs</b> </p><div class="fragment"><div class="line">design/aie_src/graph_[net_name].cpp               # main .cpp to be compiled by aiecompiler</div>
-<div class="line">design/host_app_src/[net_name]_aie_app.cpp        # host .cpp for PS</div>
-<div class="line">design/system_configs/[net_name]_output_inter.cfg # config files for v++ system linking</div>
-<div class="line">design/system_configs/[net_name].cfg</div>
-<div class="line">design/traffic_gen/xtg_[net_name]_output_inter.py # external traffic generator files for tests</div>
-<div class="line">design/traffic_gen/xtg_[net_name].py</div>
+<div class="fragment"><div class="line"># takes onnx model and numpy tensor, with batch as first dimension</div>
+<div class="line">$ python/generate.py ./models/my_model.onnx ./data/data.npy</div>
+</div><!-- fragment --><p>Example truncated stdout </p><div class="fragment"><div class="line">Saving tensor of shape (1, 1, 28, 28) into ../data/input.txt</div>
+<div class="line">WARNING: fusing Conv+Relu</div>
+<div class="line">Padding Conv weights (6, 1, 5, 5) to (6, 1, 5, 8)</div>
+<div class="line">Saving tensor of shape (1, 1, 28, 28) into ../data/k0conv_in_shape1x1x28x28.txt</div>
+<div class="line">...</div>
+<div class="line">WARNING: Shape not implemented, skipping...</div>
+<div class="line">WARNING: Constant not implemented, skipping...</div>
+<div class="line">...</div>
+<div class="line">Found matching output /Reshape_output_0 and k5pool output</div>
+<div class="line">Disabled output padding, may result in choosing scalar op instead of vector.</div>
+<div class="line">...</div>
+<div class="line">Generating MNIST txt for 100 data points</div>
+</div><!-- fragment --><p>Example generated files </p><div class="fragment"><div class="line">models/</div>
+<div class="line">├── lenet_mnist_inter.onnx              # generated onnx model to output at all layers</div>
+<div class="line">├── lenet_mnist.onnx</div>
+<div class="line">└── lenet_mnist.pkl</div>
+<div class="line">data/</div>
+<div class="line">├── input.txt                           # generated input data</div>
+<div class="line">├── input_host.txt                      # generated batch input data for e2e test</div>
+<div class="line">├── k0conv_goldenout.txt                # intermediate inputs and outputs for verification</div>
+<div class="line">├── k0conv_in.txt</div>
+<div class="line">├── k14gemm_goldenout.txt</div>
+<div class="line">├── k14gemm_in.txt</div>
+<div class="line">├── k16gemm_goldenout.txt</div>
+<div class="line">├── k16gemm_in.txt</div>
+<div class="line">├── k18gemm_goldenout.txt               # generated output data</div>
+<div class="line">├── k18gemm_goldenout_host.txt          # generated batch output data for e2e host</div>
+<div class="line">├── k18gemm_in.txt</div>
+<div class="line">├── k2pool_goldenout.txt</div>
+<div class="line">├── k2pool_in.txt</div>
+<div class="line">├── k3conv_goldenout.txt</div>
+<div class="line">├── k3conv_in.txt</div>
+<div class="line">├── k5pool_goldenout.txt</div>
+<div class="line">├── k5pool_in.txt</div>
+<div class="line">design/</div>
+<div class="line">├── aie_src</div>
+<div class="line">│   └── graph_lenet_mnist.cpp           # aiengine computation graph for aiecompiler</div>
+<div class="line">├── host_app_src</div>
+<div class="line">│   └── lenet_mnist_aie_app.cpp         # host code to load data and run compiled graph</div>
+<div class="line">├── system_configs</div>
+<div class="line">│   ├── lenet_mnist.cfg                 # configuration for v++ linking</div>
+<div class="line">│   └── lenet_mnist_output_inter.cfg</div>
+<div class="line">└── trafficgen</div>
+<div class="line">    ├── xtg_lenet_mnist_output_inter.py # traffic generators for testing computation graph</div>
+<div class="line">    └── xtg_lenet_mnist.py</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md4"></a>
 Usage - Simulation, Verification, Profiling, Hardware Build</h1>
 <p><code>make help</code> for full details. Only key (and probably insufficient) examples here. <br  />
- <b>If you run into issues running the make, try to run each recipe one by one.</b> </p><div class="fragment"><div class="line">OPTIONS:</div>
+ <b>If you run into issues running the make, try to run each recipe one by one.</b></p>
+<div class="fragment"><div class="line">OPTIONS:</div>
 <div class="line">Use the make recipes with required values for options mentioned below-</div>
 <div class="line">    TARGET      sw_emu(default)|hw_emu|hw, build target</div>
 <div class="line">    GRAPH       lenet (default),           target graph as per design/aie_src/graph_[].cpp</div>

@@ -96,14 +96,14 @@ $(document).ready(function(){initNavTree('group__Concat.html',''); initResizable
 </div><!--header-->
 <div class="contents">
 
-<p>Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE. No CHUNK_SIZE_PAD for shaping operations.  
+<p>Concatenates chunks of H*INP_W from LCNT lanes then truncate to H*OUT_W.  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for Concat:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__Concat.png" border="0" usemap="#agroup____Concat" alt=""/></div>
 <map name="agroup____Concat" id="agroup____Concat">
-<area shape="rect" title="Concatenates chunks of CHUNK_SIZE from LCNT lanes then truncate to BLOCK_SIZE. No CHUNK_SIZE_PAD for ..." alt="" coords="5,5,68,31"/>
+<area shape="rect" title="Concatenates chunks of H*INP_W from LCNT lanes then truncate to H*OUT_W." alt="" coords="5,5,68,31"/>
 <area shape="rect" href="group__ConcatKernels.html" title=" " alt="" coords="116,5,222,31"/>
 </map>
 </div>
@@ -115,7 +115,7 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConcatGraph.html">ConcatGraph&lt; CONCAT, LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConcatGraph.html">ConcatGraph&lt; CONCAT, LCNT, H, INP_W, OUT_W &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Graph wrapper for arbitrary concat kernel implementation and lanes.  <a href="classConcatGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -129,9 +129,9 @@ Classes</h2></td></tr>
   <table class="tparams">
     <tr><td class="paramname">CONCAT</td><td>Concat Kernel </td></tr>
     <tr><td class="paramname">LCNT</td><td>number of lanes to concat </td></tr>
-    <tr><td class="paramname">CHUNK_CNT</td><td>number of chunks </td></tr>
-    <tr><td class="paramname">CHUNK_SIZE</td><td>size of chunk from each lanes per iteration </td></tr>
-    <tr><td class="paramname">BLOCK_SIZE</td><td>size of concatenated chunks per iteration </td></tr>
+    <tr><td class="paramname">H</td><td>number of chunks </td></tr>
+    <tr><td class="paramname">INP_W</td><td>size of chunk from each lanes per iteration </td></tr>
+    <tr><td class="paramname">OUT_W</td><td>size of concatenated chunks per iteration </td></tr>
   </table>
   </dd>
 </dl>

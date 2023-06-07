@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K &gt; Class Template Reference</title>
+<title>onnx2versal: ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('classConvReluChunkGraph.html',''); ini
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classConvReluChunkGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
+  <div class="headertitle"><div class="title">ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -105,46 +105,46 @@ $(document).ready(function(){initNavTree('classConvReluChunkGraph.html',''); ini
 
 <p>Inherits adf::graph.</p>
 <div class="dynheader">
-Collaboration diagram for ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K &gt;:</div>
+Collaboration diagram for ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K, IS_RELU &gt;:</div>
 <div class="dyncontent">
-<div class="center"><img src="classConvReluChunkGraph__coll__graph.png" border="0" usemap="#aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_01_4_coll__map" alt="Collaboration graph"/></div>
-<map name="aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_01_4_coll__map" id="aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_01_4_coll__map">
-<area shape="rect" title="Multiinstance graph that stores weights and biases. If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and ..." alt="" coords="311,5,514,76"/>
+<div class="center"><img src="classConvReluChunkGraph__coll__graph.png" border="0" usemap="#aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_00_01IS__RELU_01_4_coll__map" alt="Collaboration graph"/></div>
+<map name="aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_00_01IS__RELU_01_4_coll__map" id="aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_00_01IS__RELU_01_4_coll__map">
+<area shape="rect" title="Multiinstance graph that stores weights and biases. If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and ..." alt="" coords="311,5,521,76"/>
 <area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="5,5,207,76"/>
-<area shape="poly" title=" " alt="" coords="222,38,310,38,310,43,222,43"/>
+<area shape="poly" title=" " alt="" coords="222,38,311,38,311,43,222,43"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1f965b79e8859c40ccc3b3b778525179"><td class="memItemLeft" align="right" valign="top"><a id="a1f965b79e8859c40ccc3b3b778525179" name="a1f965b79e8859c40ccc3b3b778525179"></a>
+<tr class="memitem:a1e8140b6ed40e809710408c69810079b"><td class="memItemLeft" align="right" valign="top"><a id="a1e8140b6ed40e809710408c69810079b" name="a1e8140b6ed40e809710408c69810079b"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ConvReluChunkGraph</b> (std::vector&lt; float &gt; weights, std::vector&lt; float &gt; bias)</td></tr>
-<tr class="separator:a1f965b79e8859c40ccc3b3b778525179"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a1e8140b6ed40e809710408c69810079b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ae480d684d5bdb306ac37d83f9cff1452"><td class="memItemLeft" align="right" valign="top"><a id="ae480d684d5bdb306ac37d83f9cff1452" name="ae480d684d5bdb306ac37d83f9cff1452"></a>
+<tr class="memitem:abbf29fa3bd019db2b9e235feb53c21ff"><td class="memItemLeft" align="right" valign="top"><a id="abbf29fa3bd019db2b9e235feb53c21ff" name="abbf29fa3bd019db2b9e235feb53c21ff"></a>
 adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>convs</b> [CHUNK_COUNT]</td></tr>
-<tr class="separator:ae480d684d5bdb306ac37d83f9cff1452"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78c722210c3b73bbf93d809d27b7a056"><td class="memItemLeft" align="right" valign="top"><a id="a78c722210c3b73bbf93d809d27b7a056" name="a78c722210c3b73bbf93d809d27b7a056"></a>
+<tr class="separator:abbf29fa3bd019db2b9e235feb53c21ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6917aa88a26fbf3ebd7172dbcb313720"><td class="memItemLeft" align="right" valign="top"><a id="a6917aa88a26fbf3ebd7172dbcb313720" name="a6917aa88a26fbf3ebd7172dbcb313720"></a>
 <a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, CHUNK_COUNT, CONCAT_CHUNK_COUNT, CONCAT_CHUNK, CONCAT_BLOCK &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
-<tr class="separator:a78c722210c3b73bbf93d809d27b7a056"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad667272c8da9837ae77663dd4c54b2de"><td class="memItemLeft" align="right" valign="top"><a id="ad667272c8da9837ae77663dd4c54b2de" name="ad667272c8da9837ae77663dd4c54b2de"></a>
+<tr class="separator:a6917aa88a26fbf3ebd7172dbcb313720"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a845f0e5def64e8ea138ff4aa57526e68"><td class="memItemLeft" align="right" valign="top"><a id="a845f0e5def64e8ea138ff4aa57526e68" name="a845f0e5def64e8ea138ff4aa57526e68"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [CHUNK_COUNT]</td></tr>
-<tr class="separator:ad667272c8da9837ae77663dd4c54b2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38c6a2e2fa548512691dbce6a72b91c8"><td class="memItemLeft" align="right" valign="top"><a id="a38c6a2e2fa548512691dbce6a72b91c8" name="a38c6a2e2fa548512691dbce6a72b91c8"></a>
+<tr class="separator:a845f0e5def64e8ea138ff4aa57526e68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa77939c055b153e1c453235caabf07ea"><td class="memItemLeft" align="right" valign="top"><a id="aa77939c055b153e1c453235caabf07ea" name="aa77939c055b153e1c453235caabf07ea"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a38c6a2e2fa548512691dbce6a72b91c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aa77939c055b153e1c453235caabf07ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a16e44e0bdf1c0a2d751a953466e31d9a"><td class="memItemLeft" align="right" valign="top"><a id="a16e44e0bdf1c0a2d751a953466e31d9a" name="a16e44e0bdf1c0a2d751a953466e31d9a"></a>
+<tr class="memitem:a960863e781d03bf2cc4b82ed94766bca"><td class="memItemLeft" align="right" valign="top"><a id="a960863e781d03bf2cc4b82ed94766bca" name="a960863e781d03bf2cc4b82ed94766bca"></a>
 static const int&#160;</td><td class="memItemRight" valign="bottom"><b>CHUNK_COUNT</b> = (M + MCHUNK - 1) / MCHUNK</td></tr>
-<tr class="separator:a16e44e0bdf1c0a2d751a953466e31d9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a960863e781d03bf2cc4b82ed94766bca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int &gt; class CONV, template&lt; int, int, int, int &gt; class CONCAT, int IS_BCHW, int IS_KPAD, int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K&gt;<br />
-class ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int, int &gt; class CONV, template&lt; int, int, int, int &gt; class CONCAT, int IS_BCHW, int IS_KPAD, int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU&gt;<br />
+class ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K, IS_RELU &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
