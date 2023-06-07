@@ -1,6 +1,8 @@
 #ifndef MAC_KERNEL_H
 #define MAC_KERNEL_H
 
+#include <type_traits>
+#include <assert.h>
 #include <adf.h>
 
 
@@ -21,17 +23,17 @@
  * @brief Scalar implementation,
  * MacScalar<196,128> takes cycles
  */
-template <typename TT, int B, int INP_W, int IS_RELU>
+template <typename TT, int B, int W, int IS_RELU>
 class MacScalar {
   
   private:
-    alignas(32) TT (&weights)[INP_W];
-    alignas(32) TT (&bias)[INP_W];
+    alignas(32) TT (&weights)[W];
+    alignas(32) TT (&bias)[W];
 	
   public:
     MacScalar (
-      TT (&w)[INP_W],
-      TT (&b)[INP_W]
+      TT (&w)[W],
+      TT (&b)[W]
     ): weights(w), bias(b) {};
 
 		void filter(
@@ -41,6 +43,37 @@ class MacScalar {
 
 		static void registerKernelClass() {
 			REGISTER_FUNCTION(MacScalar::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
+ * @brief Scalar implementation,
+ * MacFloat<196,128> takes 1881 cycles
+ */
+template <typename TT, int B, int W, int IS_RELU>
+class MacFloat {
+  
+  private:
+    alignas(32) float (&weights)[W];
+    alignas(32) float (&bias)[W];
+	
+  public:
+    MacFloat (
+      float (&w)[W],
+      float (&b)[W]
+    ): weights(w), bias(b) {};
+
+		void filter(
+			input_window<float>* in,
+			output_window<float>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert(W % 8 == 0 && (std::is_same<TT, float>::value));
+			REGISTER_FUNCTION(MacFloat::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
 		}

@@ -1,6 +1,7 @@
 #ifndef __MAC_GRAPH_H__
 #define __MAC_GRAPH_H__
 
+#include <assert.h>
 #include <adf.h>
 #include "mac.h"
 
@@ -45,6 +46,7 @@ class MacGraph : public adf::graph {
       std::vector<TT> weights,
       std::vector<TT> bias
     ) { 
+      static_assert(W*TTSIZE < MAX_PARAM_BYTES);
       k[0] = adf::kernel::create_object<MAC<TT, B, W, IS_RELU>>(weights, bias);
       adf::source(k[0]) = "mac.cc";
       adf::headers(k[0]) = {"mac.h"};
