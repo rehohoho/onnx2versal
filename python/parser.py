@@ -1,4 +1,4 @@
-from typing import List, Mapping
+from typing import List, Mapping, Any
 import os
 
 import numpy as np
@@ -6,8 +6,9 @@ import onnx
 from onnx import numpy_helper
 # from google.protobuf.json_format import MessageToJson, MessageToDict
 
-from op_parsers import dtype_to_cstr, save_tensor, pad_lastdim, OpParser, \
-  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, PoolOp, QGemm, QLinearConvOp, QuantizeLinearOp, QLinearSoftmaxOp, SoftmaxOp
+from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
+  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, MacOp, PoolOp, QGemm, \
+  QLinearConvOp, QuantizeLinearOp, QLinearSoftmaxOp, SoftmaxOp
 
 
 class Parser:
@@ -51,6 +52,11 @@ class Parser:
       init.name: init for init in model.graph.initializer}
     self.output_tensors: Mapping[str, np.ndarray] = output_tensors
   
+  def get_optype(self, i: int):
+    if i >= len(self.nodes):
+      return ""
+    return self.nodes[i].op_type
+
   def get_filename(self, filename: str, is_dout: bool = True):
     filename = os.path.splitext(filename)[0]
     suffix = "" if is_dout else "_host"
@@ -84,19 +90,20 @@ class Parser:
     i = 0
     while i < len(self.nodes):
       node = self.nodes[i]
-      
-      if node.op_type == "Conv":
-        if self.nodes[i+1].op_type != "Relu": # lookahead
-          raise NotImplementedError("No relu found after Conv, no valid implementation.")
-        print(f"WARNING: fusing Conv+Relu")
 
-        onnx_out_name = self.nodes[i+1].output[0]
-        op = ConvOp(f"k{i}conv")
+      if node.op_type == "Conv":
+        is_relu = self.get_optype(i+1) == "Relu"
+        op = ConvOp(f"k{i}conv", is_relu)
+        
+        if is_relu: # lookahead
+          print(f"WARNING: fusing Conv+Relu")
+          i += 1
+        
+        onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], onnx_out_name, op)
-        i += 1
       
       elif node.op_type == "MaxPool":
         op = PoolOp(f"k{i}pool")
@@ -104,25 +111,43 @@ class Parser:
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
+      
+      elif node.op_type == "Mul":
+        if self.get_optype(i+1) != "Add": # lookahead
+          raise NotImplementedError("No Add found after Mul, no valid implementation.")
+        bias_name = self.nodes[i+1].input[1]
+        
+        is_relu = self.get_optype(i+2) == "Relu"
+        op = MacOp(f"k{i}mac", is_relu=is_relu)
+
+        i += 1 # add
+        if is_relu:
+          print(f"WARNING: fusing Mul+Add+Relu")
+          i += 1 # relu
+        else:
+          print(f"WARNING: fusing Mul+Add")
+        
+        onnx_out_name = self.nodes[i].output[0]
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input[0], onnx_out_name, op)
 
       elif node.op_type == "Gemm":
-        is_relu = self.nodes[i+1].op_type == "Relu" # lookahead
-        
-        if is_relu:
-          onnx_out_name = self.nodes[i+1].output[0]
-        else:
-          onnx_out_name = node.output[0]
-
+        is_relu = self.get_optype(i+1) == "Relu" # lookahead
         op = GemmOp(f"k{i}gemm", is_relu=is_relu)
+        
+        if self.get_optype(i+1) == "Relu":
+          print(f"WARNING: fusing Gemm+Relu")
+          i += 1
+        
+        onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)], 
                            node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], onnx_out_name, op)
         
-        if is_relu:
-          i += 1
-      
       elif node.op_type == "QuantizeLinear":
         op = QuantizeLinearOp(f"k{i}quantizelinear")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
@@ -161,27 +186,25 @@ class Parser:
           print(f"WARNING: {node.op_type} not implemented, skipping...")
       
       elif node.op_type == "MatMul":
-        if self.nodes[i+1].op_type != "Add": # lookahead
+        if self.get_optype(i+1) != "Add": # lookahead
           raise NotImplementedError("No Add found after MatMul, no valid implementation.")
+        bias_name = self.nodes[i+1].input[1]
         
-        is_relu = self.nodes[i+2].op_type == "Relu"
-        
+        is_relu = self.get_optype(i+2) == "Relu"
+        op = GemmOp(f"k{i}gemm", is_relu=is_relu)
+        i += 1
         if is_relu:
           print(f"WARNING: fusing MatMul+Add+Relu")
-          onnx_out_name = self.nodes[i+2].output[0]
+          i += 1
         else:
-          onnx_out_name = self.nodes[i+1].output[0]
+          print(f"WARNING: fusing MatMul+Add")
         
-        bias_name = self.nodes[i+1].input[1]
-        op = GemmOp(f"k{i}gemm", is_relu=is_relu)
+        onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)],
                            node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], onnx_out_name, op)
-
-        i += 1 # add
-        if is_relu: i += 1 # relu
       
       elif node.op_type == "Softmax":
         op = SoftmaxOp(f"k{i}softmax")

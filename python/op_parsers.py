@@ -144,10 +144,6 @@ class ArgmaxOp(OpParser):
 
 class ConcatOp(OpParser):
   include_file: str = "graph_concat.h"
-  constraints: Mapping[str, str] = {
-    "ConcatScalar": [],
-    "ConcatVector": [("CHUNK_SIZE", 8), ("BLOCK_SIZE", 4)]
-  }
 
 
 class ConvOp(OpParser):
@@ -156,6 +152,10 @@ class ConvOp(OpParser):
   Expects MxCxKxK weights as per PyTorch, pads to  MxCxKxK' where K'%8=0
   """
   include_file: str = "graph_conv.h"
+
+  def __init__(self, name: str, is_relu: bool):
+    super().__init__(name)
+    self.is_relu = is_relu
 
   def register_params(self, tensors: List[np.ndarray]):
     assert len(tensors) == 4
@@ -191,7 +191,7 @@ class ConvOp(OpParser):
     if self.OUT_W % 8 == 0 and self.K == 5:
       kernel = "Conv5x5on8ReluBCHW"
     
-    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
+    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{self.is_relu}> {self.name};"
   
 
 class DequantizeLinearOp(OpParser):
@@ -297,6 +297,45 @@ class GemmOp(OpParser):
     self.varname_2_tensors[f"{self.name}_b"] = self.varname_2_tensors[f"{self.name}_b"][...,:self.N]
     self.out_size = self.tout.size
     super().disable_output_pad()
+
+
+class MacOp(OpParser):
+  include_file: str = "graph_mac.h"
+
+  def __init__(self, name: str, is_relu: bool):
+    super().__init__(name)
+    self.is_relu = is_relu
+
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 4
+    tin, tw, tbias, tout = tensors
+
+    assert tin.shape == tout.shape and tw.ndim == tbias.ndim == 1 and \
+      tin.shape[-1] == tw.shape[0] == tbias.shape[0] == tout.shape[-1]
+
+    self.tout = tout # reference copy to check against to compress graph
+
+    tw = pad_lastdim(tw, "Mac tw", get_vector_boundary(tw)) # heap
+    self.varname_2_tensors[f"{self.name}_w"] = tw
+    tbias = pad_lastdim(tbias, "Mac tbias", get_vector_boundary(tbias))
+    self.varname_2_tensors[f"{self.name}_b"] = tbias
+
+    tin = pad_lastdim(tin, "ConvOp tin", get_vector_boundary(tin)) #files
+    self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
+    self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+
+    tout = pad_lastdim(tout, "ConvOp tout", get_vector_boundary(tout))
+    
+    self.B, self.W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
+    self.dtype = tw.dtype
+    self.out_size = tout.size
+
+  def get_kernel_line(self) -> str:
+    graph = "MacGraph"
+    kernel = "MacScalar"
+    if self.W % 8 == 0:
+      kernel = "MacFloat"
+    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
 
 
 class PoolOp(OpParser):
