@@ -77,13 +77,23 @@ def get_attribute_dict(attributes: List[Any]):
   return attr_d
 
 
+def factor_int(n):
+  val = math.ceil(math.sqrt(n))
+  val2 = int(n/val)
+  while val2 * val != float(n):
+    val -= 1
+    val2 = int(n/val)
+  return val, val2
+
+
 class OpParser:
   include_file: str
 
   def __init__(self, name: str):
     self.name = name
-    self.varname_2_tensors = {}  # generate files
-    self.filename_2_tensors = {} # output txt
+    self.varname_2_tensors = {}   # generate files
+    self.filename_2_tensors = {}  # output txt
+    self.plinname_2_filename = {} # extra plins for stream kernels
 
     self.tout = None             # reference copy to compare with
   
@@ -191,7 +201,7 @@ class ConvOp(OpParser):
     if self.OUT_W % 8 == 0 and self.K == 5:
       kernel = "Conv5x5on8ReluBCHW"
     
-    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{self.is_relu}> {self.name};"
+    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}> {self.name};"
   
 
 class DequantizeLinearOp(OpParser):
@@ -260,11 +270,19 @@ class GemmOp(OpParser):
 
     # chunk graph handles padding
     tw = pad_lastdim(tw, "Gemm tw", get_vector_boundary(tw))
-    self.varname_2_tensors[f"{self.name}_w"] = tw
     tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
-    self.varname_2_tensors[f"{self.name}_b"] = tbias
+    self.is_stream = tw.size >= MAX_FLOAT_PARAMS * 8
+
+    if not self.is_stream:
+      self.varname_2_tensors[f"{self.name}_w"] = tw
+      self.varname_2_tensors[f"{self.name}_b"] = tbias
 
     tin = pad_lastdim(tin, "Gemm tin", get_vector_boundary(tin)) # files
+    if self.is_stream:
+      self.filename_2_tensors[f"{self.name}_w_{get_shape_str(tw)}.txt"] = np.tile(tw.flatten, 196//4)
+      self.filename_2_tensors[f"{self.name}_b_{get_shape_str(tbias)}.txt"] = np.tile(tbias, 196//4)
+      self.plinname_2_filename[f"{self.name}_w"] = f"{self.name}_w_{get_shape_str(tw)}.txt"
+      self.plinname_2_filename[f"{self.name}_b"] = f"{self.name}_b_{get_shape_str(tbias)}.txt"
     self.filename_2_tensors[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensors[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
@@ -277,24 +295,36 @@ class GemmOp(OpParser):
     graph = "GemmReluMkknChunkGraph"
     kernel = "GemmReluScalarMKKN"
     concat_kernel = "ConcatScalar"
-    
-    chunkSize = int(MAX_FLOAT_PARAMS/self.K//4*4)
-    if chunkSize >= self.N: chunkSize = self.N
-    if self.K % 2 == 0 and chunkSize % 4 == 0: kernel = "GemmReluMKKN"
-    if chunkSize % 8 == 0 and self.N % 4 == 0: concat_kernel = "ConcatVector"
-    return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+
+    if self.is_stream:
+      graph = "GemmReluGmemParamGraph"
+      kernel = "GemmReluScalarGmemParamMKKN"
+      return f"{graph}<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+    else:
+      chunkSize = int(MAX_FLOAT_PARAMS/self.K//4*4)
+      if chunkSize >= self.N: chunkSize = self.N
+      if self.K % 2 == 0 and chunkSize % 4 == 0: kernel = "GemmReluMKKN"
+      if chunkSize % 8 == 0 and self.N % 4 == 0: concat_kernel = "ConcatVector"
+      return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
   
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
   
   def get_connect_line(self, last_port: str) -> str:
+    if self.is_stream:
+      connect_list = [f"adf::connect<> ({last_port}, {self.name}.pin[0]);"]
+      connect_list += [f"adf::connect<> (plin_{plinname}.out[0], {self.name}.pin[{i+1}]);"
+        for i, plinname in enumerate(self.plinname_2_filename)
+      ]
+      return "\n".join(connect_list)
     return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
       f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
   
   def disable_output_pad(self):
     self.N = self.unpadded_N
-    self.varname_2_tensors[f"{self.name}_w"] = self.varname_2_tensors[f"{self.name}_w"][...,:self.N]
-    self.varname_2_tensors[f"{self.name}_b"] = self.varname_2_tensors[f"{self.name}_b"][...,:self.N]
+    if not self.is_stream:
+      self.varname_2_tensors[f"{self.name}_w"] = self.varname_2_tensors[f"{self.name}_w"][...,:self.N]
+      self.varname_2_tensors[f"{self.name}_b"] = self.varname_2_tensors[f"{self.name}_b"][...,:self.N]
     self.out_size = self.tout.size
     super().disable_output_pad()
 
@@ -488,7 +518,7 @@ class QLinearConvOp(OpParser):
     
   def get_kernel_line(self) -> str:
     graph = "QLinearConvGraph"
-    kernel = "QLinearConvVectorScale32bit"
+    kernel = "QLinearConvVector"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
 
 
@@ -538,7 +568,7 @@ class QLinearSoftmaxOp(OpParser):
     graph = "QlinearsoftmaxGraph"
     kernel = "QlinearsoftmaxScalar"
     if self.INP_W_PAD % 16 == 0:
-      kernel = "QlinearsoftmaxFloatmul" # accuracy option
+      kernel = "QlinearsoftmaxSingleaxis" # accuracy option
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
 

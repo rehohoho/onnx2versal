@@ -14,10 +14,19 @@ class CppGenerator:
   def get_kernels(self) -> str:
     return "    " + "\n".join(i.get_kernel_line() for i in self.p.op_list).replace("\n", "\n    ")
 
+  def get_plin_defs(self) -> str:
+    plins = [f"adf::input_plio plin[{len(self.p.modelin_2_tensor)}];"]
+    for op in self.p.op_list:
+      plins += [f"adf::input_plio plin_{plinname};"
+                for plinname in op.plinname_2_filename]
+    return "    " + "\n".join(plins).replace("\n", "\n    ")
+
   def get_args(self) -> str:
     args = [f"const std::string& {inp_name}" for inp_name in self.p.modelin_2_tensor]
     args += [f"const std::string& {op.name}_out" for op in self.p.modelout_2_op.values()]
-    args += [i.get_arg_line() for i in self.p.op_list]
+    args += [op.get_arg_line() for op in self.p.op_list]
+    for op in self.p.op_list:
+      args += [f"const std::string& {plin}" for plin in op.plinname_2_filename]
     args += [f"const std::string& {op.name}_out = std::string()" for op in self.p.op_list 
              if op not in self.p.modelout_2_op.values()]
     args = [i for i in args if i != ""]
@@ -33,6 +42,11 @@ class CppGenerator:
       f'plin[{i}] = adf::input_plio::create("plin{i}_"+id+"_{inp_name}", PLIO64_ARG({inp_name}));'
       for i, inp_name in enumerate(self.p.modelin_2_tensor)
     ]
+    for op in self.p.op_list:
+      for plin_name in op.plinname_2_filename:
+        plins.append(
+          f'plin_{plin_name} = adf::input_plio::create("plin_"+id+"_{plin_name}", PLIO64_ARG({plin_name}));'
+        )
     return "      " + "\n".join(plins).replace("\n", "\n      ")
   
   def get_plouts(self) -> str:
@@ -61,7 +75,9 @@ class CppGenerator:
   def get_callargs(self, is_dout: bool) -> str:
     args = [f'"{self.p.get_filename(inp_name)}"' for inp_name in self.p.modelin_2_tensor]
     args += [f'"{op.get_output_filename()}"' for op in self.p.modelout_2_op.values()]
-    args += [i.get_callarg_line() for i in self.p.op_list]
+    args += [op.get_callarg_line() for op in self.p.op_list]
+    for op in self.p.op_list:
+      args += [f'"{fn}"' for fn in op.plinname_2_filename.values()]
     if is_dout:
       args += [f'"{op.get_output_filename()}"' for op in self.p.op_list 
                if op not in self.p.modelout_2_op.values()]
@@ -81,7 +97,7 @@ class {self.p.graph_name.capitalize()} : public adf::graph {{
 {self.get_kernels()}
 
   public:
-    adf::input_plio plin[{len(self.p.modelin_2_tensor)}];
+{self.get_plin_defs()}
     std::vector<adf::output_plio> plout; // intermediate outputs optional
 
     {self.p.graph_name.capitalize()}(
