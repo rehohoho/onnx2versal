@@ -23,39 +23,28 @@
 
 
 /**
- * @brief Scalar implementation for MK*NK, streams weights and biases, 
- * GemmReluScalarGmemParamMKNK<2, 36, 10> total = 16449
+ * @brief Scalar implementation for MK*NK, streams input, outputs, weights, stores bias 
+ * GemmReluScalarMKNKStream<2, 36, 10> total = 3444
  */
 template <int M, int K, int N, int IS_RELU>
-class GemmReluScalarGmemParamMKNK {
+class GemmReluScalarMKNKStream {
+  private:
+    alignas(32) float (&bias)[N];
+    alignas(32) float in_row[K];
+
   public:
+    GemmReluScalarMKNKStream (
+      float (&b)[N]
+    ): bias(b) {};
+
     void filter(
-      input_window<float>* in,      // MxK
-      input_window<float>* weight,  // NxK
-      input_window<float>* bias,    // N 
-      output_window<float>* out     // MxN
+      input_stream<float>* in,      // MxK
+      input_stream<float>* weight,  // NxK
+      output_stream<float>* out     // MxN
     );
     static void registerKernelClass() {
-      REGISTER_FUNCTION(GemmReluScalarGmemParamMKNK::filter);
-    };
-};
-
-
-/**
- * @brief Scalar implementation for MK*KN, streams weights and biases, 
- * GemmReluScalarGmemParamMKNK<2, 36, 10> total = 16590
- */
-template <int M, int K, int N, int IS_RELU>
-class GemmReluScalarGmemParamMKKN {
-  public:
-    void filter(
-      input_window<float>* in,      // MxK
-      input_window<float>* weight,  // NxK
-      input_window<float>* bias,    // N 
-      output_window<float>* out     // MxN
-    );
-    static void registerKernelClass() {
-      REGISTER_FUNCTION(GemmReluScalarGmemParamMKKN::filter);
+      REGISTER_FUNCTION(GemmReluScalarMKNKStream::filter);
+      REGISTER_PARAMETER(bias);
     };
 };
 

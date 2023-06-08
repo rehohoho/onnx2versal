@@ -1,9 +1,11 @@
 #ifndef __GEMM_GRAPH_H_
 #define __GEMM_GRAPH_H_
 
+#include <assert.h>
 #include <adf.h>
 #include "gemm.h"
 #include "graph_concat.h"
+#include "graph_utils.h"
 
 
 /**
@@ -51,6 +53,9 @@ class GemmReluGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
+      static_assert(M*K*4 <= TILE_BYTES);
+      static_assert(K*N*4 <= MAX_PARAM_BYTES);
+      static_assert(M*N*4 <= TILE_BYTES);
       k[0] = adf::kernel::create_object<GEMM<M, K, N, IS_RELU>>(weights, bias);
       adf::source(k[0]) = "gemm.cc";
       adf::headers(k[0]) = {"gemm.h"};
@@ -88,25 +93,26 @@ class GemmReluGraph : public adf::graph {
  */
 template <template<int, int, int, int> class GEMM, 
   int M, int K, int N, int IS_RELU>
-class GemmReluGmemParamGraph : public adf::graph {
+class GemmReluStreamGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
 
   public:
-    adf::port<input> pin[3];
+    adf::port<input> pin[2];
     adf::port<output> pout[1];
 
-    GemmReluGmemParamGraph() { 
-      k[0] = adf::kernel::create_object<GEMM<M, K, N, IS_RELU>>();
+    GemmReluStreamGraph(
+      std::vector<float> bias
+    ) { 
+      k[0] = adf::kernel::create_object<GEMM<M, K, N, IS_RELU>>(bias);
       adf::source(k[0]) = "gemm.cc";
       adf::headers(k[0]) = {"gemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
-      adf::connect<adf::window<M*K*4>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<K*N*4>> (pin[1], k[0].in[1]);
-      adf::connect<adf::window<N*4>>   (pin[2], k[0].in[2]);
-      adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (pin[1], k[0].in[1]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
     }
 
 };
@@ -157,6 +163,10 @@ class GemmReluMknkChunkGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
+      static_assert(M*K*4 <= TILE_BYTES);
+      static_assert(K*N*4 <= MAX_PARAM_BYTES);
+      static_assert(M*N*4 <= TILE_BYTES);
+      
       std::vector<float> wChunk;
       std::vector<float> bChunk;
 
@@ -228,7 +238,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    ConcatTwiceGraph<CONCAT, CHUNK_COUNT, M, NCHUNK, N> concat_g;
+    ConcatGraph<CONCAT, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];
@@ -237,6 +247,10 @@ class GemmReluMkknChunkGraph : public adf::graph {
       std::vector<float> weights, // KxN_RND
       std::vector<float> bias     // N
     ) { 
+      static_assert(M*K*4 <= TILE_BYTES);
+      static_assert(K*NCHUNK*4 <= MAX_PARAM_BYTES);
+      static_assert(M*NCHUNK*4 <= TILE_BYTES);
+
       std::vector<float> bChunk;
 
       for (int i = 0; i < CHUNK_COUNT; i++) {

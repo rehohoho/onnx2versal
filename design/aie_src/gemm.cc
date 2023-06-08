@@ -4,67 +4,30 @@
 
 
 template <int M, int K, int N, int IS_RELU>
-void GemmReluScalarGmemParamMKNK<M, K, N, IS_RELU>::filter(
-	input_window<float>* in,      // MxK  (1x256)
-  input_window<float>* weight,  // NxK  (120x256)
-  input_window<float>* bias,    // N    (120)
-  output_window<float>* out     // MxN  (1x120)
+void GemmReluScalarMKNKStream<M, K, N, IS_RELU>::filter(
+	input_stream<float>* in,      // MxK
+  input_stream<float>* weight,  // NxK 
+  output_stream<float>* out     // MxN
 ) {
   PROFILE_HEADER(printf(
-    "Running GemmReluScalarGmemParamMKNK<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
+    "Running GemmReluScalarMKNKStream<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
   
   for (int i = 0; i < M; i++) {
+    for (int k = 0; k < K; k++)
+      in_row[k] = readincr(in);
+    
     for (int j = 0; j < N; j++) {
-      float res = window_readincr(bias);
+      float res = bias[j];
       for (int k = 0; k < K; k++) {
-        float a = window_readincr(in);
-        float b = window_readincr(weight);
+        float a = in_row[k];
+        float b = readincr(weight);
         res += a * b; // matB is a circular buffer
       }
 
       if (IS_RELU)
         if (res < 0) res = 0;
-      window_writeincr(out, res);
-      window_incr(in, -K); // repeat same in row for next j
+      writeincr(out, res);
     }
-    window_incr(in, K); // next row
-    window_incr(weight, -N*K);
-    window_incr(bias, -N);
-  }
-
-  PROFILE_FOOTER;
-}
-
-
-template <int M, int K, int N, int IS_RELU>
-void GemmReluScalarGmemParamMKKN<M, K, N, IS_RELU>::filter(
-	input_window<float>* in,      // MxK
-  input_window<float>* weight,  // KxN
-  input_window<float>* bias,    // N  
-  output_window<float>* out     // MxN
-) {
-  PROFILE_HEADER(printf(
-    "Running GemmReluScalarGmemParamMKKN<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
-  
-  for (int i = 0; i < M; i++) {
-    for (int j = 0; j < N; j++) {
-      float res = window_readincr(bias);
-      for (int k = 0; k < K; k++) {
-        float a = window_readincr(in);
-        float b = window_read(weight);
-        window_incr(weight, N);
-        res += a * b;
-      }
-
-      if (IS_RELU)
-        if (res < 0) res = 0;
-      window_writeincr(out, res);
-      window_incr(in, -K);
-      window_incr(weight, -K*N+1);
-    }
-    window_incr(in, K);
-    window_incr(weight, -N);
-    window_incr(bias, -N);
   }
 
   PROFILE_FOOTER;
@@ -73,8 +36,8 @@ void GemmReluScalarGmemParamMKKN<M, K, N, IS_RELU>::filter(
 
 template <int M, int K, int N, int IS_RELU>
 void GemmReluScalarMKNK<M, K, N, IS_RELU>::filter(
-	input_window<float>* in,      // MxK  (1x256)
-  output_window<float>* out     // MxN  (1x120)
+	input_window<float>* in,      // MxK
+  output_window<float>* out     // MxN
 ) {
   PROFILE_HEADER(printf(
     "Running GemmReluScalarMKNK<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
@@ -106,9 +69,9 @@ void GemmReluScalarMKNK<M, K, N, IS_RELU>::filter(
 
 template <int M, int K, int N, int IS_RELU>
 void GemmReluScalarMKKN<M, K, N, IS_RELU>::filter(
-	input_window<float>* in,      // MxK  inputs
-                                // KxN  weights
-  output_window<float>* out     // MxN  outputs
+	input_window<float>* in,      // MxK
+                                // KxN
+  output_window<float>* out     // MxN
 ) {
   PROFILE_HEADER(printf(
     "Running GemmReluScalarMKKN<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
@@ -139,9 +102,9 @@ void GemmReluScalarMKKN<M, K, N, IS_RELU>::filter(
 
 template <int M, int K, int N, int IS_RELU>
 void GemmReluMKKN<M, K, N, IS_RELU>::filter(
-	input_window<float>* in,      // MxK  inputs
-                                // KxN  weights
-  output_window<float>* out     // MxN  outputs
+	input_window<float>* in,      // MxK
+                                // KxN
+  output_window<float>* out     // MxN
 ) {
   PROFILE_HEADER(printf(
     "Running GemmReluMKKN<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
