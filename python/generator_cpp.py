@@ -5,15 +5,15 @@ from parser import Parser
 class CppGenerator:
 
   def __init__(self,
-               parser: Parser):
-    self.p = parser
+               p: Parser):
+    self.p = p
 
     gmio_allocs = []
     gmio_cpys = []
     gmio_xfers = []
     gmio_frees = []
     
-    for op in self.p.op_list:
+    for op in p.op_list:
       for gmio_name, tensor in op.gmioname_2_tensor.items():
         ctype = dtype_to_cstr(tensor.dtype)
         size = tensor.size
@@ -27,7 +27,7 @@ class CppGenerator:
           f"  memcpy({gmio_name}_buf + i*{size}, {gmio_name}.data(), {size}*sizeof({ctype}));"
         )
         gmio_xfers.append(
-          f"{self.p.graph_name}.gmio_{gmio_name}.gm2aie_nb({gmio_name}_buf, {repeats}*{size}*sizeof({ctype}));"
+          f"{p.graph_name}.gmio_{gmio_name}.gm2aie_nb({gmio_name}_buf, {repeats}*{size}*sizeof({ctype}));"
         )
         gmio_frees.append(
           f"adf::GMIO::free({gmio_name}_buf);"
@@ -35,7 +35,7 @@ class CppGenerator:
     
     self.gmio_allocs = "  " + "\n".join(gmio_allocs).replace("\n", "\n  ")
     self.gmio_cpys = "  " + "\n".join(gmio_cpys).replace("\n", "\n  ")
-    self.gmio_xfers = "  " + "\n".join(gmio_xfers).replace("\n", "\n    ")
+    self.gmio_xfers = "  " + "\n".join(gmio_xfers).replace("\n", "\n  ")
     self.gmio_frees = "  " + "\n".join(gmio_frees).replace("\n", "\n  ")
   
   def get_includes(self) -> str:
@@ -170,30 +170,19 @@ class {self.p.graph_name.capitalize()} : public adf::graph {{
 #endif
 
 
-#ifdef __X86SIM__
+#if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {{
 
 {self.gmio_allocs}
 {self.gmio_cpys}
   
   adfCheck({self.p.graph_name}.init(), "init {self.p.graph_name}");
-
+  
 {self.gmio_xfers}
   adfCheck({self.p.graph_name}.run(ITER_CNT), "run {self.p.graph_name}");
-  adfCheck({self.p.graph_name}.wait(), "wait {self.p.graph_name}");
-
-{self.gmio_frees}
+  
   adfCheck({self.p.graph_name}.end(), "end {self.p.graph_name}");
-  return 0;
-}}
-#endif
-
-
-#ifdef __AIESIM__
-int main(int argc, char ** argv) {{
-	adfCheck({self.p.graph_name}.init(), "init {self.p.graph_name}");
-  get_graph_throughput_by_port({self.p.graph_name}, "plout[0]", {self.p.graph_name}.plout[0], 1*10, sizeof(float), ITER_CNT);
-	adfCheck({self.p.graph_name}.end(), "end {self.p.graph_name}");
+{self.gmio_frees}
   return 0;
 }}
 #endif

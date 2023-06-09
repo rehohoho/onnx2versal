@@ -78,13 +78,17 @@ def get_attribute_dict(attributes: List[Any]):
   return attr_d
 
 
-def factor_int(n):
-  val = math.ceil(math.sqrt(n))
-  val2 = int(n/val)
-  while val2 * val != float(n):
-    val -= 1
-    val2 = int(n/val)
-  return val, val2
+def factor_int(n: int, 
+               multiplier: int, 
+               upper_bound: int):
+  factor = 2
+  mult = 1
+  while n * multiplier > upper_bound:
+    if n % factor == 0: 
+      n //= factor
+      mult *= factor
+    else: factor += 1
+  return n, mult
 
 
 class OpParser:
@@ -294,13 +298,9 @@ class GemmOp(OpParser):
     
     # batch M till window fits tile size
     if not self.is_stream:
-      tmp = max(self.K, self.N)
-      factor = 2
-      while self.M * tmp * self.dtype.itemsize > TILE_SIZE:
-        if self.M % factor == 0:
-          self.M //= factor
-        else:
-          factor += 1
+      self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, TILE_SIZE)
+    else:
+      self.M, self.repeat = factor_int(self.M, self.N * self.dtype.itemsize, TILE_SIZE)
 
   def get_kernel_type(self) -> str:
     # TODO: non-chunk graph after chunkgraph yields placement error
@@ -321,6 +321,12 @@ class GemmOp(OpParser):
   
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
+  
+  def get_initlist_line(self) -> str:
+    initlist = ", ".join(argname for argname in self.argname_2_tensor)
+    if initlist == "": 
+      return ""
+    return f"{self.name}({initlist}, {self.repeat})"
   
   def get_connect_line(self, last_port: str) -> str:
     if self.is_stream:
@@ -372,12 +378,20 @@ class MacOp(OpParser):
     self.dtype = tout.dtype
     self.out_size = tout.size
 
+    self.B, self.repeat = factor_int(self.B, self.W * self.dtype.itemsize, TILE_SIZE) # batch window size
+
   def get_kernel_line(self) -> str:
     graph = "MacGraph"
     kernel = "MacScalar"
     if self.W % 8 == 0:
       kernel = "MacFloat"
     return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
+  
+  def get_initlist_line(self) -> str:
+    initlist = ", ".join(argname for argname in self.argname_2_tensor)
+    if initlist == "": 
+      return ""
+    return f"{self.name}({initlist}, {self.repeat})"
 
 
 class PoolOp(OpParser):
