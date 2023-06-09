@@ -24,7 +24,7 @@
 
 /**
  * @brief Scalar implementation for MK*NK, streams input, outputs, weights, stores bias 
- * GemmReluScalarMKNKStream<2, 36, 10> total = 3444
+ * GemmReluScalarMKNKStream<2, 36, 10> total = 3497
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarMKNKStream {
@@ -40,7 +40,7 @@ class GemmReluScalarMKNKStream {
     void filter(
       input_stream<float>* in,      // MxK
       input_stream<float>* weight,  // NxK
-      output_stream<float>* out     // MxN
+      output_window<float>* out     // MxN
     );
     static void registerKernelClass() {
       REGISTER_FUNCTION(GemmReluScalarMKNKStream::filter);

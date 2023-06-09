@@ -51,7 +51,8 @@ class GemmReluGraph : public adf::graph {
 
     GemmReluGraph(
       std::vector<float> weights,
-      std::vector<float> bias
+      std::vector<float> bias,
+      int repeat_cnt = 1
     ) { 
       static_assert(M*K*4 <= TILE_BYTES);
       static_assert(K*N*4 <= MAX_PARAM_BYTES);
@@ -60,6 +61,7 @@ class GemmReluGraph : public adf::graph {
       adf::source(k[0]) = "gemm.cc";
       adf::headers(k[0]) = {"gemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::repetition_count(k[0]) = repeat_cnt;
 
       adf::connect<adf::window<M*K*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
@@ -103,16 +105,18 @@ class GemmReluStreamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     GemmReluStreamGraph(
-      std::vector<float> bias
+      std::vector<float> bias,
+      int repeat_cnt = 1
     ) { 
       k[0] = adf::kernel::create_object<GEMM<M, K, N, IS_RELU>>(bias);
       adf::source(k[0]) = "gemm.cc";
       adf::headers(k[0]) = {"gemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::repetition_count(k[0]) = repeat_cnt;
 
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (pin[1], k[0].in[1]);
-      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
     }
 
 };
@@ -161,7 +165,8 @@ class GemmReluMknkChunkGraph : public adf::graph {
 
     GemmReluMknkChunkGraph(
       std::vector<float> weights,
-      std::vector<float> bias
+      std::vector<float> bias,
+      int repeat_cnt = 1
     ) { 
       static_assert(M*K*4 <= TILE_BYTES);
       static_assert(K*N*4 <= MAX_PARAM_BYTES);
@@ -181,6 +186,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
         adf::source(gemms[i]) = "gemm.cc";
         adf::headers(gemms[i]) = {"gemm.h"};
         adf::runtime<ratio>(gemms[i]) = 0.6;
+        adf::repetition_count(gemms[i]) = repeat_cnt;
 
         adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
@@ -245,7 +251,8 @@ class GemmReluMkknChunkGraph : public adf::graph {
 
     GemmReluMkknChunkGraph(
       std::vector<float> weights, // KxN_RND
-      std::vector<float> bias     // N
+      std::vector<float> bias,    // N
+      int repeat_cnt = 1
     ) { 
       static_assert(M*K*4 <= TILE_BYTES);
       static_assert(K*NCHUNK*4 <= MAX_PARAM_BYTES);
@@ -270,6 +277,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
         adf::source(gemms[i]) = "gemm.cc";
         adf::headers(gemms[i]) = {"gemm.h"};
         adf::runtime<ratio>(gemms[i]) = 0.6;
+        adf::repetition_count(gemms[i]) = repeat_cnt;
 
         adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
@@ -282,9 +290,9 @@ class GemmReluMkknChunkGraph : public adf::graph {
         adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset); 
         offset += (NCHUNK*4 + 4095)/4096*4096; // separate bank
         adf::location<adf::buffer>(gemms[i].in[0]) = tilePos;
-        adf::location<adf::buffer>(gemms[i].in[0]) = {
-          adf::offset(offset), 
-          adf::offset(offset + (M*K*4 + 4095)/4096*4096)};
+        // adf::location<adf::buffer>(gemms[i].in[0]) = {
+        //   adf::offset(offset), 
+        //   adf::offset(offset + (M*K*4 + 4095)/4096*4096)};
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {

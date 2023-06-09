@@ -54,7 +54,7 @@ class GemmReluStreamGraphTest : public adf::graph {
       
       adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::stream> (gmio_w.out[0], g.pin[1]);
-      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<M*N*4>> (g.pout[0], plout[0].in[0]);
     }
 
 };

@@ -7,7 +7,7 @@ template <int M, int K, int N, int IS_RELU>
 void GemmReluScalarMKNKStream<M, K, N, IS_RELU>::filter(
 	input_stream<float>* in,      // MxK
   input_stream<float>* weight,  // NxK 
-  output_stream<float>* out     // MxN
+  output_window<float>* out     // MxN
 ) {
   PROFILE_HEADER(printf(
     "Running GemmReluScalarMKNKStream<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
@@ -26,7 +26,7 @@ void GemmReluScalarMKNKStream<M, K, N, IS_RELU>::filter(
 
       if (IS_RELU)
         if (res < 0) res = 0;
-      writeincr(out, res);
+      window_writeincr(out, res);
     }
   }
 
