@@ -288,7 +288,6 @@ class GemmReluMkknChunkGraph : public adf::graph {
         offset += (NCHUNK*K*4 + 31)/32*32; // separate bank not required for weights vs bias
         adf::location<adf::parameter>(gemms[i].param[1]) = tilePos;
         adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset); 
-        offset += (NCHUNK*4 + 4095)/4096*4096; // separate bank
         adf::location<adf::buffer>(gemms[i].in[0]) = tilePos;
         // adf::location<adf::buffer>(gemms[i].in[0]) = {
         //   adf::offset(offset), 

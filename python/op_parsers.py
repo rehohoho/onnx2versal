@@ -4,6 +4,7 @@ import math
 import numpy as np
 
 TILE_SIZE = 32768
+MAX_PARAM_SIZE = TILE_SIZE // 2 # ping-pong buffer
 MAX_FLOAT_PARAMS = 16384//4
 PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
@@ -298,9 +299,9 @@ class GemmOp(OpParser):
     
     # batch M till window fits tile size
     if not self.is_stream:
-      self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, TILE_SIZE)
+      self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE)
     else:
-      self.M, self.repeat = factor_int(self.M, self.N * self.dtype.itemsize, TILE_SIZE)
+      self.M, self.repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE)
 
   def get_kernel_type(self) -> str:
     # TODO: non-chunk graph after chunkgraph yields placement error
@@ -378,7 +379,7 @@ class MacOp(OpParser):
     self.dtype = tout.dtype
     self.out_size = tout.size
 
-    self.B, self.repeat = factor_int(self.B, self.W * self.dtype.itemsize, TILE_SIZE) # batch window size
+    self.B, self.repeat = factor_int(self.B, self.W * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
 
   def get_kernel_line(self) -> str:
     graph = "MacGraph"

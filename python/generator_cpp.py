@@ -106,8 +106,11 @@ class CppGenerator:
     args += [f'"{op.get_output_filename()}"' for op in self.p.modelout_2_op.values()]
     args += [op.get_callarg_line() for op in self.p.op_list]
     if is_dout:
-      args += [f'"{op.get_output_filename()}"' for op in self.p.op_list 
-               if op not in self.p.modelout_2_op.values()]
+      optargs = [f'"{op.get_output_filename()}"' for op in self.p.op_list 
+                 if op not in self.p.modelout_2_op.values()]
+      if len(optargs) >= 8:
+        optargs = ['""' for _ in range(len(optargs) - 8)] + optargs[-8:]
+      args += optargs
     args = [i for i in args if i != ""]
     return "  " + ",\n".join(args).replace("\n", "\n  ")
   

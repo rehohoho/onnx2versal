@@ -4,6 +4,7 @@
 #include <adf.h>
 
 // for 16384B (note 32768B DDR per AIE)
+#define TILE_BYTES        32768
 #define MAX_PARAM_BYTES   16384
 #define MAX_FLOAT_PARAMS  MAX_PARAM_BYTES / sizeof(float)
 
