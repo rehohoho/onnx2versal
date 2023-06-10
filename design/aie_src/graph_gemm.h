@@ -113,6 +113,7 @@ class GemmReluStreamGraph : public adf::graph {
       adf::headers(k[0]) = {"gemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::repetition_count(k[0]) = repeat_cnt;
+      adf::heap_size(k[0]) = 16384;
 
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (pin[1], k[0].in[1]);

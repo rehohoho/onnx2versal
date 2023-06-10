@@ -43,97 +43,116 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
   PROFILE_HEADER(printf(
     "Running GemmReluMKKNStream<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
   
-  float *out_ptr = (float *) out->ptr;
   float *b_ptr = (float *) bias;
-  v8float zeros = null_v8float();
-  v8float matA = undef_v8float();
-  v16float matW = null_v16float();
+  v8float matW = null_v8float();
 
-#define MAC_ROW(matA_i) \
+#define MAC_ROW(k1, k2, k3, k4) \
   matW = upd_v(matW, 0, readincr_v4(weight)); \
   matW = upd_v(matW, 1, readincr_v4(weight)); \
-  acc1 = fpmac(acc1, matW, 0, 0x76543210, matA, matA_i, 0x00000000); \
-  matW = upd_v(matW, 2, readincr_v4(weight)); \
-  matW = upd_v(matW, 3, readincr_v4(weight)); \
-  acc2 = fpmac(acc2, matW, 8, 0x76543210, matA, matA_i, 0x00000000);
+  acc1 = aie::mac(acc1, (aie::vector<float, 8>) matW, k1); \
+  acc2 = aie::mac(acc2, (aie::vector<float, 8>) matW, k2); \
+  acc3 = aie::mac(acc3, (aie::vector<float, 8>) matW, k3); \
+  acc4 = aie::mac(acc4, (aie::vector<float, 8>) matW, k4);
 
-  for (int i = 0; i < M; i++) {
-    // read stream iter
-    v8float *in_ptr = (v8float *) in_row;
-    v8float acc1 = *(v8float *) (b_ptr + 0);
-    v8float acc2 = *(v8float *) (b_ptr + 8);
-
-    for (int k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[k:k+8,n:n+16]
-      matA = upd_v(matA, 0, readincr_v4(in));
-
-      MAC_ROW(0); // += input[0]*weight[0:16]
-      MAC_ROW(1);
-      MAC_ROW(2);
-      MAC_ROW(3);
-      
-      matA = upd_v(matA, 1, readincr_v4(in));
-      *in_ptr = matA;
-      MAC_ROW(4);
-      MAC_ROW(5);
-      MAC_ROW(6);
-      MAC_ROW(7);
-    } // K
-    if (RUN_LASTCHUNK) { // K%4==0
-      matA = upd_v(matA, 0, readincr_v4(in)); 
-      *in_ptr = matA; // dangerous
-      for (int p = 0; p < 4; p++) {
-        MAC_ROW(p);
-      }
-    } // K
-    
-    if (IS_RELU) {
-      acc1 = fpmax(acc1, zeros, 0, 0x76543210);
-      acc2 = fpmax(acc2, zeros, 0, 0x76543210);
+  for (int i = 0; i < M-3; i+=4) {
+    v4float *in_ptr = (v4float *) in_row;
+    for (int k = 0; k < 4*K; k+=4) {
+      *in_ptr = readincr_v4(in); in_ptr ++;
     }
 
-    window_writeincr(out, acc1);
-    window_writeincr(out, acc2);
+    float *out_row_ptr = (float *) out_row;
 
-    // rest of iters
-    for (int j = 16; j < N; j+=16) { // v16float output per iter
+    for (int j = 0; j < N; j+=8) { // 2x v8float output per iter
 
-      v8float acc1 = *(v8float *) (b_ptr + j);
-      v8float acc2 = *(v8float *) (b_ptr + j + 8);
-      float *in_row_ptr = (float *) in_row;
+      aie::accum<accfloat,8> acc1 = *(v8float *) (b_ptr + j);
+      aie::accum<accfloat,8> acc2 = *(v8float *) (b_ptr + j);
+      aie::accum<accfloat,8> acc3 = *(v8float *) (b_ptr + j);
+      aie::accum<accfloat,8> acc4 = *(v8float *) (b_ptr + j);
 
       for (int k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[k:k+8,n:n+16]
-        matA = *(v8float *) in_row_ptr; in_row_ptr += 8;
-        MAC_ROW(0); // += input[0]*weight[0:16]
-        MAC_ROW(1);
-        MAC_ROW(2);
-        MAC_ROW(3);
-        MAC_ROW(4);
-        MAC_ROW(5);
-        MAC_ROW(6);
-        MAC_ROW(7);
+        MAC_ROW(in_row[k+0], in_row[k+K+0], in_row[k+2*K+0], in_row[k+3*K+0]); // += input[0]*weight[0:16]
+        MAC_ROW(in_row[k+1], in_row[k+K+1], in_row[k+2*K+1], in_row[k+3*K+1]);
+        MAC_ROW(in_row[k+2], in_row[k+K+2], in_row[k+2*K+2], in_row[k+3*K+2]);
+        MAC_ROW(in_row[k+3], in_row[k+K+3], in_row[k+2*K+3], in_row[k+3*K+3]);
+        MAC_ROW(in_row[k+4], in_row[k+K+4], in_row[k+2*K+4], in_row[k+3*K+4]);
+        MAC_ROW(in_row[k+5], in_row[k+K+5], in_row[k+2*K+5], in_row[k+3*K+5]);
+        MAC_ROW(in_row[k+6], in_row[k+K+6], in_row[k+2*K+6], in_row[k+3*K+6]);
+        MAC_ROW(in_row[k+7], in_row[k+K+7], in_row[k+2*K+7], in_row[k+3*K+7]);
       } // K
-      if (RUN_LASTCHUNK) {
-        matA = *(v8float *) in_row_ptr; in_row_ptr += K_REM8;
-        for (int p = 0; p < K_REM8; p++) {
-          MAC_ROW(p);
+
+      int k = K/8*8;
+      if (K%8 != 0) {
+        for (int p = 0; p < 4; p++) {
+          MAC_ROW(in_row[k+p], in_row[k+K+p], in_row[k+2*K+p], in_row[k+3*K+p]);
         }
       } // K
       
+      aie::vector<float, 8> accv1 = acc1.to_vector<float>();
+      aie::vector<float, 8> accv2 = acc2.to_vector<float>();
+      aie::vector<float, 8> accv3 = acc3.to_vector<float>();
+      aie::vector<float, 8> accv4 = acc4.to_vector<float>();
       if (IS_RELU) {
-        acc1 = fpmax(acc1, zeros, 0, 0x76543210);
-        acc2 = fpmax(acc2, zeros, 0, 0x76543210);
+        accv1 = aie::max(accv1, 0.0f);
+        accv2 = aie::max(accv2, 0.0f);
+        accv3 = aie::max(accv3, 0.0f);
+        accv4 = aie::max(accv4, 0.0f);
       }
 
-      window_writeincr(out, acc1);
-      window_writeincr(out, acc2);
-      
-      v8float testp = *(v8float *) out_ptr;
-      print_fvec<float>((float *) &testp, 8);
-
+      window_writeincr(out, accv1);
+      aie::store_v(out_row_ptr, accv2); out_row_ptr += N;
+      aie::store_v(out_row_ptr, accv3); out_row_ptr += N;
+      aie::store_v(out_row_ptr, accv4); out_row_ptr += -2*N + 8;
     } // N
+
+    out_row_ptr = (float *) out_row;
+    for (int j = 0; j < 3*N; j+=8) {
+      window_writeincr(out, *(v8float *) out_row_ptr); out_row_ptr += 8;
+    }
     
   } // M
+#undef MAC_ROW
 
+#define MAC_ROW(k1) \
+  matW = upd_v(matW, 0, readincr_v4(weight)); \
+  matW = upd_v(matW, 1, readincr_v4(weight)); \
+  acc1 = aie::mac(acc1, (aie::vector<float, 8>) matW, k1);
+  
+  for (int i = 0; i < M%4; i++) {
+    v4float *in_ptr = (v4float *) in_row;
+    for (int k = 0; k < K; k+=4) {
+      *in_ptr = readincr_v4(in); in_ptr ++;
+    }
+
+    for (int j = 0; j < N; j+=8) { // 2x v8float output per iter
+
+      aie::accum<accfloat,8> acc1 = *(v8float *) (b_ptr + j);
+
+      for (int k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[k:k+8,n:n+16]
+        MAC_ROW(in_row[k+0]); // += input[0]*weight[0:16]
+        MAC_ROW(in_row[k+1]);
+        MAC_ROW(in_row[k+2]);
+        MAC_ROW(in_row[k+3]);
+        MAC_ROW(in_row[k+4]);
+        MAC_ROW(in_row[k+5]);
+        MAC_ROW(in_row[k+6]);
+        MAC_ROW(in_row[k+7]);
+      } // K
+
+      int k = K/8*8;
+      if (K%8 != 0) {
+        for (int p = 0; p < 4; p++) {
+          MAC_ROW(in_row[k+p]);
+        }
+      } // K
+      
+      aie::vector<float, 8> accv1 = acc1.to_vector<float>();
+      if (IS_RELU) {
+        accv1 = aie::max(accv1, 0.0f);
+      }
+
+      window_writeincr(out, accv1);
+    } // N
+  }
 #undef MAC_ROW
 
   PROFILE_FOOTER;

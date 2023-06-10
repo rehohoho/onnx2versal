@@ -24,7 +24,7 @@
 
 /**
  * @brief Scalar implementation for MK*NK, streams input, outputs, weights, stores bias 
- * GemmReluScalarMKNKStream<2, 36, 10> total = 3497
+ * GemmReluScalarMKNKStream<7,36,10> total = 12214
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarMKNKStream {
@@ -50,40 +50,8 @@ class GemmReluScalarMKNKStream {
 
 
 /**
- * @brief Vector implementation for MK*KN, streams input, outputs, weights, stores bias,
- * requires K%4==0 and N%16==0
- * GemmReluMKKNStream<2, 36, 10> total = 1367
- */
-template <int M, int K, int N, int IS_RELU>
-class GemmReluMKKNStream {
-  private:
-    alignas(32) float (&bias)[N];
-    alignas(32) float in_row[K];
-
-    static constexpr int K_REM8 = K%8;
-    static constexpr int RUN_LASTCHUNK = K_REM8 > 0;
-
-  public:
-    GemmReluMKKNStream (
-      float (&b)[N]
-    ): bias(b) {};
-
-    void filter(
-      input_stream<float>* in,      // MxK
-      input_stream<float>* weight,  // NxK
-      output_window<float>* out     // MxN
-    );
-    static void registerKernelClass() {
-      static_assert(K%4==0 && N%16==0);
-      REGISTER_FUNCTION(GemmReluMKKNStream::filter);
-      REGISTER_PARAMETER(bias);
-    };
-};
-
-
-/**
  * @brief Scalar implementation for MK*NK, stores weights and biases,
- * Running GemmReluScalarMKNK<2, 36, 10> total = 1874
+ * Running GemmReluScalarMKNK<7,36,10> total = 6515
  */
 // xA^T + b as per torch,nn.Linear
 template <int M, int K, int N, int IS_RELU>
@@ -114,7 +82,7 @@ class GemmReluScalarMKNK {
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * GemmReluScalarMKKN<2, 36, 10> total = 2242
+ * GemmReluScalarMKKN<7,36,10> total = 7798
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluScalarMKKN {
@@ -143,9 +111,39 @@ class GemmReluScalarMKKN {
 
 
 /**
+ * @brief Vector implementation for MK*KN, streams input, outputs, weights, stores bias,
+ * requires K%4==0 and N%8==0
+ * GemmReluMKKNStream<7,36,10> total = 3630
+ */
+template <int M, int K, int N, int IS_RELU>
+class GemmReluMKKNStream {
+  private:
+    alignas(32) float (&bias)[N];
+    alignas(32) float in_row[4*K];
+    alignas(32) float out_row[3*N];
+
+  public:
+    GemmReluMKKNStream (
+      float (&b)[N]
+    ): bias(b) {};
+
+    void filter(
+      input_stream<float>* in,      // MxK
+      input_stream<float>* weight,  // NxK
+      output_window<float>* out     // MxN
+    );
+    static void registerKernelClass() {
+      static_assert(K%4==0 && N%8==0 && (4*K + 3*N)*4 <= 16384);
+      REGISTER_FUNCTION(GemmReluMKKNStream::filter);
+      REGISTER_PARAMETER(bias);
+    };
+};
+
+
+/**
  * @brief Vector implementation for MK*KN, stores weights and biases, 
  * requires K%4=0, N%4=0
- * GemmReluMKKN<2, 36, 10> total = 441
+ * GemmReluMKKN<7,36,10> total = 1470
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluMKKN {
