@@ -196,14 +196,9 @@ class GemmReluMknkChunkGraph : public adf::graph {
         adf::location_constraint tilePos = adf::location<adf::kernel>(gemms[i]);
         adf::location<adf::parameter>(gemms[i].param[0]) = tilePos; // weight (<= 16384B)
         adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(offset);
-        offset += (NCHUNK*K*4 + 31)/32*32;
         adf::location<adf::parameter>(gemms[i].param[1]) = tilePos; // bias   (<= 4096B)
-        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset); 
-        offset += (NCHUNK*4 + 31)/32*32;
-        adf::location<adf::buffer>(gemms[i].in[0]) = tilePos;  // input window (<= 4096B)
-        adf::location<adf::buffer>(gemms[i].in[0]) = {
-          adf::offset(offset), 
-          adf::offset(offset + (M*K*4+31)/32*32)};
+        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset + NCHUNK*K*4); 
+        // arbitrary input/output buffer location due to interconnect design
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
@@ -286,13 +281,9 @@ class GemmReluMkknChunkGraph : public adf::graph {
         adf::location_constraint tilePos = adf::location<adf::kernel>(gemms[i]);
         adf::location<adf::parameter>(gemms[i].param[0]) = tilePos;
         adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(offset);
-        offset += (NCHUNK*K*4 + 31)/32*32; // separate bank not required for weights vs bias
         adf::location<adf::parameter>(gemms[i].param[1]) = tilePos;
-        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset); 
-        adf::location<adf::buffer>(gemms[i].in[0]) = tilePos;
-        // adf::location<adf::buffer>(gemms[i].in[0]) = {
-        //   adf::offset(offset), 
-        //   adf::offset(offset + (M*K*4 + 4095)/4096*4096)};
+        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset + NCHUNK*K*4);
+        // arbitrary input/output buffer location due to interconnect design
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
