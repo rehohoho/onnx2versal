@@ -9,13 +9,17 @@
 /** 
  * @defgroup QlinearMacKernels
  * @ingroup QlinearMac
- * - y = saturate ((x / y_scale) + y_zero)
- * - x = (qx - qx_zero) * qx_scale
  * 
+ * @details
  * https://github.com/onnx/onnx/blob/main/docs/Operators.md#Mul
  * https://github.com/onnx/onnx/blob/main/docs/Operators.md#Add
  * https://github.com/onnx/onnx/blob/main/docs/Operators.md#Relu
- * y = max(x * tw + tbias, 0)
+ * - y = saturate ((x / y_scale) + y_zero)
+ * - x = (qx - qx_zero) * qx_scale
+ * 
+ * Computation
+ * - qz = (qx-qx_zero)*qx_scale * (qw-qw_zero)*qw_scale / qz_scale + qz_zero
+ * - qy = (qz-qz_zero)*qz_scale + (qb-qb_zero)*qb_scale / qy_scale + qy_zero
  * 
  * @{
  */
@@ -40,6 +44,12 @@ class QlinearMacScalar {
     int8_t b_zero;
     int8_t z_zero;
     int8_t y_zero;
+
+    // precompute
+    float scale_x;
+    float scale_z;
+    float shift_x[W];
+    float shift_z[W];
 	
   public:
     QlinearMacScalar (
@@ -55,7 +65,7 @@ class QlinearMacScalar {
       int8_t b_zero,
       int8_t z_zero,
       int8_t y_zero
-    ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), b_scale(b_scale), z_scale(z_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), b_zero(b_zero), z_zero(z_zero), y_zero(y_zero){};
+    );
 
 		void filter(
 			input_window<int8_t>* in,
