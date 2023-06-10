@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 TILE_SIZE = 32768
-MAX_PARAM_SIZE = TILE_SIZE // 2 # ping-pong buffer
+MAX_PARAM_SIZE = TILE_SIZE // 4 # ping-pong buffer
 MAX_FLOAT_PARAMS = 16384//4
 PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
@@ -82,14 +82,19 @@ def get_attribute_dict(attributes: List[Any]):
 def factor_int(n: int, 
                multiplier: int, 
                upper_bound: int):
-  factor = 2
-  mult = 1
-  while n * multiplier > upper_bound:
-    if n % factor == 0: 
-      n //= factor
-      mult *= factor
-    else: factor += 1
-  return n, mult
+  factor_pairs = []
+  factor = 1
+  while factor <= n ** 0.5:
+    if n % factor == 0:
+      factor_pairs.append((n//factor, factor))
+    factor += 1
+  
+  factor_pairs = factor_pairs + [(f2, f1) for f1, f2 in factor_pairs[::-1]]
+
+  for f1, f2 in factor_pairs:
+    if f1 * multiplier <= upper_bound:
+      return f1, f2
+  raise ValueError(f"Unable to find factors f1, f2 of {n} such that f1*{multiplier} <= {upper_bound}")
 
 
 class OpParser:
@@ -267,61 +272,63 @@ class GemmOp(OpParser):
     if attr_d.get("alpha", 1) != 1: raise NotImplementedError("Gemm alpha not implemented yet.")
     if attr_d.get("beta", 1) != 1: raise NotImplementedError("Gemm beta not implemented yet.")
 
-    inM, inK = tin.shape
-    wK, wN = tw.shape
-    bN, = tbias.shape
-    outM, outN = tout.shape
-    
-    assert inM == outM and inK == wK and wN == bN and bN == outN
-
-    self.unpadded_N = wN
-    self.tout = tout # reference copy to check against to compress graph
-
-    # chunk graph handles padding
-    tw = pad_lastdim(tw, "Gemm tw", get_vector_boundary(tw))
-    tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
-    self.is_stream = tw.size >= MAX_FLOAT_PARAMS * 8
-    
-    if self.is_stream:
-      self.gmioname_2_tensor[f"{self.name}_w"] = tw.transpose() # MKNK
-      self.gmio_repeats = inM
-    else:
-      self.argname_2_tensor[f"{self.name}_w"] = tw
-    self.argname_2_tensor[f"{self.name}_b"] = tbias
-
-    tin = pad_lastdim(tin, "Gemm tin", get_vector_boundary(tin)) # files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
-
-    self.M, self.K, self.N = inM, inK, tw.shape[1] # config
+    self.M, self.K = tin.shape
+    _, self.N = tout.shape
     self.dtype = tout.dtype
     self.out_size = tout.size
+    assert self.M == tout.shape[0] and (self.K, self.N) == tw.shape and (self.N, ) == tbias.shape
+
+    self.unpadded_N = self.N
+    self.tout = tout # reference copy to check against to compress graph
+
+    tw = pad_lastdim(tw, "Gemm tw", get_vector_boundary(tw))
+    tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
+    tin = pad_lastdim(tin, "Gemm tin", get_vector_boundary(tin))
+
+    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
-    # batch M till window fits tile size
-    if not self.is_stream:
-      self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE)
-    else:
+    self.is_stream = tw.size >= MAX_FLOAT_PARAMS * 8
+    
+    self.N = tw.shape[1] # config
+    if self.is_stream:
       self.M, self.repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE)
 
-  def get_kernel_type(self) -> str:
-    # TODO: non-chunk graph after chunkgraph yields placement error
-    graph = "GemmReluMkknChunkGraph"
-    kernel = "GemmReluScalarMKKN"
-    concat_kernel = "ConcatScalar"
-
-    if self.is_stream:
       graph = "GemmReluStreamGraph"
       kernel = "GemmReluScalarMKNKStream"
-      return f"{graph}<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+      if self.K % 4 == 0 and self.N % 8 == 0:
+        kernel = "GemmReluMKKNStream"
+        tw = pad_lastdim(tw, "Gemm tw", 8)
+        tw = tw.reshape(self.K, -1, 8).transpose(1,0,2)
+        self.gmioname_2_tensor[f"{self.name}_w"] = tw
+        self.gmio_repeats = (self.M // 4 + self.M % 4) * self.repeat
+      else:
+        self.gmioname_2_tensor[f"{self.name}_w"] = tw.transpose() # MKNK
+        self.gmio_repeats = self.M * self.repeat
+      self.argname_2_tensor[f"{self.name}_b"] = tbias
+      
+      self.kernel_type = f"{graph}<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+    
     else:
+      graph = "GemmReluMkknChunkGraph"
+      kernel = "GemmReluScalarMKKN"
+      concat_kernel = "ConcatScalar"
+      
       chunkSize = int(MAX_FLOAT_PARAMS/self.K//4*4)
       if chunkSize >= self.N: chunkSize = self.N
-      if self.K % 2 == 0 and chunkSize % 4 == 0: kernel = "GemmReluMKKN"
-      if chunkSize % 8 == 0 and self.N % 4 == 0: concat_kernel = "ConcatVector"
-      return f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+      if self.K % 2 == 0 and chunkSize % 4 == 0: 
+        kernel = "GemmReluMKKN"
+      if chunkSize % 8 == 0 and self.N % 4 == 0: 
+        concat_kernel = "ConcatVector"
+      
+      self.argname_2_tensor[f"{self.name}_w"] = tw
+      self.argname_2_tensor[f"{self.name}_b"] = tbias
+      
+      self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE)
+      self.kernel_type = f"{graph}<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
   
   def get_kernel_line(self) -> str:
-    return f"{self.get_kernel_type()} {self.name};"
+    return f"{self.kernel_type} {self.name};"
   
   def get_initlist_line(self) -> str:
     initlist = ", ".join(argname for argname in self.argname_2_tensor)
@@ -336,7 +343,7 @@ class GemmOp(OpParser):
         for i, gmioname in enumerate(self.gmioname_2_tensor)
       ]
       return "\n".join(connect_list)
-    return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
+    return f"for (int i = 0; i < {self.kernel_type}::CHUNK_COUNT; i++)\n" + \
       f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
   
   def disable_output_pad(self):
