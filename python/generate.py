@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import numpy as np
 import onnx
@@ -31,7 +32,7 @@ if __name__ == '__main__':
   parser.add_argument("onnx",      nargs=1, help="required path to onnx file")
   parser.add_argument("input_npy", nargs=1, help="path to input data .npy, assume first dim is batch")
   parser.add_argument("-data", default="../data", help="path to data directory")
-  parser.add_argument("-ndata", default=1000, help="number of samples for end to end test")
+  parser.add_argument("-ndata", type=int, default=1000, help="number of samples for end to end test")
   parser.add_argument("-is_output_all", action="store_true", help="whether to output for all layers")
   args = parser.parse_args()
   args.onnx = args.onnx[0]
@@ -46,7 +47,12 @@ if __name__ == '__main__':
   # Load data, shape according to model def, run with ONNX Runtime
   many_inputs = np.load(args.input_npy)[:args.ndata]
   single_input = many_inputs[[0]]
+  input_shape = ort_session.get_inputs()[0].shape
   
+  if single_input.ndim > len(input_shape):
+    single_input = single_input.reshape(-1, *(single_input.shape[-len(input_shape)+1:]))
+    many_inputs = many_inputs.reshape(-1, *(many_inputs.shape[-len(input_shape)+1:]))
+    single_input = single_input[:28]
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}
   ort_outs = ort_session.run(None, ort_inputs)
 
@@ -78,3 +84,6 @@ if __name__ == '__main__':
   out_filename = parser.get_filename(out_op.get_output_filename(), False)
   model_output_path = f"{args.data}/{out_filename}"
   save_tensor(model_output_path, ort_outs[-1])
+
+  # Cleanup
+  os.remove(onnx_inter_path)

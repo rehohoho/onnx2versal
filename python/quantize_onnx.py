@@ -16,6 +16,8 @@ class NumpyDataReader(CalibrationDataReader):
 
     session = onnxruntime.InferenceSession(onnx_path, None)
     self.input_name = session.get_inputs()[0].name
+    if self.data_list[0].ndim > len(session.get_inputs()[0].shape):
+      self.data_list = [i.squeeze() for i in self.data_list]
   
   def get_next(self):
     if self.enum_data is None:
@@ -31,6 +33,9 @@ def run_model(onnx_path: str,
               input_arrs: np.ndarray):
   session = onnxruntime.InferenceSession(onnx_path)
   input_name = session.get_inputs()[0].name
+  input_shape = session.get_inputs()[0].shape
+  if input_arrs.ndim > len(input_shape):
+    input_arrs = input_arrs.reshape(-1, *(input_arrs.shape[-len(input_shape)+1:]))
   
   # Warm up
   _ = session.run([], {session.get_inputs()[0].name: input_arrs[[0]]})
