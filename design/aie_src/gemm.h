@@ -50,6 +50,38 @@ class GemmReluScalarMKNKStream {
 
 
 /**
+ * @brief Vector implementation for MK*KN, streams input, outputs, weights, stores bias,
+ * requires K%4==0 and N%16==0
+ * GemmReluMKKNStream<2, 36, 10> total = 1367
+ */
+template <int M, int K, int N, int IS_RELU>
+class GemmReluMKKNStream {
+  private:
+    alignas(32) float (&bias)[N];
+    alignas(32) float in_row[K];
+
+    static constexpr int K_REM8 = K%8;
+    static constexpr int RUN_LASTCHUNK = K_REM8 > 0;
+
+  public:
+    GemmReluMKKNStream (
+      float (&b)[N]
+    ): bias(b) {};
+
+    void filter(
+      input_stream<float>* in,      // MxK
+      input_stream<float>* weight,  // NxK
+      output_window<float>* out     // MxN
+    );
+    static void registerKernelClass() {
+      static_assert(K%4==0 && N%16==0);
+      REGISTER_FUNCTION(GemmReluMKKNStream::filter);
+      REGISTER_PARAMETER(bias);
+    };
+};
+
+
+/**
  * @brief Scalar implementation for MK*NK, stores weights and biases,
  * Running GemmReluScalarMKNK<2, 36, 10> total = 1874
  */
