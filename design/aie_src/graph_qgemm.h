@@ -3,6 +3,8 @@
 
 #include <adf.h>
 #include "qgemm.h"
+#include "graph_concat.h"
+#include "graph_utils.h"
 
 
 /**
@@ -13,7 +15,7 @@
  * and computes the quantized output. xA^T + b as per torch.nn.Linear. 
  * Applies general matrix multiply: output(MxN) = input(MxK) * weights(KxN) + bias(N)
  * 
- * @tparam GEMM     Gemm Kernel
+ * @tparam QGEMM    QGemm Kernel
  * @tparam M        number of rows of input matrix
  * @tparam K        number of cols / number of rows of weight matrix
  * @tparam N        number of cols of weight matrix / size of bias vector
@@ -25,8 +27,8 @@
  * @brief Single instance graph that stores weights and biases
  * 
  * @connections
- * @connect{pin[0], M*K*4}
- * @connect{pout[0], M*N*4}
+ * @connect{pin[0], M*K}
+ * @connect{pout[0], M*N}
  * @endconnections
  */
 template <template<int, int, int> class QGEMM, int M, int K, int N>
@@ -45,18 +47,101 @@ class QgemmGraph : public adf::graph {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero_point,
-      int8_t w_zero_point,
-      int8_t y_zero_point
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
     ) { 
       k[0] = adf::kernel::create_object<QGEMM<M, K, N>>(
-        weights, bias, x_scale, w_scale, y_scale, x_zero_point, w_zero_point, y_zero_point);
+        weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qgemm.cc";
       adf::headers(k[0]) = {"qgemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::connect<adf::window<M*K>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<M*N>> (k[0].out[0], pout[0]);
+    }
+
+};
+
+
+/**
+ * @brief Multiinstance graph for MxK times KxN that stores weights and biases
+ * Requires KxN_RND weight, NCHUNK%8=0, N%4=0
+ * Chunks KxN weights by N dimension into NCHUNK chunks.
+ * Each instance has max size = 16384 and 4096 bytes respectively.
+ * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
+ */
+template <
+  template<int, int, int> class QGEMM, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int NCHUNK, int M, int K, int N>
+class QgemmMkknChunkGraph : public adf::graph {
+
+  private:
+    adf::relative_coordinate tileOffsets[8] = {
+      {.col_offset = -1, .row_offset = 0}, // left, right
+      {.col_offset = 1, .row_offset = 0},
+      {.col_offset = -1, .row_offset = 1}, // bottom row
+      {.col_offset = 0, .row_offset = 1},
+      {.col_offset = 1, .row_offset = 1},
+      {.col_offset = -1, .row_offset = -1}, // top row
+      {.col_offset = 0, .row_offset = -1},
+      {.col_offset = 1, .row_offset = -1},
+    };
+
+  public:
+    static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
+    adf::kernel k[CHUNK_COUNT];
+    ConcatGraph<CONCAT, int8_t, CHUNK_COUNT, M, NCHUNK, N> concat_g;
+    
+    adf::port<input> pin[CHUNK_COUNT];
+    adf::port<output> pout[1];
+
+    QgemmMkknChunkGraph(
+      std::vector<int8_t> weights,  // KxN
+      std::vector<int32_t> bias,    // N
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero,
+      int repeat_cnt = 1
+    ) { 
+      static_assert(CHUNK_COUNT <= 8);
+      static_assert(M*K <= TILE_BYTES);
+      static_assert(K*NCHUNK <= MAX_PARAM_BYTES);
+      static_assert(M*NCHUNK <= TILE_BYTES);
+
+      std::vector<float> bChunk;
+
+      for (int i = 0; i < CHUNK_COUNT; i++) {
+        
+        // build wchunk
+        std::vector<float> wChunk;
+        wChunk.reserve(NCHUNK*K);
+        for (int j = 0; j < K*N; j+=N) {
+          wChunk.insert(wChunk.end(), weights.begin()+j+i*NCHUNK, weights.begin()+j+i*NCHUNK+NCHUNK);
+        }
+        
+        // build bChunk
+        bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);
+        bChunk.resize(NCHUNK, 0);
+        
+        k[i] = adf::kernel::create_object<QGEMM<M, K, NCHUNK>>(
+          wChunk, bChunk, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
+        adf::source(k[i]) = "qgemm.cc";
+        adf::headers(k[i]) = {"qgemm.h"};
+        adf::runtime<ratio>(k[i]) = 0.6;
+        adf::repetition_count(k[i]) = repeat_cnt;
+        // arbitrary input/output buffer location due to interconnect design
+      }
+
+      for (int i = 0; i < CHUNK_COUNT; i++) {
+        adf::connect<adf::window<M*K>> (pin[i], k[i].in[0]);
+        adf::connect<adf::window<M*NCHUNK>> (k[i].out[0], concat_g.pin[i]);
+      }
+      adf::connect<adf::window<M*N>> (concat_g.pout[0], pout[0]);
     }
 
 };

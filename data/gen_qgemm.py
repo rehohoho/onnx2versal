@@ -9,7 +9,7 @@ np.random.seed(0)
 
 M = 1
 K = 84
-N = 10
+N = 30
 tin_scale = 0.004
 tw_scale = 0.003
 tout_scale = 0.002
@@ -35,6 +35,6 @@ tout = np.clip(tout, -128, 127).astype(np.int8)
 
 # save
 save_tensor("qgemm_int8in.txt", tin)
-save_tensor("qgemm_int8out_shape1x10.txt", tout)
+save_tensor(f"qgemm_int8out_shape{M}x{N}.txt", tout)
 print("int8weights\n", tw.flatten().tolist(), "\n\n\n")
 print("int8bias\n", tbias.flatten().tolist(), "\n\n\n")
