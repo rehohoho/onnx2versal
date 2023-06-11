@@ -126,7 +126,7 @@ class ConvReluGmemParamGraph : public adf::graph {
  */
 template <
   template<int, int, int, int, int, int, int> class CONV, 
-  template<int, int, int, int> class CONCAT, 
+  template<typename, int, int, int, int> class CONCAT, 
   int IS_BCHW, int IS_KPAD,
   int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluChunkGraph : public adf::graph {
@@ -152,7 +152,7 @@ class ConvReluChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (M + MCHUNK - 1) / MCHUNK; // ceiling
     adf::kernel convs[CHUNK_COUNT];
-    ConcatGraph<CONCAT, CHUNK_COUNT, CONCAT_CHUNK_COUNT, CONCAT_CHUNK, CONCAT_BLOCK> concat_g;
+    ConcatGraph<CONCAT, float_t, CHUNK_COUNT, CONCAT_CHUNK_COUNT, CONCAT_CHUNK, CONCAT_BLOCK> concat_g;
 
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];
@@ -161,6 +161,7 @@ class ConvReluChunkGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
+      static_assert(CHUNK_COUNT <= 8);
       std::vector<float> wChunk;
       std::vector<float> bChunk;
 

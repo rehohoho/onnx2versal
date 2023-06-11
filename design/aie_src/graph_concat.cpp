@@ -2,12 +2,13 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int> class CONCAT,
-  int LCNT, int H, int INP_W, int OUT_W>
+template <template<typename, int, int, int, int> class CONCAT,
+  typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatGraphTest : public adf::graph {
 
   private:
-    ConcatGraph<CONCAT, LCNT, H, INP_W, OUT_W> g;
+    static const int TTSIZE = sizeof(TT);
+    ConcatGraph<CONCAT, TT, LCNT, H, INP_W, OUT_W> g;
 
   public:
     adf::input_plio plin[LCNT];
@@ -21,22 +22,23 @@ class ConcatGraphTest : public adf::graph {
       for (int i = 0; i < LCNT; i++) {
         std::string plin_name = "plin"+std::to_string(i)+"_concat_"+id+"_input"; 
         plin[i] = adf::input_plio::create(plin_name, PLIO64_ARG(INP_TXT[i]));
-        adf::connect<adf::window<H*INP_W*4>> (plin[i].out[0], g.pin[i]);
+        adf::connect<adf::window<H*INP_W*TTSIZE>> (plin[i].out[0], g.pin[i]);
       }
 
       plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<H*OUT_W*4>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<H*OUT_W*TTSIZE>> (g.pout[0], plout[0].in[0]);
     }
 
 };
 
 
-template <template<int, int, int, int> class CONCAT,
-  int LCNT, int H, int INP_W, int OUT_W>
+template <template<typename, int, int, int, int> class CONCAT,
+  typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatTwiceGraphTest : public adf::graph {
 
   private:
-    ConcatTwiceGraph<CONCAT, LCNT, H, INP_W, OUT_W> g;
+    static const int TTSIZE = sizeof(TT);
+    ConcatTwiceGraph<CONCAT, TT, LCNT, H, INP_W, OUT_W> g;
 
   public:
     adf::input_plio plin[LCNT];
@@ -50,11 +52,11 @@ class ConcatTwiceGraphTest : public adf::graph {
       for (int i = 0; i < LCNT; i++) {
         std::string plin_name = "plin"+std::to_string(i)+"_concat_"+id+"_input"; 
         plin[i] = adf::input_plio::create(plin_name, PLIO64_ARG(INP_TXT[i]));
-        adf::connect<adf::window<H*INP_W*4>> (plin[i].out[0], g.pin[i]);
+        adf::connect<adf::window<H*INP_W*TTSIZE>> (plin[i].out[0], g.pin[i]);
       }
       
       plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<H*OUT_W*4>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<H*OUT_W*TTSIZE>> (g.pout[0], plout[0].in[0]);
     }
 
 };
@@ -65,11 +67,11 @@ std::vector<std::string> inp_txts {
 };
 
 // instance to be compiled and used in host within xclbin
-ConcatGraphTest<ConcatScalar, 5, 4, 16, 52> concatScalar(
+ConcatGraphTest<ConcatScalar, float_t, 5, 4, 16, 52> concatScalar(
   "concatScalar", "concat_fpout_shape4x52_ConcatScalar.txt", inp_txts);
 
-ConcatGraphTest<ConcatVector, 5, 4, 16, 52> concatVector(
-  "concatVector", "concat_fpout_shape4x52_ConcatVector.txt", inp_txts);
+ConcatGraphTest<ConcatFloat, float_t, 5, 4, 16, 52> concatVector(
+  "concatVector", "concat_fpout_shape4x52_ConcatFloat.txt", inp_txts);
 
 std::vector<std::string> multi_inp_txts {
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
@@ -87,8 +89,8 @@ std::vector<std::string> multi_inp_txts {
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt"
 };
 
-ConcatTwiceGraphTest<ConcatVector, 52, 4, 16, 820> multiConcatVector(
-  "multiConcatVector", "concatmulti_fpout_shape4x820_ConcatVector.txt", multi_inp_txts
+ConcatTwiceGraphTest<ConcatFloat, float_t, 52, 4, 16, 820> multiConcatFloat(
+  "multiConcatFloat", "concatmulti_fpout_shape4x820_ConcatFloat.txt", multi_inp_txts
 );
 
 
@@ -102,9 +104,9 @@ int main(int argc, char ** argv) {
   adfCheck(concatVector.run(ITER_CNT), "run concatVector");
 	adfCheck(concatVector.end(), "end concatVector");
 
-  adfCheck(multiConcatVector.init(), "init multiConcatVector");
-  adfCheck(multiConcatVector.run(ITER_CNT), "run multiConcatVector");
-	adfCheck(multiConcatVector.end(), "end multiConcatVector");
+  adfCheck(multiConcatFloat.init(), "init multiConcatFloat");
+  adfCheck(multiConcatFloat.run(ITER_CNT), "run multiConcatFloat");
+	adfCheck(multiConcatFloat.end(), "end multiConcatFloat");
   return 0;
 }
 #endif
@@ -120,9 +122,9 @@ int main(int argc, char ** argv) {
   get_graph_throughput_by_port(concatVector, "plout[0]", concatVector.plout[0], 36, sizeof(float), ITER_CNT);
 	adfCheck(concatVector.end(), "end concatVector");
 
-  adfCheck(multiConcatVector.init(), "init multiConcatVector");
-  get_graph_throughput_by_port(multiConcatVector, "plout[0]", multiConcatVector.plout[0], 36, sizeof(float), ITER_CNT);
-	adfCheck(multiConcatVector.end(), "end multiConcatVector");
+  adfCheck(multiConcatFloat.init(), "init multiConcatFloat");
+  get_graph_throughput_by_port(multiConcatFloat, "plout[0]", multiConcatFloat.plout[0], 36, sizeof(float), ITER_CNT);
+	adfCheck(multiConcatFloat.end(), "end multiConcatFloat");
   return 0;
 }
 #endif

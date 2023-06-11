@@ -4,7 +4,7 @@
 
 template <
   template<int, int, int, int> class GEMM, 
-  template<int, int, int, int> class CONCAT, 
+  template<typename, int, int, int, int> class CONCAT, 
   int NCHUNK, int M, int K, int N, int IS_RELU>
 class GemmReluMknkChunkGraphTest : public adf::graph {
 
@@ -37,7 +37,7 @@ class GemmReluMknkChunkGraphTest : public adf::graph {
 
 template <
   template<int, int, int, int> class GEMM, 
-  template<int, int, int, int> class CONCAT, 
+  template<typename, int, int, int, int> class CONCAT, 
   int NCHUNK, int M, int K, int N, int IS_RELU>
 class GemmReluMkknChunkGraphTest : public adf::graph {
 

@@ -5,7 +5,7 @@
 #define CAT(INP_WIN) \
   for (int i = 0; i < INP_W; i++) { \
     if (outi < OUT_W) { \
-      float a = window_readincr(INP_WIN); \
+      TT a = window_readincr(INP_WIN); \
       window_writeincr(out, a); \
     } else { \
       window_incr(INP_WIN, 1); \
@@ -13,20 +13,20 @@
     outi++; }
 
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter8(
-	input_window<float>* in0,
-	input_window<float>* in1,
-	input_window<float>* in2,
-	input_window<float>* in3,
-	input_window<float>* in4,
-	input_window<float>* in5,
-	input_window<float>* in6,
-	input_window<float>* in7,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter8(
+	input_window<TT>* in0,
+	input_window<TT>* in1,
+	input_window<TT>* in2,
+	input_window<TT>* in3,
+	input_window<TT>* in4,
+	input_window<TT>* in5,
+	input_window<TT>* in6,
+	input_window<TT>* in7,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter8\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter8\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -44,19 +44,19 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter8(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter7(
-	input_window<float>* in0,
-	input_window<float>* in1,
-	input_window<float>* in2,
-	input_window<float>* in3,
-	input_window<float>* in4,
-	input_window<float>* in5,
-	input_window<float>* in6,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter7(
+	input_window<TT>* in0,
+	input_window<TT>* in1,
+	input_window<TT>* in2,
+	input_window<TT>* in3,
+	input_window<TT>* in4,
+	input_window<TT>* in5,
+	input_window<TT>* in6,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter7\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter7\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -73,18 +73,18 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter7(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter6(
-	input_window<float>* in0,
-	input_window<float>* in1,
-	input_window<float>* in2,
-	input_window<float>* in3,
-	input_window<float>* in4,
-	input_window<float>* in5,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter6(
+	input_window<TT>* in0,
+	input_window<TT>* in1,
+	input_window<TT>* in2,
+	input_window<TT>* in3,
+	input_window<TT>* in4,
+	input_window<TT>* in5,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter6\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter6\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -100,17 +100,17 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter6(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter5(
-	input_window<float>* in0,
-	input_window<float>* in1,
-	input_window<float>* in2,
-	input_window<float>* in3,
-	input_window<float>* in4,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter5(
+	input_window<TT>* in0,
+	input_window<TT>* in1,
+	input_window<TT>* in2,
+	input_window<TT>* in3,
+	input_window<TT>* in4,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter5\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter5\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -125,16 +125,16 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter5(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter4(
-	input_window<float>* in0,
-	input_window<float>* in1,
-	input_window<float>* in2,
-	input_window<float>* in3,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter4(
+	input_window<TT>* in0,
+	input_window<TT>* in1,
+	input_window<TT>* in2,
+	input_window<TT>* in3,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter4\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter4\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -148,15 +148,15 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter4(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter3(
-	input_window<float>* in0,
-	input_window<float>* in1,
-	input_window<float>* in2,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter3(
+	input_window<TT>* in0,
+	input_window<TT>* in1,
+	input_window<TT>* in2,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter3\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter3\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -169,14 +169,14 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter3(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter2(
-	input_window<float>* in0,
-	input_window<float>* in1,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter2(
+	input_window<TT>* in0,
+	input_window<TT>* in1,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter2\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter2\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -188,13 +188,13 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter2(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter1(
-	input_window<float>* in0,
-  output_window<float>* out
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter1(
+	input_window<TT>* in0,
+  output_window<TT>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatScalar<%d,%d,%d,%d>::filter1\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatScalar<%s,%d,%d,%d,%d>::filter1\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -220,8 +220,8 @@ void ConcatScalar<LCNT, H, INP_W, OUT_W>::filter1(
   } \
   outi += INP_W;
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter8(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter8(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -233,7 +233,7 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter8(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter8\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter8\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -251,8 +251,8 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter8(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter7(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter7(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -263,7 +263,7 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter7(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter7\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter7\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -280,8 +280,8 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter7(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter6(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter6(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -291,7 +291,7 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter6(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter6\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter6\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -307,8 +307,8 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter6(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter5(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter5(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -317,7 +317,7 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter5(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter5\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter5\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -332,8 +332,8 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter5(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter4(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter4(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
@@ -341,7 +341,7 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter4(
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter4\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter4\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -355,15 +355,15 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter4(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter3(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter3(
 	input_window<float>* in0,
 	input_window<float>* in1,
 	input_window<float>* in2,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter3\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter3\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -376,14 +376,14 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter3(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter2(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter2(
 	input_window<float>* in0,
 	input_window<float>* in1,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter2\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter2\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;
@@ -395,13 +395,13 @@ void ConcatVector<LCNT, H, INP_W, OUT_W>::filter2(
   PROFILE_FOOTER;
 }
 
-template <int LCNT, int H, int INP_W, int OUT_W>
-void ConcatVector<LCNT, H, INP_W, OUT_W>::filter1(
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter1(
 	input_window<float>* in0,
   output_window<float>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running ConcatVector<%d,%d,%d,%d>::filter7\n", LCNT, H, INP_W, OUT_W));
+    "Running ConcatFloat<%s,%d,%d,%d,%d>::filter7\n", typeid(TT).name(), LCNT, H, INP_W, OUT_W));
 
   for (int i = 0; i < H; i++) {
     int outi = 0;

@@ -138,7 +138,7 @@ class GemmReluStreamGraph : public adf::graph {
  */
 template <
   template<int, int, int, int> class GEMM, 
-  template<int, int, int, int> class CONCAT, 
+  template<typename, int, int, int, int> class CONCAT, 
   int NCHUNK, int M, int K, int N, int IS_RELU>
 class GemmReluMknkChunkGraph : public adf::graph {
 
@@ -159,7 +159,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    ConcatGraph<CONCAT, CHUNK_COUNT, 1, NCHUNK, N> concat_g;
+    ConcatGraph<CONCAT, float_t, CHUNK_COUNT, 1, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];
@@ -169,6 +169,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
       std::vector<float> bias,
       int repeat_cnt = 1
     ) { 
+      static_assert(CHUNK_COUNT <= 8);
       static_assert(M*K*4 <= TILE_BYTES);
       static_assert(K*N*4 <= MAX_PARAM_BYTES);
       static_assert(M*N*4 <= TILE_BYTES);
@@ -221,7 +222,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
  */
 template <
   template<int, int, int, int> class GEMM, 
-  template<int, int, int, int> class CONCAT, 
+  template<typename, int, int, int, int> class CONCAT, 
   int NCHUNK, int M, int K, int N, int IS_RELU>
 class GemmReluMkknChunkGraph : public adf::graph {
 
@@ -240,7 +241,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    ConcatGraph<CONCAT, CHUNK_COUNT, M, NCHUNK, N> concat_g;
+    ConcatGraph<CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];
@@ -250,6 +251,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
       std::vector<float> bias,    // N
       int repeat_cnt = 1
     ) { 
+      static_assert(CHUNK_COUNT <= 8);
       static_assert(M*K*4 <= TILE_BYTES);
       static_assert(K*NCHUNK*4 <= MAX_PARAM_BYTES);
       static_assert(M*NCHUNK*4 <= TILE_BYTES);
