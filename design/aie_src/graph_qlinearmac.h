@@ -66,7 +66,7 @@ class QlinearMacGraph : public adf::graph {
       adf::headers(k[0]) = {"qlinearmac.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::repetition_count(k[0]) = repeat_cnt;
-      adf::heap_size(k[0]) = 2*W + 128;
+      adf::heap_size(k[0]) = 2*W*4 + 1024;
       
       adf::connect<adf::window<B*W>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<B*W>> (k[0].out[0], pout[0]);

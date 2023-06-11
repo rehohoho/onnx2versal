@@ -59,6 +59,14 @@ QlinearMacGraphTest<QlinearMacScalar,14,128,0> qlinearmacScalar(
   k2qmac_xscale, k2qmac_wscale, k2qmac_bscale, k2qmac_zscale, k2qmac_yscale, 
   k2qmac_xzero, k2qmac_wzero, k2qmac_bzero, k2qmac_zzero, k2qmac_yzero, 
   "k2qmac_in_shape14x128.txt", 
+  "k2qmac_goldenout_shape14x128_scalar.txt");
+
+QlinearMacGraphTest<QlinearMac,14,128,0> qlinearmac(
+  "qlinearmac", 
+  k2qmac_w, k2qmac_b, 
+  k2qmac_xscale, k2qmac_wscale, k2qmac_bscale, k2qmac_zscale, k2qmac_yscale, 
+  k2qmac_xzero, k2qmac_wzero, k2qmac_bzero, k2qmac_zzero, k2qmac_yzero, 
+  "k2qmac_in_shape14x128.txt", 
   "k2qmac_goldenout_shape14x128.txt");
 
 
@@ -67,6 +75,10 @@ int main(int argc, char ** argv) {
 	adfCheck(qlinearmacScalar.init(), "init qlinearmacScalar");
   adfCheck(qlinearmacScalar.run(ITER_CNT), "run qlinearmacScalar");
 	adfCheck(qlinearmacScalar.end(), "end qlinearmacScalar");
+
+  adfCheck(qlinearmac.init(), "init qlinearmac");
+  adfCheck(qlinearmac.run(ITER_CNT), "run qlinearmac");
+	adfCheck(qlinearmac.end(), "end qlinearmac");
   return 0;
 }
 #endif
