@@ -83,7 +83,7 @@ class QlinearMacScalar {
 /**
  * @brief QlinearMac vector implementation,
  * requires W%16 == 0,
- * QlinearMacScalar<14,128,0> 2169 cycles
+ * QlinearMacScalar<14,128,0> 1253 cycles
  */
 template <int B, int W, int IS_RELU>
 class QlinearMac {

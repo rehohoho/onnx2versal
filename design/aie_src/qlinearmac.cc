@@ -91,12 +91,12 @@ QlinearMac<B, W, IS_RELU>::QlinearMac (
   scale_z = float2fix(fscale_z, bitshift_z);
 
   for (int w = 0; w < W; w++) {
-    float fshift_x = -x_zero * (weights[w] - w_zero) * fscale_x + z_zero;
+    float fshift_x = -x_zero * weights[w] * fscale_x + z_zero;
     shift_x[w] = float2fix(fshift_x, bitshift_x);
     float fshift_z = (-z_zero * z_scale + (bias[w] - b_zero) * b_scale) * inv(y_scale) + y_zero;
     shift_z[w] = float2fix(fshift_z, bitshift_z);
   }
-  printf("bitshift_x %d bitshift_z %d\n", bitshift_x, bitshift_z);
+  printf("\nbitshift_x %d bitshift_z %d\n", bitshift_x, bitshift_z);
 }
 
 template <int B, int W, int IS_RELU>
@@ -110,38 +110,50 @@ void QlinearMac<B, W, IS_RELU>::filter(
   set_sat();
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
 
-  aie::accum<acc48,16> acc1;
-  aie::accum<acc48,16> acc2;
+  v16acc48 acc = null_v16acc48();
+  aie::accum<acc48,16> accx;
+  aie::accum<acc48,16> accz;
+
+  v64int8 xv = null_v64int8();
+  v32int8 wv = null_v32int8();
+  v16int8 res = undef_v16int8();
+  v16int8 *w_ptr = (v16int8 *) weights;
 
   int8_t *out_ptr = (int8_t *) out->ptr;
-  int8_t *w_ptr = (int8_t *) weights;
   int32_t *sx_ptr = (int32_t *) shift_x;
   int32_t *sz_ptr = (int32_t *) shift_z;
   
-  for (int b = 0; b < B; b++) {
-    for (int w = 0; w < W; w+=16) {
-      
-      aie::vector<int8_t,16> x = window_readincr_v16(in);      
-      aie::vector<int8_t,16> wv = aie::load_v<16>(w_ptr); w_ptr += 16;
-      auto z = aie::mul(x, wv).to_vector<int16_t>(0);
-      
-      acc1.from_vector(aie::load_v<16>(sx_ptr), 0); sx_ptr += 16;
-      auto zz = aie::mac(acc1, z, scale_x).to_vector<int16_t>(bitshift_x);
+  for (int w = 0; w < W; w+=16) {
+    wv = upd_v(wv, 0, *w_ptr); w_ptr++;
+    accx.from_vector(aie::load_v<16>(sx_ptr), 0); sx_ptr += 16;
+    accz.from_vector(aie::load_v<16>(sz_ptr), 0); sz_ptr += 16;
 
-      // print_vec<short, short>((short *) &z, 16);
+    for (int b = 0; b < B; b++) {
       
-      acc2.from_vector(aie::load_v<16>(sz_ptr), 0); sz_ptr += 16;
-      auto res = aie::mac(acc2, zz, scale_z).to_vector<int8_t>(bitshift_z);
+      xv = upd_v(xv, 0, window_read_v16(in));
+      window_incr(in, W);
+      /*
+      acc0  += x0  z0  x16 z2
+      acc1  += x1  z1  x17 z3
+      acc2  += x18 z0  x2  z2
+      acc3  += x19 z1  x3  z3
+      xidx: 30 -> 0-3, 16-19, 33 -> 12-15, 28-31
+      zidx: 00 -> 0-1, 2-3  , 02 -> 4-5, 6-7
+      */
+      acc = mul16(xv, 0, 0x33323130, 16, 0x1320, wv, 0, 0x76543210, 16, 0x3120);
+      acc = aie::mac(accx, (aie::vector<int16_t, 16>) srs(acc, 0), scale_x);
+      acc = aie::mac(accz, (aie::vector<int16_t, 16>) srs(acc, bitshift_x), scale_z);
+      res = bsrs(acc, bitshift_z);
       
       if (IS_RELU)
-        res = aie::max(res, (int8_t) 0);
+        res = aie::max((aie::vector<int8_t,16>) res, (int8_t) 0);
       
-      aie::store_v(out_ptr, res); out_ptr += 16;
+      window_write(out, res);
+      window_incr(out, W);
     }
-    // printf("\n");
-    w_ptr -= W;
-    sx_ptr -= W;
-    sz_ptr -= W;
+
+    window_incr(in, -B*W+16);
+    window_incr(out, -B*W+16);
   }
 
   PROFILE_FOOTER;
