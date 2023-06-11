@@ -8,7 +8,7 @@ from onnx import numpy_helper
 
 from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
   ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, MacOp, PoolOp, QGemm, \
-  QLinearConvOp, QuantizeLinearOp, QLinearSoftmaxOp, SoftmaxOp
+  QLinearConvOp, QLinearMacOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp
 
 
 class Parser:
@@ -169,6 +169,27 @@ class Parser:
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port(node.input[0], node.output[0], op)
+      
+      elif node.op_type == "QLinearMul":
+        if self.get_optype(i+1) != "QLinearAdd": # lookahead
+          raise NotImplementedError("No QLinearAdd found after QLinearMul, no valid implementation.")
+        add_node_inputs = self.nodes[i+1].input
+        
+        is_relu = self.get_optype(i+2) == "Relu"
+        op = QLinearMacOp(f"k{i}qlinearmac", is_relu=is_relu)
+
+        i += 1 # add
+        if is_relu:
+          print(f"WARNING: fusing QLinearMul+QLinearAdd+Relu")
+          i += 1 # relu
+        else:
+          print(f"WARNING: fusing QLinearMul+QLinearAdd")
+        
+        onnx_out_name = self.nodes[i].output[0]
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *add_node_inputs, onnx_out_name)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input[0], onnx_out_name, op)
       
       elif node.op_type == "DequantizeLinear":
         op = DequantizeLinearOp(f"k{i}dequantizeLinear")

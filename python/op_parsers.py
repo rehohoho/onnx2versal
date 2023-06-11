@@ -319,7 +319,7 @@ class GemmOp(OpParser):
       if self.K % 2 == 0 and chunkSize % 4 == 0: 
         kernel = "GemmReluMKKN"
       if chunkSize % 8 == 0 and self.N % 4 == 0: 
-        concat_kernel = "ConcatVector"
+        concat_kernel = "ConcatFloat"
       
       self.argname_2_tensor[f"{self.name}_w"] = tw
       self.argname_2_tensor[f"{self.name}_b"] = tbias
@@ -376,11 +376,11 @@ class MacOp(OpParser):
     tbias = pad_lastdim(tbias, "Mac tbias", get_vector_boundary(tbias))
     self.argname_2_tensor[f"{self.name}_b"] = tbias
 
-    tin = pad_lastdim(tin, "ConvOp tin", get_vector_boundary(tin)) #files
+    tin = pad_lastdim(tin, "MacOp tin", get_vector_boundary(tin)) #files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
-    tout = pad_lastdim(tout, "ConvOp tout", get_vector_boundary(tout))
+    tout = pad_lastdim(tout, "MacOp tout", get_vector_boundary(tout))
     
     self.B, self.W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
@@ -554,6 +554,63 @@ class QLinearConvOp(OpParser):
     graph = "QLinearConvGraph"
     kernel = "QLinearConvVector"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
+
+
+class QLinearMacOp(OpParser):
+  include_file: str = "graph_qlinearmac.h"
+
+  def __init__(self, name: str, is_relu: bool):
+    super().__init__(name)
+    self.is_relu = is_relu
+
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 17
+    tin, tin_scale, tin_zero, tw, tw_scale, tw_zero, tz_scale, tz_zero, _, _, _, tbias, tbias_scale, tbias_zero, tout_scale, tout_zero, tout = tensors
+
+    assert tin.shape == tout.shape and tw.ndim == tbias.ndim == 1 and \
+      tin.shape[-1] == tw.shape[0] == tbias.shape[0] == tout.shape[-1] and \
+      tin_scale.shape == tin_zero.shape == tw_scale.shape == tw_zero.shape == \
+      tbias_scale.shape == tbias_zero.shape == tout_scale.shape == tout_zero.shape == ()
+
+    self.B, self.W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
+    self.dtype = tout.dtype
+    self.out_size = tout.size
+    self.tout = tout # reference copy to check against to compress graph
+
+    tw = pad_lastdim(tw, "QLinearMacOp tw", get_vector_boundary(tw)) # heap
+    tbias = pad_lastdim(tbias, "QLinearMacOp tbias", get_vector_boundary(tbias))
+    tin = pad_lastdim(tin, "QLinearMacOp tin", get_vector_boundary(tin))
+    self.argname_2_tensor[f"{self.name}_w"] = tw
+    self.argname_2_tensor[f"{self.name}_b"] = tbias
+    self.argname_2_tensor[f"{self.name}_xscale"] = tin_scale
+    self.argname_2_tensor[f"{self.name}_wscale"] = tw_scale
+    self.argname_2_tensor[f"{self.name}_bscale"] = tbias_scale
+    self.argname_2_tensor[f"{self.name}_zscale"] = tz_scale
+    self.argname_2_tensor[f"{self.name}_yscale"] = tout_scale
+    self.argname_2_tensor[f"{self.name}_xzero"] = tin_zero
+    self.argname_2_tensor[f"{self.name}_wzero"] = tw_zero
+    self.argname_2_tensor[f"{self.name}_bzero"] = tbias_zero
+    self.argname_2_tensor[f"{self.name}_zzero"] = tz_zero
+    self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
+
+    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
+    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+
+    self.W = tin.shape[-1]
+    self.B, self.repeat = factor_int(self.B, self.W * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
+
+  def get_kernel_line(self) -> str:
+    graph = "QlinearMacGraph"
+    kernel = "QlinearMacScalar"
+    if self.W % 16 == 0:
+      kernel = "QlinearMac"
+    return f"{graph}<{kernel},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
+  
+  def get_initlist_line(self) -> str:
+    initlist = ", ".join(argname for argname in self.argname_2_tensor)
+    if initlist == "": 
+      return ""
+    return f"{self.name}({initlist}, {self.repeat})"
 
 
 class QLinearSoftmaxOp(OpParser):
