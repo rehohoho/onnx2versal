@@ -68,6 +68,7 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero_point(x_zero_point), w_zero_point(w_zero_point), y_zero_point(y_zero_point)
 { 
+  assert(w_zero_point == 0);
   // qy = qy_zero + [(qx-qx_zero)*(qw-qw_zero) + qbias] * qx_scale*qw_scale/qy_scale
   v16int8 *w_ptr = (v16int8 *) weights;
   
@@ -245,6 +246,7 @@ QLinearConvVectorScale32bit<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConv
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero_point(x_zero_point), w_zero_point(w_zero_point), y_zero_point(y_zero_point)
 { 
+  assert(w_zero_point == 0);
   v16int8 *w_ptr = (v16int8 *) weights;
   
   for (int m = 0; m < M; m++) {

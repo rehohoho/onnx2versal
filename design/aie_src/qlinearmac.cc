@@ -83,11 +83,11 @@ QlinearMac<B, W, IS_RELU>::QlinearMac (
   float invlog2 = inv(log(2));
 
   float fscale_x = x_scale * w_scale * inv(z_scale);
-  bitshift_x = std::abs(log(fscale_x) * invlog2) + 18;
+  bitshift_x = std::abs(log(fscale_x) * invlog2) + 15; // fshift_x uses int8*int8*fscale_x+int8 <= int32
   scale_x = float2fix(fscale_x, bitshift_x);
 
   float fscale_z = z_scale * inv(y_scale);
-  bitshift_z = std::abs(log(fscale_z) * invlog2) + 18;
+  bitshift_z = std::abs(log(fscale_z) * invlog2) + 15;
   scale_z = float2fix(fscale_z, bitshift_z);
 
   for (int w = 0; w < W; w++) {
@@ -96,7 +96,7 @@ QlinearMac<B, W, IS_RELU>::QlinearMac (
     float fshift_z = (-z_zero * z_scale + (bias[w] - b_zero) * b_scale) * inv(y_scale) + y_zero;
     shift_z[w] = float2fix(fshift_z, bitshift_z);
   }
-  printf("\nbitshift_x %d bitshift_z %d\n", bitshift_x, bitshift_z);
+  // printf("\nbitshift_x %d bitshift_z %d\n", bitshift_x, bitshift_z);
 }
 
 template <int B, int W, int IS_RELU>

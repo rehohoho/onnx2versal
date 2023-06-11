@@ -58,16 +58,16 @@ QlinearMacGraphTest<QlinearMacScalar,14,128,0> qlinearmacScalar(
   k2qmac_w, k2qmac_b, 
   k2qmac_xscale, k2qmac_wscale, k2qmac_bscale, k2qmac_zscale, k2qmac_yscale, 
   k2qmac_xzero, k2qmac_wzero, k2qmac_bzero, k2qmac_zzero, k2qmac_yzero, 
-  "k2qmac_in_shape14x128.txt", 
-  "k2qmac_goldenout_shape14x128_scalar.txt");
+  "k2qlinearmac_in_shape14x128.txt", 
+  "k2qlinearmac_goldenout_shape14x128_scalar.txt");
 
 QlinearMacGraphTest<QlinearMac,14,128,0> qlinearmac(
   "qlinearmac", 
   k2qmac_w, k2qmac_b, 
   k2qmac_xscale, k2qmac_wscale, k2qmac_bscale, k2qmac_zscale, k2qmac_yscale, 
   k2qmac_xzero, k2qmac_wzero, k2qmac_bzero, k2qmac_zzero, k2qmac_yzero, 
-  "k2qmac_in_shape14x128.txt", 
-  "k2qmac_goldenout_shape14x128.txt");
+  "k2qlinearmac_in_shape14x128.txt", 
+  "k2qlinearmac_goldenout_shape14x128.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
