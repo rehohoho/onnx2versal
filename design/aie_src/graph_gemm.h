@@ -71,6 +71,7 @@ class GemmReluGraph : public adf::graph {
       adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
       adf::location<adf::parameter>(k[0].param[1]) = tilePos;
       adf::location<adf::parameter>(k[0].param[1]) = adf::offset((K*N*4+31)/32*32); 
+    }
 
 };
 

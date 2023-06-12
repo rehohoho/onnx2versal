@@ -7,8 +7,9 @@ from onnx import numpy_helper
 # from google.protobuf.json_format import MessageToJson, MessageToDict
 
 from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
-  ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, MacOp, PoolOp, QGemm, \
-  QLinearConvOp, QLinearMacOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp
+  AddOp, ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, MacOp, PoolOp, QGemmOp, \
+  QLinearConvOp, QLinearMacOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp, \
+  TransposeOp
 
 
 class Parser:
@@ -79,11 +80,16 @@ class Parser:
     else:
       raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
     
-  def register_port(self, onnx_in_name: str, onnx_out_name: str, op: OpParser):
-    self.adf_connects.append(op.get_connect_line(self.nodeout_2_adfport[onnx_in_name]))
-    self.nodeout_2_adfport[onnx_out_name] = f"{op.name}.pout[0]"
-    if onnx_out_name in self.modelout_2_op:
-      self.modelout_2_op[onnx_out_name] = op
+  def register_port(self, 
+                    onnx_innames: List[str], 
+                    onnx_outnames: List[str], 
+                    op: OpParser):
+    for i, input_name in enumerate(onnx_innames):
+      self.adf_connects.append(op.get_connect_line(self.nodeout_2_adfport[input_name], i))
+    for i, output_name in enumerate(onnx_outnames):
+      self.nodeout_2_adfport[output_name] = f"{op.name}.pout[{i}]"
+      if output_name in self.modelout_2_op:
+        self.modelout_2_op[output_name] = op
 
   # assumes nodes are in topological sorted order
   def parse(self):
@@ -91,7 +97,28 @@ class Parser:
     while i < len(self.nodes):
       node = self.nodes[i]
 
-      if node.op_type == "Conv":
+      if node.op_type == "Add":
+        is_relu = self.get_optype(i+1) == "Relu"
+        op = AddOp(f"k{i}add", is_relu)
+        
+        if is_relu: # lookahead
+          print(f"WARNING: fusing Conv+Relu")
+          i += 1
+        
+        onnx_out_name = self.nodes[i].output[0]
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input, [onnx_out_name], op)
+      
+      elif node.op_type == "AveragePool":
+        op = PoolOp(f"k{i}pool", reduction_mode="avg")
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port(node.input, [onnx_out_name], op)
+      
+      elif node.op_type == "Conv":
         is_relu = self.get_optype(i+1) == "Relu"
         op = ConvOp(f"k{i}conv", is_relu)
         
@@ -103,14 +130,14 @@ class Parser:
         op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "MaxPool":
-        op = PoolOp(f"k{i}pool")
-        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
+        op = PoolOp(f"k{i}pool", reduction_mode="max")
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], node.output[0], op)
+        self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "Mul":
         if self.get_optype(i+1) != "Add": # lookahead
@@ -131,7 +158,7 @@ class Parser:
         op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port([node.input[0]], [onnx_out_name], op)
 
       elif node.op_type == "Gemm":
         is_relu = self.get_optype(i+1) == "Relu" # lookahead
@@ -146,29 +173,29 @@ class Parser:
                            node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port([node.input[0]], [onnx_out_name], op)
         
       elif node.op_type == "QuantizeLinear":
         op = QuantizeLinearOp(f"k{i}quantizelinear")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], node.output[0], op)
+        self.register_port([node.input[0]], [node.output[0]], op)
 
       elif node.op_type == "QLinearConv":
         op = QLinearConvOp(f"k{i}qlinearconv")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], node.output[0], op)
+        self.register_port([node.input[0]], [node.output[0]], op)
         
       elif node.op_type == "QGemm":
-        op = QGemm(f"k{i}qgemm")
+        op = QGemmOp(f"k{i}qgemm")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)],
                            node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], node.output[0], op)
+        self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "QLinearMul":
         if self.get_optype(i+1) != "QLinearAdd": # lookahead
@@ -189,14 +216,14 @@ class Parser:
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *add_node_inputs, onnx_out_name)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "DequantizeLinear":
         op = DequantizeLinearOp(f"k{i}dequantizeLinear")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], node.output[0], op)
+        self.register_port([node.input[0]], [node.output[0]], op)
 
       elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
         if len(node.output[0]) != 0 and np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
@@ -225,21 +252,28 @@ class Parser:
                            node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], onnx_out_name, op)
+        self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "Softmax":
         op = SoftmaxOp(f"k{i}softmax")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], node.output[0], op)
+        self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "QLinearSoftmax":
         op = QLinearSoftmaxOp(f"k{i}qlinearsoftmax")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
-        self.register_port(node.input[0], node.output[0], op)
+        self.register_port([node.input[0]], [node.output[0]], op)
+      
+      elif node.op_type == "Transpose":
+        op = TransposeOp(f"k{i}transpose")
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port([node.input[0]], [node.output[0]], op)
       
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")

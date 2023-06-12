@@ -49,13 +49,15 @@ class QgemmGraph : public adf::graph {
       float y_scale,
       int8_t x_zero,
       int8_t w_zero,
-      int8_t y_zero
+      int8_t y_zero,
+      int repeat_cnt = 1
     ) { 
       k[0] = adf::kernel::create_object<QGEMM<M, K, N>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qgemm.cc";
       adf::headers(k[0]) = {"qgemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::repetition_count(k[0]) = repeat_cnt;
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos;

@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 TILE_SIZE = 32768
-MAX_PARAM_SIZE = TILE_SIZE // 4 # ping-pong buffer
+MAX_PARAM_SIZE = TILE_SIZE // 4 # ping-pong buffer, fit input and output ping pongs
 MAX_FLOAT_PARAMS = 16384//4
 MAX_INT8_PARAMS = 16384
 PLIO_WIDTH = 64 // 8 # in bytes
@@ -76,6 +76,7 @@ def get_attribute_dict(attributes: List[Any]):
   for attr in attributes:
     if attr.type == 1: attr_d[attr.name] = attr.f # FLOAT
     elif attr.type == 2: attr_d[attr.name] = attr.i # INT
+    elif attr.type == 7: attr_d[attr.name] = attr.ints # INTS
     else: raise NotImplementedError(f"Unknown type {attr.f}")
   return attr_d
 
@@ -119,12 +120,13 @@ class OpParser:
       for argname, tensor in self.argname_2_tensor.items())
   
   def get_initlist_line(self) -> str:
-    initlist = ", ".join(argname for argname in self.argname_2_tensor)
-    if initlist == "": 
+    initlist = [argname for argname in self.argname_2_tensor]
+    if hasattr(self, "repeat"):
+      initlist.append(str(self.repeat))
+    if len(initlist) == 0: 
       return ""
-    if not hasattr(self, "repeat"):
-      return f"{self.name}({initlist})"
-    return f"{self.name}({initlist}, {self.repeat})"
+    init_str = ", ".join(init for init in initlist)
+    return f"{self.name}({init_str})"
   
   def get_weight_line(self) -> str:
     lines = []
@@ -141,8 +143,8 @@ class OpParser:
   def get_callarg_line(self) -> str:
     return ", ".join(argname for argname in self.argname_2_tensor)
   
-  def get_connect_line(self, last_port: str) -> str:
-    return f"adf::connect<> ({last_port}, {self.name}.pin[0]);"
+  def get_connect_line(self, last_port: str, i: int = 0) -> str:
+    return f"adf::connect<> ({last_port}, {self.name}.pin[{i}]);"
 
   def get_output_filename(self) -> str:
     if len(self.filename_2_tensor) == 0:
@@ -163,6 +165,36 @@ class OpParser:
   def disable_output_pad(self):
     """For last node and skipped nodes (node before skip)"""
     print(f"Disabled output padding for {self.name}, may result in choosing scalar op instead of vector.")
+
+
+class AddOp(OpParser):
+  include_file: str = "graph_add.h"
+
+  def __init__(self, name: str, is_relu: bool):
+    super().__init__(name)
+    self.is_relu = is_relu
+  
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 3
+
+    ta, tb, tout = tensors
+    assert ta.shape == tb.shape == tout.shape
+
+    self.tout = tout # reference copy to check against to compress graph
+    self.dtype = tout.dtype
+
+    self.filename_2_tensor[f"{self.name}_inA_{get_shape_str(ta)}.txt"] = ta
+    self.filename_2_tensor[f"{self.name}_inB_{get_shape_str(tb)}.txt"] = tb
+    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    
+    self.W = ta.size
+    self.W, self.repeat = factor_int(self.W, self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
+    self.out_size = tout.size # host buffer sizes
+  
+  def get_kernel_line(self) -> str:
+    graph = "AddGraph"
+    kernel = "AddScalar"
+    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.W},{int(self.is_relu)}> {self.name};"
 
 
 class ArgmaxOp(OpParser):
@@ -197,6 +229,7 @@ class ConvOp(OpParser):
       and inB == outB and wK1 == wK2
 
     self.tout = tout # reference copy to check against to compress graph
+    self.dtype = tout.dtype
     
     self.argname_2_tensor[f"{self.name}_w"] = pad_lastdim(tw, "Conv weights", 8) # heap
     self.argname_2_tensor[f"{self.name}_b"] = tbias
@@ -209,16 +242,36 @@ class ConvOp(OpParser):
     
     self.INP_H, self.INP_W, self.OUT_H, self.OUT_W = inH, tin.shape[-1], outH, tout.shape[-1] # config
     self.B, self.C, self.M, self.K = inB, inC, wM, wK1
-    self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
+
+    self.chunkSize = int(MAX_FLOAT_PARAMS/self.C/self.K/self.K//4*4)
+    self.chunkCount = (self.M + self.chunkSize - 1) // self.chunkSize
   
-  def get_kernel_line(self) -> str:
-    graph = "ConvReluGraph"
+  def get_kernel_type(self) -> str:
     kernel = "ConvReluScalarBCHW"
+    is_bchw = True
+    is_k_pad = False
     if self.OUT_W % 8 == 0 and self.K == 5:
       kernel = "Conv5x5on8ReluBCHW"
+      is_k_pad = True
     
-    return f"{graph}<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}> {self.name};"
+    if self.chunkCount > 1:
+      concat_w = self.chunkSize * self.OUT_W * self.OUT_W
+      concat_block = self.M * self.OUT_W * self.OUT_W
+      concat = "ConcatFloat" if concat_w % 8 == 0 and concat_block % 4 == 0 else "ConcatScalar"
+      return f"ConvReluChunkGraph<" + \
+        f"{kernel},{concat},{int(is_bchw)},{int(is_k_pad)},{self.chunkSize}," + \
+        f"{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}>"
+    return f"ConvReluGraph<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}>"
+    
+  def get_kernel_line(self) -> str:
+    return f"{self.get_kernel_type()} {self.name};"
+  
+  def get_connect_line(self, last_port: str, i: int = 0) -> str:
+    if self.chunkCount > 1:
+      return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
+        f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
+    return super().get_connect_line(last_port)
   
 
 class DequantizeLinearOp(OpParser):
@@ -243,7 +296,7 @@ class DequantizeLinearOp(OpParser):
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
     tout = pad_lastdim(tout, "DequantizeLinearOp tin", get_vector_boundary(tout)) # config
-    self.B, self.INP_W = math.prod(tin.shape[:-1]), tin.shape[-1]
+    self.B, self.INP_W = tin.shape[0], math.prod(tin.shape[1:])
     self.OUT_W = tout.shape[-1]
 
     self.B, self.repeat = factor_int(self.B, self.OUT_W*self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
@@ -337,7 +390,7 @@ class GemmOp(OpParser):
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
   
-  def get_connect_line(self, last_port: str) -> str:
+  def get_connect_line(self, last_port: str, i: int = 0) -> str:
     if self.is_stream:
       connect_list = [f"adf::connect<> ({last_port}, {self.name}.pin[0]);"]
       connect_list += [f"adf::connect<> (gmio_{gmioname}.out[0], {self.name}.pin[{i+1}]);"
@@ -402,9 +455,16 @@ class PoolOp(OpParser):
   Use output tensor for OUT_W, pads width to vector boundary for OUT_W
   """
   include_file: str = "graph_pool.h"
+
+  def __init__(self, name: str, reduction_mode: str = "max"):
+    super().__init__(name)
+    self.reduction_mode = reduction_mode
   
-  def register_params(self, tensors: List[np.ndarray]):
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 2
+    
+    attr_d = get_attribute_dict(attributes)
+    if attr_d.get("strides") != attr_d.get("kernel_shape"): raise ValueError(f"Attribute error, strides {attr_d['strides']} not equal to kernel {attr_d['kernel_shape']}")
     
     tin, tout = tensors
     inB, inC, inH, inW = tin.shape
@@ -427,13 +487,19 @@ class PoolOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    graph = "MaxpoolGraph"
-    kernel = "MaxpoolScalarBCHW"
-    if self.OUT_W % 4 == 0 and self.INP_W//self.OUT_W == 2 and self.dtype == "float32":
-      kernel = "Maxpool2x2FloatBCHW"
-    elif self.INP_W % 16 == 0 and self.OUT_W % 16 == 0 and self.INP_W//self.OUT_W == 2 and self.dtype == "int8":
-      kernel = "Maxpool2x2Int8BCHW"
-    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C}> {self.name};"
+    graph = "PoolGraph"
+    if self.reduction_mode == "max":
+      kernel = "MaxpoolScalarBCHW"
+      if self.OUT_W % 4 == 0 and self.INP_W//self.OUT_W == 2 and self.dtype == "float32":
+        kernel = "Maxpool2x2FloatBCHW"
+      elif self.INP_W % 16 == 0 and self.OUT_W % 16 == 0 and self.INP_W//self.OUT_W == 2 and self.dtype == "int8":
+        kernel = "Maxpool2x2Int8BCHW"
+      return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C}> {self.name};"
+    elif self.reduction_mode == "avg":
+      kernel = "AvgpoolScalarBCHW"
+      return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C}> {self.name};"
+    else:
+      raise NotImplementedError(f"Pool for reduction mode {self.reduction_mode} not implemented.")
   
   def disable_output_pad(self):
     self.OUT_W = self.unpadded_OUT_W
@@ -441,7 +507,7 @@ class PoolOp(OpParser):
     super().disable_output_pad()
 
 
-class QGemm(OpParser):
+class QGemmOp(OpParser):
   """Use input tensor for M, pad width to vector boundary for K
   Use output tensor, pad width to vector boundary for N
   """
@@ -466,6 +532,7 @@ class QGemm(OpParser):
 
     self.tin_K = inK
     self.tout = tout # reference copy to check against to compress graph
+    self.dtype = tout.dtype
   
     vector_size = get_vector_boundary(tin)
     tw = pad_lastdim(tw, "QGemm weights", vector_size) # heap
@@ -485,24 +552,23 @@ class QGemm(OpParser):
 
     tout = pad_lastdim(tout, "QGemm tout", vector_size, value=tin_zero) # config
     self.M, self.K, self.N = inM, tin.shape[-1], tout.shape[-1]
-    self.dtype = tout.dtype
+    self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
     self.out_size = tout.size # host buffer sizes
+
     self.chunkSize = int(MAX_INT8_PARAMS/self.K//16*16)
-    if self.chunkSize >= self.N: 
-      self.chunkSize = self.N
     self.chunkCount = (self.N + self.chunkSize - 1) // self.chunkSize
     
   def get_kernel_type(self) -> str:
     kernel = "QgemmVector" if self.N%16==0 else "QgemmScalar"
     if self.chunkCount > 1:
-      concat = "ConcatScalar"
+      concat = "ConcatInt8" if self.chunkSize % 16 == 0 and self.N % 16 == 0 else "ConcatScalar"
       return f"QgemmMkknChunkGraph<{kernel},{concat},{self.chunkSize},{self.M},{self.K},{self.N}>"
     return f"QgemmGraph<{kernel},{self.M},{self.K},{self.N}>"
     
   def get_kernel_line(self) -> str:
     return f"{self.get_kernel_type()} {self.name};"
   
-  def get_connect_line(self, last_port: str) -> str:
+  def get_connect_line(self, last_port: str, i: int = 0) -> str:
     if self.chunkCount > 1:
       return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
         f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
@@ -741,3 +807,31 @@ class SoftmaxOp(OpParser):
     elif self.INP_W_PAD % 8 == 0:
       kernel = "SoftmaxSingleaxis"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
+
+
+class TransposeOp(OpParser):
+  include_file: str = "graph_transpose.h"
+
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
+    assert len(tensors) == 2
+
+    attr_d = get_attribute_dict(attributes)
+    if attr_d.get("perm") != [0,3,1,2]: raise NotImplementedError(f"Transpose for {attr_d.get('perm')} not implemented yet.")
+    
+    tin, tout = tensors
+    self.B, self.H, self.W, self.C = tin.shape
+    assert tout.shape == (self.B, self.C, self.H, self.W)
+
+    self.tout = tout # reference copy to check against to compress graph
+
+    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    
+    self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
+    self.dtype = tout.dtype
+    self.out_size = tout.size # host buffer sizes
+  
+  def get_kernel_line(self) -> str:
+    graph = "TransposeGraph"
+    kernel = "TransposeScalarBHWC2BCHW"
+    return f"{graph}<{kernel},{self.B},{self.H},{self.W},{self.C}> {self.name};"

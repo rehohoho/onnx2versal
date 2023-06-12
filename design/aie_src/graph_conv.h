@@ -134,9 +134,9 @@ class ConvReluChunkGraph : public adf::graph {
   private:
     static const int K2 = (IS_KPAD) ? (K+7)/8*8 : K;
     static const int MCUTCHUNK = M % MCHUNK;
-    static const int CONCAT_CHUNK = (IS_BCHW) ? MCHUNK*OUT_W*OUT_W : MCHUNK;
+    static const int CONCAT_W = (IS_BCHW) ? MCHUNK*OUT_W*OUT_W : MCHUNK;
     static const int CONCAT_BLOCK = (IS_BCHW) ? M*OUT_W*OUT_W : M;
-    static const int CONCAT_CHUNK_COUNT = B*MCHUNK*OUT_W*OUT_W / CONCAT_CHUNK;
+    static const int CONCAT_H = (IS_BCHW) ? B : B*OUT_W*OUT_W;
 
     adf::relative_coordinate tileOffsets[8] = {
       {.col_offset = -1, .row_offset = 0}, // left, right
@@ -152,7 +152,7 @@ class ConvReluChunkGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (M + MCHUNK - 1) / MCHUNK; // ceiling
     adf::kernel convs[CHUNK_COUNT];
-    ConcatGraph<CONCAT, float_t, CHUNK_COUNT, CONCAT_CHUNK_COUNT, CONCAT_CHUNK, CONCAT_BLOCK> concat_g;
+    ConcatGraph<CONCAT, float_t, CHUNK_COUNT, CONCAT_H, CONCAT_W, CONCAT_BLOCK> concat_g;
 
     adf::port<input> pin[CHUNK_COUNT];
     adf::port<output> pout[1];

@@ -52,7 +52,6 @@ if __name__ == '__main__':
   if single_input.ndim > len(input_shape):
     single_input = single_input.reshape(-1, *(single_input.shape[-len(input_shape)+1:]))
     many_inputs = many_inputs.reshape(-1, *(many_inputs.shape[-len(input_shape)+1:]))
-    single_input = single_input[:28]
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}
   ort_outs = ort_session.run(None, ort_inputs)
 
