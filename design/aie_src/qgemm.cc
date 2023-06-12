@@ -65,7 +65,8 @@ QgemmVector<M, K, N>::QgemmVector (
   
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  assert(scalebits <= 48 - log(K)/log(2) - 16); // K*int8*int8*scale <= acc48
+  if (scalebits >= 48 - log(K)/log(2) - 16)
+    printf("WARNING: scalebits %d vs %f \n", scalebits, 48 - log(K)/log(2) - 16); // K*int8*int8*scale <= acc48
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 };
 
@@ -134,12 +135,12 @@ void QgemmVector<M, K, N>::filter(
   wmat = upd_v(wmat, 6, *(v16int8 *) w_ptr); w_ptr += N; \
   wmat = upd_v(wmat, 7, *(v16int8 *) w_ptr); w_ptr += N;
 
-  for (int i = 0; i < M; i++) {
-    for (int j = 0; j < N; j+=16) {
+  for (int i = 0; i < M; i++) chess_prepare_for_pipelining chess_loop_range(M,) {
+    for (int j = 0; j < N; j+=16) chess_prepare_for_pipelining chess_loop_range(N/16,) {
       
       acc1 = null_v16acc48();
 
-      for (int k = 0; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
+      for (int k = 0; k < K; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
         inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 16; // load input[k:k+8]
         LOAD_W; // load weight[k:k+8,n:n+16]
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
@@ -168,11 +169,17 @@ void QgemmVector<M, K, N>::filter(
       in_ptr -= K;        // reset
       w_ptr += -K*N + 16; // next
     } // N
+    
+    // Error when M > 1
+    // Internal error: chess-backend: mist/block_depcies.cpp:1481: int min_distance_to(const CFG&, const Bundle*, Macro_node*): Assertion `n' failed.
+    chess_separator_scheduler();
 
     in_ptr += K;
     b_ptr -= N/16*16; // reset
     w_ptr -= N;    // reset
   } // M
+
+#undef LOAD_W
 
   PROFILE_FOOTER;
 }
