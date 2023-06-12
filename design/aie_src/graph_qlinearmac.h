@@ -70,6 +70,12 @@ class QlinearMacGraph : public adf::graph {
       
       adf::connect<adf::window<B*W>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<B*W>> (k[0].out[0], pout[0]);
+
+      adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
+      adf::location<adf::parameter>(k[0].param[0]) = tilePos;
+      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
+      adf::location<adf::parameter>(k[0].param[1]) = tilePos;
+      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((W+31)/32*32); 
     }
 
 };

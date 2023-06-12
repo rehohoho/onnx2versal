@@ -181,10 +181,10 @@ class ConvReluChunkGraph : public adf::graph {
         adf::location<adf::kernel>(convs[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
         adf::location_constraint tilePos = adf::location<adf::kernel>(convs[i]);
-        adf::location<adf::parameter>(convs[i].param[0]) = tilePos; // weight (<= 16384B)
-        adf::location<adf::parameter>(convs[i].param[0]) = adf::offset(0x0000);
-        adf::location<adf::parameter>(convs[i].param[1]) = tilePos; // bias   (<= 4096B)
-        adf::location<adf::parameter>(convs[i].param[1]) = adf::offset(0x4000); 
+        adf::location<adf::parameter>(convs[i].param[0]) = tilePos;
+        adf::location<adf::parameter>(convs[i].param[0]) = adf::offset(0);
+        adf::location<adf::parameter>(convs[i].param[1]) = tilePos;
+        adf::location<adf::parameter>(convs[i].param[1]) = adf::offset((MCHUNK*K*K2*C*4+31)/32*32);
         // input window and output window can be much larger
       }
 

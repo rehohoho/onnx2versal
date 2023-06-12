@@ -57,6 +57,12 @@ class QgemmGraph : public adf::graph {
       adf::headers(k[0]) = {"qgemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
+      adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
+      adf::location<adf::parameter>(k[0].param[0]) = tilePos;
+      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
+      adf::location<adf::parameter>(k[0].param[1]) = tilePos;
+      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((K*N+31)/32*32);
+
       adf::connect<adf::window<M*K>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<M*N>> (k[0].out[0], pout[0]);
     }
@@ -79,14 +85,14 @@ class QgemmMkknChunkGraph : public adf::graph {
 
   private:
     adf::relative_coordinate tileOffsets[8] = {
-      {.col_offset = -1, .row_offset = 0}, // left, right
-      {.col_offset = 1, .row_offset = 0},
-      {.col_offset = -1, .row_offset = 1}, // bottom row
+      {.col_offset = -1, .row_offset = 1}, // top row
       {.col_offset = 0, .row_offset = 1},
       {.col_offset = 1, .row_offset = 1},
-      {.col_offset = -1, .row_offset = -1}, // top row
+      {.col_offset = -1, .row_offset = -1}, // bottom row
       {.col_offset = 0, .row_offset = -1},
       {.col_offset = 1, .row_offset = -1},
+      {.col_offset = -1, .row_offset = 0}, // left, right
+      {.col_offset = 1, .row_offset = 0},
     };
 
   public:
@@ -113,19 +119,19 @@ class QgemmMkknChunkGraph : public adf::graph {
       static_assert(K*NCHUNK <= MAX_PARAM_BYTES);
       static_assert(M*NCHUNK <= TILE_BYTES);
 
-      std::vector<float> bChunk;
+      std::vector<int32_t> bChunk;
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
         
         // build wchunk
-        std::vector<float> wChunk;
+        std::vector<int8_t> wChunk;
         wChunk.reserve(NCHUNK*K);
         for (int j = 0; j < K*N; j+=N) {
           wChunk.insert(wChunk.end(), weights.begin()+j+i*NCHUNK, weights.begin()+j+i*NCHUNK+NCHUNK);
         }
         
         // build bChunk
-        bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);
+        bChunk = std::vector<int32_t>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);
         bChunk.resize(NCHUNK, 0);
         
         k[i] = adf::kernel::create_object<QGEMM<M, K, NCHUNK>>(
@@ -134,6 +140,14 @@ class QgemmMkknChunkGraph : public adf::graph {
         adf::headers(k[i]) = {"qgemm.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
         adf::repetition_count(k[i]) = repeat_cnt;
+        
+        adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
+          adf::relative_offset(tileOffsets[i]);
+        adf::location_constraint tilePos = adf::location<adf::kernel>(k[i]);
+        adf::location<adf::parameter>(k[i].param[0]) = tilePos;
+        adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
+        adf::location<adf::parameter>(k[i].param[1]) = tilePos;
+        adf::location<adf::parameter>(k[i].param[1]) = adf::offset((K*NCHUNK+31)/32*32);
         // arbitrary input/output buffer location due to interconnect design
       }
 

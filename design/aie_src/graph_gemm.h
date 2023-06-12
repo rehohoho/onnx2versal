@@ -66,19 +66,11 @@ class GemmReluGraph : public adf::graph {
       adf::connect<adf::window<M*K*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
       
-      int offset = 0;
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos;
-      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(offset);
-      offset += (N*K*4 + 31)/32*32;
+      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
       adf::location<adf::parameter>(k[0].param[1]) = tilePos;
-      adf::location<adf::parameter>(k[0].param[1]) = adf::offset(offset); 
-      offset += (N*4 + 31)/32*32;
-      adf::location<adf::buffer>(k[0].in[0]) = tilePos;
-      adf::location<adf::buffer>(k[0].in[0]) = {
-        adf::offset(offset), 
-        adf::offset(offset + (M*K*4+31)/32*32)};
-    }
+      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((K*N*4+31)/32*32); 
 
 };
 
@@ -193,12 +185,11 @@ class GemmReluMknkChunkGraph : public adf::graph {
         adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
         
-        int offset = 0;
         adf::location_constraint tilePos = adf::location<adf::kernel>(gemms[i]);
         adf::location<adf::parameter>(gemms[i].param[0]) = tilePos; // weight (<= 16384B)
-        adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(offset);
+        adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(0);
         adf::location<adf::parameter>(gemms[i].param[1]) = tilePos; // bias   (<= 4096B)
-        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset + NCHUNK*K*4); 
+        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset((NCHUNK*K*4+31)/32*32); 
         // arbitrary input/output buffer location due to interconnect design
       }
 
@@ -279,12 +270,11 @@ class GemmReluMkknChunkGraph : public adf::graph {
 
         adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
-        int offset = 0;
         adf::location_constraint tilePos = adf::location<adf::kernel>(gemms[i]);
         adf::location<adf::parameter>(gemms[i].param[0]) = tilePos;
-        adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(offset);
+        adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(0);
         adf::location<adf::parameter>(gemms[i].param[1]) = tilePos;
-        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset(offset + NCHUNK*K*4);
+        adf::location<adf::parameter>(gemms[i].param[1]) = adf::offset((NCHUNK*K*4+31)/32*32);
         // arbitrary input/output buffer location due to interconnect design
       }
 
