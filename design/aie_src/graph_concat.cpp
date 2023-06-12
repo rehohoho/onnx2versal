@@ -61,19 +61,36 @@ class ConcatTwiceGraphTest : public adf::graph {
 
 };
 
-std::vector<std::string> inp_txts {
+
+const int LCNT = 5; 
+const int CHUNK_CNT = 4;
+const int CHUNK_SIZE = 32; // % 16 for int8, % 8 for float
+const int BLOCK_SIZE = 112; //% 16 for int8, % 4 for float
+
+std::vector<std::string> fp_txts {
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
   "concat_fpin.txt"
 };
 
 // instance to be compiled and used in host within xclbin
-ConcatGraphTest<ConcatScalar, float_t, 5, 4, 16, 52> concatScalar(
-  "concatScalar", "concat_fpout_shape4x52_ConcatScalar.txt", inp_txts);
+ConcatGraphTest<ConcatScalar, float_t, LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE> concatScalar(
+  "concatScalar", "concat_fpout_shape4x112_ConcatScalar.txt", fp_txts);
 
-ConcatGraphTest<ConcatFloat, float_t, 5, 4, 16, 52> concatVector(
-  "concatVector", "concat_fpout_shape4x52_ConcatFloat.txt", inp_txts);
+ConcatGraphTest<ConcatFloat, float_t, LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE> concatFloat(
+  "concatFloat", "concat_fpout_shape4x112_ConcatFloat.txt", fp_txts);
 
-std::vector<std::string> multi_inp_txts {
+std::vector<std::string> int8_txts {
+  "concat_int8in.txt", "concat_int8in.txt", "concat_int8in.txt", "concat_int8in.txt", 
+  "concat_int8in.txt"
+};
+
+ConcatGraphTest<ConcatInt8, int8_t, LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE> concatInt8(
+  "concatInt8", "concat_int8out_shape4x112_ConcatInt8.txt", int8_txts);
+
+const int MULTI_LCNT = 52; 
+const int MULTI_BLOCK_SIZE = 816; //% 16 for int8, % 4 for float
+
+std::vector<std::string> multi_fp_txts {
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
@@ -89,42 +106,29 @@ std::vector<std::string> multi_inp_txts {
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt"
 };
 
-ConcatTwiceGraphTest<ConcatFloat, float_t, 52, 4, 16, 820> multiConcatFloat(
-  "multiConcatFloat", "concatmulti_fpout_shape4x820_ConcatFloat.txt", multi_inp_txts
-);
+// ConcatTwiceGraphTest<ConcatFloat, float_t, MULTI_LCNT, CHUNK_CNT, CHUNK_SIZE, MULTI_BLOCK_SIZE> multiConcatFloat(
+//   "multiConcatFloat", "concatmulti_fpout_shape4x816_ConcatFloat.txt", multi_fp_txts
+// );
 
 
-#ifdef __X86SIM__
+#if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
   adfCheck(concatScalar.init(), "init concatScalar");
   adfCheck(concatScalar.run(ITER_CNT), "run concatScalar");
 	adfCheck(concatScalar.end(), "end concatScalar");
 
-  adfCheck(concatVector.init(), "init concatVector");
-  adfCheck(concatVector.run(ITER_CNT), "run concatVector");
-	adfCheck(concatVector.end(), "end concatVector");
+  adfCheck(concatFloat.init(), "init concatFloat");
+  adfCheck(concatFloat.run(ITER_CNT), "run concatFloat");
+	adfCheck(concatFloat.end(), "end concatFloat");
 
-  adfCheck(multiConcatFloat.init(), "init multiConcatFloat");
-  adfCheck(multiConcatFloat.run(ITER_CNT), "run multiConcatFloat");
-	adfCheck(multiConcatFloat.end(), "end multiConcatFloat");
-  return 0;
-}
-#endif
+  adfCheck(concatInt8.init(), "init concatInt8");
+  adfCheck(concatInt8.run(ITER_CNT), "run concatInt8");
+	adfCheck(concatInt8.end(), "end concatInt8");
 
-
-#ifdef __AIESIM__
-int main(int argc, char ** argv) {
-	adfCheck(concatScalar.init(), "init concatScalar");
-  get_graph_throughput_by_port(concatScalar, "plout[0]", concatScalar.plout[0], 36, sizeof(float), ITER_CNT);
-	adfCheck(concatScalar.end(), "end concatScalar");
-
-  adfCheck(concatVector.init(), "init concatVector");
-  get_graph_throughput_by_port(concatVector, "plout[0]", concatVector.plout[0], 36, sizeof(float), ITER_CNT);
-	adfCheck(concatVector.end(), "end concatVector");
-
-  adfCheck(multiConcatFloat.init(), "init multiConcatFloat");
-  get_graph_throughput_by_port(multiConcatFloat, "plout[0]", multiConcatFloat.plout[0], 36, sizeof(float), ITER_CNT);
-	adfCheck(multiConcatFloat.end(), "end multiConcatFloat");
+  // not very feasible mapping into array
+  // adfCheck(multiConcatFloat.init(), "init multiConcatFloat");
+  // adfCheck(multiConcatFloat.run(ITER_CNT), "run multiConcatFloat");
+	// adfCheck(multiConcatFloat.end(), "end multiConcatFloat");
   return 0;
 }
 #endif
