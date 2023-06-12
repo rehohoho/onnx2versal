@@ -6,6 +6,7 @@ import numpy as np
 TILE_SIZE = 32768
 MAX_PARAM_SIZE = TILE_SIZE // 4 # ping-pong buffer
 MAX_FLOAT_PARAMS = 16384//4
+MAX_INT8_PARAMS = 16384
 PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
 
@@ -121,7 +122,9 @@ class OpParser:
     initlist = ", ".join(argname for argname in self.argname_2_tensor)
     if initlist == "": 
       return ""
-    return f"{self.name}({initlist})"
+    if not hasattr(self, "repeat"):
+      return f"{self.name}({initlist})"
+    return f"{self.name}({initlist}, {self.repeat})"
   
   def get_weight_line(self) -> str:
     lines = []
@@ -207,7 +210,7 @@ class ConvOp(OpParser):
     self.INP_H, self.INP_W, self.OUT_H, self.OUT_W = inH, tin.shape[-1], outH, tout.shape[-1] # config
     self.B, self.C, self.M, self.K = inB, inC, wM, wK1
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
     graph = "ConvReluGraph"
@@ -220,7 +223,6 @@ class ConvOp(OpParser):
 
 class DequantizeLinearOp(OpParser):
   """Use input tensor, pad width to vector boundary for INP_SIZE
-  Use output tensor for OUT_SIZE. Assumes only input has to meet vector boundaries.
   """
   include_file: str = "graph_dequantize_linear.h"
 
@@ -231,6 +233,7 @@ class DequantizeLinearOp(OpParser):
     assert tin.size == tout.size and tscale.shape == () and tzero.shape == ()
 
     self.tout = tout # reference copy to check against to compress graph
+    self.dtype = tout.dtype
     
     self.argname_2_tensor[f"{self.name}_scale"] = tscale # heap
     self.argname_2_tensor[f"{self.name}_zero"] = tzero
@@ -240,17 +243,20 @@ class DequantizeLinearOp(OpParser):
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
     tout = pad_lastdim(tout, "DequantizeLinearOp tin", get_vector_boundary(tout)) # config
-    self.INP_SIZE, self.OUT_SIZE = tin.size, tout.size # config
-    self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.B, self.INP_W = math.prod(tin.shape[:-1]), tin.shape[-1]
+    self.OUT_W = tout.shape[-1]
+
+    self.B, self.repeat = factor_int(self.B, self.OUT_W*self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
+    self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
     graph = "DequantizeLinearGraph"
     kernel = "DequantizeLinearScalar"
-    return f"{graph}<{kernel},{self.INP_SIZE},{self.OUT_SIZE}> {self.name};"
+    if self.INP_W % 16 == 0 and self.OUT_W % 4 == 0:
+      kernel = "DequantizeLinear"
+    return f"{graph}<{kernel},{self.B},{self.INP_W},{self.OUT_W}> {self.name};"
   
   def disable_output_pad(self):
-    self.OUT_SIZE = self.tout.size
     self.out_size = self.tout.size
     super().disable_output_pad()
 
@@ -275,7 +281,6 @@ class GemmOp(OpParser):
     self.M, self.K = tin.shape
     _, self.N = tout.shape
     self.dtype = tout.dtype
-    self.out_size = tout.size
     assert self.M == tout.shape[0] and (self.K, self.N) == tw.shape and (self.N, ) == tbias.shape
 
     self.unpadded_N = self.N
@@ -290,7 +295,9 @@ class GemmOp(OpParser):
     
     self.is_stream = tw.size >= MAX_FLOAT_PARAMS * 8
     
-    self.N = tw.shape[1] # config
+    self.N = tw.shape[1]
+    self.out_size = tout.size # host buffer sizes
+
     if self.is_stream:
       self.M, self.repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE)
 
@@ -329,12 +336,6 @@ class GemmOp(OpParser):
   
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
-  
-  def get_initlist_line(self) -> str:
-    initlist = ", ".join(argname for argname in self.argname_2_tensor)
-    if initlist == "": 
-      return ""
-    return f"{self.name}({initlist}, {self.repeat})"
   
   def get_connect_line(self, last_port: str) -> str:
     if self.is_stream:
@@ -384,7 +385,7 @@ class MacOp(OpParser):
     
     self.B, self.W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
 
     self.B, self.repeat = factor_int(self.B, self.W * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
 
@@ -394,12 +395,6 @@ class MacOp(OpParser):
     if self.W % 8 == 0:
       kernel = "MacFloat"
     return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
-  
-  def get_initlist_line(self) -> str:
-    initlist = ", ".join(argname for argname in self.argname_2_tensor)
-    if initlist == "": 
-      return ""
-    return f"{self.name}({initlist}, {self.repeat})"
 
 
 class PoolOp(OpParser):
@@ -429,7 +424,7 @@ class PoolOp(OpParser):
     self.INP_H, self.INP_W, self.OUT_H, self.OUT_W = inH, tin.shape[-1], outH, tout.shape[-1]
     self.B, self.C = inB, inC
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
     graph = "MaxpoolGraph"
@@ -491,14 +486,27 @@ class QGemm(OpParser):
     tout = pad_lastdim(tout, "QGemm tout", vector_size, value=tin_zero) # config
     self.M, self.K, self.N = inM, tin.shape[-1], tout.shape[-1]
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
+    self.chunkSize = int(MAX_INT8_PARAMS/self.K//16*16)
+    if self.chunkSize >= self.N: 
+      self.chunkSize = self.N
+    self.chunkCount = (self.N + self.chunkSize - 1) // self.chunkSize
+    
+  def get_kernel_type(self) -> str:
+    kernel = "QgemmVector" if self.N%16==0 else "QgemmScalar"
+    if self.chunkCount > 1:
+      concat = "ConcatScalar"
+      return f"QgemmMkknChunkGraph<{kernel},{concat},{self.chunkSize},{self.M},{self.K},{self.N}>"
+    return f"QgemmGraph<{kernel},{self.M},{self.K},{self.N}>"
     
   def get_kernel_line(self) -> str:
-    kernel = "QgemmScalar"
-    graph = "QgemmGraph"
-    if self.N%16==0:
-      kernel = "QgemmVector"
-    return f"{graph}<{kernel},{self.M},{self.K},{self.N}> {self.name};"
+    return f"{self.get_kernel_type()} {self.name};"
+  
+  def get_connect_line(self, last_port: str) -> str:
+    if self.chunkCount > 1:
+      return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
+        f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
+    return super().get_connect_line(last_port)
   
   def disable_input_pad(self):
     self.K = self.tin_K
@@ -548,7 +556,7 @@ class QLinearConvOp(OpParser):
     self.INP_H, self.INP_W, self.OUT_H, self.OUT_W = inH, tin.shape[-1], outH, tout.shape[-1] 
     self.B, self.C, self.M, self.K = inB, inC, wM, wK1
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
     
   def get_kernel_line(self) -> str:
     graph = "QLinearConvGraph"
@@ -574,7 +582,6 @@ class QLinearMacOp(OpParser):
 
     self.B, self.W = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
-    self.out_size = tout.size
     self.tout = tout # reference copy to check against to compress graph
 
     tw = pad_lastdim(tw, "QLinearMacOp tw", get_vector_boundary(tw)) # heap
@@ -597,6 +604,7 @@ class QLinearMacOp(OpParser):
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
     self.W = tin.shape[-1]
+    self.out_size = tout.size # host buffer sizes
     self.B, self.repeat = factor_int(self.B, self.W * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
 
   def get_kernel_line(self) -> str:
@@ -605,12 +613,6 @@ class QLinearMacOp(OpParser):
     if self.W % 16 == 0:
       kernel = "QlinearMac"
     return f"{graph}<{kernel},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
-  
-  def get_initlist_line(self) -> str:
-    initlist = ", ".join(argname for argname in self.argname_2_tensor)
-    if initlist == "": 
-      return ""
-    return f"{self.name}({initlist}, {self.repeat})"
 
 
 class QLinearSoftmaxOp(OpParser):
@@ -653,7 +655,7 @@ class QLinearSoftmaxOp(OpParser):
       raise NotImplementedError("QLinearSoftmax not implemented for axis that is not last.")    
     
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
     
   def get_kernel_line(self) -> str:
     graph = "QlinearsoftmaxGraph"
@@ -681,7 +683,7 @@ class QuantizeLinearOp(OpParser):
     self.argname_2_tensor[f"{self.name}_scale"] = tscale # heap
     self.argname_2_tensor[f"{self.name}_zero"] = tzero
 
-    tin = pad_lastdim(tout, "QuantizeLinearOp tin", get_vector_boundary(tin)) # files
+    tin = pad_lastdim(tin, "QuantizeLinearOp tin", get_vector_boundary(tin)) # files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
     
@@ -691,13 +693,14 @@ class QuantizeLinearOp(OpParser):
     inH = math.prod(tin.shape[:-1]) # config
     self.INP_H, self.INP_W, self.OUT_W = inH, tin.shape[-1], tout.shape[-1]
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
+    self.INP_H, self.repeat = factor_int(self.INP_H, self.INP_W * tin.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
   
   def get_kernel_line(self) -> str:
     graph = "QuantizeLinearGraph"
     kernel = "QuantizeLinearScalar"
     if self.INP_W % 4 == 0 and self.OUT_W % 16 == 0:
-      kernel = "QuantizeLinearVector"
+      kernel = "QuantizeLinearFmul"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
   
   def disable_input_pad(self):
@@ -728,7 +731,7 @@ class SoftmaxOp(OpParser):
 
     self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
-    self.out_size = tout.size
+    self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
     graph = "SoftmaxGraph"
