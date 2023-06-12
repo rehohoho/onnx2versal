@@ -34,14 +34,19 @@ QuantizerLinearTest<QuantizeLinearScalar, 28, 28, 32> quantizeLinearScalar(
   "quantizelinear_int8out_shape28x28_QuantizeLinearScalar.txt",
   0.00392156889, -128);
 
-QuantizerLinearTest<QuantizeLinearVector, 28, 28, 32> quantizeLinearVector(
+QuantizerLinearTest<QuantizeLinear, 28, 28, 32> quantizeLinearVector(
   "quantizeLinearVector", 
   "quantizelinear_int8in.txt", 
-  "quantizelinear_int8out_shape28x28_QuantizeLinearVector.txt",
+  "quantizelinear_int8out_shape28x28_QuantizeLinear.txt",
   0.00392156889, -128);
 
+QuantizerLinearTest<QuantizeLinearFmul, 28, 28, 32> quantizeLinearFmul(
+  "quantizeLinearFmul", 
+  "quantizelinear_int8in.txt", 
+  "quantizelinear_int8out_shape28x28_QuantizeLinearFmul.txt",
+  0.00392156889, -128);
 
-#ifdef __X86SIM__
+#if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
 	adfCheck(quantizeLinearScalar.init(), "init quantizeLinearScalar");
   adfCheck(quantizeLinearScalar.run(ITER_CNT), "run quantizeLinearScalar");
@@ -50,20 +55,10 @@ int main(int argc, char ** argv) {
   adfCheck(quantizeLinearVector.init(), "init quantizeLinearVector");
   adfCheck(quantizeLinearVector.run(ITER_CNT), "run quantizeLinearVector");
 	adfCheck(quantizeLinearVector.end(), "end quantizeLinearVector");
-  return 0;
-}
-#endif
 
-
-#ifdef __AIESIM__
-int main(int argc, char ** argv) {
-	adfCheck(quantizeLinearScalar.init(), "init quantizeLinearScalar");
-  get_graph_throughput_by_port(quantizeLinearScalar, "plout[0]", quantizeLinearScalar.plout[0], 10, sizeof(float), ITER_CNT);
-	adfCheck(quantizeLinearScalar.end(), "end quantizeLinearScalar");
-
-  adfCheck(quantizeLinearVector.init(), "init quantizeLinearVector");
-  get_graph_throughput_by_port(quantizeLinearVector, "plout[0]", quantizeLinearVector.plout[0], 10, sizeof(float), ITER_CNT);
-	adfCheck(quantizeLinearVector.end(), "end quantizeLinearVector");
+  adfCheck(quantizeLinearFmul.init(), "init quantizeLinearFmul");
+  adfCheck(quantizeLinearFmul.run(ITER_CNT), "run quantizeLinearFmul");
+	adfCheck(quantizeLinearFmul.end(), "end quantizeLinearFmul");
   return 0;
 }
 #endif

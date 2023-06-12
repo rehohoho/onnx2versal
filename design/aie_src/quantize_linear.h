@@ -44,11 +44,11 @@ class QuantizeLinearScalar {
 
 
 /**
- * @brief Vector implementation, QuantizeLinearVector<1*1*28*28> takes 1945 cycles,
+ * @brief Vector implementation, QuantizeLinear<1*1*28*28> takes 1945 cycles,
  * requires INP_W%4==0, OUT_W%16==0
  */
 template <int INP_H, int INP_W, int OUT_W>
-class QuantizeLinearVector {
+class QuantizeLinear {
   
   private:
     float y_scale;
@@ -60,7 +60,7 @@ class QuantizeLinearVector {
     int16_t y_scale_inv_int;
 	
   public:
-    QuantizeLinearVector (
+    QuantizeLinear (
       float y_scale,
       int8_t y_zero
     );
@@ -72,7 +72,36 @@ class QuantizeLinearVector {
 
 		static void registerKernelClass() {
       static_assert(INP_W%4 == 0 && OUT_W%16 == 0);
-			REGISTER_FUNCTION(QuantizeLinearVector::filter);
+			REGISTER_FUNCTION(QuantizeLinear::filter);
+		}
+};
+
+
+/**
+ * @brief Vector implementation, QuantizeLinearFmul<1*1*28*28> takes 1526 cycles,
+ * requires INP_W%4==0, OUT_W%16==0
+ */
+template <int INP_H, int INP_W, int OUT_W>
+class QuantizeLinearFmul {
+  
+  private:
+    float y_scale;
+    int8_t y_zero; // same type as output
+
+  public:
+    QuantizeLinearFmul (
+      float y_scale,
+      int8_t y_zero
+    ): y_scale(y_scale), y_zero(y_zero) {};
+
+		void filter(
+			input_window<float>* in,
+			output_window<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert(INP_W%4 == 0 && OUT_W%16 == 0);
+			REGISTER_FUNCTION(QuantizeLinearFmul::filter);
 		}
 };
 /** @}*/
