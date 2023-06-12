@@ -1,6 +1,7 @@
 #ifndef __DEQUANTIZE_LINEAR_GRAPH_H__
 #define __DEQUANTIZE_LINEAR_GRAPH_H__
 
+#include <assert.h>
 #include <adf.h>
 #include "dequantize_linear.h"
 
@@ -16,8 +17,9 @@
  * have same shape.
  * 
  * @tparam DEQUANTIZE_LINEAR  DequantizeLinear Kernel
- * @tparam INP_SIZE           input size
- * @tparam OUT_SIZE           output size
+ * @tparam B                  batch size
+ * @tparam INP_W              input width
+ * @tparam OUT_W              output width, expect OUT_W > INP_W
  * 
  * @{
  */
@@ -26,11 +28,11 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], INP_SIZE}
- * @connect{pout[0], OUT_SIZE*4}
+ * @connect{pin[0], B*INP_W}
+ * @connect{pout[0], B*OUT_W*4}
  * @endconnections
  */
-template <template<int, int> class DEQUANTIZE_LINEAR, int INP_SIZE, int OUT_SIZE>
+template <template<int, int, int> class DEQUANTIZE_LINEAR, int B, int INP_W, int OUT_W>
 class DequantizeLinearGraph : public adf::graph {
 
   private:
@@ -45,13 +47,14 @@ class DequantizeLinearGraph : public adf::graph {
       float scale,
       int8_t zero
     ) { 
-      k[0] = adf::kernel::create_object<DEQUANTIZE_LINEAR<INP_SIZE, OUT_SIZE>>(scale, zero);
+      static_assert(INP_W >= OUT_W);
+      k[0] = adf::kernel::create_object<DEQUANTIZE_LINEAR<B, INP_W, OUT_W>>(scale, zero);
       adf::source(k[0]) = "dequantize_linear.cc";
       adf::headers(k[0]) = {"dequantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<INP_SIZE>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<OUT_SIZE*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*INP_W>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<B*OUT_W*4>> (k[0].out[0], pout[0]);
     }
 
 };

@@ -19,7 +19,7 @@
  * @brief Scalar implementation,
  * DequantizeLinearScalar<96,84> takes 296 cycles
  */
-template <int INP_SIZE, int OUT_SIZE>
+template <int B, int INP_W, int OUT_W>
 class DequantizeLinearScalar {
   
   private:
