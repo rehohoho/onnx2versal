@@ -33,7 +33,7 @@
  */
 template <template<typename, int, int, int, int, int, int> class POOL,
   typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
-class MaxpoolGraph : public adf::graph {
+class PoolGraph : public adf::graph {
 
   private:
     static constexpr int TTSIZE = sizeof(TT);
@@ -45,7 +45,7 @@ class MaxpoolGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    MaxpoolGraph() { 
+    PoolGraph() { 
       k[0] = adf::kernel::create_object<POOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>>();
       adf::source(k[0]) = "pool.cc";
       adf::headers(k[0]) = {"pool.h"};

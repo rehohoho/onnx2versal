@@ -198,3 +198,38 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
 
   PROFILE_FOOTER;
 }
+
+
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
+void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
+  input_window<TT>* in,      // BCHW (1x6x24x24)
+  output_window<TT>* out     // BCPQ (1x6x12x12)
+) {
+  PROFILE_HEADER(printf(
+    "Running AvgpoolScalarBCHW::filter<%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C));
+
+  TT div_factor = inv(K*K);
+
+  for (int b = 0; b < B; b++) {
+    for (int c = 0; c < C; c++) {
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W; w++) {
+
+          TT sum = 0;
+          for (int p = 0; p < K; p++) {
+            for (int q = 0; q < K; q++) {
+              TT a = window_readincr(in);
+              sum += a;
+            }
+            window_incr(in, -K+INP_W); // left K, down 1
+          }
+          window_incr(in, -K*INP_W + K); // up K, right K
+          window_writeincr(out, sum * div_factor);
+        } // W
+        window_incr(in, -OUT_W*K  + K*INP_W); // down K, left OUT_W*K , account for padding
+      } // H
+    } // C
+  } // B
+
+  PROFILE_FOOTER;
+}
