@@ -34,12 +34,22 @@ DequantizeLinearScalarTest<DequantizeLinearScalar, 1, 96, 84> dequantizeLinearSc
   "dequantizelinear_fpout_shape84_DequantizeLinearScalar.txt",
   0.00392156889, -128);
 
+DequantizeLinearScalarTest<DequantizeLinear, 1, 96, 84> dequantizeLinear(
+  "dequantizeLinear", 
+  "dequantizelinear_int8in.txt", 
+  "dequantizelinear_fpout_shape84_DequantizeLinear.txt",
+  0.00392156889, -128);
+
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
 	adfCheck(dequantizeLinearScalar.init(), "init dequantizeLinearScalar");
   adfCheck(dequantizeLinearScalar.run(ITER_CNT), "run dequantizeLinearScalar");
 	adfCheck(dequantizeLinearScalar.end(), "end dequantizeLinearScalar");
+
+  adfCheck(dequantizeLinear.init(), "init dequantizeLinear");
+  adfCheck(dequantizeLinear.run(ITER_CNT), "run dequantizeLinear");
+	adfCheck(dequantizeLinear.end(), "end dequantizeLinear");
   return 0;
 }
 #endif

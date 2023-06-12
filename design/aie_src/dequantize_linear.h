@@ -41,6 +41,39 @@ class DequantizeLinearScalar {
 			REGISTER_FUNCTION(DequantizeLinearScalar::filter);
 		}
 };
+
+
+/**
+ * @brief Vector implementation,
+ * DequantizeLinear<96,84> takes 163 cycles
+ */
+template <int B, int INP_W, int OUT_W>
+class DequantizeLinear {
+  
+  private:
+    float scale;
+    int8_t zero; // same type as output
+
+    // precompute
+    int32_t iscale;
+    int32_t ishift;
+    int bitshift;
+	
+  public:
+    DequantizeLinear (
+      float scale,
+      int8_t zero
+    );
+
+		void filter(
+			input_window<int8_t>* in,
+			output_window<float>* out
+		);
+
+		static void registerKernelClass() {
+			REGISTER_FUNCTION(DequantizeLinear::filter);
+		}
+};
 /** @}*/
 
 

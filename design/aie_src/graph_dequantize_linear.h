@@ -45,13 +45,15 @@ class DequantizeLinearGraph : public adf::graph {
 
     DequantizeLinearGraph(
       float scale,
-      int8_t zero
+      int8_t zero,
+      int repeat_cnt = 1
     ) { 
       static_assert(INP_W >= OUT_W);
       k[0] = adf::kernel::create_object<DEQUANTIZE_LINEAR<B, INP_W, OUT_W>>(scale, zero);
       adf::source(k[0]) = "dequantize_linear.cc";
       adf::headers(k[0]) = {"dequantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::repetition_count(k[0]) = repeat_cnt;
       
       adf::connect<adf::window<B*INP_W>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<B*OUT_W*4>> (k[0].out[0], pout[0]);
