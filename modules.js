@@ -11,6 +11,7 @@ var modules =
     [ "Pool2D", "group__Pool2D.html", "group__Pool2D" ],
     [ "Qgemm", "group__Qgemm.html", "group__Qgemm" ],
     [ "QLinearConv", "group__QLinearConv.html", "group__QLinearConv" ],
+    [ "QlinearMac", "group__QlinearMac.html", "group__QlinearMac" ],
     [ "Qlinearsoftmax", "group__Qlinearsoftmax.html", "group__Qlinearsoftmax" ],
     [ "QuantizeLinear", "group__QuantizeLinear.html", "group__QuantizeLinear" ],
     [ "Softmax", "group__Softmax.html", "group__Softmax" ],

@@ -118,11 +118,14 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmGraph.html">QgemmGraph&lt; QGEMM, M, K, N &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases.  <a href="classQgemmGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmMkknChunkGraph.html">QgemmMkknChunkGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight, NCHUNK%8=0, N%4=0 Chunks KxN weights by N dimension into NCHUNK chunks. Each instance has max size = 16384 and 4096 bytes respectively. Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)  <a href="classQgemmMkknChunkGraph.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">GEMM</td><td>Gemm Kernel </td></tr>
+    <tr><td class="paramname">QGEMM</td><td>QGemm Kernel </td></tr>
     <tr><td class="paramname">M</td><td>number of rows of input matrix </td></tr>
     <tr><td class="paramname">K</td><td>number of cols / number of rows of weight matrix </td></tr>
     <tr><td class="paramname">N</td><td>number of cols of weight matrix / size of bias vector </td></tr>

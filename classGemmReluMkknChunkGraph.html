@@ -104,21 +104,31 @@ $(document).ready(function(){initNavTree('classGemmReluMkknChunkGraph.html','');
 <p><code>#include &lt;<a class="el" href="graph__gemm_8h_source.html">graph_gemm.h</a>&gt;</code></p>
 
 <p>Inherits adf::graph.</p>
+<div class="dynheader">
+Collaboration diagram for GemmReluMkknChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU &gt;:</div>
+<div class="dyncontent">
+<div class="center"><img src="classGemmReluMkknChunkGraph__coll__graph.png" border="0" usemap="#aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_00_01IS__RELU_01_4_coll__map" alt="Collaboration graph"/></div>
+<map name="aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_00_01IS__RELU_01_4_coll__map" id="aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_00_01IS__RELU_01_4_coll__map">
+<area shape="rect" title="Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,..." alt="" coords="5,124,209,180"/>
+<area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="21,5,193,61"/>
+<area shape="poly" title=" " alt="" coords="110,76,110,123,104,123,104,76"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4bf176e04011269a6cc21ca221ef9ec3"><td class="memItemLeft" align="right" valign="top"><a id="a4bf176e04011269a6cc21ca221ef9ec3" name="a4bf176e04011269a6cc21ca221ef9ec3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>GemmReluMkknChunkGraph</b> (std::vector&lt; float &gt; weights, std::vector&lt; float &gt; bias)</td></tr>
-<tr class="separator:a4bf176e04011269a6cc21ca221ef9ec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ec8931d137beb189b0e94d91ef36d12"><td class="memItemLeft" align="right" valign="top"><a id="a2ec8931d137beb189b0e94d91ef36d12" name="a2ec8931d137beb189b0e94d91ef36d12"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>GemmReluMkknChunkGraph</b> (std::vector&lt; float &gt; weights, std::vector&lt; float &gt; bias, int repeat_cnt=1)</td></tr>
+<tr class="separator:a2ec8931d137beb189b0e94d91ef36d12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:af121300d34358b1d80b91b1db26248ab"><td class="memItemLeft" align="right" valign="top"><a id="af121300d34358b1d80b91b1db26248ab" name="af121300d34358b1d80b91b1db26248ab"></a>
 adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>gemms</b> [CHUNK_COUNT]</td></tr>
 <tr class="separator:af121300d34358b1d80b91b1db26248ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12f52ec43d68009e6cb7d2ff5496d997"><td class="memItemLeft" align="right" valign="top"><a id="a12f52ec43d68009e6cb7d2ff5496d997" name="a12f52ec43d68009e6cb7d2ff5496d997"></a>
-ConcatTwiceGraph&lt; CONCAT, CHUNK_COUNT, M, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
-<tr class="separator:a12f52ec43d68009e6cb7d2ff5496d997"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4423bdcb2ff544e2db6e387d9c82ab9e"><td class="memItemLeft" align="right" valign="top"><a id="a4423bdcb2ff544e2db6e387d9c82ab9e" name="a4423bdcb2ff544e2db6e387d9c82ab9e"></a>
+<a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
+<tr class="separator:a4423bdcb2ff544e2db6e387d9c82ab9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c309d85989150c0205f6c6bd71da3f6"><td class="memItemLeft" align="right" valign="top"><a id="a6c309d85989150c0205f6c6bd71da3f6" name="a6c309d85989150c0205f6c6bd71da3f6"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [CHUNK_COUNT]</td></tr>
 <tr class="separator:a6c309d85989150c0205f6c6bd71da3f6"><td class="memSeparator" colspan="2">&#160;</td></tr>

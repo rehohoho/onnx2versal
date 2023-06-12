@@ -1,5 +1,6 @@
 var group__QuantizeLinearKernels =
 [
     [ "QuantizeLinearScalar< INP_H, INP_W, OUT_W >", "classQuantizeLinearScalar.html", null ],
-    [ "QuantizeLinearVector< INP_H, INP_W, OUT_W >", "classQuantizeLinearVector.html", null ]
+    [ "QuantizeLinear< INP_H, INP_W, OUT_W >", "classQuantizeLinear.html", null ],
+    [ "QuantizeLinearFmul< INP_H, INP_W, OUT_W >", "classQuantizeLinearFmul.html", null ]
 ];

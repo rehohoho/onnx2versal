@@ -95,232 +95,247 @@ $(document).ready(function(){initNavTree('graph__gemm_8h_source.html',''); initR
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef __GEMM_GRAPH_H_</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define __GEMM_GRAPH_H_</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;adf.h&gt;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;gemm.h&quot;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;graph_concat.h&quot;</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>  <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="classGemmReluGraph.html">   41</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluGraph.html">GemmReluGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    adf::kernel k[1];</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    adf::port&lt;input&gt; pin[1];</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    adf::port&lt;output&gt; pout[1];</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_class" href="classGemmReluGraph.html">GemmReluGraph</a>(</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>      std::vector&lt;float&gt; weights,</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      std::vector&lt;float&gt; bias</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    ) { </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>      k[0] = adf::kernel::create_object&lt;GEMM&lt;M, K, N, IS_RELU&gt;&gt;(weights, bias);</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>      adf::source(k[0]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>      adf::connect&lt;adf::window&lt;M*K*4&gt;&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>      </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>      <span class="keywordtype">int</span> offset = 0;</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>      adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(k[0]);</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = tilePos;</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = adf::offset(offset);</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>      offset += (N*K*4 + 31)/32*32;</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = tilePos;</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = adf::offset(offset); </div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>      offset += (N*4 + 31)/32*32;</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>      adf::location&lt;adf::buffer&gt;(k[0].in[0]) = tilePos;</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>      adf::location&lt;adf::buffer&gt;(k[0].in[0]) = {</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        adf::offset(offset), </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        adf::offset(offset + (M*K*4+31)/32*32)};</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    }</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>};</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="classGemmReluGmemParamGraph.html">   91</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluGmemParamGraph.html">GemmReluGmemParamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    adf::kernel k[1];</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    adf::port&lt;input&gt; pin[3];</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;assert.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;adf.h&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;gemm.h&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;graph_concat.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;graph_utils.h&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="classGemmReluGraph.html">   43</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluGraph.html">GemmReluGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    adf::kernel k[1];</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    adf::port&lt;input&gt; pin[1];</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <a class="code hl_class" href="classGemmReluGraph.html">GemmReluGraph</a>(</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>      std::vector&lt;float&gt; weights,</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>      std::vector&lt;float&gt; bias,</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>      <span class="keywordtype">int</span> repeat_cnt = 1</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    ) { </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>      <span class="keyword">static_assert</span>(M*K*4 &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>      <span class="keyword">static_assert</span>(K*N*4 &lt;= MAX_PARAM_BYTES);</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>      <span class="keyword">static_assert</span>(M*N*4 &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>      k[0] = adf::kernel::create_object&lt;GEMM&lt;M, K, N, IS_RELU&gt;&gt;(weights, bias);</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>      adf::source(k[0]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>      adf::repetition_count(k[0]) = repeat_cnt;</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>      adf::connect&lt;adf::window&lt;M*K*4&gt;&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>      </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>      <span class="keywordtype">int</span> offset = 0;</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>      adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(k[0]);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = tilePos;</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = adf::offset(offset);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>      offset += (N*K*4 + 31)/32*32;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = tilePos;</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = adf::offset(offset); </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>      offset += (N*4 + 31)/32*32;</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>      adf::location&lt;adf::buffer&gt;(k[0].in[0]) = tilePos;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>      adf::location&lt;adf::buffer&gt;(k[0].in[0]) = {</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>        adf::offset(offset), </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        adf::offset(offset + (M*K*4+31)/32*32)};</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    }</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>};</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>  <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="classGemmReluStreamGraph.html">   98</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluStreamGraph.html">GemmReluStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <a class="code hl_class" href="classGemmReluGmemParamGraph.html">GemmReluGmemParamGraph</a>() { </div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>      k[0] = adf::kernel::create_object&lt;GEMM&lt;M, K, N, IS_RELU&gt;&gt;();</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>      adf::source(k[0]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      adf::connect&lt;adf::window&lt;M*K*4&gt;&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      adf::connect&lt;adf::window&lt;K*N*4&gt;&gt; (pin[1], k[0].in[1]);</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      adf::connect&lt;adf::window&lt;N*4&gt;&gt;   (pin[2], k[0].in[2]);</div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    }</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>};</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="keyword">template</span> &lt;</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>  <span class="keywordtype">int</span> NCHUNK, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno"><a class="line" href="classGemmReluMknkChunkGraph.html">  132</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluMknkChunkGraph.html">GemmReluMknkChunkGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> NCUTCHUNK = N % NCHUNK;</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    adf::relative_coordinate tileOffsets[8] = {</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>      {.col_offset = -1, .row_offset = 0}, <span class="comment">// left, right</span></div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>      {.col_offset = 1, .row_offset = 0},</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>      {.col_offset = -1, .row_offset = 1}, <span class="comment">// bottom row</span></div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>      {.col_offset = 0, .row_offset = 1},</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>      {.col_offset = 1, .row_offset = 1},</div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>      {.col_offset = -1, .row_offset = -1}, <span class="comment">// top row</span></div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>      {.col_offset = 0, .row_offset = -1},</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>      {.col_offset = 1, .row_offset = -1},</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    };</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    adf::kernel k[1];</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    adf::port&lt;input&gt; pin[2];</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <a class="code hl_class" href="classGemmReluStreamGraph.html">GemmReluStreamGraph</a>(</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      std::vector&lt;float&gt; bias,</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      <span class="keywordtype">int</span> repeat_cnt = 1</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    ) { </div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>      k[0] = adf::kernel::create_object&lt;GEMM&lt;M, K, N, IS_RELU&gt;&gt;(bias);</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>      adf::source(k[0]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>      adf::repetition_count(k[0]) = repeat_cnt;</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>      adf::heap_size(k[0]) = 16384;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      adf::connect&lt;adf::stream&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      adf::connect&lt;adf::stream&gt; (pin[1], k[0].in[1]);</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    }</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span> </div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>};</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="keyword">template</span> &lt;</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>  <span class="keywordtype">int</span> NCHUNK, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno"><a class="line" href="classGemmReluMknkChunkGraph.html">  143</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluMknkChunkGraph.html">GemmReluMknkChunkGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> NCUTCHUNK = N % NCHUNK;</div>
 <div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; <span class="comment">// ceiling</span></div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    adf::kernel gemms[CHUNK_COUNT];</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    <a class="code hl_class" href="classConcatGraph.html">ConcatGraph&lt;CONCAT, CHUNK_COUNT, 1, NCHUNK, N&gt;</a> concat_g;</div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    </div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    adf::port&lt;input&gt; pin[CHUNK_COUNT];</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    adf::port&lt;output&gt; pout[1];</div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span> </div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    <a class="code hl_class" href="classGemmReluMknkChunkGraph.html">GemmReluMknkChunkGraph</a>(</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>      std::vector&lt;float&gt; weights,</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>      std::vector&lt;float&gt; bias</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>    ) { </div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>      std::vector&lt;float&gt; wChunk;</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>      std::vector&lt;float&gt; bChunk;</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span> </div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>        <span class="keywordtype">int</span> chunkSize = (i*NCHUNK + NCHUNK &gt; N) ? NCUTCHUNK : NCHUNK;</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        wChunk = std::vector&lt;float&gt;(weights.begin()+i*NCHUNK*K, weights.begin()+(i*NCHUNK+chunkSize)*K); </div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>        wChunk.resize(NCHUNK*K, 0);</div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>        bChunk = std::vector&lt;float&gt;(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+chunkSize);</div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>        bChunk.resize(NCHUNK, 0);</div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>        </div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>        gemms[i] = adf::kernel::create_object&lt;GEMM&lt;M, K, NCHUNK, IS_RELU&gt;&gt;(wChunk, bChunk);</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        adf::source(gemms[i]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>        adf::headers(gemms[i]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>        adf::runtime&lt;ratio&gt;(gemms[i]) = 0.6;</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>        adf::location&lt;adf::kernel&gt;(gemms[i]) = adf::location&lt;adf::kernel&gt;(concat_g.k[0]) + </div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>          adf::relative_offset(tileOffsets[i]);</div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>        </div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>        <span class="keywordtype">int</span> offset = 0;</div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>        adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(gemms[i]);</div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = tilePos; <span class="comment">// weight (&lt;= 16384B)</span></div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = adf::offset(offset);</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>        offset += (NCHUNK*K*4 + 31)/32*32;</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = tilePos; <span class="comment">// bias   (&lt;= 4096B)</span></div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = adf::offset(offset); </div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>        offset += (NCHUNK*4 + 31)/32*32;</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>        adf::location&lt;adf::buffer&gt;(gemms[i].in[0]) = tilePos;  <span class="comment">// input window (&lt;= 4096B)</span></div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>        adf::location&lt;adf::buffer&gt;(gemms[i].in[0]) = {</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>          adf::offset(offset), </div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>          adf::offset(offset + (M*K*4+31)/32*32)};</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>      }</div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>        adf::connect&lt;adf::window&lt;M*K*4&gt;&gt; (pin[i], gemms[i].in[0]);</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>        adf::connect&lt;adf::window&lt;M*NCHUNK*4&gt;&gt; (gemms[i].out[0], concat_g.pin[i]);</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>      }</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span> </div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (concat_g.pout[0], pout[0]);</div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    }</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>};</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span> </div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span> </div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span><span class="keyword">template</span> &lt;</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>  <span class="keywordtype">int</span> NCHUNK, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno"><a class="line" href="classGemmReluMkknChunkGraph.html">  214</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluMkknChunkGraph.html">GemmReluMkknChunkGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    adf::relative_coordinate tileOffsets[8] = {</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>      {.col_offset = -1, .row_offset = 0}, <span class="comment">// left, right</span></div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>      {.col_offset = 1, .row_offset = 0},</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>      {.col_offset = -1, .row_offset = 1}, <span class="comment">// bottom row</span></div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>      {.col_offset = 0, .row_offset = 1},</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>      {.col_offset = 1, .row_offset = 1},</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>      {.col_offset = -1, .row_offset = -1}, <span class="comment">// top row</span></div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>      {.col_offset = 0, .row_offset = -1},</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>      {.col_offset = 1, .row_offset = -1},</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    };</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; <span class="comment">// ceiling</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>    adf::kernel gemms[CHUNK_COUNT];</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <a class="code hl_class" href="classConcatGraph.html">ConcatGraph&lt;CONCAT, float_t, CHUNK_COUNT, 1, NCHUNK, N&gt;</a> concat_g;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    </div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    adf::port&lt;input&gt; pin[CHUNK_COUNT];</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    <a class="code hl_class" href="classGemmReluMknkChunkGraph.html">GemmReluMknkChunkGraph</a>(</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>      std::vector&lt;float&gt; weights,</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>      std::vector&lt;float&gt; bias,</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>      <span class="keywordtype">int</span> repeat_cnt = 1</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    ) { </div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>      <span class="keyword">static_assert</span>(CHUNK_COUNT &lt;= 8);</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>      <span class="keyword">static_assert</span>(M*K*4 &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>      <span class="keyword">static_assert</span>(K*N*4 &lt;= MAX_PARAM_BYTES);</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>      <span class="keyword">static_assert</span>(M*N*4 &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>      </div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>      std::vector&lt;float&gt; wChunk;</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>      std::vector&lt;float&gt; bChunk;</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span> </div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>        <span class="keywordtype">int</span> chunkSize = (i*NCHUNK + NCHUNK &gt; N) ? NCUTCHUNK : NCHUNK;</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>        wChunk = std::vector&lt;float&gt;(weights.begin()+i*NCHUNK*K, weights.begin()+(i*NCHUNK+chunkSize)*K); </div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>        wChunk.resize(NCHUNK*K, 0);</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>        bChunk = std::vector&lt;float&gt;(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+chunkSize);</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>        bChunk.resize(NCHUNK, 0);</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>        </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>        gemms[i] = adf::kernel::create_object&lt;GEMM&lt;M, K, NCHUNK, IS_RELU&gt;&gt;(wChunk, bChunk);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        adf::source(gemms[i]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>        adf::headers(gemms[i]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>        adf::runtime&lt;ratio&gt;(gemms[i]) = 0.6;</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>        adf::repetition_count(gemms[i]) = repeat_cnt;</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span> </div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>        adf::location&lt;adf::kernel&gt;(gemms[i]) = adf::location&lt;adf::kernel&gt;(concat_g.k[0]) + </div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>          adf::relative_offset(tileOffsets[i]);</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>        </div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>        <span class="keywordtype">int</span> offset = 0;</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>        adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(gemms[i]);</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = tilePos; <span class="comment">// weight (&lt;= 16384B)</span></div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = adf::offset(offset);</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = tilePos; <span class="comment">// bias   (&lt;= 4096B)</span></div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = adf::offset(offset + NCHUNK*K*4); </div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        <span class="comment">// arbitrary input/output buffer location due to interconnect design</span></div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>      }</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>        adf::connect&lt;adf::window&lt;M*K*4&gt;&gt; (pin[i], gemms[i].in[0]);</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        adf::connect&lt;adf::window&lt;M*NCHUNK*4&gt;&gt; (gemms[i].out[0], concat_g.pin[i]);</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>      }</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (concat_g.pout[0], pout[0]);</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    }</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>};</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span> </div>
 <div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span> </div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>    adf::relative_coordinate tileOffsets[8] = {</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>      {.col_offset = -1, .row_offset = 0}, <span class="comment">// left, right</span></div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>      {.col_offset = 1, .row_offset = 0},</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>      {.col_offset = -1, .row_offset = 1}, <span class="comment">// bottom row</span></div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>      {.col_offset = 0, .row_offset = 1},</div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>      {.col_offset = 1, .row_offset = 1},</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>      {.col_offset = -1, .row_offset = -1}, <span class="comment">// top row</span></div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      {.col_offset = 0, .row_offset = -1},</div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>      {.col_offset = 1, .row_offset = -1},</div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    };</div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span> </div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; <span class="comment">// ceiling</span></div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    adf::kernel gemms[CHUNK_COUNT];</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>    ConcatTwiceGraph&lt;CONCAT, CHUNK_COUNT, M, NCHUNK, N&gt; concat_g;</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>    </div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    adf::port&lt;input&gt; pin[CHUNK_COUNT];</div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    adf::port&lt;output&gt; pout[1];</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span> </div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    <a class="code hl_class" href="classGemmReluMkknChunkGraph.html">GemmReluMkknChunkGraph</a>(</div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>      std::vector&lt;float&gt; weights, <span class="comment">// KxN_RND</span></div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>      std::vector&lt;float&gt; bias     <span class="comment">// N</span></div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    ) { </div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>      std::vector&lt;float&gt; bChunk;</div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span> </div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>        </div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>        <span class="comment">// build wchunk</span></div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>        std::vector&lt;float&gt; wChunk;</div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>        wChunk.reserve(NCHUNK*K);</div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; K*N; j+=N) {</div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>          wChunk.insert(wChunk.end(), weights.begin()+j+i*NCHUNK, weights.begin()+j+i*NCHUNK+NCHUNK);</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>        }</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>        </div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>        <span class="comment">// build bChunk</span></div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>        bChunk = std::vector&lt;float&gt;(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);</div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>        bChunk.resize(NCHUNK, 0);</div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>        </div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>        gemms[i] = adf::kernel::create_object&lt;GEMM&lt;M, K, NCHUNK, IS_RELU&gt;&gt;(wChunk, bChunk);</div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>        adf::source(gemms[i]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>        adf::headers(gemms[i]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        adf::runtime&lt;ratio&gt;(gemms[i]) = 0.6;</div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span> </div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        adf::location&lt;adf::kernel&gt;(gemms[i]) = adf::location&lt;adf::kernel&gt;(concat_g.k[0]) + </div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>          adf::relative_offset(tileOffsets[i]);</div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>        <span class="keywordtype">int</span> offset = 0;</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(gemms[i]);</div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = tilePos;</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = adf::offset(offset);</div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        offset += (NCHUNK*K*4 + 31)/32*32; <span class="comment">// separate bank not required for weights vs bias</span></div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = tilePos;</div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = adf::offset(offset); </div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>        offset += (NCHUNK*4 + 4095)/4096*4096; <span class="comment">// separate bank</span></div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>        adf::location&lt;adf::buffer&gt;(gemms[i].in[0]) = tilePos;</div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>        adf::location&lt;adf::buffer&gt;(gemms[i].in[0]) = {</div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>          adf::offset(offset), </div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>          adf::offset(offset + (M*K*4 + 4095)/4096*4096)};</div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>      }</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span> </div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>        adf::connect&lt;adf::window&lt;M*K*4&gt;&gt; (pin[i], gemms[i].in[0]);</div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>        adf::connect&lt;adf::window&lt;M*NCHUNK*4&gt;&gt; (gemms[i].out[0], concat_g.pin[i]);</div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>      }</div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (concat_g.pout[0], pout[0]);</div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>    }</div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span> </div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>};</div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="preprocessor">#endif </span><span class="comment">// __GEMM_GRAPH_H_</span></div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="keyword">template</span> &lt;</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>GEMM, </div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>  <span class="keywordtype">int</span> NCHUNK, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> K, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> IS_RELU&gt;</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno"><a class="line" href="classGemmReluMkknChunkGraph.html">  227</a></span><span class="keyword">class </span><a class="code hl_class" href="classGemmReluMkknChunkGraph.html">GemmReluMkknChunkGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span> </div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    adf::relative_coordinate tileOffsets[8] = {</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>      {.col_offset = -1, .row_offset = 0}, <span class="comment">// left, right</span></div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>      {.col_offset = 1, .row_offset = 0},</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>      {.col_offset = -1, .row_offset = 1}, <span class="comment">// bottom row</span></div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>      {.col_offset = 0, .row_offset = 1},</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>      {.col_offset = 1, .row_offset = 1},</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>      {.col_offset = -1, .row_offset = -1}, <span class="comment">// top row</span></div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>      {.col_offset = 0, .row_offset = -1},</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>      {.col_offset = 1, .row_offset = -1},</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    };</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span> </div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; <span class="comment">// ceiling</span></div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>    adf::kernel gemms[CHUNK_COUNT];</div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>    <a class="code hl_class" href="classConcatGraph.html">ConcatGraph&lt;CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N&gt;</a> concat_g;</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>    </div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>    adf::port&lt;input&gt; pin[CHUNK_COUNT];</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span> </div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    <a class="code hl_class" href="classGemmReluMkknChunkGraph.html">GemmReluMkknChunkGraph</a>(</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>      std::vector&lt;float&gt; weights, <span class="comment">// KxN_RND</span></div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>      std::vector&lt;float&gt; bias,    <span class="comment">// N</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>      <span class="keywordtype">int</span> repeat_cnt = 1</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    ) { </div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>      <span class="keyword">static_assert</span>(CHUNK_COUNT &lt;= 8);</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>      <span class="keyword">static_assert</span>(M*K*4 &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>      <span class="keyword">static_assert</span>(K*NCHUNK*4 &lt;= MAX_PARAM_BYTES);</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>      <span class="keyword">static_assert</span>(M*NCHUNK*4 &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>      std::vector&lt;float&gt; bChunk;</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span> </div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>        </div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        <span class="comment">// build wchunk</span></div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>        std::vector&lt;float&gt; wChunk;</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        wChunk.reserve(NCHUNK*K);</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; K*N; j+=N) {</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>          wChunk.insert(wChunk.end(), weights.begin()+j+i*NCHUNK, weights.begin()+j+i*NCHUNK+NCHUNK);</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>        }</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>        </div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>        <span class="comment">// build bChunk</span></div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>        bChunk = std::vector&lt;float&gt;(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>        bChunk.resize(NCHUNK, 0);</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>        </div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>        gemms[i] = adf::kernel::create_object&lt;GEMM&lt;M, K, NCHUNK, IS_RELU&gt;&gt;(wChunk, bChunk);</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>        adf::source(gemms[i]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>        adf::headers(gemms[i]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>        adf::runtime&lt;ratio&gt;(gemms[i]) = 0.6;</div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>        adf::repetition_count(gemms[i]) = repeat_cnt;</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span> </div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>        adf::location&lt;adf::kernel&gt;(gemms[i]) = adf::location&lt;adf::kernel&gt;(concat_g.k[0]) + </div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>          adf::relative_offset(tileOffsets[i]);</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>        <span class="keywordtype">int</span> offset = 0;</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>        adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(gemms[i]);</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = tilePos;</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[0]) = adf::offset(offset);</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = tilePos;</div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>        adf::location&lt;adf::parameter&gt;(gemms[i].param[1]) = adf::offset(offset + NCHUNK*K*4);</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>        <span class="comment">// arbitrary input/output buffer location due to interconnect design</span></div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>      }</div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span> </div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>        adf::connect&lt;adf::window&lt;M*K*4&gt;&gt; (pin[i], gemms[i].in[0]);</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>        adf::connect&lt;adf::window&lt;M*NCHUNK*4&gt;&gt; (gemms[i].out[0], concat_g.pin[i]);</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>      }</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>      adf::connect&lt;adf::window&lt;M*N*4&gt;&gt; (concat_g.pout[0], pout[0]);</div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>    }</div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span> </div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>};</div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span><span class="preprocessor">#endif </span><span class="comment">// __GEMM_GRAPH_H_</span></div>
 <div class="ttc" id="aclassConcatGraph_html"><div class="ttname"><a href="classConcatGraph.html">ConcatGraph</a></div><div class="ttdoc">Graph wrapper for arbitrary concat kernel implementation and lanes.</div><div class="ttdef"><b>Definition</b> graph_concat.h:37</div></div>
-<div class="ttc" id="aclassGemmReluGmemParamGraph_html"><div class="ttname"><a href="classGemmReluGmemParamGraph.html">GemmReluGmemParamGraph</a></div><div class="ttdoc">Single instance graph that streams weights and biases, significantly slower.</div><div class="ttdef"><b>Definition</b> graph_gemm.h:91</div></div>
-<div class="ttc" id="aclassGemmReluGraph_html"><div class="ttname"><a href="classGemmReluGraph.html">GemmReluGraph</a></div><div class="ttdoc">Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.</div><div class="ttdef"><b>Definition</b> graph_gemm.h:41</div></div>
-<div class="ttc" id="aclassGemmReluMkknChunkGraph_html"><div class="ttname"><a href="classGemmReluMkknChunkGraph.html">GemmReluMkknChunkGraph</a></div><div class="ttdoc">Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,...</div><div class="ttdef"><b>Definition</b> graph_gemm.h:214</div></div>
-<div class="ttc" id="aclassGemmReluMknkChunkGraph_html"><div class="ttname"><a href="classGemmReluMknkChunkGraph.html">GemmReluMknkChunkGraph</a></div><div class="ttdoc">Multiinstance graph for MxK times NxK that stores weights and biases. Requires NxK weight,...</div><div class="ttdef"><b>Definition</b> graph_gemm.h:132</div></div>
+<div class="ttc" id="aclassGemmReluGraph_html"><div class="ttname"><a href="classGemmReluGraph.html">GemmReluGraph</a></div><div class="ttdoc">Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.</div><div class="ttdef"><b>Definition</b> graph_gemm.h:43</div></div>
+<div class="ttc" id="aclassGemmReluMkknChunkGraph_html"><div class="ttname"><a href="classGemmReluMkknChunkGraph.html">GemmReluMkknChunkGraph</a></div><div class="ttdoc">Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,...</div><div class="ttdef"><b>Definition</b> graph_gemm.h:227</div></div>
+<div class="ttc" id="aclassGemmReluMknkChunkGraph_html"><div class="ttname"><a href="classGemmReluMknkChunkGraph.html">GemmReluMknkChunkGraph</a></div><div class="ttdoc">Multiinstance graph for MxK times NxK that stores weights and biases. Requires NxK weight,...</div><div class="ttdef"><b>Definition</b> graph_gemm.h:143</div></div>
+<div class="ttc" id="aclassGemmReluStreamGraph_html"><div class="ttname"><a href="classGemmReluStreamGraph.html">GemmReluStreamGraph</a></div><div class="ttdoc">Single instance graph that streams weights and biases, significantly slower.</div><div class="ttdef"><b>Definition</b> graph_gemm.h:98</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
