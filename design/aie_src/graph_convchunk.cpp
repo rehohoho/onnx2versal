@@ -3,7 +3,7 @@
 
 
 template <
-  template<int, int, int, int, int, int, int> class CONV, 
+  template<int, int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int IS_BCHW, int IS_KPAD, int MCHUNK, 
   int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU,

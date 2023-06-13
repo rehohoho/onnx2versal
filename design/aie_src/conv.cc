@@ -3,19 +3,19 @@
 #include "aie_api/aie.hpp"
 
 
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarBHWC<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+void ConvReluScalarBHWC<INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   output_window<float>* out     // BHWM (1x24x24x6)
 ) {
   PROFILE_HEADER(printf(
-    "Running ConvReluScalarBHWC<%d,%d,%d,%d,%d,%d,%d>\n", INP_W, OUT_W, B, C, M, K, IS_RELU));
+    "Running ConvReluScalarBHWC<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU));
 
   int weightIdx = 0;
 
   // BHWM
   for (int b = 0; b < B; b++) {
-    for (int h = 0; h < OUT_W; h++) {
+    for (int h = 0; h < OUT_H; h++) {
       for (int w = 0; w < OUT_W; w++) {
         
         for (int m = 0; m < M; m++) { 
@@ -49,13 +49,13 @@ void ConvReluScalarBHWC<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
 }
 
 
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW (1x1x28x28)
   output_window<float>* out     // BMHW (1x6x24x24)
 ) {
   PROFILE_HEADER(printf(
-    "Running ConvReluScalarBCHW<%d,%d,%d,%d,%d,%d,%d>\n", INP_W, OUT_W, B, C, M, K, IS_RELU));
+    "Running ConvReluScalarBCHW<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU));
 
   int weightIdx = 0;
 
@@ -63,7 +63,7 @@ void ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
       
-      for (int h = 0; h < OUT_W; h++) {
+      for (int h = 0; h < OUT_H; h++) {
         for (int w = 0; w < OUT_W; w++) {
         
           float res = bias[m];
@@ -78,17 +78,17 @@ void ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
               }
               window_incr(in, -K+INP_W); // go left K, down 1
             }
-            window_incr(in, -K*INP_W + INP_W*INP_W); // go up K, channel 1
+            window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
           }
 
           if (IS_RELU)
             if (res < 0) res = 0;
           window_writeincr(out, res);
-          window_incr(in, -C*INP_W*INP_W + 1); // go channel -C, right 1
+          window_incr(in, -C*INP_H*INP_W + 1); // go channel -C, right 1
         }
         window_incr(in, INP_W-OUT_W); // go left OUT_W, go down 1
       }
-      window_incr(in, -OUT_W*INP_W); // go up OUT_W
+      window_incr(in, -OUT_H*INP_W); // go up OUT_H
     }
   }
 
@@ -96,19 +96,19 @@ void ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
 }
 
 
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarBCHWStream<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+void ConvReluScalarBCHWStream<INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
   output_window<float>* out     // BMHW
 ) {
   PROFILE_HEADER(printf(
-    "Running ConvReluScalarBCHWStream<%d,%d,%d,%d,%d,%d,%d>\n", INP_W, OUT_W, B, C, M, K, IS_RELU));
+    "Running ConvReluScalarBCHWStream<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU));
   
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) {
 
-      for (int i = 0; i < OUT_W*OUT_W; i++) {
+      for (int i = 0; i < OUT_H*OUT_W; i++) {
         w_row[i] = bias[m];
       }
       
@@ -119,7 +119,7 @@ void ConvReluScalarBCHWStream<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
             float weight = readincr(weights);
             // printf("weight: %f\n", weight);
             
-            for (int h = 0; h < OUT_W; h++) {
+            for (int h = 0; h < OUT_H; h++) {
               for (int w = 0; w < OUT_W; w++) {
                 float a = window_readincr(in);
                 w_row[h*OUT_W + w] += weight * a;
@@ -129,7 +129,7 @@ void ConvReluScalarBCHWStream<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
             } // H
             // printf("\n\n");
             
-            window_incr(in, -OUT_W*INP_W+1);  // reset up OUT_W after OUT_W*OUT_W, go next
+            window_incr(in, -OUT_H*INP_W+1);  // reset up OUT_H after OUT_W*OUT_W, go next
             
           } // K
           window_incr(in, -K+INP_W); // next row in KxK
@@ -139,7 +139,7 @@ void ConvReluScalarBCHWStream<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
 
       } // C
 
-      for (int i = 0; i < OUT_W*OUT_W; i++) {
+      for (int i = 0; i < OUT_H*OUT_W; i++) {
         float res = w_row[i];
         res = (res >= 0) ? res : 0;
         window_writeincr(out, res);
@@ -160,13 +160,13 @@ void ConvReluScalarBCHWStream<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
   wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
 #endif
 
-template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
-void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
+void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
   PROFILE_HEADER(printf(
-    "Running Conv5x5ReluBCHW<%d,%d,%d,%d,%d,%d,%d>\n", INP_W, OUT_W, B, C, M, _K_notused, IS_RELU));
+    "Running Conv5x5ReluBCHW<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C, M, _K_notused, IS_RELU));
 
   v16float data = null_v16float();
   v8float zeros = null_v8float();
@@ -230,10 +230,10 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
             MAC_ROW(acc1);
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_W*INP_W - 5*INP_W - 16);
+            window_incr(in, INP_H*INP_W - 5*INP_W - 16);
             MAC_ROW(acc2);
           }
-          window_incr(in, -C*INP_W*INP_W + 8); // data go channel -C, right 8
+          window_incr(in, -C*INP_H*INP_W + 8); // data go channel -C, right 8
                     
           if (IS_RELU) {
             acc1 = fpmax(acc1, zeros, 0, 0x76543210);
@@ -249,7 +249,7 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
         window_incr(out, OUT_W);
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
-      window_incr(in, -OUT_W*INP_W); // go up OUT_W
+      window_incr(in, -OUT_H*INP_W); // go up OUT_H
     } // M
   } // B
 
@@ -259,13 +259,13 @@ void Conv5x5ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
 }
 
 
-template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
-void Conv5x5on8ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
+void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
   PROFILE_HEADER(printf(
-    "Running Conv5x5on8ReluBCHW<%d,%d,%d,%d,%d,%d,%d>\n", INP_W, OUT_W, B, C, M, _K_notused, IS_RELU));
+    "Running Conv5x5on8ReluBCHW<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, B, C, M, _K_notused, IS_RELU));
 
   v16float data = null_v16float();
   v8float zeros = null_v8float();
@@ -281,7 +281,7 @@ void Conv5x5on8ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
   // BHWM
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { // computes one output channel
-      for (int h = 0; h < OUT_W; h+=2) {
+      for (int h = 0; h < OUT_H; h+=2) {
         for (int w = 0; w < OUT_W; w+=8) { // computes 8 output channel pixels
           
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
@@ -322,11 +322,11 @@ void Conv5x5on8ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
             MAC_ROW(acc1);
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_W*INP_W - 5*INP_W - 16);
+            window_incr(in, INP_H*INP_W - 5*INP_W - 16);
             MAC_ROW(acc2);
             wvec++;
           }
-          window_incr(in, -C*INP_W*INP_W + 8); // data go channel -C, right 8
+          window_incr(in, -C*INP_H*INP_W + 8); // data go channel -C, right 8
                     
           if (IS_RELU) {
             acc1 = fpmax(acc1, zeros, 0, 0x76543210);
@@ -343,7 +343,7 @@ void Conv5x5on8ReluBCHW<INP_W, OUT_W, B, C, M, _K_notused, IS_RELU>::filter(
         window_incr(out, OUT_W);
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
-      window_incr(in, -OUT_W*INP_W); // go up OUT_W
+      window_incr(in, -OUT_H*INP_W); // go up OUT_H
       wvec += C*5;
     } // M
   } // B

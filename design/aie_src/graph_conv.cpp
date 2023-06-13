@@ -2,7 +2,7 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int, int> class CONV, 
+template <template<int, int, int, int, int, int, int, int> class CONV, 
   int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluGraphTest : public adf::graph {
@@ -31,7 +31,7 @@ class ConvReluGraphTest : public adf::graph {
 };
 
 
-template <template<int, int, int, int, int, int, int> class CONV, 
+template <template<int, int, int, int, int, int, int, int> class CONV, 
   int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluStreamGraphTest : public adf::graph {

@@ -29,12 +29,13 @@
 
 /**
  * @brief Scalar implementation for BHWC, stores weights and biases,
- * ConvReluScalarBHWC<28, 24, 1, 1, 6, 5> total = 247757 cycles
+ * ConvReluScalarBHWC<28, 28, 24, 1, 1, 6, 5> total = 247757 cycles
  */
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluScalarBHWC {
 
   private:
+    static constexpr int OUT_H = INP_H - K + 1;
     alignas(32) float (&weights)[M*K*K*C];
     alignas(32) float (&bias)[M];
 
@@ -60,12 +61,13 @@ class ConvReluScalarBHWC {
 
 /**
  * @brief Scalar implementation for BCHW, stores weights and biases,
- * ConvReluScalarBCHW<28, 24, 1, 1, 6, 5> total = 236147 cycles
+ * ConvReluScalarBCHW<28, 28, 24, 1, 1, 6, 5> total = 236147 cycles
  */
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluScalarBCHW {
 
   private:
+    static constexpr int OUT_H = INP_H - K + 1;
     alignas(32) float (&weights)[M*K*K*C];
     alignas(32) float (&bias)[M];
 
@@ -91,12 +93,13 @@ class ConvReluScalarBCHW {
 
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
- * ConvReluScalarBCHWStream<28, 24, 1, 1, 6, 5> total = 1359043 cycles
+ * ConvReluScalarBCHWStream<28, 28, 24, 1, 1, 6, 5> total = 1359043 cycles
  */
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluScalarBCHWStream {
 
   private:
+    static constexpr int OUT_H = INP_H - K + 1;
     alignas(32) float (&bias)[M];
     alignas(32) float w_row[OUT_W*OUT_W];
 
@@ -123,11 +126,12 @@ class ConvReluScalarBCHWStream {
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
  * Conv5x5ReluBCHW<28, 24, 1, 1, 6> total = 21199 cycles
  */
-template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
 class Conv5x5ReluBCHW {
 
   private:
-    static const int K = 5;
+    static constexpr int K = 5;
+    static constexpr int OUT_H = INP_H - K + 1;
     alignas(32) float (&weights)[M*C*K*K];
     alignas(32) float (&bias)[M];
 
@@ -156,11 +160,12 @@ class Conv5x5ReluBCHW {
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
  * Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16521 cycles
  */
-template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
 class Conv5x5on8ReluBCHW {
 
   private:
-    static const int K = 5;
+    static constexpr int K = 5;
+    static constexpr int OUT_H = INP_H - K + 1;
     alignas(32) float (&weights)[M*C*K*8];
     alignas(32) float (&bias)[M];
 
