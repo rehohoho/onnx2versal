@@ -127,7 +127,7 @@ class Parser:
           i += 1
         
         onnx_out_name = self.nodes[i].output[0]
-        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port([node.input[0]], [onnx_out_name], op)

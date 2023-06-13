@@ -216,60 +216,90 @@ class ConvOp(OpParser):
     super().__init__(name)
     self.is_relu = is_relu
 
-  def register_params(self, tensors: List[np.ndarray]):
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 4
     tin, tw, tbias, tout = tensors
 
-    inB, inC, inH, inW = tin.shape
-    wM, wC, wK1, wK2 = tw.shape
-    bM, = tbias.shape
-    outB, outM, outH, outW = tout.shape
+    attr_d = get_attribute_dict(attributes)
+    for i in attr_d.get("dilations"):
+      if i != 1: raise NotImplementedError("Dilated convolution not implemented.")
+    for i in attr_d.get("strides"):
+      if i != 1: raise NotImplementedError("Strided convolution not implemented.")
+    if np.unique(attr_d.get("kernel_shape")).size != 1: 
+      raise NotImplementedError("Asymmetric kernel convolution not implemented")
+    self.pads = attr_d.get("pads", [0, 0, 0, 0])
+    if len(self.pads) != 4:
+      raise NotImplementedError(f"Convolution for padding {self.pads} not implemented. Expect pad shape 4.")
+    pad_str = ",".join(str(i) for i in self.pads)
     
-    assert inH == inW and outH == outW and inC == wC and wM == bM and bM == outM \
-      and inB == outB and wK1 == wK2
+    self.B, self.C, self.INP_H, self.INP_W = tin.shape
+    self.M, _, self.K, _ = tw.shape
+    self.OUT_H = self.INP_H + self.pads[0] + self.pads[1] - self.K + 1
+    self.OUT_W = self.INP_W + self.pads[2] + self.pads[3] - self.K + 1
+    
+    assert tin.shape == (self.B, self.C, self.INP_H, self.INP_W) and \
+      tw.shape == (self.M, self.C, self.K, self.K) and \
+      tbias.shape == (self.M, ) and \
+      tout.shape == (self.B, self.M, self.OUT_H, self.OUT_W)
 
     self.tout = tout # reference copy to check against to compress graph
     self.dtype = tout.dtype
-    
-    self.argname_2_tensor[f"{self.name}_w"] = pad_lastdim(tw, "Conv weights", 8) # heap
-    self.argname_2_tensor[f"{self.name}_b"] = tbias
 
-    tin = pad_lastdim(tin, "ConvOp tin", get_vector_boundary(tin)) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
+    if self.pads != [0, 0, 0, 0]:
+      tin_pad = np.pad(tin, ((0,0), (0,0), (self.pads[0], self.pads[1]), (self.pads[2], self.pads[3])))
+      tin_pad = pad_lastdim(tin_pad, "ConvOp tin_pad", get_vector_boundary(tin_pad))
+      self.filename_2_tensor[f"{self.name}_padded_{get_shape_str(tin)}.txt"] = tin_pad
+
+    tin = pad_lastdim(tin, "ConvOp tin", get_vector_boundary(tin))
+    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
-    tout = pad_lastdim(tout, "ConvOp tout", get_vector_boundary(tout))
+    tout = pad_lastdim(tout, "ConvOp tout", get_vector_boundary(tout))    
     
-    self.INP_H, self.INP_W, self.OUT_H, self.OUT_W = inH, tin.shape[-1], outH, tout.shape[-1] # config
-    self.B, self.C, self.M, self.K = inB, inC, wM, wK1
+    self.INP_W, self.OUT_W = tin_pad.shape[-1], tout.shape[-1]
     self.out_size = tout.size # host buffer sizes
 
     self.chunkSize = int(MAX_FLOAT_PARAMS/self.C/self.K/self.K//4*4)
     self.chunkCount = (self.M + self.chunkSize - 1) // self.chunkSize
-  
-  def get_kernel_type(self) -> str:
-    kernel = "ConvReluScalarBCHW"
-    is_bchw = True
-    is_k_pad = False
-    if self.OUT_W % 8 == 0 and self.K == 5:
-      kernel = "Conv5x5on8ReluBCHW"
+
+    if self.chunkCount > 8: # stream
+      self.gmioname_2_tensor[f"{self.name}_w"] = tw
+      self.argname_2_tensor[f"{self.name}_b"] = tbias
+
+      kernel = "ConvReluScalarBCHWStream"
+      self.kernel_type = f"ConvReluStreamGraph<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}" + \
+        f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)},{pad_str}>"
+    else:
+      kernel = "Conv5x5on8ReluBCHW" if self.OUT_W % 8 == 0 and self.K == 5 else "ConvReluScalarBCHW"
+      is_bchw = True
       is_k_pad = True
-    
-    if self.chunkCount > 1:
-      concat_w = self.chunkSize * self.OUT_W * self.OUT_W
-      concat_block = self.M * self.OUT_W * self.OUT_W
-      concat = "ConcatFloat" if concat_w % 8 == 0 and concat_block % 4 == 0 else "ConcatScalar"
-      return f"ConvReluChunkGraph<" + \
-        f"{kernel},{concat},{int(is_bchw)},{int(is_k_pad)},{self.chunkSize}," + \
-        f"{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}>"
-    return f"ConvReluGraph<{kernel},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}>"
+
+      self.argname_2_tensor[f"{self.name}_w"] = pad_lastdim(tw, "Conv weights", 8) # is_k_pad
+      self.argname_2_tensor[f"{self.name}_b"] = tbias
+      
+      if self.chunkCount > 1:
+        concat_w = self.chunkSize * self.OUT_W * self.OUT_W
+        concat_block = self.M * self.OUT_W * self.OUT_W
+        concat = "ConcatFloat" if concat_w % 8 == 0 and concat_block % 4 == 0 else "ConcatScalar"
+        self.kernel_type = f"ConvReluChunkGraph<" + \
+          f"{kernel},{concat},{int(is_bchw)},{int(is_k_pad)},{self.chunkSize}," + \
+          f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)},{pad_str}>"
+      else:
+        self.kernel_type = f"ConvReluGraph<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}," + \
+          f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)},{pad_str}>"
     
   def get_kernel_line(self) -> str:
-    return f"{self.get_kernel_type()} {self.name};"
+    return f"{self.kernel_type} {self.name};"
   
   def get_connect_line(self, last_port: str, i: int = 0) -> str:
-    if self.chunkCount > 1:
-      return f"for (int i = 0; i < {self.get_kernel_type()}::CHUNK_COUNT; i++)\n" + \
+    if self.chunkCount > 8:
+      connect_list = [f"adf::connect<> ({last_port}, {self.name}.pin[0]);"]
+      connect_list += [f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+1}]);"
+        for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor)
+      ]
+      return "\n".join(connect_list)
+    elif self.chunkCount > 1:
+      return f"for (int i = 0; i < {self.kernel_type}::CHUNK_COUNT; i++)\n" + \
         f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
     return super().get_connect_line(last_port)
   
@@ -393,8 +423,8 @@ class GemmOp(OpParser):
   def get_connect_line(self, last_port: str, i: int = 0) -> str:
     if self.is_stream:
       connect_list = [f"adf::connect<> ({last_port}, {self.name}.pin[0]);"]
-      connect_list += [f"adf::connect<> (gmio_{gmioname}.out[0], {self.name}.pin[{i+1}]);"
-        for i, gmioname in enumerate(self.gmioname_2_tensor)
+      connect_list += [f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+1}]);"
+        for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor)
       ]
       return "\n".join(connect_list)
     return f"for (int i = 0; i < {self.kernel_type}::CHUNK_COUNT; i++)\n" + \
