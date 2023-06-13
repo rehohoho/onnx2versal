@@ -31,7 +31,8 @@
  * @brief Scalar implementation for BHWC, stores weights and biases,
  * ConvReluScalarBHWC<28, 28, 24, 1, 1, 6, 5> total = 247757 cycles
  */
-template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
 class ConvReluScalarBHWC {
 
   private:
@@ -51,6 +52,7 @@ class ConvReluScalarBHWC {
     );
     
     static void registerKernelClass() {
+      static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(ConvReluScalarBHWC::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -63,7 +65,8 @@ class ConvReluScalarBHWC {
  * @brief Scalar implementation for BCHW, stores weights and biases,
  * ConvReluScalarBCHW<28, 28, 24, 1, 1, 6, 5> total = 236147 cycles
  */
-template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
 class ConvReluScalarBCHW {
 
   private:
@@ -83,6 +86,7 @@ class ConvReluScalarBCHW {
     );
     
     static void registerKernelClass() {
+      static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(ConvReluScalarBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -95,7 +99,8 @@ class ConvReluScalarBCHW {
  * @brief Scalar stream implementation for BCHW, stores biases,
  * ConvReluScalarBCHWStream<28, 28, 24, 1, 1, 6, 5> total = 1359043 cycles
  */
-template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
 class ConvReluScalarBCHWStream {
 
   private:
@@ -115,6 +120,7 @@ class ConvReluScalarBCHWStream {
     );
     
     static void registerKernelClass() {
+      static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(ConvReluScalarBCHWStream::filter);
       REGISTER_PARAMETER(bias);
     }
@@ -126,7 +132,8 @@ class ConvReluScalarBCHWStream {
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
  * Conv5x5ReluBCHW<28, 24, 1, 1, 6> total = 21199 cycles
  */
-template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int _K_notused, int IS_RELU>
 class Conv5x5ReluBCHW {
 
   private:
@@ -148,6 +155,7 @@ class Conv5x5ReluBCHW {
     
     static void registerKernelClass() {
       static_assert(OUT_W%8==0);
+      static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(Conv5x5ReluBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -160,7 +168,8 @@ class Conv5x5ReluBCHW {
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
  * Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16521 cycles
  */
-template <int INP_H, int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int _K_notused, int IS_RELU>
 class Conv5x5on8ReluBCHW {
 
   private:
@@ -182,6 +191,7 @@ class Conv5x5on8ReluBCHW {
     
     static void registerKernelClass() {
       static_assert(OUT_W%8==0);
+      static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(Conv5x5on8ReluBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

@@ -2,13 +2,14 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
+template <template<int, int, int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluGraphTest : public adf::graph {
 
   private:
-    typedef ConvReluGraph<CONV, INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU, H0, H1, W0, W1> Graph;
+    typedef ConvReluGraph<CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
 
@@ -31,13 +32,14 @@ class ConvReluGraphTest : public adf::graph {
 };
 
 
-template <template<int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
+template <template<int, int, int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluStreamGraphTest : public adf::graph {
 
   private:
-    typedef ConvReluStreamGraph<CONV, INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU, H0, H1, W0, W1> Graph;
+    typedef ConvReluStreamGraph<CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
 
@@ -67,6 +69,8 @@ class ConvReluStreamGraphTest : public adf::graph {
 const int INP_H = 24;
 const int INP_W = 24;
 const int OUT_W = INP_W;
+const int STEP_H = 1;
+const int STEP_W = 1;
 const int B = 1;
 const int C = 1; // loop dependency missed issue occurs at C=1
 const int M = 5;
@@ -79,29 +83,29 @@ std::vector<float> fpweights_pad {0.16046764388760104, 0.8863046660865599, 0.446
 std::vector<float> fpbias {0.22286381801498023, 0.08053200347184408, 0.08531092311870336, 0.22139644629277222, 0.10001406092155518};
 
 //BCHW
-ConvReluGraphTest<ConvReluScalarBCHW, INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
-                  PAD, PAD, PAD, PAD> convReluScalarBCHW(
+ConvReluGraphTest<ConvReluScalarBCHW, INP_H, INP_W, OUT_W, STEP_H, STEP_W, 
+                  B, C, M, K, IS_RELU, PAD, PAD, PAD, PAD> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x5x24x24_ConvReluScalarBCHW.txt");
 
-ConvReluStreamGraphTest<ConvReluScalarBCHWStream, INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
+ConvReluStreamGraphTest<ConvReluScalarBCHWStream, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU,
                         PAD, PAD, PAD, PAD> convReluScalarBCHWStream(
   "convReluScalarBCHWStream", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x5x24x24_ConvReluScalarBCHWStream.txt");
 
-ConvReluGraphTest<Conv5x5ReluBCHW, INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
-                  PAD, PAD, PAD, PAD> conv5x5ReluBCHW(
+ConvReluGraphTest<Conv5x5ReluBCHW, INP_H, INP_W, OUT_W, STEP_H, STEP_W, 
+                  B, C, M, K, IS_RELU, PAD, PAD, PAD, PAD> conv5x5ReluBCHW(
   "conv5x5ReluBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x5x24x24_Conv5x5ReluBCHW.txt");
 
-ConvReluGraphTest<Conv5x5on8ReluBCHW, INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
-                  PAD, PAD, PAD, PAD> conv5x5on8ReluBCHW(
+ConvReluGraphTest<Conv5x5on8ReluBCHW, INP_H, INP_W, OUT_W, STEP_H, STEP_W, 
+                  B, C, M, K, IS_RELU, PAD, PAD, PAD, PAD> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x5x24x24_Conv5x5on8ReluBCHW.txt");
 
 //BHWC
-ConvReluGraphTest<ConvReluScalarBHWC, INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
-                  PAD, PAD, PAD, PAD> convReluScalarBHWC(
+ConvReluGraphTest<ConvReluScalarBHWC, INP_H, INP_W, OUT_W, STEP_H, STEP_W, 
+                  B, C, M, K, IS_RELU, PAD, PAD, PAD, PAD> convReluScalarBHWC(
   "convReluScalarBHWC", fpweights, fpbias, 
   "conv_fpin.txt", "convbhwc_fpout_shape1x5x24x24_ConvReluScalarBHWC.txt");
 

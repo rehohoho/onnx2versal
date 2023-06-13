@@ -3,16 +3,18 @@
 
 
 template <
-  template<int, int, int, int, int, int, int, int> class CONV, 
+  template<int, int, int, int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int IS_BCHW, int IS_KPAD, int MCHUNK, 
-  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU,
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
+  int B, int C, int M, int K, int IS_RELU,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluChunkGraphTest : public adf::graph {
 
   private:
     typedef ConvReluChunkGraph<CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, 
-                               INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
+                               INP_H, INP_W, OUT_W, STEP_H, STEP_W,
+                               B, C, M, K, IS_RELU,
                                H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
@@ -40,6 +42,8 @@ class ConvReluChunkGraphTest : public adf::graph {
 const int INP_H = 24;
 const int INP_W = 24;
 const int OUT_W = INP_W;
+const int STEP_H = 1;
+const int STEP_W = 1;
 const int B = 1;
 const int C = 1; // loop dependency missed issue occurs at C=1
 const int M = 5;
@@ -54,26 +58,26 @@ std::vector<float> fpbias {0.22286381801498023, 0.08053200347184408, 0.085310923
 
 // BCHW
 ConvReluChunkGraphTest<ConvReluScalarBCHW, ConcatFloat, 1, 0, MCHUNK, 
-                       INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
+                       INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU,
                        PAD, PAD, PAD, PAD> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x5x24x24_ConvReluScalarBCHW.txt");
 
 ConvReluChunkGraphTest<Conv5x5ReluBCHW, ConcatFloat, 1, 0, MCHUNK, 
-                       INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
+                       INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU,
                        PAD, PAD, PAD, PAD> conv5x5ReluBCHW(
   "conv5x5ReluBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x5x24x24_Conv5x5ReluBCHW.txt");
 
 ConvReluChunkGraphTest<Conv5x5on8ReluBCHW, ConcatFloat, 1, 1, MCHUNK, 
-                       INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
+                       INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU,
                        PAD, PAD, PAD, PAD> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x5x24x24_Conv5x5on8ReluBCHW.txt");
 
 // BHWC, ConcatFloat requires CONCAT_BLOCK=M%4=0
 ConvReluChunkGraphTest<ConvReluScalarBHWC, ConcatScalar, 0, 0, MCHUNK, 
-                       INP_H, INP_W, OUT_W, B, C, M, K, IS_RELU,
+                       INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU,
                        PAD, PAD, PAD, PAD> convReluScalarBHWC(
   "convReluScalarBHWC", fpweights, fpbias, 
   "conv_fpin.txt", "convbhwc_fpout_shape1x5x24x24_ConvReluScalarBHWC.txt");

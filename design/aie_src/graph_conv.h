@@ -24,6 +24,8 @@
  * @tparam MCHUNK   M chunk size (if multiinstance)
  * @tparam INP_W    input width/height
  * @tparam OUT_W    output width/height, = INP_W - K/2
+ * @tparam STEP_H   stride H
+ * @tparam STEP_W   stride W
  * @tparam B        batch size
  * @tparam C        input channels
  * @tparam M        output channels
@@ -45,8 +47,9 @@
  * @connect{pout[0], B*M*OUT_H*OUT_W*4}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
+template <template<int, int, int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluGraph : public adf::graph {
 
@@ -66,7 +69,7 @@ class ConvReluGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
-      k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, B, C, M, K, IS_RELU>>(weights, bias);
+      k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -107,8 +110,9 @@ class ConvReluGraph : public adf::graph {
  * @connect{pout[0], B*M*OUT_H*OUT_W*4}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
+template <template<int, int, int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluStreamGraph : public adf::graph {
 
@@ -128,7 +132,7 @@ class ConvReluStreamGraph : public adf::graph {
       std::vector<float> bias,
       int repeat_cnt = 1
     ) { 
-      k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, B, C, M, K, IS_RELU>>(bias);
+      k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>>(bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -168,10 +172,11 @@ class ConvReluStreamGraph : public adf::graph {
  * @endconnections
  */
 template <
-  template<int, int, int, int, int, int, int, int> class CONV, 
+  template<int, int, int, int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int IS_BCHW, int IS_KPAD, int MCHUNK, 
-  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU,
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
+  int B, int C, int M, int K, int IS_RELU,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluChunkGraph : public adf::graph {
 
@@ -224,7 +229,7 @@ class ConvReluChunkGraph : public adf::graph {
         bChunk = std::vector<float>(bias.begin()+i*MCHUNK, bias.begin()+i*MCHUNK+chunkSize);
         bChunk.resize(MCHUNK, 0);
 
-        k[i] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, B, C, MCHUNK, K, IS_RELU>>(wChunk, bChunk);
+        k[i] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, MCHUNK, K, IS_RELU>>(wChunk, bChunk);
         adf::source(k[i]) = "conv.cc";
         adf::headers(k[i]) = {"conv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
