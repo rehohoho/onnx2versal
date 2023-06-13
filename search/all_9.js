@@ -7,5 +7,6 @@ var searchData=
   ['padvectorint16_4',['PadVectorInt16',['../classPadVectorInt16.html',1,'']]],
   ['pool2d_5',['Pool2D',['../group__Pool2D.html',1,'']]],
   ['pool2dkernels_6',['Pool2DKernels',['../group__Pool2DKernels.html',1,'']]],
-  ['profiling_7',['Profiling',['../md_profile.html',1,'']]]
+  ['poolgraph_7',['PoolGraph',['../classPoolGraph.html',1,'']]],
+  ['profiling_8',['Profiling',['../md_profile.html',1,'']]]
 ];

@@ -1,5 +1,6 @@
 var modules =
 [
+    [ "Add", "group__Add.html", "group__Add" ],
     [ "Argmax", "group__Argmax.html", "group__Argmax" ],
     [ "Concat", "group__Concat.html", "group__Concat" ],
     [ "Conv2D", "group__Conv2D.html", "group__Conv2D" ],

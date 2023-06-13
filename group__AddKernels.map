@@ -1,0 +1,4 @@
+<map id="AddKernels" name="AddKernels">
+<area shape="rect" id="Node000002" href="$group__Add.html" title="Add over W vector, see https://github.com/onnx/onnx/blob/main/docs/Operators.md#Add." alt="" coords="5,5,50,31"/>
+<area shape="rect" id="Node000001" title="See https://github.com/onnx/onnx/blob/main/docs/Operators.md#Add." alt="" coords="98,5,186,31"/>
+</map>

@@ -109,9 +109,9 @@ Collaboration diagram for ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD,
 <div class="dyncontent">
 <div class="center"><img src="classConvReluChunkGraph__coll__graph.png" border="0" usemap="#aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_00_01IS__RELU_01_4_coll__map" alt="Collaboration graph"/></div>
 <map name="aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_00_01IS__RELU_01_4_coll__map" id="aConvReluChunkGraph_3_01CONV_00_01CONCAT_00_01IS__BCHW_00_01IS__KPAD_00_01MCHUNK_00_01INP__W_00_01OUT__W_00_01B_00_01C_00_01M_00_01K_00_01IS__RELU_01_4_coll__map">
-<area shape="rect" title="Multiinstance graph that stores weights and biases. If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and ..." alt="" coords="360,5,570,76"/>
-<area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="5,5,256,76"/>
-<area shape="poly" title=" " alt="" coords="271,38,360,38,360,43,271,43"/>
+<area shape="rect" title="Multiinstance graph that stores weights and biases. If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and ..." alt="" coords="20,139,230,210"/>
+<area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="5,5,245,76"/>
+<area shape="poly" title=" " alt="" coords="128,91,128,138,122,138,122,91"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -126,9 +126,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:abbf29fa3bd019db2b9e235feb53c21ff"><td class="memItemLeft" align="right" valign="top"><a id="abbf29fa3bd019db2b9e235feb53c21ff" name="abbf29fa3bd019db2b9e235feb53c21ff"></a>
 adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>convs</b> [CHUNK_COUNT]</td></tr>
 <tr class="separator:abbf29fa3bd019db2b9e235feb53c21ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0260c38ba3dc60885aa050403aa263e"><td class="memItemLeft" align="right" valign="top"><a id="ab0260c38ba3dc60885aa050403aa263e" name="ab0260c38ba3dc60885aa050403aa263e"></a>
-<a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, float_t, CHUNK_COUNT, CONCAT_CHUNK_COUNT, CONCAT_CHUNK, CONCAT_BLOCK &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
-<tr class="separator:ab0260c38ba3dc60885aa050403aa263e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebbfed36a5da7e95ef8a4f7506cbdfdb"><td class="memItemLeft" align="right" valign="top"><a id="aebbfed36a5da7e95ef8a4f7506cbdfdb" name="aebbfed36a5da7e95ef8a4f7506cbdfdb"></a>
+<a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, float_t, CHUNK_COUNT, CONCAT_H, CONCAT_W, CONCAT_BLOCK &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
+<tr class="separator:aebbfed36a5da7e95ef8a4f7506cbdfdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a845f0e5def64e8ea138ff4aa57526e68"><td class="memItemLeft" align="right" valign="top"><a id="a845f0e5def64e8ea138ff4aa57526e68" name="a845f0e5def64e8ea138ff4aa57526e68"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [CHUNK_COUNT]</td></tr>
 <tr class="separator:a845f0e5def64e8ea138ff4aa57526e68"><td class="memSeparator" colspan="2">&#160;</td></tr>

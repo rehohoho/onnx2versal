@@ -139,10 +139,16 @@ $(document).ready(function(){initNavTree('graph__qlinearmac_8h_source.html','');
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>      </div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>      adf::connect&lt;adf::window&lt;B*W&gt;&gt; (pin[0], k[0].in[0]);</div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>      adf::connect&lt;adf::window&lt;B*W&gt;&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    }</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>};</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARMAC_GRAPH_H__</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>      adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(k[0]);</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = tilePos;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = adf::offset(0);</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = tilePos;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = adf::offset((W+31)/32*32); </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    }</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>};</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARMAC_GRAPH_H__</span></div>
 <div class="ttc" id="aclassQlinearMacGraph_html"><div class="ttname"><a href="classQlinearMacGraph.html">QlinearMacGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearmac.h:37</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

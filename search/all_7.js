@@ -7,7 +7,6 @@ var searchData=
   ['macscalar_4',['MacScalar',['../classMacScalar.html',1,'']]],
   ['maxpool2x2floatbchw_5',['Maxpool2x2FloatBCHW',['../classMaxpool2x2FloatBCHW.html',1,'']]],
   ['maxpool2x2int8bchw_6',['Maxpool2x2Int8BCHW',['../classMaxpool2x2Int8BCHW.html',1,'']]],
-  ['maxpoolgraph_7',['MaxpoolGraph',['../classMaxpoolGraph.html',1,'']]],
-  ['maxpoolscalarbchw_8',['MaxpoolScalarBCHW',['../classMaxpoolScalarBCHW.html',1,'']]],
-  ['maxpoolscalarbhwc_9',['MaxpoolScalarBHWC',['../classMaxpoolScalarBHWC.html',1,'']]]
+  ['maxpoolscalarbchw_7',['MaxpoolScalarBCHW',['../classMaxpoolScalarBCHW.html',1,'']]],
+  ['maxpoolscalarbhwc_8',['MaxpoolScalarBHWC',['../classMaxpoolScalarBHWC.html',1,'']]]
 ];

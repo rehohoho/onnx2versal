@@ -1,10 +1,12 @@
 var dir_4fc369f3e3bb6b520cab108493a8c188 =
 [
+    [ "add.h", "add_8h_source.html", null ],
     [ "argmax.h", "argmax_8h_source.html", null ],
     [ "concat.h", "concat_8h_source.html", null ],
     [ "conv.h", "conv_8h_source.html", null ],
     [ "dequantize_linear.h", "dequantize__linear_8h_source.html", null ],
     [ "gemm.h", "gemm_8h_source.html", null ],
+    [ "graph_add.h", "graph__add_8h_source.html", null ],
     [ "graph_argmax.h", "graph__argmax_8h_source.html", null ],
     [ "graph_concat.h", "graph__concat_8h_source.html", null ],
     [ "graph_conv.h", "graph__conv_8h_source.html", null ],
