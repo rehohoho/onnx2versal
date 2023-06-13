@@ -3,6 +3,7 @@
 
 #include <adf.h>
 #include "conv.h"
+#include "pad.h"
 #include "graph_concat.h"
 
 
@@ -27,6 +28,10 @@
  * @tparam C        input channels
  * @tparam M        output channels
  * @tparam K        kernel width
+ * @tparam H0       Pixels added before height (default 0)
+ * @tparam H1       Pixels added after height (default 0)
+ * @tparam W0       Pixels added before width (default 0)
+ * @tparam W1       Pixels added after width (default 0)
  * 
  * @{
  */
@@ -36,18 +41,24 @@
  * Max size = 16384 and 4096 bytes respectively
  * 
  * @connections
- * @connect{pin[0], B*C*INP_W*INP_W*4}
- * @connect{pout[0], B*M*OUT_W*OUT_W*4}
+ * @connect{pin[0], B*C*INP_H*INP_W*4}
+ * @connect{pout[0], B*M*OUT_H*OUT_W*4}
  * @endconnections
  */
 template <template<int, int, int, int, int, int, int> class CONV, 
-  int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
+    std::vector<adf::kernel> pad;
+    static constexpr int PAD_H = INP_H + H0 + H1;
+    static constexpr int PAD_W = INP_W + W0 + W1;
 
   public:
+    static constexpr int OUT_H = PAD_H - K + 1;
+
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
@@ -55,13 +66,25 @@ class ConvReluGraph : public adf::graph {
       std::vector<float> weights,
       std::vector<float> bias
     ) { 
-      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K, IS_RELU>>(weights, bias);
+      k[0] = adf::kernel::create_object<CONV<PAD_W, OUT_W, B, C, M, K, IS_RELU>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
-      adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], pout[0]);
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DScalar<float_t, B, INP_H, INP_W, H0, H1, W0, W1>>());
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.1;
+
+        adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
+      } else {
+        adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
+      }
+      
+      adf::connect<adf::window<B*M*OUT_H*OUT_W*4>> (k[0].out[0], pout[0]);
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos;
@@ -79,19 +102,25 @@ class ConvReluGraph : public adf::graph {
  * @brief Single instance graph that streams weights and biases, significantly slower.
  * 
  * @connections
- * @connect{pin[0], B*C*INP_W*INP_W*4}
- * @connect{pin[1], M*K*K*C*4}
- * @connect{pout[0], B*M*OUT_W*OUT_W*4}
+ * @connect{pin[0], B*C*INP_H*INP_W*4}
+ * @connect{pin[1], stream}
+ * @connect{pout[0], B*M*OUT_H*OUT_W*4}
  * @endconnections
  */
 template <template<int, int, int, int, int, int, int> class CONV, 
-  int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU, 
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluStreamGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
+    std::vector<adf::kernel> pad;
+    static constexpr int PAD_H = INP_H + H0 + H1;
+    static constexpr int PAD_W = INP_W + W0 + W1;
 
   public:
+    static constexpr int OUT_H = PAD_H - K + 1;
+
     adf::port<input> pin[2];
     adf::port<output> pout[1];
 
@@ -99,15 +128,27 @@ class ConvReluStreamGraph : public adf::graph {
       std::vector<float> bias,
       int repeat_cnt = 1
     ) { 
-      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K, IS_RELU>>(bias);
+      k[0] = adf::kernel::create_object<CONV<PAD_W, OUT_W, B, C, M, K, IS_RELU>>(bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::heap_size(k[0]) = OUT_W*OUT_W*4 + 1024; // caches HoWo partial products
 
-      adf::connect<adf::window<B*C*INP_W*INP_W*4>> (pin[0], k[0].in[0]);
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DScalar<float_t, B, INP_H, INP_W, H0, H1, W0, W1>>());
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.1;
+
+        adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
+      } else {
+        adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
+      }
+      
       adf::connect<adf::stream>                    (pin[1], k[0].in[1]);
-      adf::connect<adf::window<B*M*OUT_W*OUT_W*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W*4>> (k[0].out[0], pout[0]);
     }
 
 };
@@ -129,16 +170,19 @@ class ConvReluStreamGraph : public adf::graph {
 template <
   template<int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
-  int IS_BCHW, int IS_KPAD,
-  int MCHUNK, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+  int IS_BCHW, int IS_KPAD, int MCHUNK, 
+  int INP_H, int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU,
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluChunkGraph : public adf::graph {
 
   private:
-    static const int K2 = (IS_KPAD) ? (K+7)/8*8 : K;
-    static const int MCUTCHUNK = M % MCHUNK;
-    static const int CONCAT_W = (IS_BCHW) ? MCHUNK*OUT_W*OUT_W : MCHUNK;
-    static const int CONCAT_BLOCK = (IS_BCHW) ? M*OUT_W*OUT_W : M;
-    static const int CONCAT_H = (IS_BCHW) ? B : B*OUT_W*OUT_W;
+    static constexpr int K2 = (IS_KPAD) ? (K+7)/8*8 : K;
+    
+    static constexpr int CHUNK_COUNT = (M + MCHUNK - 1) / MCHUNK; // ceiling
+    static constexpr int CHUNK_REM = M % MCHUNK;
+
+    static constexpr int PAD_H = INP_H + H0 + H1;
+    static constexpr int PAD_W = INP_W + W0 + W1;
 
     adf::relative_coordinate tileOffsets[8] = {
       {.col_offset = -1, .row_offset = 0}, // left, right
@@ -151,12 +195,17 @@ class ConvReluChunkGraph : public adf::graph {
       {.col_offset = 1, .row_offset = -1},
     };
 
+    adf::kernel k[CHUNK_COUNT];
+    std::vector<adf::kernel> pad;
+
   public:
-    static const int CHUNK_COUNT = (M + MCHUNK - 1) / MCHUNK; // ceiling
-    adf::kernel convs[CHUNK_COUNT];
+    static constexpr int OUT_H = PAD_H - K + 1;
+    static constexpr int CONCAT_W = (IS_BCHW) ? MCHUNK*OUT_H*OUT_W : MCHUNK;
+    static constexpr int CONCAT_BLOCK = (IS_BCHW) ? M*OUT_H*OUT_W : M;
+    static constexpr int CONCAT_H = (IS_BCHW) ? B : B*OUT_H*OUT_W;
     ConcatGraph<CONCAT, float_t, CHUNK_COUNT, CONCAT_H, CONCAT_W, CONCAT_BLOCK> concat_g;
 
-    adf::port<input> pin[CHUNK_COUNT];
+    adf::port<input> pin[1];
     adf::port<output> pout[1];
 
     ConvReluChunkGraph(
@@ -168,33 +217,46 @@ class ConvReluChunkGraph : public adf::graph {
       std::vector<float> bChunk;
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
-        int chunkSize = (i*MCHUNK + MCHUNK > M) ? MCUTCHUNK : MCHUNK;
+        int chunkSize = (i*MCHUNK + MCHUNK > M) ? CHUNK_REM : MCHUNK;
         wChunk = std::vector<float>(weights.begin()+i*MCHUNK*K*K2*C, 
                                     weights.begin()+(i*MCHUNK+chunkSize)*K*K2*C); 
         wChunk.resize(MCHUNK*K*K2*C, 0);
         bChunk = std::vector<float>(bias.begin()+i*MCHUNK, bias.begin()+i*MCHUNK+chunkSize);
         bChunk.resize(MCHUNK, 0);
 
-        convs[i] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, MCHUNK, K, IS_RELU>>(wChunk, bChunk);
-        adf::source(convs[i]) = "conv.cc";
-        adf::headers(convs[i]) = {"conv.h"};
-        adf::runtime<ratio>(convs[i]) = 0.6;
+        k[i] = adf::kernel::create_object<CONV<PAD_W, OUT_W, B, C, MCHUNK, K, IS_RELU>>(wChunk, bChunk);
+        adf::source(k[i]) = "conv.cc";
+        adf::headers(k[i]) = {"conv.h"};
+        adf::runtime<ratio>(k[i]) = 0.6;
         
-        adf::location<adf::kernel>(convs[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
+        adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
-        adf::location_constraint tilePos = adf::location<adf::kernel>(convs[i]);
-        adf::location<adf::parameter>(convs[i].param[0]) = tilePos;
-        adf::location<adf::parameter>(convs[i].param[0]) = adf::offset(0);
-        adf::location<adf::parameter>(convs[i].param[1]) = tilePos;
-        adf::location<adf::parameter>(convs[i].param[1]) = adf::offset((MCHUNK*K*K2*C*4+31)/32*32);
+        adf::location_constraint tilePos = adf::location<adf::kernel>(k[i]);
+        adf::location<adf::parameter>(k[i].param[0]) = tilePos;
+        adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
+        adf::location<adf::parameter>(k[i].param[1]) = tilePos;
+        adf::location<adf::parameter>(k[i].param[1]) = adf::offset((MCHUNK*K*K2*C*4+31)/32*32);
         // input window and output window can be much larger
       }
 
-      for (int i = 0; i < CHUNK_COUNT; i++) {
-        adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[i], convs[i].in[0]);
-        adf::connect<adf::window<B*OUT_W*OUT_W*MCHUNK*4>> (convs[i].out[0], concat_g.pin[i]);
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DScalar<float_t, B, INP_H, INP_W, H0, H1, W0, W1>>());
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.1;
+
+        adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], pad[0].in[0]);
+        for (int i = 0; i < CHUNK_COUNT; i++)
+          adf::connect<adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[i].in[0]);
+      } else {
+        for (int i = 0; i < CHUNK_COUNT; i++)
+          adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[i].in[0]);
       }
-      adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (concat_g.pout[0], pout[0]);
+
+      for (int i = 0; i < CHUNK_COUNT; i++)
+        adf::connect<adf::window<B*MCHUNK*OUT_H*OUT_W*4>> (k[i].out[0], concat_g.pin[i]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W*4>> (concat_g.pout[0], pout[0]);
     }
 };
 /** @} */
