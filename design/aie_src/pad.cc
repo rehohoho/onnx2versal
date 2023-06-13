@@ -2,49 +2,28 @@
 #include "kernel_utils.h"
 
 
-template <typename TT, int N, int INP_W, int OUT_W>
-void PadScalar<TT, N, INP_W, OUT_W>::filter(
+template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+void Pad2DScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 	input_window<TT>* in,  // NxINP_W
   output_window<TT>* out // NxOUT_W
 ) {
   PROFILE_HEADER(printf(
-    "Running PadScalar::filter<%d, %d>\n", INP_W, OUT_W));
+    "Running Pad2DScalar::filter<%s,%d,%d,%d,%d,%d,%d,%d>\n", typeid(TT).name(), B, INP_H, INP_W, H0, H1, W0, W1));
   
-  for (int i = 0; i < N; i++) {
-    for (int j = 0; j < INP_W; j++) {
-      window_writeincr(out, window_readincr(in));
-    }
-    window_incr(out, OUT_W - INP_W);
-  }
+  for (int b = 0; b < B; b++) {
+    window_incr(out, H0*OUT_W);
+    
+    for (int h = 0; h < INP_H; h++) {
+      window_incr(out, W0);
 
-  PROFILE_FOOTER;
-}
-
-
-template <typename TT, int N, int INP_W, int OUT_W>
-void PadVectorInt16<TT, N, INP_W, OUT_W>::filter(
-	input_window<int16>* in,  // NxINP_W
-  output_window<int16>* out // NxOUT_W
-) {
-  PROFILE_HEADER(printf(
-    "Running PadVectorInt16::filter<%d, %d>\n", INP_W, OUT_W));
-  
-  const int word_size = WORD_SIZE_BITS/sizeof(TT);
-
-  v8int16 v = null_v8int16();
-  
-  for (int i = 0; i < N; i++) {
-    int j = 0;
-    for (j; j < INP_W-7; j+=8) {
-      for (int k = 0; k < 8; k++) {
-        v = upd_elem(v, k, window_readincr(in)); // vector boundary issues
+      for (int w = 0; w < INP_W; w++) {
+        window_writeincr(out, window_readincr(in));
       }
-      window_writeincr(out, v);
+
+      window_incr(out, W1);
     }
-    for (j; j < INP_W; j++) {
-      window_writeincr(out, window_readincr(in));
-    }
-    window_incr(out, OUT_W-INP_W);
+
+    window_incr(out, H1*OUT_W);
   }
 
   PROFILE_FOOTER;

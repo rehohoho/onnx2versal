@@ -3,16 +3,18 @@ import numpy as np
 from python.op_parsers import pad_lastdim, get_vector_boundary, save_tensor
 
 
-N = 28
-INP_W = 28
-OUT_W = 32
+B = 2
+INP_H = 32
+INP_W = 32
+H0 = 1
+H1 = 1
+W0 = 1
+W1 = 1
+OUT_H = INP_H + H0 + H1
+OUT_W = INP_W + W0 + W1
 
-inp = np.arange(N*INP_W).reshape(N, INP_W).astype(np.int16)
-out = np.pad(inp, ((0,0),(0,OUT_W-INP_W))).reshape(N, OUT_W)
-save_tensor("pad_int16in.txt", inp)
-save_tensor(f"pad_int16out_shape{INP_W}x{OUT_W}.txt", out)
+fpin = np.random.random(size=(B, INP_H, INP_W)).astype(np.float32)
+fpout = np.pad(fpin, ((0,0),(H0,H1),(W0,W1)))
 
-inp = np.arange(N*INP_W).reshape(N, INP_W).astype(np.int8)
-out = np.pad(inp, ((0,0),(0,OUT_W-INP_W))).reshape(N, OUT_W)
-save_tensor("pad_int8in.txt", inp)
-save_tensor(f"pad_int8out_shape{INP_W}x{OUT_W}.txt", out)
+save_tensor("pad_2d_fpin.txt", fpin)
+save_tensor(f"pad_2d_fpout_shape{B}x{OUT_H}x{OUT_W}.txt", fpout)

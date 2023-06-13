@@ -2,72 +2,51 @@
 #include "graph_utils.h"
 
 
-template <template<typename, int, int, int> class PAD, 
-  typename TT, int N, int INP_W, int OUT_W>
-class PadGraphTest : public adf::graph {
+template <template<typename, int, int, int, int, int, int, int> class PAD, 
+  typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+class Pad2DGraphTest : public adf::graph {
 
   private:
-    PadGraph<PAD, TT, N, INP_W, OUT_W> g;
+    Pad2DGraph<PAD, TT, B, INP_H, INP_W, H0, H1, W0, W1> g;
+    static constexpr int OUT_H = INP_H + H0 + H1;
+    static constexpr int OUT_W = INP_W + W0 + W1;
 
   public:
     adf::input_plio plin[1];
     adf::output_plio plout[1];
 
-    PadGraphTest(
+    Pad2DGraphTest(
       const std::string& id,
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "pad_out.txt"
     ) { 
       plin[0] = adf::input_plio::create("plin0_pad_"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_pad_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<N*INP_W*sizeof(TT)>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<N*OUT_W*sizeof(TT)>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<B*INP_H*INP_W*sizeof(TT)>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<B*OUT_H*OUT_W*sizeof(TT)>> (g.pout[0], plout[0].in[0]);
     }
 
 };
 
 
 // instance to be compiled and used in host within xclbin
-PadGraphTest<PadScalar, int16_t, 28, 28, 32> padScalar(
-  "padScalar", "pad_int16in.txt", "pad_int16out_shape28x32_PadScalar.txt");
-PadGraphTest<PadScalar, int8_t, 28, 28, 32> padScalar_int8(
-  "padScalar_int8", "pad_int8in.txt", "pad_int8out_shape28x32_PadScalar.txt");
+const int B = 2;
+const int INP_H = 32;
+const int INP_W = 32;
+const int H0 = 1;
+const int H1 = 1;
+const int W0 = 1;
+const int W1 = 1;
 
-PadGraphTest<PadVectorInt16, int16_t, 28, 28, 32> padVector(
-  "padVector", "pad_int16in.txt", "pad_int16out_shape28x32_PadVector.txt");
+Pad2DGraphTest<Pad2DScalar, float_t, B, INP_H, INP_W, H0, H1, W0, W1> pad2DScalar(
+  "pad2DScalar", "pad_2d_fpin.txt", "pad_2d_fpout_shape2x34x34_Pad2DScalar.txt");
 
 
-#ifdef __X86SIM__
+#if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
-  adfCheck(padScalar.init(), "init padScalar");
-  adfCheck(padScalar.run(ITER_CNT), "run padScalar");
-	adfCheck(padScalar.end(), "end padScalar");
-
-  adfCheck(padScalar_int8.init(), "init padScalar_int8");
-  adfCheck(padScalar_int8.run(ITER_CNT), "run padScalar_int8");
-	adfCheck(padScalar_int8.end(), "end padScalar_int8");
-
-  adfCheck(padVector.init(), "init padVector");
-  adfCheck(padVector.run(ITER_CNT), "run padVector");
-	adfCheck(padVector.end(), "end padVector");
-  return 0;
-}
-#endif
-
-
-#ifdef __AIESIM__
-int main(int argc, char ** argv) {
-  adfCheck(padScalar.init(), "init padScalar");
-  get_graph_throughput_by_port(padScalar, "plout[0]", padScalar.plout[0], 28*32, sizeof(int16_t), ITER_CNT);
-	adfCheck(padScalar.end(), "end padScalar");
-
-  adfCheck(padScalar_int8.init(), "init padScalar_int8");
-  get_graph_throughput_by_port(padScalar_int8, "plout[0]", padScalar_int8.plout[0], 28*32, sizeof(int16_t), ITER_CNT);
-	adfCheck(padScalar_int8.end(), "end padScalar_int8");
-
-  adfCheck(padVector.init(), "init padVector");
-  get_graph_throughput_by_port(padVector, "plout[0]", padVector.plout[0], 28*32, sizeof(int16_t), ITER_CNT);
-	adfCheck(padVector.end(), "end padVector");
+  adfCheck(pad2DScalar.init(), "init pad2DScalar");
+  adfCheck(pad2DScalar.run(ITER_CNT), "run pad2DScalar");
+	adfCheck(pad2DScalar.end(), "end pad2DScalar");
   return 0;
 }
 #endif

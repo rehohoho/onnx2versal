@@ -10,19 +10,19 @@
  * @defgroup PadKernels
  * @ingroup Pad
  * 
- * @brief Pads NxINP_W to NxOUT_W shape. Requires INP_W<=OUT_W.
+ * @brief See padding at https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv
  * 
  * @{
  */
 
 /**
- * @brief Scalar implementation for Pad
- * PadScalar::filter<int16_t, 28, 28, 32>, total = 5521
+ * @brief Scalar implementation for Pad2D
  */
-template <typename TT, int N, int INP_W, int OUT_W>
-class PadScalar {
+template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+class Pad2DScalar {
   private:
-    static const int WORD_SIZE_BYTES = 16;
+    static constexpr int OUT_H = INP_H + H0 + H1;
+    static constexpr int OUT_W = INP_W + W0 + W1;
     
   public:
     void filter(
@@ -31,33 +31,10 @@ class PadScalar {
     );
 
     static void registerKernelClass() {
-      static_assert(INP_W<=OUT_W);
-      REGISTER_FUNCTION(PadScalar::filter);
+      REGISTER_FUNCTION(Pad2DScalar::filter);
     }
 };
 
-
-/**
- * @brief Vector implementation for Pad
- * PadVectorInt16::filter<int16_t, 28, 28, 32>, total = 5521
- */
-template <typename TT, int N, int INP_W, int OUT_W>
-class PadVectorInt16 {
-  private:
-    static const int WORD_SIZE_BITS = 16;
-
-  public:
-    void filter(
-      input_window<int16>* in,  // NxINP_W
-      output_window<int16>* out // NxOUT_W
-    );
-
-    static void registerKernelClass() {
-      static_assert(INP_W<=OUT_W && (std::is_same<TT, int16_t>::value));
-      static_assert((std::is_same<TT, int16>::value));
-      REGISTER_FUNCTION(PadVectorInt16::filter);
-    }
-};
 /** @}*/
 
 
