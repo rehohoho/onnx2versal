@@ -4,53 +4,6 @@
 
 
 template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarGmemParamBHWC<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
-	input_window<float>* in,      // BHWC (1x28x28x1)
-  input_window<float>* weight,  // MKKC (6x5x5x1)
-  input_window<float>* bias,    // M    (6)
-  output_window<float>* out     // BHWM (1x24x24x6)
-) {
-  PROFILE_HEADER(printf(
-    "Running ConvReluScalarGmemParamBHWC<%d,%d,%d,%d,%d,%d,%d>\n", INP_W, OUT_W, B, C, M, K, IS_RELU));
-  
-  // BHWM
-  for (int b = 0; b < B; b++) {
-    for (int h = 0; h < OUT_W; h++) {
-      for (int w = 0; w < OUT_W; w++) {
-        
-        for (int m = 0; m < M; m++) { 
-
-          // KKC
-          float res = window_readincr(bias);
-          
-          for (int p = 0; p < K; p++) {
-            for (int q = 0; q < K; q++) {
-              for (int c = 0; c < C; c++) {
-                res += window_readincr(in)*window_readincr(weight);
-              }
-            }
-            window_incr(in, C*(-K + INP_W)); // go back K, go down 1
-          }
-
-          if (IS_RELU)
-            if (res < 0) res = 0;
-          window_writeincr(out, res);
-          window_incr(in, C*(-K*INP_W)); // go up K
-        }
-
-        window_incr(in, C);            // next position
-        window_incr(weight, -M*K*K*C); // reset weight
-        window_incr(bias, -M);         // reset bias
-      }
-      window_incr(in, C*K - C); // next row
-    }
-  }
-
-  PROFILE_FOOTER;
-}
-
-
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 void ConvReluScalarBHWC<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   output_window<float>* out     // BHWM (1x24x24x6)
@@ -138,6 +91,62 @@ void ConvReluScalarBCHW<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
       window_incr(in, -OUT_W*INP_W); // go up OUT_W
     }
   }
+
+  PROFILE_FOOTER;
+}
+
+
+template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+void ConvReluScalarBCHWStream<INP_W, OUT_W, B, C, M, K, IS_RELU>::filter(
+	input_window<float>* in,      // BCHW
+  input_stream<float>* weights, // MCKK
+  output_window<float>* out     // BMHW
+) {
+  PROFILE_HEADER(printf(
+    "Running ConvReluScalarBCHWStream<%d,%d,%d,%d,%d,%d,%d>\n", INP_W, OUT_W, B, C, M, K, IS_RELU));
+  
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) {
+
+      for (int i = 0; i < OUT_W*OUT_W; i++) {
+        w_row[i] = bias[m];
+      }
+      
+      for (int c = 0; c < C; c++) {
+        for (int p = 0; p < K; p++) {
+          for (int q = 0; q < K; q++) {
+
+            float weight = readincr(weights);
+            // printf("weight: %f\n", weight);
+            
+            for (int h = 0; h < OUT_W; h++) {
+              for (int w = 0; w < OUT_W; w++) {
+                float a = window_readincr(in);
+                w_row[h*OUT_W + w] += weight * a;
+                // printf("%f ", a);
+              } // W
+              window_incr(in, -OUT_W+INP_W); // next row after OUT_W
+            } // H
+            // printf("\n\n");
+            
+            window_incr(in, -OUT_W*INP_W+1);  // reset up OUT_W after OUT_W*OUT_W, go next
+            
+          } // K
+          window_incr(in, -K+INP_W); // next row in KxK
+          
+        } // K
+        window_incr(in, -K*INP_W);   // reset to 0, 0
+
+      } // C
+
+      for (int i = 0; i < OUT_W*OUT_W; i++) {
+        float res = w_row[i];
+        res = (res >= 0) ? res : 0;
+        window_writeincr(out, res);
+      }
+
+    } // M
+  } // B
 
   PROFILE_FOOTER;
 }

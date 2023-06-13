@@ -81,31 +81,33 @@ class ConvReluGraph : public adf::graph {
  * @connections
  * @connect{pin[0], B*C*INP_W*INP_W*4}
  * @connect{pin[1], M*K*K*C*4}
- * @connect{pin[2], M*4}
  * @connect{pout[0], B*M*OUT_W*OUT_W*4}
  * @endconnections
  */
 template <template<int, int, int, int, int, int, int> class CONV, 
   int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
-class ConvReluGmemParamGraph : public adf::graph {
+class ConvReluStreamGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
 
   public:
-    adf::port<input> pin[3];
+    adf::port<input> pin[2];
     adf::port<output> pout[1];
 
-    ConvReluGmemParamGraph() { 
-      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K, IS_RELU>>();
+    ConvReluStreamGraph(
+      std::vector<float> bias,
+      int repeat_cnt = 1
+    ) { 
+      k[0] = adf::kernel::create_object<CONV<INP_W, OUT_W, B, C, M, K, IS_RELU>>(bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::heap_size(k[0]) = OUT_W*OUT_W*4 + 1024; // caches HoWo partial products
 
-      adf::connect<adf::window<B*INP_W*INP_W*C*4>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<M*K*K*C*4>>         (pin[1], k[0].in[1]);
-      adf::connect<adf::window<M*4>>               (pin[2], k[0].in[2]);
-      adf::connect<adf::window<B*OUT_W*OUT_W*M*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*C*INP_W*INP_W*4>> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream>                    (pin[1], k[0].in[1]);
+      adf::connect<adf::window<B*M*OUT_W*OUT_W*4>> (k[0].out[0], pout[0]);
     }
 
 };

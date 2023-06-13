@@ -10,48 +10,26 @@
  * @ingroup Conv2D
  * 
  * @details 
- * Reference performance
- *  - Lenet Conv2 Tutorial (1x16x12x12 int8) example with matmul ~2k cycles
- *  - Theoretical limit: (16*6*5*5*8*8 + 16*8*8) / 4 = 38656 cycles
+ * Reference performance:
+ *  - B*M*C*K*K*OUT_H*OUT_W computations
  * 
  * Design notes for non-padded weights
- * - Note zstart must be a compile time constant
  * - Using conditionals ~2x loop time, so shuffle down to handle %4 vs %5
  * - Compiler does not detect dependencies across C-loop within W-loop for some C, M, K
- * - With chess_separator_scheduler, 40796 -> 41580
  * 
  * Design notes
- *  - Compute constrained, no point using extra v8float acc to utilize data[12:16]
+ *  - Compute constrained
  *  - Loop order BMHW seems faster since H and W > M
  *  - Multiple accs reduces number of loads by reusing data
- *  - Unrolling is not useful, must preload extra every C*K*K, not worth (46244 -> 53541)
- *  - Reduce data instances to reduce spill (v32float -> v16float: 43981 -> 40796)
+ *  - Preloading is not useful since it loads extra every C*K*K
  * 
  * @{
  */
 
-/**
- * @brief Scalar implementation for BHWC, streams weights and biases, 
- * ConvReluScalarGmemParamBHWC<28, 24, 1, 1, 6, 5> total = 2207545
- */
-template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
-class ConvReluScalarGmemParamBHWC {
-  public:
-    void filter(
-      input_window<float>* in,      // BHWC (1x28x28x1)
-      input_window<float>* weight,  // MKKC (6x5x5x1)
-      input_window<float>* bias,    // M    (6)
-      output_window<float>* out     // BHWM (1x24x24x6)
-    );
-    static void registerKernelClass() {
-      REGISTER_FUNCTION(ConvReluScalarGmemParamBHWC::filter);
-    }
-};
-
 
 /**
  * @brief Scalar implementation for BHWC, stores weights and biases,
- * ConvReluScalarBHWC<28, 24, 1, 1, 6, 5> total = 242765 cycles
+ * ConvReluScalarBHWC<28, 24, 1, 1, 6, 5> total = 247757 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
 class ConvReluScalarBHWC {
@@ -112,8 +90,38 @@ class ConvReluScalarBCHW {
 
 
 /**
+ * @brief Scalar stream implementation for BCHW, stores biases,
+ * ConvReluScalarBCHWStream<28, 24, 1, 1, 6, 5> total = 1359043 cycles
+ */
+template <int INP_W, int OUT_W, int B, int C, int M, int K, int IS_RELU>
+class ConvReluScalarBCHWStream {
+
+  private:
+    alignas(32) float (&bias)[M];
+    alignas(32) float w_row[OUT_W*OUT_W];
+
+  public:
+    ConvReluScalarBCHWStream(
+      float (&b)[M]
+    ): bias(b) {}; 
+
+    void filter(
+      input_window<float>* in,      // BCHW
+      input_stream<float>* weights, // MCKK
+      output_window<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      REGISTER_FUNCTION(ConvReluScalarBCHWStream::filter);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
+
+
+/**
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
- * Conv5x5ReluBCHW<28, 24, 1, 1, 6> total = 21271 cycles
+ * Conv5x5ReluBCHW<28, 24, 1, 1, 6> total = 21199 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
 class Conv5x5ReluBCHW {
@@ -146,7 +154,7 @@ class Conv5x5ReluBCHW {
 
 /**
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
- * Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16737 cycles
+ * Conv5x5on8ReluBCHW<28, 24, 1, 1, 6> total = 16521 cycles
  */
 template <int INP_W, int OUT_W, int B, int C, int M, int _K_notused, int IS_RELU>
 class Conv5x5on8ReluBCHW {
