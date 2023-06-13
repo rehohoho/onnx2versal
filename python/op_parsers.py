@@ -223,32 +223,23 @@ class ConvOp(OpParser):
     attr_d = get_attribute_dict(attributes)
     for i in attr_d.get("dilations"):
       if i != 1: raise NotImplementedError("Dilated convolution not implemented.")
-    for i in attr_d.get("strides"):
-      if i != 1: raise NotImplementedError("Strided convolution not implemented.")
     if np.unique(attr_d.get("kernel_shape")).size != 1: 
       raise NotImplementedError("Asymmetric kernel convolution not implemented")
-    self.pads = attr_d.get("pads", [0, 0, 0, 0])
-    if len(self.pads) != 4:
-      raise NotImplementedError(f"Convolution for padding {self.pads} not implemented. Expect pad shape 4.")
-    pad_str = ",".join(str(i) for i in self.pads)
+    self.STEP_H, self.STEP_W = attr_d.get("strides", [1, 1])
+    self.H0, self.W0, self.H1, self.W1 = attr_d.get("pads", [0, 0, 0, 0])
     
     self.B, self.C, self.INP_H, self.INP_W = tin.shape
     self.M, _, self.K, _ = tw.shape
-    self.OUT_H = self.INP_H + self.pads[0] + self.pads[1] - self.K + 1
-    self.OUT_W = self.INP_W + self.pads[2] + self.pads[3] - self.K + 1
+    self.OUT_H = (self.INP_H + self.H0 + self.H1 - self.K) // self.STEP_H + 1
+    self.OUT_W = (self.INP_W + self.W0 + self.W1 - self.K) // self.STEP_W + 1
     
-    assert tin.shape == (self.B, self.C, self.INP_H, self.INP_W) and \
+    if not (tin.shape == (self.B, self.C, self.INP_H, self.INP_W) and \
       tw.shape == (self.M, self.C, self.K, self.K) and \
       tbias.shape == (self.M, ) and \
-      tout.shape == (self.B, self.M, self.OUT_H, self.OUT_W)
+      tout.shape == (self.B, self.M, self.OUT_H, self.OUT_W)): import ipdb;ipdb.set_trace()
 
     self.tout = tout # reference copy to check against to compress graph
     self.dtype = tout.dtype
-
-    if self.pads != [0, 0, 0, 0]:
-      tin_pad = np.pad(tin, ((0,0), (0,0), (self.pads[0], self.pads[1]), (self.pads[2], self.pads[3])))
-      tin_pad = pad_lastdim(tin_pad, "ConvOp tin_pad", get_vector_boundary(tin_pad))
-      self.filename_2_tensor[f"{self.name}_padded_{get_shape_str(tin)}.txt"] = tin_pad
 
     tin = pad_lastdim(tin, "ConvOp tin", get_vector_boundary(tin))
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
@@ -256,7 +247,7 @@ class ConvOp(OpParser):
 
     tout = pad_lastdim(tout, "ConvOp tout", get_vector_boundary(tout))    
     
-    self.INP_W, self.OUT_W = tin_pad.shape[-1], tout.shape[-1]
+    self.INP_W, self.OUT_W = tin.shape[-1], tout.shape[-1]
     self.out_size = tout.size # host buffer sizes
 
     self.chunkSize = int(MAX_FLOAT_PARAMS/self.C/self.K/self.K//4*4)
@@ -267,14 +258,21 @@ class ConvOp(OpParser):
       self.argname_2_tensor[f"{self.name}_b"] = tbias
 
       kernel = "ConvReluScalarBCHWStream"
-      self.kernel_type = f"ConvReluStreamGraph<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}" + \
-        f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)},{pad_str}>"
+      self.kernel_type = f"ConvReluStreamGraph<{kernel}," + \
+        f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}" + \
+        f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
+        f"{self.H0},{self.H1},{self.W0},{self.W1}>"
     else:
-      kernel = "Conv5x5on8ReluBCHW" if self.OUT_W % 8 == 0 and self.K == 5 else "ConvReluScalarBCHW"
+      kernel = "ConvReluScalarBCHW"
       is_bchw = True
-      is_k_pad = True
+      is_k_pad = False
+      
+      if self.OUT_W % 8 == 0 and self.K == 5:
+        kernel = "Conv5x5on8ReluBCHW"
+        is_k_pad = True
+        tw = pad_lastdim(tw, "Conv weights", 8) # is_k_pad
 
-      self.argname_2_tensor[f"{self.name}_w"] = pad_lastdim(tw, "Conv weights", 8) # is_k_pad
+      self.argname_2_tensor[f"{self.name}_w"] = tw
       self.argname_2_tensor[f"{self.name}_b"] = tbias
       
       if self.chunkCount > 1:
@@ -283,10 +281,15 @@ class ConvOp(OpParser):
         concat = "ConcatFloat" if concat_w % 8 == 0 and concat_block % 4 == 0 else "ConcatScalar"
         self.kernel_type = f"ConvReluChunkGraph<" + \
           f"{kernel},{concat},{int(is_bchw)},{int(is_k_pad)},{self.chunkSize}," + \
-          f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)},{pad_str}>"
+          f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
+          f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
+          f"{self.H0},{self.H1},{self.W0},{self.W1}>"
+        
       else:
-        self.kernel_type = f"ConvReluGraph<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}," + \
-          f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)},{pad_str}>"
+        self.kernel_type = f"ConvReluGraph<{kernel}," + \
+          f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
+          f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
+          f"{self.H0},{self.H1},{self.W0},{self.W1}>"
     
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
@@ -298,9 +301,6 @@ class ConvOp(OpParser):
         for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor)
       ]
       return "\n".join(connect_list)
-    elif self.chunkCount > 1:
-      return f"for (int i = 0; i < {self.kernel_type}::CHUNK_COUNT; i++)\n" + \
-        f"  adf::connect<> ({last_port}, {self.name}.pin[i]);"
     return super().get_connect_line(last_port)
   
 

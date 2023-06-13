@@ -60,26 +60,29 @@ class ConvReluGraph : public adf::graph {
     static constexpr int PAD_W = INP_W + W0 + W1;
 
   public:
-    static constexpr int OUT_H = PAD_H - K + 1;
+    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
 
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
     ConvReluGraph(
       std::vector<float> weights,
-      std::vector<float> bias
+      std::vector<float> bias,
+      int repeat_cnt = 1
     ) { 
       k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::repetition_count(k[0]) = repeat_cnt;
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DScalar<float_t, B, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DScalar<float_t, B*M, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.1;
+        adf::repetition_count(pad[0]) = repeat_cnt;
 
         adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], pad[0].in[0]);
         adf::connect<adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
@@ -123,7 +126,7 @@ class ConvReluStreamGraph : public adf::graph {
     static constexpr int PAD_W = INP_W + W0 + W1;
 
   public:
-    static constexpr int OUT_H = PAD_H - K + 1;
+    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
 
     adf::port<input> pin[2];
     adf::port<output> pout[1];
@@ -136,14 +139,16 @@ class ConvReluStreamGraph : public adf::graph {
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::repetition_count(k[0]) = repeat_cnt;
       adf::heap_size(k[0]) = OUT_W*OUT_W*4 + 1024; // caches HoWo partial products
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DScalar<float_t, B, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DScalar<float_t, B*M, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.1;
+        adf::repetition_count(pad[0]) = repeat_cnt;
 
         adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], pad[0].in[0]);
         adf::connect<adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
@@ -204,7 +209,7 @@ class ConvReluChunkGraph : public adf::graph {
     std::vector<adf::kernel> pad;
 
   public:
-    static constexpr int OUT_H = PAD_H - K + 1;
+    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
     static constexpr int CONCAT_W = (IS_BCHW) ? MCHUNK*OUT_H*OUT_W : MCHUNK;
     static constexpr int CONCAT_BLOCK = (IS_BCHW) ? M*OUT_H*OUT_W : M;
     static constexpr int CONCAT_H = (IS_BCHW) ? B : B*OUT_H*OUT_W;
@@ -215,7 +220,8 @@ class ConvReluChunkGraph : public adf::graph {
 
     ConvReluChunkGraph(
       std::vector<float> weights,
-      std::vector<float> bias
+      std::vector<float> bias,
+      int repeat_cnt = 1
     ) { 
       static_assert(CHUNK_COUNT <= 8);
       std::vector<float> wChunk;
@@ -233,6 +239,7 @@ class ConvReluChunkGraph : public adf::graph {
         adf::source(k[i]) = "conv.cc";
         adf::headers(k[i]) = {"conv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
+        adf::repetition_count(k[i]) = repeat_cnt;
         
         adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
           adf::relative_offset(tileOffsets[i]);
@@ -246,10 +253,11 @@ class ConvReluChunkGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DScalar<float_t, B, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DScalar<float_t, B*M, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.1;
+        adf::repetition_count(pad[0]) = repeat_cnt;
 
         adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], pad[0].in[0]);
         for (int i = 0; i < CHUNK_COUNT; i++)

@@ -88,13 +88,13 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
           if (IS_RELU)
             if (res < 0) res = 0;
           window_writeincr(out, res);
-          window_incr(in, -C*INP_H*INP_W + 1); // go channel -C, right 1
-        }
-        window_incr(in, INP_W-OUT_W); // go left OUT_W, go down 1
-      }
-      window_incr(in, -OUT_H*INP_W); // go up OUT_H
-    }
-  }
+          window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
+        } // W
+        window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
+      } // H
+      window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
+    } // M
+  } // B
 
   PROFILE_FOOTER;
 }
@@ -127,18 +127,18 @@ void ConvReluScalarBCHWStream<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, I
             
             for (int h = 0; h < OUT_H; h++) {
               for (int w = 0; w < OUT_W; w++) {
-                float a = window_readincr(in);
+                float a = window_read(in); window_incr(in, STEP_W);
                 w_row[h*OUT_W + w] += weight * a;
                 // printf("%f ", a);
               } // W
-              window_incr(in, -OUT_W+INP_W); // next row after OUT_W
+              window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // down STEP_H row after row dot
             } // H
             // printf("\n\n");
             
-            window_incr(in, -OUT_H*INP_W+1);  // reset up OUT_H after OUT_W*OUT_W, go next
+            window_incr(in, -INP_W*OUT_H*STEP_H + 1);  // up OUT_H*STEP_H, right 1 after partial dot for next in K
             
           } // K
-          window_incr(in, -K+INP_W); // next row in KxK
+          window_incr(in, -K + INP_W); // down 1 for next in KxK
           
         } // K
         window_incr(in, -K*INP_W);   // reset to 0, 0

@@ -36,7 +36,7 @@ template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
 class ConvReluScalarBHWC {
 
   private:
-    static constexpr int OUT_H = INP_H - K + 1;
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&weights)[M*K*K*C];
     alignas(32) float (&bias)[M];
 
@@ -70,7 +70,7 @@ template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
 class ConvReluScalarBCHW {
 
   private:
-    static constexpr int OUT_H = INP_H - K + 1;
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&weights)[M*K*K*C];
     alignas(32) float (&bias)[M];
 
@@ -86,7 +86,6 @@ class ConvReluScalarBCHW {
     );
     
     static void registerKernelClass() {
-      static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(ConvReluScalarBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -104,7 +103,7 @@ template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
 class ConvReluScalarBCHWStream {
 
   private:
-    static constexpr int OUT_H = INP_H - K + 1;
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&bias)[M];
     alignas(32) float w_row[OUT_W*OUT_W];
 
@@ -120,7 +119,6 @@ class ConvReluScalarBCHWStream {
     );
     
     static void registerKernelClass() {
-      static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(ConvReluScalarBCHWStream::filter);
       REGISTER_PARAMETER(bias);
     }
@@ -138,7 +136,7 @@ class Conv5x5ReluBCHW {
 
   private:
     static constexpr int K = 5;
-    static constexpr int OUT_H = INP_H - K + 1;
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&weights)[M*C*K*K];
     alignas(32) float (&bias)[M];
 
@@ -174,7 +172,7 @@ class Conv5x5on8ReluBCHW {
 
   private:
     static constexpr int K = 5;
-    static constexpr int OUT_H = INP_H - K + 1;
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&weights)[M*C*K*8];
     alignas(32) float (&bias)[M];
 
