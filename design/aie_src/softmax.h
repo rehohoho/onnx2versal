@@ -73,7 +73,7 @@ class SoftmaxSingleaxis {
 		);
 
 		static void registerKernelClass() {
-			static_assert(INP_W_PAD % 8 == 0);
+			static_assert(INP_W_PAD % 4 == 0);
 			REGISTER_FUNCTION(SoftmaxSingleaxis::filter);
 		}
 };

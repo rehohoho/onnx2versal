@@ -140,7 +140,7 @@ class ConvReluStreamGraph : public adf::graph {
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::repetition_count(k[0]) = repeat_cnt;
-      adf::heap_size(k[0]) = OUT_W*OUT_W*4 + 1024; // caches HoWo partial products
+      adf::heap_size(k[0]) = OUT_H*OUT_W*4 + 1024; // caches HoWo partial products
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(

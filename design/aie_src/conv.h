@@ -105,7 +105,7 @@ class ConvReluScalarBCHWStream {
   private:
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&bias)[M];
-    alignas(32) float w_row[OUT_W*OUT_W];
+    alignas(32) float w_row[OUT_H*OUT_W];
 
   public:
     ConvReluScalarBCHWStream(

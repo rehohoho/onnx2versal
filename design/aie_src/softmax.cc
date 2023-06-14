@@ -86,7 +86,7 @@ void SoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::filter(
 
     aie::vector<float,8> sum = aie::zeros<float,8>();
 
-    for (int j = 0; j < INP_W; j+=8) {  
+    for (int j = 0; j <= INP_W_PAD-8; j+=8) {  // INP_W_PAD % 8
       in_v = window_readincr_v8(in);
 
       // compute using fastexp2 method
@@ -97,15 +97,30 @@ void SoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::filter(
       sum = aie::add(sum, in_v);
       aie::store_v(exp_v_ptr, in_v); exp_v_ptr += 8;
     }
+    if (INP_W_PAD % 8 != 0) { // INP_W_PAD % 4
+      in_v = upd_v(in_v, 0, window_readincr_v4(in));
+
+      in_v = aie::mac(ones, in_v, scale).to_vector<float>(0);
+      for (int k = 0; k < 8; k++)
+        in_v = aie::mul_square(in_v);
+      
+      sum = aie::add(sum, in_v);
+      aie::store_v(exp_v_ptr, in_v.extract<4>(0));
+    }
 
     exp_scale += aie::reduce_add(sum);
     exp_scale = inv(exp_scale);
 
     exp_v_ptr = (float *) exp_v;
-    for (int j = 0; j < INP_W; j+=8) {
+    for (int j = 0; j <= INP_W_PAD-8; j+=8) {  // INP_W_PAD % 8
       in_v = aie::load_v<8>(exp_v_ptr); exp_v_ptr += 8;
       in_v = aie::mul(in_v, exp_scale);
       aie::store_v(out_ptr, in_v); out_ptr += 8;
+    }
+    if (INP_W_PAD % 8 != 0) { // INP_W_PAD % 4
+      in_v = aie::load_v<8>(exp_v_ptr);
+      in_v = aie::mul(in_v, exp_scale);
+      aie::store_v(out_ptr, in_v.extract<4>(0));
     }
   }
 

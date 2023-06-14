@@ -123,17 +123,14 @@ void ConvReluScalarBCHWStream<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, I
           for (int q = 0; q < K; q++) {
 
             float weight = readincr(weights);
-            // printf("weight: %f\n", weight);
             
             for (int h = 0; h < OUT_H; h++) {
               for (int w = 0; w < OUT_W; w++) {
                 float a = window_read(in); window_incr(in, STEP_W);
                 w_row[h*OUT_W + w] += weight * a;
-                // printf("%f ", a);
               } // W
               window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // down STEP_H row after row dot
             } // H
-            // printf("\n\n");
             
             window_incr(in, -INP_W*OUT_H*STEP_H + 1);  // up OUT_H*STEP_H, right 1 after partial dot for next in K
             
@@ -141,13 +138,14 @@ void ConvReluScalarBCHWStream<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, I
           window_incr(in, -K + INP_W); // down 1 for next in KxK
           
         } // K
-        window_incr(in, -K*INP_W);   // reset to 0, 0
+        window_incr(in, -K*INP_W + INP_H*INP_W);   // up K to reset, channel +1
 
       } // C
 
       for (int i = 0; i < OUT_H*OUT_W; i++) {
         float res = w_row[i];
-        res = (res >= 0) ? res : 0;
+        if (IS_RELU)
+          res = (res >= 0) ? res : 0;
         window_writeincr(out, res);
       }
 

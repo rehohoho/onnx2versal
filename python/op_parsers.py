@@ -255,11 +255,12 @@ class ConvOp(OpParser):
 
     if self.chunkCount > 8: # stream
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
+      self.gmio_repeats = 1
       self.argname_2_tensor[f"{self.name}_b"] = tbias
 
       kernel = "ConvReluScalarBCHWStream"
       self.kernel_type = f"ConvReluStreamGraph<{kernel}," + \
-        f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}" + \
+        f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
         f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
         f"{self.H0},{self.H1},{self.W0},{self.W1}>"
     else:
@@ -819,11 +820,11 @@ class SoftmaxOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
     self.INP_W = tin.shape[-1]
 
-    tin = pad_lastdim(tin, "SoftmaxOp tin", 8) # files
+    tin = pad_lastdim(tin, "SoftmaxOp tin", get_vector_boundary(tin)) # files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
-    tout = pad_lastdim(tout, "SoftmaxOp tout", 8)
+    tout = pad_lastdim(tout, "SoftmaxOp tout", get_vector_boundary(tout))
 
     self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
