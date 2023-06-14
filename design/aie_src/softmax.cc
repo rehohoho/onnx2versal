@@ -46,7 +46,7 @@ void SoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
     exp_scale1 = 0;
     for (int j = 0; j < INP_W; j++) {
       float a = window_readincr(in);
-      exp_v1[j] = fastexp2(a, 8);
+      exp_v1[j] = expf(a);
       exp_scale1 += exp_v1[j];
     }
     exp_scale1 = inv(exp_scale1);
@@ -81,7 +81,7 @@ void SoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::filter(
   ones.from_vector(aie::broadcast<float,8>(1), 0);
 
   for (int i = 0; i < INP_H; i++) {
-    exp_scale = INP_W - INP_W_PAD;
+    exp_scale = INP_W - INP_W_PAD; // offset for calculating by INP_W_PAD
     exp_v_ptr = (float *) exp_v;
 
     aie::vector<float,8> sum = aie::zeros<float,8>();

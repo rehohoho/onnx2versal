@@ -95,38 +95,6 @@ class ConvReluScalarBCHW {
 
 
 /**
- * @brief Scalar stream implementation for BCHW, stores biases,
- * ConvReluScalarBCHWStream<28, 28, 24, 1, 1, 6, 5> total = 1359043 cycles
- */
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-class ConvReluScalarBCHWStream {
-
-  private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    alignas(32) float (&bias)[M];
-    alignas(32) float w_row[OUT_H*OUT_W];
-
-  public:
-    ConvReluScalarBCHWStream(
-      float (&b)[M]
-    ): bias(b) {}; 
-
-    void filter(
-      input_window<float>* in,      // BCHW
-      input_stream<float>* weights, // MCKK
-      output_window<float>* out     // BMHW
-    );
-    
-    static void registerKernelClass() {
-      REGISTER_FUNCTION(ConvReluScalarBCHWStream::filter);
-      REGISTER_PARAMETER(bias);
-    }
-
-};
-
-
-/**
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0
  * Conv5x5ReluBCHW<28, 24, 1, 1, 6> total = 21199 cycles
  */
@@ -192,6 +160,38 @@ class Conv5x5on8ReluBCHW {
       static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(Conv5x5on8ReluBCHW::filter);
       REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
+
+
+/**
+ * @brief Scalar stream implementation for BCHW, stores biases,
+ * ConvReluScalarBCHWStream<28, 28, 24, 1, 1, 6, 5> total = 1359043 cycles
+ */
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
+class ConvReluScalarBCHWStream {
+
+  private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    alignas(32) float (&bias)[M];
+    alignas(32) float w_row[OUT_H*OUT_W];
+
+  public:
+    ConvReluScalarBCHWStream(
+      float (&b)[M]
+    ): bias(b) {}; 
+
+    void filter(
+      input_window<float>* in,      // BCHW
+      input_stream<float>* weights, // MCKK
+      output_window<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      REGISTER_FUNCTION(ConvReluScalarBCHWStream::filter);
       REGISTER_PARAMETER(bias);
     }
 

@@ -100,62 +100,6 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarBCHWStream<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
-	input_window<float>* in,      // BCHW
-  input_stream<float>* weights, // MCKK
-  output_window<float>* out     // BMHW
-) {
-  PROFILE_HEADER(printf(
-    "Running ConvReluScalarBCHWStream<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
-  
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) {
-
-      for (int i = 0; i < OUT_H*OUT_W; i++) {
-        w_row[i] = bias[m];
-      }
-      
-      for (int c = 0; c < C; c++) {
-        for (int p = 0; p < K; p++) {
-          for (int q = 0; q < K; q++) {
-
-            float weight = readincr(weights);
-            
-            for (int h = 0; h < OUT_H; h++) {
-              for (int w = 0; w < OUT_W; w++) {
-                float a = window_read(in); window_incr(in, STEP_W);
-                w_row[h*OUT_W + w] += weight * a;
-              } // W
-              window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // down STEP_H row after row dot
-            } // H
-            
-            window_incr(in, -INP_W*OUT_H*STEP_H + 1);  // up OUT_H*STEP_H, right 1 after partial dot for next in K
-            
-          } // K
-          window_incr(in, -K + INP_W); // down 1 for next in KxK
-          
-        } // K
-        window_incr(in, -K*INP_W + INP_H*INP_W);   // up K to reset, channel +1
-
-      } // C
-
-      for (int i = 0; i < OUT_H*OUT_W; i++) {
-        float res = w_row[i];
-        if (IS_RELU)
-          res = (res >= 0) ? res : 0;
-        window_writeincr(out, res);
-      }
-
-    } // M
-  } // B
-
-  PROFILE_FOOTER;
-}
-
-
 #ifdef __X86SIM__
 #define GET_WVEC(wp, zstart) \
   wvec = fpshuffle(*(v8float*) wp, 0, 0x00043210);
@@ -357,6 +301,62 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, _K_notused
   } // B
 
 #undef MAC_ROW
+
+  PROFILE_FOOTER;
+}
+
+
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
+void ConvReluScalarBCHWStream<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+	input_window<float>* in,      // BCHW
+  input_stream<float>* weights, // MCKK
+  output_window<float>* out     // BMHW
+) {
+  PROFILE_HEADER(printf(
+    "Running ConvReluScalarBCHWStream<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
+    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) {
+
+      for (int i = 0; i < OUT_H*OUT_W; i++) {
+        w_row[i] = bias[m];
+      }
+      
+      for (int c = 0; c < C; c++) {
+        for (int p = 0; p < K; p++) {
+          for (int q = 0; q < K; q++) {
+
+            float weight = readincr(weights);
+            
+            for (int h = 0; h < OUT_H; h++) {
+              for (int w = 0; w < OUT_W; w++) {
+                float a = window_read(in); window_incr(in, STEP_W);
+                w_row[h*OUT_W + w] += weight * a;
+              } // W
+              window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // down STEP_H row after row dot
+            } // H
+            
+            window_incr(in, -INP_W*OUT_H*STEP_H + 1);  // up OUT_H*STEP_H, right 1 after partial dot for next in K
+            
+          } // K
+          window_incr(in, -K + INP_W); // down 1 for next in KxK
+          
+        } // K
+        window_incr(in, -K*INP_W + INP_H*INP_W);   // up K to reset, channel +1
+
+      } // C
+
+      for (int i = 0; i < OUT_H*OUT_W; i++) {
+        float res = w_row[i];
+        if (IS_RELU)
+          res = (res >= 0) ? res : 0;
+        window_writeincr(out, res);
+      }
+
+    } // M
+  } // B
 
   PROFILE_FOOTER;
 }
