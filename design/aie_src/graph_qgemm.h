@@ -102,7 +102,7 @@ class QgemmMkknChunkGraph : public adf::graph {
     adf::kernel k[CHUNK_COUNT];
     ConcatGraph<CONCAT, int8_t, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
-    adf::port<input> pin[CHUNK_COUNT];
+    adf::port<input> pin[1];
     adf::port<output> pout[1];
 
     QgemmMkknChunkGraph(
@@ -154,7 +154,7 @@ class QgemmMkknChunkGraph : public adf::graph {
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
-        adf::connect<adf::window<M*K>> (pin[i], k[i].in[0]);
+        adf::connect<adf::window<M*K>> (pin[0], k[i].in[0]);
         adf::connect<adf::window<M*NCHUNK>> (k[i].out[0], concat_g.pin[i]);
       }
       adf::connect<adf::window<M*N>> (concat_g.pout[0], pout[0]);

@@ -10,10 +10,9 @@ class GemmReluMknkChunkGraphTest : public adf::graph {
 
   private:
     GemmReluMknkChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU> g;
-    static const int CHUNK_COUNT = GemmReluMknkChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU>::CHUNK_COUNT;
 
   public:
-    adf::input_plio plin[CHUNK_COUNT];
+    adf::input_plio plin[1];
     adf::output_plio plout[1];
 
     GemmReluMknkChunkGraphTest(
@@ -23,12 +22,9 @@ class GemmReluMknkChunkGraphTest : public adf::graph {
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "gemm_out.txt"
     ): g(weights, bias) { 
-      for (int i = 0; i < CHUNK_COUNT; i++) {
-        std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input";
-        plin[i] = adf::input_plio::create(plio_name, PLIO64_ARG(INP_TXT));
-        adf::connect<adf::window<M*K*4>> (plin[i].out[0], g.pin[i]);
-      }
+      plin[0] = adf::input_plio::create("plin0_gemm"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", PLIO64_ARG(OUT_TXT));
+      adf::connect<adf::window<M*K*4>> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::window<M*N*4>> (g.pout[0], plout[0].in[0]);
     }
 
@@ -43,10 +39,9 @@ class GemmReluMkknChunkGraphTest : public adf::graph {
 
   private:
     GemmReluMkknChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU> g;
-    static const int CHUNK_COUNT = GemmReluMkknChunkGraph<GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU>::CHUNK_COUNT;
 
   public:
-    adf::input_plio plin[CHUNK_COUNT];
+    adf::input_plio plin[1];
     adf::output_plio plout[1];
 
     GemmReluMkknChunkGraphTest(
@@ -56,12 +51,9 @@ class GemmReluMkknChunkGraphTest : public adf::graph {
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "gemm_out.txt"
     ): g(weights, bias) { 
-      for (int i = 0; i < CHUNK_COUNT; i++) {
-        std::string plio_name = "plin"+std::to_string(i)+"_gemm"+id+"_input";
-        plin[i] = adf::input_plio::create(plio_name, PLIO64_ARG(INP_TXT));
-        adf::connect<adf::window<M*K*4>> (plin[i].out[0], g.pin[i]);
-      }
+      plin[0] = adf::input_plio::create("plin0_gemm"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_gemm"+id+"_output", PLIO64_ARG(OUT_TXT));
+      adf::connect<adf::window<M*K*4>> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::window<M*N*4>> (g.pout[0], plout[0].in[0]);
     }
 

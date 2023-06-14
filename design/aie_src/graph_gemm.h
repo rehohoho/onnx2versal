@@ -154,7 +154,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
     adf::kernel gemms[CHUNK_COUNT];
     ConcatGraph<CONCAT, float_t, CHUNK_COUNT, 1, NCHUNK, N> concat_g;
     
-    adf::port<input> pin[CHUNK_COUNT];
+    adf::port<input> pin[1];
     adf::port<output> pout[1];
 
     GemmReluMknkChunkGraph(
@@ -195,7 +195,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
-        adf::connect<adf::window<M*K*4>> (pin[i], gemms[i].in[0]);
+        adf::connect<adf::window<M*K*4>> (pin[0], gemms[i].in[0]);
         adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat_g.pin[i]);
       }
 
@@ -235,7 +235,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
     adf::kernel gemms[CHUNK_COUNT];
     ConcatGraph<CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
-    adf::port<input> pin[CHUNK_COUNT];
+    adf::port<input> pin[1];
     adf::port<output> pout[1];
 
     GemmReluMkknChunkGraph(
@@ -280,7 +280,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
-        adf::connect<adf::window<M*K*4>> (pin[i], gemms[i].in[0]);
+        adf::connect<adf::window<M*K*4>> (pin[0], gemms[i].in[0]);
         adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat_g.pin[i]);
       }
       adf::connect<adf::window<M*N*4>> (concat_g.pout[0], pout[0]);

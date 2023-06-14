@@ -10,10 +10,9 @@ class QgemmMkknChunkGraphTest : public adf::graph {
 
   private:
     QgemmMkknChunkGraph<QGEMM, CONCAT, NCHUNK, M, K, N> g;
-    static const int CHUNK_COUNT = QgemmMkknChunkGraph<QGEMM, CONCAT, NCHUNK, M, K, N>::CHUNK_COUNT;
 
   public:
-    adf::input_plio plin[CHUNK_COUNT];
+    adf::input_plio plin[1];
     adf::output_plio plout[1];
 
     QgemmMkknChunkGraphTest(
@@ -29,11 +28,9 @@ class QgemmMkknChunkGraphTest : public adf::graph {
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "qgemm_out.txt"
     ): g(weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
-      for (int i = 0; i < CHUNK_COUNT; i++) {
-        plin[i] = adf::input_plio::create("plin"+std::to_string(i)+"_qgemm"+id+"_input", PLIO64_ARG(INP_TXT));
-        adf::connect<adf::window<M*K>> (plin[i].out[0], g.pin[i]);
-      }
+      plin[0] = adf::input_plio::create("plin0_qgemm"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_qgemm"+id+"_output", PLIO64_ARG(OUT_TXT));
+      adf::connect<adf::window<M*K>> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::window<M*N>> (g.pout[0], plout[0].in[0]);
     }
 

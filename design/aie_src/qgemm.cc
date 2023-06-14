@@ -140,7 +140,7 @@ void QgemmVector<M, K, N>::filter(
       
       acc1 = null_v16acc48();
 
-      for (int k = 0; k < K; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
+      for (int k = 0; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
         inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 16; // load input[k:k+8]
         LOAD_W; // load weight[k:k+8,n:n+16]
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
