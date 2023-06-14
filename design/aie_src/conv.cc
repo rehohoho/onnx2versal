@@ -311,7 +311,7 @@ template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
 void ConvReluScalarStreamCacheHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
-  output_window<float>* out     // BMHW
+  output_stream<float>* out     // BMHW
 ) {
   PROFILE_HEADER(printf(
     "Running ConvReluScalarStreamCacheHW<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
@@ -352,7 +352,7 @@ void ConvReluScalarStreamCacheHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K
         float res = w_row[i];
         if (IS_RELU)
           res = (res >= 0) ? res : 0;
-        window_writeincr(out, res);
+        writeincr(out, res);
       }
 
     } // M
@@ -367,7 +367,7 @@ template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
 void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
-  output_window<float>* out     // BMHW
+  output_stream<float>* out     // BMHW
 ) {
   PROFILE_HEADER(printf(
     "Running ConvReluScalarStreamCacheCKK<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
@@ -402,7 +402,7 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
 
           if (IS_RELU)
             if (res < 0) res = 0;
-          window_writeincr(out, res);
+          writeincr(out, res);
           window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
         } // W
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H

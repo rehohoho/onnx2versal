@@ -155,8 +155,8 @@ class ConvReluStreamGraph : public adf::graph {
         adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
       }
       
-      adf::connect<adf::stream>                    (pin[1], k[0].in[1]);
-      adf::connect<adf::window<B*M*OUT_H*OUT_W*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (pin[1], k[0].in[1]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
     }
 
 };

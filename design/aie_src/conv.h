@@ -168,7 +168,7 @@ class Conv5x5on8ReluBCHW {
 
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
- * ConvReluScalarStreamCacheHW<28,28,24,1,1,1,1,5,5,1> total = 1131842 cycles
+ * ConvReluScalarStreamCacheHW<28,28,24,1,1,1,1,5,5,1> total = 1131806 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -187,7 +187,7 @@ class ConvReluScalarStreamCacheHW {
     void filter(
       input_window<float>* in,      // BCHW
       input_stream<float>* weights, // MCKK
-      output_window<float>* out     // BMHW
+      output_stream<float>* out     // BMHW
     );
     
     static void registerKernelClass() {
@@ -200,7 +200,7 @@ class ConvReluScalarStreamCacheHW {
 
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
- * ConvReluScalarStreamCacheCKK<28,28,24,1,1,1,1,5,5,1> total = 483995 cycles
+ * ConvReluScalarStreamCacheCKK<28,28,24,1,1,1,1,5,5,1> total = 268757 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -219,7 +219,7 @@ class ConvReluScalarStreamCacheCKK {
     void filter(
       input_window<float>* in,      // BCHW
       input_stream<float>* weights, // MCKK
-      output_window<float>* out     // BMHW
+      output_stream<float>* out     // BMHW
     );
     
     static void registerKernelClass() {
