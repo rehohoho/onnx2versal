@@ -82,6 +82,7 @@ class ConcatScalar {
 			output_stream<TT>* out
 		);
 		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4 || sizeof(TT) == 16); // 32-bit or 128-bit stream
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(ConcatScalar::filter8);
 			} else if (LCNT == 7) {
