@@ -17,6 +17,7 @@
 
 /**
  * @brief Scalar implementation for Pad2D
+ * Pad2DScalar::filter<f,1,28,28,2,2,2,2> takes 2964 cycles (tested 954 window, 13k mixed)
  */
 template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
 class Pad2DScalar {
@@ -26,8 +27,8 @@ class Pad2DScalar {
     
   public:
     void filter(
-      input_window<TT>* in,  // NxINP_W
-      output_window<TT>* out // NxOUT_W
+      input_stream<TT>* in,
+      output_stream<TT>* out
     );
 
     static void registerKernelClass() {

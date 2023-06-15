@@ -22,8 +22,8 @@ class Pad2DGraphTest : public adf::graph {
     ) { 
       plin[0] = adf::input_plio::create("plin0_pad_"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_pad_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<B*INP_H*INP_W*sizeof(TT)>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<B*OUT_H*OUT_W*sizeof(TT)>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
     }
 
 };

@@ -51,8 +51,8 @@ class Pad2DGraph : public adf::graph {
       adf::headers(k[0]) = {"pad.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<B*INP_H*INP_W*sizeof(TT)>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_H*OUT_W*sizeof(TT)>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
     }
 
 };
