@@ -15,7 +15,8 @@
 
 
 /**
- * @brief Scalar implementation, ConcatScalar<5, 64, 16, 52> takes 650 cycles
+ * @brief Scalar implementation, 
+ * ConcatScalar<5, 64, 16, 52> takes 4452 cycles (650 for output window)
  */
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatScalar {
@@ -29,7 +30,7 @@ class ConcatScalar {
 			input_window<TT>* in5,
 			input_window<TT>* in6,
 			input_window<TT>* in7,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter7(
 			input_window<TT>* in0,
@@ -39,7 +40,7 @@ class ConcatScalar {
 			input_window<TT>* in4,
 			input_window<TT>* in5,
 			input_window<TT>* in6,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter6(
 			input_window<TT>* in0,
@@ -48,7 +49,7 @@ class ConcatScalar {
 			input_window<TT>* in3,
 			input_window<TT>* in4,
 			input_window<TT>* in5,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter5(
 			input_window<TT>* in0,
@@ -56,29 +57,29 @@ class ConcatScalar {
 			input_window<TT>* in2,
 			input_window<TT>* in3,
 			input_window<TT>* in4,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter4(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
 			input_window<TT>* in2,
 			input_window<TT>* in3,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter3(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
 			input_window<TT>* in2,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter2(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter1(
 			input_window<TT>* in0,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		static void registerKernelClass() {
 			if (LCNT == 8) {
@@ -103,8 +104,9 @@ class ConcatScalar {
 
 
 /**
- * @brief Vector implementation, Requires INP_W%8=0, OUT_W%4=0.
- * ConcatFloat<5, 64, 16, 52> takes 232 cycles.
+ * @brief Vector implementation, 
+ * requires INP_W%4=0, OUT_W%4=0.
+ * ConcatFloat<5, 64, 16, 52> takes 547 cycles (232 for output window).
  */
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatFloat {
@@ -118,7 +120,7 @@ class ConcatFloat {
 			input_window<TT>* in5,
 			input_window<TT>* in6,
 			input_window<TT>* in7,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter7(
 			input_window<TT>* in0,
@@ -128,7 +130,7 @@ class ConcatFloat {
 			input_window<TT>* in4,
 			input_window<TT>* in5,
 			input_window<TT>* in6,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter6(
 			input_window<TT>* in0,
@@ -137,7 +139,7 @@ class ConcatFloat {
 			input_window<TT>* in3,
 			input_window<TT>* in4,
 			input_window<TT>* in5,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter5(
 			input_window<TT>* in0,
@@ -145,32 +147,32 @@ class ConcatFloat {
 			input_window<TT>* in2,
 			input_window<TT>* in3,
 			input_window<TT>* in4,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter4(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
 			input_window<TT>* in2,
 			input_window<TT>* in3,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter3(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
 			input_window<TT>* in2,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter2(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter1(
 			input_window<TT>* in0,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		static void registerKernelClass() {
-			static_assert(INP_W%8==0 && OUT_W%4==0 && (std::is_same<TT, float>::value));
+			static_assert(INP_W%4==0 && OUT_W%4==0 && (std::is_same<TT, float>::value));
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(ConcatFloat::filter8);
 			} else if (LCNT == 7) {
@@ -194,8 +196,8 @@ class ConcatFloat {
 
 /**
  * @brief Vector implementation for int8_t, 
- * requires INP_W%16=0, OUT_W%16=0.
- * ConcatInt8<5, 64, 16, 52> takes 223 cycles.
+ * requires INP_W%16=0, OUT_W%16=0,
+ * ConcatInt8<5, 64, 16, 52> takes 230 cycles (223 with output window).
  */
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatInt8 {
@@ -209,7 +211,7 @@ class ConcatInt8 {
 			input_window<TT>* in5,
 			input_window<TT>* in6,
 			input_window<TT>* in7,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter7(
 			input_window<TT>* in0,
@@ -219,7 +221,7 @@ class ConcatInt8 {
 			input_window<TT>* in4,
 			input_window<TT>* in5,
 			input_window<TT>* in6,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter6(
 			input_window<TT>* in0,
@@ -228,7 +230,7 @@ class ConcatInt8 {
 			input_window<TT>* in3,
 			input_window<TT>* in4,
 			input_window<TT>* in5,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter5(
 			input_window<TT>* in0,
@@ -236,29 +238,29 @@ class ConcatInt8 {
 			input_window<TT>* in2,
 			input_window<TT>* in3,
 			input_window<TT>* in4,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter4(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
 			input_window<TT>* in2,
 			input_window<TT>* in3,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter3(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
 			input_window<TT>* in2,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter2(
 			input_window<TT>* in0,
 			input_window<TT>* in1,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		void filter1(
 			input_window<TT>* in0,
-			output_window<TT>* out
+			output_stream<TT>* out
 		);
 		static void registerKernelClass() {
 			static_assert(INP_W%16==0 && OUT_W%16==0 && (std::is_same<TT, int8_t>::value));

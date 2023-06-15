@@ -157,7 +157,7 @@ class QgemmMkknChunkGraph : public adf::graph {
         adf::connect<adf::window<M*K>> (pin[0], k[i].in[0]);
         adf::connect<adf::window<M*NCHUNK>> (k[i].out[0], concat_g.pin[i]);
       }
-      adf::connect<adf::window<M*N>> (concat_g.pout[0], pout[0]);
+      adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
     }
 
 };

@@ -26,7 +26,7 @@ class ConcatGraphTest : public adf::graph {
       }
 
       plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<H*OUT_W*TTSIZE>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
     }
 
 };
@@ -87,24 +87,24 @@ std::vector<std::string> int8_txts {
 ConcatGraphTest<ConcatInt8, int8_t, LCNT, CHUNK_CNT, CHUNK_SIZE, BLOCK_SIZE> concatInt8(
   "concatInt8", "concat_int8out_shape4x112_ConcatInt8.txt", int8_txts);
 
-const int MULTI_LCNT = 52; 
-const int MULTI_BLOCK_SIZE = 816; //% 16 for int8, % 4 for float
+// const int MULTI_LCNT = 52; 
+// const int MULTI_BLOCK_SIZE = 816; //% 16 for int8, % 4 for float
 
-std::vector<std::string> multi_fp_txts {
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
-  "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt"
-};
+// std::vector<std::string> multi_fp_txts {
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
+//   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt"
+// };
 
 // ConcatTwiceGraphTest<ConcatFloat, float_t, MULTI_LCNT, CHUNK_CNT, CHUNK_SIZE, MULTI_BLOCK_SIZE> multiConcatFloat(
 //   "multiConcatFloat", "concatmulti_fpout_shape4x816_ConcatFloat.txt", multi_fp_txts

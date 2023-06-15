@@ -55,7 +55,7 @@ class ConcatGraph : public adf::graph {
         adf::connect<adf::window<H*INP_W*TTSIZE>> (pin[i], k[0].in[i]);
       
       // OUT_W <= H*INP_W
-      adf::connect<adf::window<H*OUT_W*TTSIZE>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
     }
 
 };
@@ -94,7 +94,7 @@ class ConcatTwiceGraph : public adf::graph {
 
           for (int j = 0; j < 8; j++)
             adf::connect<adf::window<H*INP_W*TTSIZE>> (pin[i*8+j], k[i].in[j]);
-          adf::connect<adf::window<H*INNER_OUT_W*TTSIZE>> (k[i].out[0], klast.in[i]);
+          adf::connect<adf::stream> (k[i].out[0], klast.in[i]);
         }
       }
       
@@ -107,9 +107,9 @@ class ConcatTwiceGraph : public adf::graph {
       
       for (int j = 0; j < LCNT_REM; j++)
         adf::connect<adf::window<H*INP_W*TTSIZE>> (pin[i*8+j], k[i].in[j]);
-      adf::connect<adf::window<H*INNER_OUT_W*TTSIZE>> (k[i].out[0], klast.in[i]);
+      adf::connect<adf::stream> (k[i].out[0], klast.in[i]);
       
-      adf::connect<adf::window<H*OUT_W*TTSIZE>> (klast.out[0], pout[0]);
+      adf::connect<adf::stream> (klast.out[0], pout[0]);
     }
 
 };

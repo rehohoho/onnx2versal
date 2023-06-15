@@ -199,7 +199,7 @@ class GemmReluMknkChunkGraph : public adf::graph {
         adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat_g.pin[i]);
       }
 
-      adf::connect<adf::window<M*N*4>> (concat_g.pout[0], pout[0]);
+      adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
     }
 
 };
@@ -283,7 +283,7 @@ class GemmReluMkknChunkGraph : public adf::graph {
         adf::connect<adf::window<M*K*4>> (pin[0], gemms[i].in[0]);
         adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat_g.pin[i]);
       }
-      adf::connect<adf::window<M*N*4>> (concat_g.pout[0], pout[0]);
+      adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
     }
 
 };
