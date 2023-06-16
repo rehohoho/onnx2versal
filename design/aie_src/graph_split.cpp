@@ -46,12 +46,22 @@ SplitGraphTest<SplitScalar, float_t, H, INP_W, OUT_W, OVERLAP> splitScalar(
     "split_fpout2_shape10x22_splitScalar.txt"
   });
 
+SplitGraphTest<SplitScalar, float_t, H, INP_W, 31, -1> splitScalar_neg(
+  "splitScalar_neg", "split_fpin.txt", 
+  {
+    "split_fpout0_shape10x31_splitScalar.txt", 
+    "split_fpout1_shape10x31_splitScalar.txt"
+  });
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
   adfCheck(splitScalar.init(), "init splitScalar");
   adfCheck(splitScalar.run(ITER_CNT), "run splitScalar");
 	adfCheck(splitScalar.end(), "end splitScalar");
+
+  adfCheck(splitScalar_neg.init(), "init splitScalar_neg");
+  adfCheck(splitScalar_neg.run(ITER_CNT), "run splitScalar_neg");
+	adfCheck(splitScalar_neg.end(), "end splitScalar_neg");
   return 0;
 }
 #endif

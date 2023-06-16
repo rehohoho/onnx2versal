@@ -18,6 +18,7 @@
  * @brief Scalar implementation, 
  * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0
  * SplitScalar<f,3,10,64,22>::filter3 takes 9505 cycles
+ * SplitScalar<f,10,64,31,-1>::filter2 takes 9547 cycles
  */
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
 class SplitScalar {
@@ -88,7 +89,8 @@ class SplitScalar {
 			output_window<TT>* out0
 		);
 		static void registerKernelClass() {
-			static_assert(2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0);
+			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) < INP_W));
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(SplitScalar::filter8);
 			} else if (LCNT == 7) {
