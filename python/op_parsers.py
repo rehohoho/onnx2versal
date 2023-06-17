@@ -82,7 +82,8 @@ def get_attribute_dict(attributes: List[Any]):
 
 def factor_int(n: int, 
                multiplier: int, 
-               upper_bound: int):
+               upper_bound: int,
+               offset: int = 0):
   factor_pairs = []
   factor = 1
   while factor <= n ** 0.5:
@@ -93,7 +94,7 @@ def factor_int(n: int,
   factor_pairs = factor_pairs + [(f2, f1) for f1, f2 in factor_pairs[::-1]]
 
   for f1, f2 in factor_pairs:
-    if f1 * multiplier <= upper_bound:
+    if f1 * multiplier + offset <= upper_bound:
       return f1, f2
   raise ValueError(f"Unable to find factors f1, f2 of {n} such that f1*{multiplier} <= {upper_bound}")
 
@@ -145,6 +146,10 @@ class OpParser:
   def get_connect_line(self, last_port: str, i: int = 0) -> str:
     return f"adf::connect<> ({last_port}, {self.name}.pin[{i}]);"
 
+  def get_gmio_connect_line(self, i: int = 0) -> str:
+    return "\n".join(f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+i}]);"
+        for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor))
+
   def get_output_filename(self) -> str:
     if len(self.filename_2_tensor) == 0:
       raise ValueError(f"No output filename for {self.name}.")
@@ -189,7 +194,6 @@ class AddOp(OpParser):
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
     self.W = ta.size
-    self.W, self.repeat = factor_int(self.W, self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
@@ -217,6 +221,11 @@ class ConvOp(OpParser):
     super().__init__(name)
     self.is_relu = is_relu
 
+  def get_conv_targs(self):
+    return f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
+      f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
+      f"{self.H0},{self.H1},{self.W0},{self.W1}>"
+  
   def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 4
     tin, tw, tbias, tout = tensors
@@ -251,62 +260,72 @@ class ConvOp(OpParser):
     self.INP_W, self.OUT_W = tin.shape[-1], tout.shape[-1]
     self.out_size = tout.size # host buffer sizes
 
-    if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE:
-      raise NotImplementedError(f"No Conv implementation for input size {tin.nbytes} and output size {tout.nbytes}")
+    if tin.nbytes + self.B*self.C*(self.K-1)*7*self.INP_W*tin.dtype.itemsize > MAX_PARAM_SIZE * 8:
+      raise NotImplementedError(f"No Conv implementation for input size {tin.nbytes}")
 
-    kernel = "ConvReluScalarBCHW"
-    is_bchw = True
-    is_k_pad = False
-    
-    if self.OUT_W % 8 == 0 and self.K == 5:
-      kernel = "Conv5x5on8ReluBCHW"
-      is_k_pad = True
-      tw = pad_lastdim(tw, "Conv weights", 8) # is_k_pad
+    if tin.nbytes <= MAX_PARAM_SIZE:
 
-    self.argname_2_tensor[f"{self.name}_w"] = tw
-    self.argname_2_tensor[f"{self.name}_b"] = tbias
+      if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
+        kernel = "ConvReluScalarBCHW"
+        if self.OUT_W % 8 == 0 and self.K == 5:
+          kernel = "Conv5x5on8ReluBCHW"
+          tw = pad_lastdim(tw, "Conv weights", 8)
+        
+        self.argname_2_tensor[f"{self.name}_w"] = tw
+        self.argname_2_tensor[f"{self.name}_b"] = tbias
 
-    if tw.nbytes <= MAX_PARAM_SIZE:
-      self.kernel_type = f"ConvReluGraph<{kernel}," + \
-        f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
-        f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
-        f"{self.H0},{self.H1},{self.W0},{self.W1}>"
+        self.kernel_type = f"ConvReluGraph<{kernel},{self.get_conv_targs()}"
 
-    elif tw.nbytes <= MAX_PARAM_SIZE * 8:
-      chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.M) //8*8, self.M)
-      concat_w = chunkSize * self.OUT_W * self.OUT_W
-      concat_block = self.M * self.OUT_W * self.OUT_W
-      concat = "ConcatFloat" if concat_w % 8 == 0 and concat_block % 4 == 0 else "ConcatScalar"
-      self.kernel_type = f"ConvReluChunkGraph<" + \
-        f"{kernel},{concat},{int(is_bchw)},{int(is_k_pad)},{chunkSize}," + \
-        f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
-        f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
-        f"{self.H0},{self.H1},{self.W0},{self.W1}>"
+      elif tw.nbytes <= MAX_PARAM_SIZE * 8 and tout.nbytes <= MAX_PARAM_SIZE * 8:
+        kernel = "ConvReluScalarBCHW"
+        if self.OUT_W % 8 == 0 and self.K == 5:
+          kernel = "Conv5x5on8ReluBCHW"
+          tw = pad_lastdim(tw, "Conv weights", 8)
+        
+        self.argname_2_tensor[f"{self.name}_w"] = tw
+        self.argname_2_tensor[f"{self.name}_b"] = tbias
+
+        chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.M) //8*8, self.M)
+        concat_w = chunkSize * self.OUT_W * self.OUT_W
+        concat_block = self.M * self.OUT_W * self.OUT_W
+        concat = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
+        self.kernel_type = f"ConvReluChunkMGraph<{kernel},{concat},{1},{chunkSize},{self.get_conv_targs()}"
+      
+      else:
+        self.gmioname_2_tensor[f"{self.name}_w"] = tw
+        self.gmio_repeats = 1
+        self.argname_2_tensor[f"{self.name}_b"] = tbias
+
+        kernel = "ConvReluScalarStreamCacheCKK"
+        self.kernel_type = f"ConvReluStreamGraph<{kernel},{self.get_conv_targs()}"
     
     else:
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
       self.gmio_repeats = 1
       self.argname_2_tensor[f"{self.name}_b"] = tbias
-
-      kernel = "ConvReluScalarBCHWStream"
-      self.kernel_type = f"ConvReluStreamGraph<{kernel}," + \
-        f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
-        f"{self.B},{self.C},{self.M},{self.K},{int(self.is_relu)}," + \
-        f"{self.H0},{self.H1},{self.W0},{self.W1}>"
     
-    self.is_stream = tw.nbytes > MAX_PARAM_SIZE * 8
+      kernel = "ConvReluScalarStreamCacheCKK"
       
+      # HCHUNK = OUT_H' * strides + overlap, OVERLAP = K - strides
+      PAD_W = self.INP_W + self.W0 + self.W1
+      multiplier = self.B * self.C * PAD_W * self.STEP_H * tin.dtype.itemsize
+      offset = self.B * self.C * (-(self.STEP_H - 1) + (self.K - 1)) * PAD_W * tin.dtype.itemsize
+      HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_PARAM_SIZE, offset)
+      HCHUNK = HCHUNK * self.STEP_H - (self.STEP_H - 1) + (self.K - 1)
+      HCHUNK_OUT = (HCHUNK - self.K) / self.STEP_H + 1
+      
+      if self.K - self.STEP_H > 0:
+        assert (self.INP_H+self.H0+self.H1-HCHUNK) % (HCHUNK - (self.K - self.STEP_H)) == 0
+      else:
+        assert self.OUT_H % (HCHUNK - (self.K - self.STEP_H)) // self.STEP_H == 0
+      
+      concat_w = HCHUNK_OUT * self.OUT_W
+      concat_block = self.OUT_H * self.OUT_W
+      concat_kernel = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
+      self.kernel_type = f"ConvReluChunkHGraph<SplitScalar,{kernel},{concat_kernel},{HCHUNK},{self.get_conv_targs()}"
+  
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
-  
-  def get_connect_line(self, last_port: str, i: int = 0) -> str:
-    if self.is_stream:
-      connect_list = [f"adf::connect<> ({last_port}, {self.name}.pin[0]);"]
-      connect_list += [f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+1}]);"
-        for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor)
-      ]
-      return "\n".join(connect_list)
-    return super().get_connect_line(last_port)
   
 
 class DequantizeLinearOp(OpParser):
@@ -395,7 +414,7 @@ class GemmOp(OpParser):
 
       chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.N) //8*8, self.N)
       kernel = "GemmReluMKKN" if self.K % 2 == 0 and chunkSize % 4 == 0 else "GemmReluScalarMKKN"
-      concat_kernel = "ConcatFloat" if chunkSize % 8 == 0 and self.N % 4 == 0 else "ConcatScalar"
+      concat_kernel = "ConcatFloat" if chunkSize % 4 == 0 and self.N % 4 == 0 else "ConcatScalar"
       self.kernel_type = f"GemmReluMkknChunkGraph<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       
     else:
@@ -417,19 +436,8 @@ class GemmOp(OpParser):
       kernel = "GemmReluMKKNStream" if self.K % 4 == 0 and self.N % 8 == 0 else "GemmReluScalarMKNKStream"
       self.kernel_type = f"GemmReluStreamGraph<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
     
-    self.is_stream = tw.nbytes > MAX_PARAM_SIZE * 8
-  
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
-  
-  def get_connect_line(self, last_port: str, i: int = 0) -> str:
-    if self.is_stream:
-      connect_list = [f"adf::connect<> ({last_port}, {self.name}.pin[0]);"]
-      connect_list += [f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+1}]);"
-        for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor)
-      ]
-      return "\n".join(connect_list)
-    return super().get_connect_line(last_port, i)
   
   def disable_output_pad(self):
     self.register(disable_N_pad=True)

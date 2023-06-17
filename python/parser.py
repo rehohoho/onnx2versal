@@ -86,6 +86,9 @@ class Parser:
                     op: OpParser):
     for i, input_name in enumerate(onnx_innames):
       self.adf_connects.append(op.get_connect_line(self.nodeout_2_adfport[input_name], i))
+    gmio_connects = op.get_gmio_connect_line(len(onnx_innames))
+    if gmio_connects != "":
+      self.adf_connects.append(gmio_connects)
     for i, output_name in enumerate(onnx_outnames):
       self.nodeout_2_adfport[output_name] = f"{op.name}.pout[{i}]"
       if output_name in self.modelout_2_op:
