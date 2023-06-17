@@ -28,7 +28,7 @@
  * @brief Graph wrapper for arbitrary split kernel implementation and lanes
  * 
  * @connections
- * @connect{pin[0:LCNT], stream}
+ * @connect{pin[0:LCNT], stream H*INP_W}
  * @connect{pout[0], H*OUT_W*sizeof(TT)}
  * @endconnections
  */
@@ -51,6 +51,7 @@ class SplitGraph : public adf::graph {
       adf::runtime<ratio>(k[0]) = 0.6;
 
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::samples_per_iteration(k[0].in[0]) = H*INP_W;
       
       for (int i = 0; i < LCNT; i++)
         adf::connect<adf::window<H*OUT_W*sizeof(TT)>> (k[0].out[i], pout[i]);

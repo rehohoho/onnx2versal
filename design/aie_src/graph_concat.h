@@ -29,7 +29,7 @@
  * 
  * @connections
  * @connect{pin[0:LCNT], H*INP_W*TTSIZE}
- * @connect{pout[0], H*OUT_W*TTSIZE}
+ * @connect{pout[0], stream H*OUT_W*TTSIZE}
  * @endconnections
  */
 template <template<typename, int, int, int, int> class CONCAT,
@@ -56,6 +56,7 @@ class ConcatGraph : public adf::graph {
       
       // OUT_W <= H*INP_W
       adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      adf::samples_per_iteration(k[0].out[0]) = H*OUT_W;
     }
 
 };

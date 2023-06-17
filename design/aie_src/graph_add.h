@@ -40,14 +40,11 @@ class AddGraph : public adf::graph {
     adf::port<input> pin[2];
     adf::port<output> pout[1];
 
-    AddGraph(
-      int repeat_cnt = 1
-    ) { 
+    AddGraph() { 
       k[0] = adf::kernel::create_object<ADD<TT, W, IS_RELU>>();
       adf::source(k[0]) = "add.cc";
       adf::headers(k[0]) = {"add.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
-      adf::repetition_count(k[0]) = repeat_cnt;
       
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (pin[1], k[0].in[1]);

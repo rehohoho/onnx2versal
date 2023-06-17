@@ -27,8 +27,8 @@
  * @brief Single instance graph for Pad2D
  * 
  * @connections
- * @connect{pin[0], B*INP_H*INP_W*sizeof(TT)}
- * @connect{pout[0], B*OUT_H*OUT_W*sizeof(TT)}
+ * @connect{pin[0], stream B*INP_H*INP_W*sizeof(TT)}
+ * @connect{pout[0], stream B*OUT_H*OUT_W*sizeof(TT)}
  * @endconnections
  */
 template <template<typename, int, int, int, int, int, int, int> class PAD, 
@@ -53,6 +53,9 @@ class Pad2DGraph : public adf::graph {
       
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (k[0].out[0], pout[0]);
+
+      adf::samples_per_iteration(k[0].in[0]) = B*INP_H*INP_W;
+      adf::samples_per_iteration(k[0].out[0]) = B*OUT_H*OUT_W;
     }
 
 };
