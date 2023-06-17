@@ -38,7 +38,7 @@ class AddScalar {
 
 /**
  * @brief Vector implementation for float, 
- * AddScalar<float_t, 16384, 1> takes 28686 cycles (window 5668*8=45344 cycles)
+ * AddScalar<float_t, 16384, 1> takes 24595 cycles (window 5668*8=45344 cycles)
  */
 template <typename TT, int W, int IS_RELU>
 class AddFloat {

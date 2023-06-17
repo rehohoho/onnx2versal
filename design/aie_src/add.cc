@@ -35,24 +35,10 @@ void AddFloat<TT, W, IS_RELU>::filter(
   v8float av = undef_v8float();
   v8float bv = undef_v8float();
 
-  for (int w = 0; w <= W-8; w+=8) chess_prepare_for_pipelining chess_loop_range(W/8,) { // W%8
-    av = upd_v(av, 0, getf_wss(0));
+  for (int w = 0; w < W; w+=4) chess_prepare_for_pipelining chess_loop_range(W/4,) {
+    av = upd_v(av, 0, getf_wss(0)); // better pipelining than loading full v8float
     bv = upd_v(bv, 0, getf_wss(1));
-    av = upd_v(av, 1, getf_wss(0));
-    bv = upd_v(bv, 1, getf_wss(1));
 
-    av = fpadd(av, bv);
-    
-    if (IS_RELU)
-      av = fpmax(av, zeros);
-    
-    put_wms(0, ext_v(av, 0));
-    put_wms(0, ext_v(av, 1));
-  }
-
-  if (W % 8 == 4) { // W%4
-    av = upd_v(av, 0, getf_wss(0));
-    bv = upd_v(bv, 0, getf_wss(1));
     av = fpadd(av, bv);
     
     if (IS_RELU)
