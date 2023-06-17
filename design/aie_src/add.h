@@ -18,18 +18,19 @@
 
 /**
  * @brief Scalar implementation, 
- * AddScalar<float_t, 2048, 1> takes 45097 cycles
+ * AddScalar<float_t, 16384, 1> takes 131102 cycles, (window 45097*8=360776 cycles)
  */
 template <typename TT, int W, int IS_RELU>
 class AddScalar {
 	public:
 		void filter(
-			input_window<TT>* inA,
-			input_window<TT>* inB,
-			output_window<TT>* out
+			input_stream<TT>* restrict inA,
+			input_stream<TT>* restrict inB,
+			output_stream<TT>* restrict out
 		);
 
 		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4);
 			REGISTER_FUNCTION(AddScalar::filter);
 		}
 };
@@ -37,15 +38,15 @@ class AddScalar {
 
 /**
  * @brief Vector implementation for float, 
- * AddScalar<float_t, 2048, 1> takes 5668 cycles
+ * AddScalar<float_t, 16384, 1> takes 28686 cycles (window 5668*8=45344 cycles)
  */
 template <typename TT, int W, int IS_RELU>
 class AddFloat {
 	public:
 		void filter(
-			input_window<TT>* inA,
-			input_window<TT>* inB,
-			output_window<TT>* out
+			input_stream<TT>* restrict inA,
+			input_stream<TT>* restrict inB,
+			output_stream<TT>* restrict out
 		);
 
 		static void registerKernelClass() {

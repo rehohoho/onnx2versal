@@ -19,25 +19,25 @@ class AddGraphTest : public adf::graph {
       const std::string& INPA_TXT, 
       const std::string& INPB_TXT, 
       const std::string& OUT_TXT
-    ): g(8) { 
+    ) { 
       plin[0] = adf::input_plio::create("plin0_add"+id, PLIO64_ARG(INPA_TXT));
       plin[1] = adf::input_plio::create("plin1_add"+id, PLIO64_ARG(INPB_TXT));
       plout[0] = adf::output_plio::create("plout0_add"+id, PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<W*TTSIZE>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<W*TTSIZE>> (plin[1].out[0], g.pin[1]);
-      adf::connect<adf::window<W*TTSIZE>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream> (plin[1].out[0], g.pin[1]);
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
-AddGraphTest<AddScalar, float_t, 2048, 1> addScalar(
+AddGraphTest<AddScalar, float_t, 16384, 1> addScalar(
   "addScalar", 
   "k6add_inA_shape1x16x32x32.txt", 
   "k6add_inB_shape1x16x32x32.txt",
   "k6add_goldenout_shape1x16x32x32_scalar.txt");
 
-AddGraphTest<AddFloat, float_t, 2048, 1> addFloat(
+AddGraphTest<AddFloat, float_t, 16384, 1> addFloat(
   "addFloat", 
   "k6add_inA_shape1x16x32x32.txt", 
   "k6add_inB_shape1x16x32x32.txt",

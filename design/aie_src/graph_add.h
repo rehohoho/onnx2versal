@@ -22,8 +22,9 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], W*TTSIZE}
- * @connect{pout[0], W*TTSIZE}
+ * @connect{pin[0], stream W*TTSIZE}
+ * @connect{pin[1], stream W*TTSIZE}
+ * @connect{pout[0], stream W*TTSIZE}
  * @endconnections
  */
 template <template<typename, int, int> class ADD, 
@@ -48,9 +49,13 @@ class AddGraph : public adf::graph {
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::repetition_count(k[0]) = repeat_cnt;
       
-      adf::connect<adf::window<W*TTSIZE>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<W*TTSIZE>> (pin[1], k[0].in[1]);
-      adf::connect<adf::window<W*TTSIZE>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (pin[1], k[0].in[1]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+
+      adf::samples_per_iteration(k[0].in[0]) = W;
+      adf::samples_per_iteration(k[0].in[1]) = W;
+      adf::samples_per_iteration(k[0].out[0]) = W;
     }
 
 };
