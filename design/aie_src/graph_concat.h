@@ -99,12 +99,16 @@ class ConcatStreamGraph : public adf::graph {
         k1.push_back(_k);
         adf::connect<adf::stream> (pin[i], _k.in[0]);
         adf::connect<adf::stream> (pin[i+1], _k.in[1]);
+        adf::location<adf::stack> (_k) = adf::location<adf::kernel>(_k);
       }
-      for (int i = 0; i < LCNT-3; i+=4) {
-        _k = create_concat_kernel<2*INP_W, 2*INP_W, 4*INP_W>();
-        k2.push_back(_k);
-        adf::connect<adf::stream> (k1[i/2].out[0], _k.in[0]);
-        adf::connect<adf::stream> (k1[i/2+1].out[0], _k.in[1]);
+      if (LCNT > 3) { // kernel in loop will be included during compilation otherwise
+        for (int i = 0; i < LCNT-3; i+=4) {
+          _k = create_concat_kernel<2*INP_W, 2*INP_W, 4*INP_W>();
+          k2.push_back(_k);
+          adf::connect<adf::stream> (k1[i/2].out[0], _k.in[0]);
+          adf::connect<adf::stream> (k1[i/2+1].out[0], _k.in[1]);
+          adf::location<adf::stack> (_k) = adf::location<adf::kernel>(_k);
+        }
       }
 
 
