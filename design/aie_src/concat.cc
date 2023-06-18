@@ -690,3 +690,34 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter1(
 
   PROFILE_FOOTER;
 }
+
+
+template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
+void ConcatScalarStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
+	input_stream<TT>* in0,
+  input_stream<TT>* in1,
+  output_stream<TT>* out
+) {
+  PROFILE_HEADER(printf(
+    "Running ConcatScalarStream<%s,%d,%d,%d,%d>::filter\n", 
+    typeid(TT).name(), H, INP_W1, INP_W2, OUT_W));
+
+  for (int i = 0; i < H; i++) {
+    for (int i = 0; i < INP_W1; i++)
+      writeincr(out, readincr(in0));
+    
+    if (INP_W1 + INP_W2 <= OUT_W) {
+      for (int i = 0; i < INP_W2; i++)
+        writeincr(out, readincr(in1));
+      for (int i = 0; i < OUT_W - INP_W1 - INP_W2; i++)
+        writeincr(out, 0);
+    } else {
+      for (int i = 0; i < OUT_W - INP_W1; i++)
+        writeincr(out, readincr(in1));  
+      for (int i = 0; i < INP_W1 + INP_W2 - OUT_W; i++)
+        readincr(in1);
+    }
+  }
+
+  PROFILE_FOOTER;
+}

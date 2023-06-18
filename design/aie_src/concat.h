@@ -16,7 +16,7 @@
 
 /**
  * @brief Scalar implementation, 
- * ConcatScalar<5, 64, 16, 52> takes 4452 cycles (650 for output window)
+ * ConcatScalar<f,5,4,32,144> takes 5858 cycles (~850 for output window)
  */
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatScalar {
@@ -82,7 +82,7 @@ class ConcatScalar {
 			output_stream<TT>* out
 		);
 		static void registerKernelClass() {
-			static_assert(sizeof(TT) == 4 || sizeof(TT) == 16); // 32-bit or 128-bit stream
+			static_assert(sizeof(TT) == 4); // 32-bit stream
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(ConcatScalar::filter8);
 			} else if (LCNT == 7) {
@@ -107,7 +107,7 @@ class ConcatScalar {
 /**
  * @brief Vector implementation, 
  * requires INP_W%4=0, OUT_W%4=0.
- * ConcatFloat<5, 64, 16, 52> takes 547 cycles (232 for output window).
+ * ConcatFloat<f,5,4,32,144> takes 715 cycles (~300 for output window).
  */
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatFloat {
@@ -198,7 +198,7 @@ class ConcatFloat {
 /**
  * @brief Vector implementation for int8_t, 
  * requires INP_W%16=0, OUT_W%16=0,
- * ConcatInt8<5, 64, 16, 52> takes 230 cycles (223 with output window).
+ * ConcatInt8<f,5,4,32,144> takes 283 cycles (~same with output window).
  */
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatInt8 {
@@ -282,6 +282,26 @@ class ConcatInt8 {
 			} else if (LCNT == 1) {
 				REGISTER_FUNCTION(ConcatInt8::filter1);
 			}
+		}
+};
+
+
+/**
+ * @brief Scalar implementation for stream concat, 
+ * ConcatScalarStream<f,4,32,32,64> takes ~1000 cycles
+ */
+template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
+class ConcatScalarStream {
+	public:
+		void filter(
+			input_stream<TT>* in0,
+			input_stream<TT>* in1,
+			output_stream<TT>* out
+		);
+		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4); // 32-bit stream
+			// also expects INP_W1 < OUT_W, not included due to conditional instances in graph
+			REGISTER_FUNCTION(ConcatScalarStream::filter);
 		}
 };
 /** @}*/
