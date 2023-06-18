@@ -53,8 +53,10 @@ class SplitGraph : public adf::graph {
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::samples_per_iteration(k[0].in[0]) = H*INP_W;
       
-      for (int i = 0; i < LCNT; i++)
+      for (int i = 0; i < LCNT; i++) {
         adf::connect<adf::window<H*OUT_W*sizeof(TT)>> (k[0].out[i], pout[i]);
+        adf::single_buffer(k[0].out[i]);
+      }
     }
 
 };
