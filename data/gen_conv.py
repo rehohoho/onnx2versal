@@ -65,11 +65,11 @@ tout_bchw_3x3 = torch.nn.functional.conv2d(
   torch.Tensor(fpweights_3x3.reshape(M,C,K,K)), 
   torch.Tensor(fpbias.reshape(M)), padding="same").numpy()
 tout_bchw_3x3 = torch.nn.functional.relu(torch.Tensor(tout_bchw_3x3)).numpy()
-save_tensor(f"convbchw_3x3_fpout_{get_shape_str(tout_bchw_3x3)}.txt", tout_bchw_3x3)
+save_tensor(f"convbchw_fpout_3x3_{get_shape_str(tout_bchw_3x3)}.txt", tout_bchw_3x3)
 
 tout_bchw_3x3_stride2 = torch.nn.functional.conv2d(
   torch.Tensor(tin.reshape(1,C,INP_W,INP_W)), 
   torch.Tensor(fpweights_3x3.reshape(M,C,K,K)), 
   torch.Tensor(fpbias.reshape(M)), stride=2).numpy()
 tout_bchw_3x3_stride2 = torch.nn.functional.relu(torch.Tensor(tout_bchw_3x3_stride2)).numpy()
-save_tensor(f"convbchw_3x3_stride2_fpout_{get_shape_str(tout_bchw_3x3_stride2)}.txt", tout_bchw_3x3_stride2)
+save_tensor(f"convbchw_fpout_3x3_stride2_{get_shape_str(tout_bchw_3x3_stride2)}.txt", tout_bchw_3x3_stride2)

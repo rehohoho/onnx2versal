@@ -32,7 +32,7 @@ void set_heap_size(adf::kernel k) {
   }
   else if ((std::is_same<
     CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
-    Conv3x3ReluStreamCacheCKK2Row<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
+    Conv3x3ReluStreamCacheCKKMultiRow<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
   ) {
     adf::heap_size(k) = C*K*K*4 + OUT_W*4 + 1024; // caches CKK weights and one OUT_ROW
   }

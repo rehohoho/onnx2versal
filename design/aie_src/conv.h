@@ -100,11 +100,10 @@ class ConvReluScalarBCHW {
  * Conv5x5ReluBCHW<28,28,24,1,1,1,1,5,5,1> total = 17671 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int _K_notused, int IS_RELU>
+          int B, int C, int M, int K, int IS_RELU>
 class Conv5x5ReluBCHW {
 
   private:
-    static constexpr int K = 5;
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&weights)[M*C*K*K];
     alignas(32) float (&bias)[M];
@@ -121,6 +120,7 @@ class Conv5x5ReluBCHW {
     );
     
     static void registerKernelClass() {
+      static_assert(K==5);
       static_assert(INP_W%4==0);
       static_assert(OUT_W%8==0);
       static_assert(STEP_H == 1 && STEP_W == 1);
@@ -139,11 +139,10 @@ class Conv5x5ReluBCHW {
  * Conv5x5on8ReluBCHW<28,28,24,1,1,1,1,5,5,1> total = 13772 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int _K_notused, int IS_RELU>
+          int B, int C, int M, int K, int IS_RELU>
 class Conv5x5on8ReluBCHW {
 
   private:
-    static constexpr int K = 5;
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&weights)[M*C*K*8];
     alignas(32) float (&bias)[M];
@@ -160,10 +159,50 @@ class Conv5x5on8ReluBCHW {
     );
     
     static void registerKernelClass() {
+      static_assert(K==5);
       static_assert(INP_W%4==0);
       static_assert(OUT_W%8==0);
       static_assert(STEP_H == 1 && STEP_W == 1);
       REGISTER_FUNCTION(Conv5x5on8ReluBCHW::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
+
+
+/**
+ * @brief Vector implementation for 3x3 BCHW, stores weights and biases, 
+ * requires K==3 and INP_W%4==0 and OUT_W%8=0 and STEP_H==1 and STEP_W==1
+ * assumes weights are padded to MxCx12,
+ * Conv3x3on12ReluBCHW<28,28,24,1,1,1,1,5,5,1> total =  cycles
+ */
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
+class Conv3x3on12ReluBCHW {
+
+  private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    alignas(32) float (&weights)[M*C*12];
+    alignas(32) float (&bias)[M];
+
+  public:
+    Conv3x3on12ReluBCHW(
+      float (&w)[M*C*12],
+      float (&b)[M]
+    ): weights(w), bias(b) {}; 
+
+    void filter(
+      input_window<float>* in,      // BCHW
+      output_window<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      static_assert(K==3);
+      static_assert(INP_W%4==0);
+      static_assert(OUT_W%8==0);
+      static_assert(STEP_H == 1 && STEP_W == 1);
+      REGISTER_FUNCTION(Conv3x3on12ReluBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
     }
@@ -278,11 +317,11 @@ class Conv3x3ReluStreamCacheCKK {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires K==3, INP_W%4==0, OUT_W%8==0, STEP_H==1, STEP_W==1
- * Conv3x3ReluStreamCacheCKK2Row<26,28,24,1,1,1,1,4,3,1> total = 9815 cycles
+ * Conv3x3ReluStreamCacheCKKMultiRow<26,28,24,1,1,1,1,4,3,1> total = 9815 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
-class Conv3x3ReluStreamCacheCKK2Row {
+class Conv3x3ReluStreamCacheCKKMultiRow {
 
   private:
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
@@ -291,7 +330,7 @@ class Conv3x3ReluStreamCacheCKK2Row {
     alignas(32) float out_row[OUT_W*2];
 
   public:
-    Conv3x3ReluStreamCacheCKK2Row(
+    Conv3x3ReluStreamCacheCKKMultiRow(
       float (&b)[M]
     ): bias(b) {}; 
 
@@ -307,7 +346,7 @@ class Conv3x3ReluStreamCacheCKK2Row {
       static_assert(OUT_W%8==0);
       static_assert(STEP_H == 1);
       static_assert(STEP_W == 1);
-      REGISTER_FUNCTION(Conv3x3ReluStreamCacheCKK2Row::filter);
+      REGISTER_FUNCTION(Conv3x3ReluStreamCacheCKKMultiRow::filter);
       REGISTER_PARAMETER(bias);
     }
 
