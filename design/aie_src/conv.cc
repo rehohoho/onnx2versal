@@ -415,6 +415,7 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
 }
 
 
+// double acc require store in cache and write where VLIW underutilized
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
 void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
@@ -430,6 +431,11 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
   
   v16float data = null_v16float();
   v8float zeros = null_v8float();
+
+#define MAC_ROW(acc, w_i) \
+  acc = fpmac(acc, data, 0, 0x76543210, *(v8float *) w_ptr, w_i+0, 0); \
+  acc = fpmac(acc, data, 1, 0x76543210, *(v8float *) w_ptr, w_i+1, 0); \
+  acc = fpmac(acc, data, 2, 0x76543210, *(v8float *) w_ptr, w_i+2, 0);
 
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
@@ -448,24 +454,18 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_v(data, 2, window_readincr_v4(in));
             window_incr(in, INP_W - 12);
-            acc1 = fpmac(acc1, data, 0, 0x76543210, *(v8float *) w_ptr, 0, 0);
-            acc1 = fpmac(acc1, data, 1, 0x76543210, *(v8float *) w_ptr, 1, 0);
-            acc1 = fpmac(acc1, data, 2, 0x76543210, *(v8float *) w_ptr, 2, 0);
+            MAC_ROW(acc1, 0);
 
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_v(data, 2, window_readincr_v4(in));
             window_incr(in, INP_W - 12);
-            acc1 = fpmac(acc1, data, 0, 0x76543210, *(v8float *) w_ptr, 3, 0);
-            acc1 = fpmac(acc1, data, 1, 0x76543210, *(v8float *) w_ptr, 4, 0);
-            acc1 = fpmac(acc1, data, 2, 0x76543210, *(v8float *) w_ptr, 5, 0);
+            MAC_ROW(acc1, 3);
             w_ptr += 4;
 
             data = upd_w(data, 0, window_readincr_v8(in));
             data = upd_v(data, 2, window_readincr_v4(in));
             window_incr(in, INP_H*INP_W - 2*INP_W - 12);
-            acc1 = fpmac(acc1, data, 0, 0x76543210, *(v8float *) w_ptr, 2, 0);
-            acc1 = fpmac(acc1, data, 1, 0x76543210, *(v8float *) w_ptr, 3, 0);
-            acc1 = fpmac(acc1, data, 2, 0x76543210, *(v8float *) w_ptr, 4, 0);
+            MAC_ROW(acc1, 2);
             w_ptr += 8;
           } // C
           window_incr(in, -C*INP_H*INP_W + 8);
@@ -488,6 +488,102 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
     } // M
   } // B
+
+#undef MAC_ROW
+
+  PROFILE_FOOTER;
+}
+
+
+// stride > 1 have no reuse of data down the row
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
+void Conv3x3ReluStreamCacheCKK2Row<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+	input_window<float>* in,      // BCHW
+  input_stream<float>* weights, // MCKK
+  output_stream<float>* out     // BMHW
+) {
+  PROFILE_HEADER(printf(
+    "Running Conv3x3ReluStreamCacheCKK2Row<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
+    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  
+  float* w_ptr = (float *) ckk_row;
+  
+  v16float data = null_v16float();
+  v8float zeros = null_v8float();
+
+#define MAC_ROW(acc, w_i) \
+  acc = fpmac(acc, data, 0, 0x76543210, *(v8float *) w_ptr, w_i+0, 0); \
+  acc = fpmac(acc, data, 1, 0x76543210, *(v8float *) w_ptr, w_i+1, 0); \
+  acc = fpmac(acc, data, 2, 0x76543210, *(v8float *) w_ptr, w_i+2, 0);
+
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) { 
+
+      for (int i = 0; i < C*12; i+=4) {
+        *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
+      }
+      w_ptr -= C*12;
+      
+      for (int h = 0; h < OUT_H; h+=2) {
+        
+        v8float *out_row_ptr = (v8float *) out_row;
+        
+        for (int w = 0; w < OUT_W; w+=8/STEP_W) {
+        
+          v8float acc1 = aie::broadcast<float, 8>(bias[m]);
+          v8float acc2 = aie::broadcast<float, 8>(bias[m]);
+          
+          for (int c = 0; c < C; c++) {
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_v(data, 2, window_readincr_v4(in));
+            window_incr(in, INP_W - 12);
+            MAC_ROW(acc1, 0);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_v(data, 2, window_readincr_v4(in));
+            window_incr(in, INP_W - 12);
+            MAC_ROW(acc2, 0);
+
+            MAC_ROW(acc1, 3);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_v(data, 2, window_readincr_v4(in));
+            window_incr(in, INP_W - 12);
+            MAC_ROW(acc2, 3);
+            w_ptr += 4;
+
+            MAC_ROW(acc1, 2);
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_v(data, 2, window_readincr_v4(in));
+            window_incr(in, INP_H*INP_W - 3*INP_W - 12);
+            MAC_ROW(acc2, 2);
+            w_ptr += 8;
+          } // C
+          window_incr(in, -C*INP_H*INP_W + 8);
+          w_ptr -= C*12;
+
+          if (IS_RELU) {
+            acc1 = fpmax(acc1, zeros, 0, 0x76543210);
+            acc2 = fpmax(acc2, zeros, 0, 0x76543210);
+          }
+
+          writeincr_v4(out, ext_v(acc1, 0));
+          writeincr_v4(out, ext_v(acc1, 1));
+          *out_row_ptr = acc2; out_row_ptr++;
+        } // W
+
+        window_incr(in, -OUT_W*STEP_W+2*INP_W*STEP_H); // go left OUT_W*STEP_W, go down 2*STEP_H
+        
+        v4float *_out_row_ptr = (v4float *) out_row;
+        for (int i = 0; i < OUT_W; i+=4) {
+          writeincr_v4(out, *_out_row_ptr); _out_row_ptr++;
+        }
+
+      } // H
+      window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
+    } // M
+  } // B
+
+#undef MAC_ROW
 
   PROFILE_FOOTER;
 }

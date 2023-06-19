@@ -20,11 +20,21 @@ void set_heap_size(adf::kernel k) {
   ) {
     adf::heap_size(k) = OUT_H*OUT_W*4 + 1024; // caches HoWo partial products
   } 
+  else if (
+    (std::is_same<
+      CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
+      ConvReluScalarStreamCacheCKK<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value) ||
+    (std::is_same<
+      CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
+      Conv3x3ReluStreamCacheCKK<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
+  ) {
+    adf::heap_size(k) = C*K*K*4 + 1024; // caches CKK weights
+  }
   else if ((std::is_same<
     CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
-    ConvReluScalarStreamCacheCKK<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
+    Conv3x3ReluStreamCacheCKK2Row<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
   ) {
-    adf::heap_size(k) = C*K*K*4 + 1024; // caches CKK inputs
+    adf::heap_size(k) = C*K*K*4 + OUT_W*4 + 1024; // caches CKK weights and one OUT_ROW
   }
 }
 
@@ -187,10 +197,6 @@ class ConvReluStreamGraph : public adf::graph {
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
 
         adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
-        adf::location<adf::buffer>(k[0].in[0]) = {
-          adf::offset(0),
-          adf::offset((B*C*INP_H*INP_W*4 + 31)/32*32)
-        };
       } else {
         adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
       }
