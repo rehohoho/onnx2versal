@@ -260,10 +260,14 @@ class ConvOp(OpParser):
     self.INP_W, self.OUT_W = tin.shape[-1], tout.shape[-1]
     self.out_size = tout.size # host buffer sizes
 
-    if tin.nbytes + self.B*self.C*(self.K-1)*7*self.INP_W*tin.dtype.itemsize > MAX_PARAM_SIZE * 8:
-      raise NotImplementedError(f"No Conv implementation for input size {tin.nbytes}")
+    PAD_H = self.INP_H + self.H0 + self.H1
+    PAD_W = self.INP_W + self.W0 + self.W1
+    conv_in_bytes = self.B*self.C*PAD_H*PAD_W*tin.dtype.itemsize
+    
+    if conv_in_bytes + self.B*self.C*(self.K-1)*7*PAD_W*tin.dtype.itemsize > MAX_PARAM_SIZE * 8:
+      raise NotImplementedError(f"No Conv implementation for padded input size {conv_in_bytes}")
 
-    if tin.nbytes <= MAX_PARAM_SIZE:
+    if conv_in_bytes <= MAX_PARAM_SIZE:
 
       if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
         kernel = "ConvReluScalarBCHW"
@@ -285,7 +289,12 @@ class ConvOp(OpParser):
         self.argname_2_tensor[f"{self.name}_w"] = tw
         self.argname_2_tensor[f"{self.name}_b"] = tbias
 
-        chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.M) //8*8, self.M)
+        chunkSize = min(
+          MAX_PARAM_SIZE//(tw.nbytes//self.M), 
+          MAX_PARAM_SIZE//(tout.nbytes//self.M), 
+          self.M)
+        if chunkSize > 8:
+          chunkSize = chunkSize //8*8
         concat_w = chunkSize * self.OUT_W * self.OUT_W
         concat_block = self.M * self.OUT_W * self.OUT_W
         concat = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
@@ -307,7 +316,6 @@ class ConvOp(OpParser):
       kernel = "ConvReluScalarStreamCacheCKK"
       
       # HCHUNK = OUT_H' * strides + overlap, OVERLAP = K - strides
-      PAD_W = self.INP_W + self.W0 + self.W1
       multiplier = self.B * self.C * PAD_W * self.STEP_H * tin.dtype.itemsize
       offset = self.B * self.C * (-(self.STEP_H - 1) + (self.K - 1)) * PAD_W * tin.dtype.itemsize
       HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_PARAM_SIZE, offset)
@@ -321,7 +329,7 @@ class ConvOp(OpParser):
       
       concat_w = HCHUNK_OUT * self.OUT_W
       concat_block = self.OUT_H * self.OUT_W
-      concat_kernel = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
+      concat_kernel = "ConcatScalarStream"
       self.kernel_type = f"ConvReluChunkHGraph<SplitScalar,{kernel},{concat_kernel},{HCHUNK},{self.get_conv_targs()}"
   
   def get_kernel_line(self) -> str:

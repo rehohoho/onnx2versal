@@ -1,12 +1,32 @@
 #ifndef __CONV_GRAPH_H__
 #define __CONV_GRAPH_H__
 
+#include <type_traits>
 #include <adf.h>
 #include "conv.h"
 #include "pad.h"
 #include "graph_concat.h"
 #include "graph_split.h"
+#include "graph_utils.h"
 
+
+template <template<int, int, int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_H, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K, int IS_RELU>
+void set_heap_size(adf::kernel k) {
+  if ((std::is_same<
+    CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
+    ConvReluScalarStreamCacheHW<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
+  ) {
+    adf::heap_size(k) = OUT_H*OUT_W*4 + 1024; // caches HoWo partial products
+  } 
+  else if ((std::is_same<
+    CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
+    ConvReluScalarStreamCacheCKK<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
+  ) {
+    adf::heap_size(k) = C*K*K*4 + 1024; // caches CKK inputs
+  }
+}
 
 /**
  * @defgroup Conv2D
@@ -70,6 +90,10 @@ class ConvReluGraph : public adf::graph {
       std::vector<float> bias,
       int repeat_cnt = 1
     ) { 
+      static_assert(B*C*PAD_H*PAD_W*4 <= MAX_PARAM_BYTES);
+      assert(weights.size() <= MAX_PARAM_BYTES);
+      static_assert(B*M*OUT_H*OUT_W*4 <= MAX_PARAM_BYTES);
+
       k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>>(weights, bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
@@ -138,12 +162,15 @@ class ConvReluStreamGraph : public adf::graph {
       std::vector<float> bias,
       int repeat_cnt = 1
     ) { 
+      static_assert(B*C*PAD_H*PAD_W*4 <= MAX_PARAM_BYTES);
+      
       k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>>(bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::repetition_count(k[0]) = repeat_cnt;
-      adf::heap_size(k[0]) = OUT_H*OUT_W*4 + 1024; // caches HoWo partial products
+
+      set_heap_size<CONV,PAD_H,PAD_W,OUT_H,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>(k[0]);
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
@@ -158,6 +185,12 @@ class ConvReluStreamGraph : public adf::graph {
 
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
+
+        adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
+        adf::location<adf::buffer>(k[0].in[0]) = {
+          adf::offset(0),
+          adf::offset((B*C*INP_H*INP_W*4 + 31)/32*32)
+        };
       } else {
         adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
       }
@@ -179,7 +212,7 @@ class ConvReluStreamGraph : public adf::graph {
  * 
  * @connections
  * @connect{pin[0], B*C*INP_W*INP_W*4}
- * @connect{pout[0], B*M*OUT_W*OUT_W*4}
+ * @connect{pout[0], stream B*M*OUT_W*OUT_W*4}
  * @endconnections
  */
 template <
@@ -227,6 +260,10 @@ class ConvReluChunkMGraph : public adf::graph {
       std::vector<float> bias
     ) { 
       static_assert(CHUNK_COUNT <= 8);
+      static_assert(B*C*PAD_H*PAD_W*4 <= MAX_PARAM_BYTES);
+      assert(weights.size() <= MAX_PARAM_BYTES*8);
+      static_assert(B*M*OUT_H*OUT_W*4 <= MAX_PARAM_BYTES*8);
+
       std::vector<float> wChunk;
       std::vector<float> bChunk;
       int CKK = weights.size() / M;
@@ -274,7 +311,7 @@ class ConvReluChunkMGraph : public adf::graph {
 
       for (int i = 0; i < CHUNK_COUNT; i++)
         adf::connect<adf::window<B*MCHUNK*OUT_H*OUT_W*4>> (k[i].out[0], concat_g.pin[i]);
-      adf::connect<adf::stream, adf::window<B*M*OUT_H*OUT_W*4>> (concat_g.pout[0], pout[0]);
+      adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
     }
 };
 
@@ -315,7 +352,25 @@ class ConvReluChunkHGraph : public adf::graph {
 
     static constexpr int HCHUNK_OUT = (HCHUNK - K) / STEP_H + 1;
     static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
-    ConcatGraph<CONCAT, float_t, LCNT, B*M, HCHUNK_OUT*OUT_W, OUT_H*OUT_W> concat_graph;
+    ConcatStreamGraph<CONCAT, float_t, LCNT, B*M, HCHUNK_OUT*OUT_W, OUT_H*OUT_W> concat_graph;
+
+    adf::relative_coordinate tileOffsets[8] = {
+      {.col_offset = -1, .row_offset = 1}, // top left, clockwise
+      {.col_offset = 0, .row_offset = 2},
+      {.col_offset = 0, .row_offset = 1},
+      {.col_offset = 1, .row_offset = 0},
+      {.col_offset = 0, .row_offset = -1},
+      {.col_offset = 0, .row_offset = -2},
+      {.col_offset = -1, .row_offset = -1},
+      {.col_offset = -1, .row_offset = 0},
+    };
+
+    adf::relative_coordinate concat_k1_offsets[4] = {
+      {.col_offset = -1, .row_offset = 2}, // top left, clockwise
+      {.col_offset = 1, .row_offset = 1},
+      {.col_offset = 1, .row_offset = -1},
+      {.col_offset = -1, .row_offset = -2},
+    };
     
   public:
     adf::port<adf::input> pin[2];
@@ -325,19 +380,22 @@ class ConvReluChunkHGraph : public adf::graph {
       std::vector<float> bias
     ) {
       static_assert((HCHUNK % STEP_H) == (K % STEP_H));
+      static_assert(LCNT <= 8);
+      static_assert(B*C*PAD_H*PAD_W*4 + B*C*(K-1)*7*PAD_W*4 <= MAX_PARAM_BYTES*8);
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
           adf::kernel::create_object<Pad2DScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
-        adf::runtime<ratio>(pad[0]) = 0.6;
+        adf::runtime<ratio>(pad[0]) = 0.1;
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
         
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
+        // split and pad can't be placed on same tile due to stream co-placement constraints
       } else {
         adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
       }
@@ -348,16 +406,26 @@ class ConvReluChunkHGraph : public adf::graph {
         adf::headers(k[i]) = {"conv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
 
+        set_heap_size<CONV,PAD_H,PAD_W,OUT_H,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>(k[i]);
+
         adf::connect<adf::window<B*C*HCHUNK*PAD_W*4>> (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::stream>                     (pin[1], k[i].in[1]);
-        adf::connect<adf::stream, adf::window<B*M*HCHUNK_OUT*OUT_W*4>> (k[i].out[0], concat_graph.pin[i]);
+        adf::connect<adf::stream>                     (k[i].out[0], concat_graph.pin[i]);
 
         adf::samples_per_iteration(k[i].out[0]) = B*M*HCHUNK_OUT*OUT_W;
 
-        adf::location<adf::parameter>(k[i].param[0]) = adf::location<adf::kernel>(k[i]);
+        adf::location<adf::kernel>(k[i]) = 
+          adf::location<adf::kernel>(split_graph.k[0]) + adf::relative_offset(tileOffsets[i]);
+        adf::location_constraint tilePos = adf::location<adf::kernel>(k[i]);
+        adf::location<adf::parameter>(k[i].param[0]) = tilePos; // may bust tiles adjacent to split
         adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
       }
-      adf::connect<adf::stream> out_stream (concat_graph.pout[0], pout[0]);      
+      adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
+
+      for (int i = 0; i < concat_graph.k1.size(); i++) {
+        adf::location<adf::kernel>(concat_graph.k1[i]) = 
+          adf::location<adf::kernel>(split_graph.k[0]) + adf::relative_offset(concat_k1_offsets[i]);
+      }
     }
 };
 /** @} */
