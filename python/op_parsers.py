@@ -198,7 +198,7 @@ class AddOp(OpParser):
   
   def get_kernel_line(self) -> str:
     graph = "AddGraph"
-    kernel = "AddScalar"
+    kernel = "AddFloat" if self.W % 4 == 0 and self.dtype == "float32" else "AddScalar"
     return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.W},{int(self.is_relu)}> {self.name};"
 
 
@@ -267,13 +267,16 @@ class ConvOp(OpParser):
     if conv_in_bytes + self.B*self.C*(self.K-1)*7*PAD_W*tin.dtype.itemsize > MAX_PARAM_SIZE * 8:
       raise NotImplementedError(f"No Conv implementation for padded input size {conv_in_bytes}")
 
+    PAD_W_VEC = (PAD_W + (tin.dtype.itemsize-1))//tin.dtype.itemsize*tin.dtype.itemsize
+
     if conv_in_bytes <= MAX_PARAM_SIZE:
 
       if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
         kernel = "ConvReluScalarBCHW"
-        if self.OUT_W % 8 == 0 and self.K == 5:
+        if self.OUT_W % 8 == 0 and self.K == 5 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
           kernel = "Conv5x5on8ReluBCHW"
           tw = pad_lastdim(tw, "Conv weights", 8)
+          self.W1 = PAD_W_VEC - self.INP_W - self.W0
         
         self.argname_2_tensor[f"{self.name}_w"] = tw
         self.argname_2_tensor[f"{self.name}_b"] = tbias
@@ -282,9 +285,10 @@ class ConvOp(OpParser):
 
       elif tw.nbytes <= MAX_PARAM_SIZE * 8 and tout.nbytes <= MAX_PARAM_SIZE * 8:
         kernel = "ConvReluScalarBCHW"
-        if self.OUT_W % 8 == 0 and self.K == 5:
+        if self.OUT_W % 8 == 0 and self.K == 5 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
           kernel = "Conv5x5on8ReluBCHW"
           tw = pad_lastdim(tw, "Conv weights", 8)
+          self.W1 = PAD_W_VEC - self.INP_W - self.W0
         
         self.argname_2_tensor[f"{self.name}_w"] = tw
         self.argname_2_tensor[f"{self.name}_b"] = tbias
@@ -301,19 +305,28 @@ class ConvOp(OpParser):
         self.kernel_type = f"ConvReluChunkMGraph<{kernel},{concat},{1},{chunkSize},{self.get_conv_targs()}"
       
       else:
+        kernel = "ConvReluScalarStreamCacheCKK"
+        if self.K == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
+          kernel = "Conv3x3ReluStreamCacheCKK2Row" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
+          tw = pad_lastdim(tw.reshape(self.M, self.C, 9), "Conv weights", 12)
+          self.W1 = PAD_W_VEC - self.INP_W - self.W0
+        
         self.gmioname_2_tensor[f"{self.name}_w"] = tw
         self.gmio_repeats = 1
         self.argname_2_tensor[f"{self.name}_b"] = tbias
-
-        kernel = "ConvReluScalarStreamCacheCKK"
+        
         self.kernel_type = f"ConvReluStreamGraph<{kernel},{self.get_conv_targs()}"
     
     else:
+      kernel = "ConvReluScalarStreamCacheCKK"
+      if self.K == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC + self.B*self.C*(self.K-1)*7*PAD_W_VEC*tin.dtype.itemsize <= MAX_PARAM_SIZE * 8:
+        kernel = "Conv3x3ReluStreamCacheCKK2Row" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
+        tw = pad_lastdim(tw.reshape(self.M, self.C, 9), "Conv weights", 12)
+        self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
+      
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
       self.gmio_repeats = 1
       self.argname_2_tensor[f"{self.name}_b"] = tbias
-    
-      kernel = "ConvReluScalarStreamCacheCKK"
       
       # HCHUNK = OUT_H' * strides + overlap, OVERLAP = K - strides
       multiplier = self.B * self.C * PAD_W * self.STEP_H * tin.dtype.itemsize
