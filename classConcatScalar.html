@@ -97,37 +97,37 @@ $(document).ready(function(){initNavTree('classConcatScalar.html',''); initResiz
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation, ConcatScalar&lt;5, 64, 16, 52&gt; takes 650 cycles.  
+<p>Scalar implementation, ConcatScalar&lt;f,5,4,32,144&gt; takes 5858 cycles (~850 for output window)  
 </p>
 
 <p><code>#include &lt;<a class="el" href="concat_8h_source.html">concat.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a347c46f6e2401d6e14d42435685c3d0e"><td class="memItemLeft" align="right" valign="top"><a id="a347c46f6e2401d6e14d42435685c3d0e" name="a347c46f6e2401d6e14d42435685c3d0e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter8</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, input_window&lt; TT &gt; *in5, input_window&lt; TT &gt; *in6, input_window&lt; TT &gt; *in7, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a347c46f6e2401d6e14d42435685c3d0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee05d6d44b03386975f9cde0b48cab49"><td class="memItemLeft" align="right" valign="top"><a id="aee05d6d44b03386975f9cde0b48cab49" name="aee05d6d44b03386975f9cde0b48cab49"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter7</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, input_window&lt; TT &gt; *in5, input_window&lt; TT &gt; *in6, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:aee05d6d44b03386975f9cde0b48cab49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28dc5babc8cf62073b3308456f7b66fb"><td class="memItemLeft" align="right" valign="top"><a id="a28dc5babc8cf62073b3308456f7b66fb" name="a28dc5babc8cf62073b3308456f7b66fb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter6</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, input_window&lt; TT &gt; *in5, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a28dc5babc8cf62073b3308456f7b66fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c7ef5780f7170d7dfac6fef90a1e088"><td class="memItemLeft" align="right" valign="top"><a id="a0c7ef5780f7170d7dfac6fef90a1e088" name="a0c7ef5780f7170d7dfac6fef90a1e088"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter5</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a0c7ef5780f7170d7dfac6fef90a1e088"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5cd298baeaca0d75d9d508c61cac4e8"><td class="memItemLeft" align="right" valign="top"><a id="af5cd298baeaca0d75d9d508c61cac4e8" name="af5cd298baeaca0d75d9d508c61cac4e8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter4</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:af5cd298baeaca0d75d9d508c61cac4e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65c1de9c6c4ef569b2e10700dd5d5305"><td class="memItemLeft" align="right" valign="top"><a id="a65c1de9c6c4ef569b2e10700dd5d5305" name="a65c1de9c6c4ef569b2e10700dd5d5305"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter3</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a65c1de9c6c4ef569b2e10700dd5d5305"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae975e08954ece3676c756d37cce22780"><td class="memItemLeft" align="right" valign="top"><a id="ae975e08954ece3676c756d37cce22780" name="ae975e08954ece3676c756d37cce22780"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter2</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:ae975e08954ece3676c756d37cce22780"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17902c8fb4362fb2ffe62ca18cbb4502"><td class="memItemLeft" align="right" valign="top"><a id="a17902c8fb4362fb2ffe62ca18cbb4502" name="a17902c8fb4362fb2ffe62ca18cbb4502"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter1</b> (input_window&lt; TT &gt; *in0, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a17902c8fb4362fb2ffe62ca18cbb4502"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a461b6136b7d8dd6d9ae3a807141cb882"><td class="memItemLeft" align="right" valign="top"><a id="a461b6136b7d8dd6d9ae3a807141cb882" name="a461b6136b7d8dd6d9ae3a807141cb882"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter8</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, input_window&lt; TT &gt; *in5, input_window&lt; TT &gt; *in6, input_window&lt; TT &gt; *in7, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a461b6136b7d8dd6d9ae3a807141cb882"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92e620b03246636c86f2c2514b765dad"><td class="memItemLeft" align="right" valign="top"><a id="a92e620b03246636c86f2c2514b765dad" name="a92e620b03246636c86f2c2514b765dad"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter7</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, input_window&lt; TT &gt; *in5, input_window&lt; TT &gt; *in6, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a92e620b03246636c86f2c2514b765dad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0eda58e962df07fedf702cdcdc844cef"><td class="memItemLeft" align="right" valign="top"><a id="a0eda58e962df07fedf702cdcdc844cef" name="a0eda58e962df07fedf702cdcdc844cef"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter6</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, input_window&lt; TT &gt; *in5, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a0eda58e962df07fedf702cdcdc844cef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae721fc35afa3eeac0ce378488af0cffc"><td class="memItemLeft" align="right" valign="top"><a id="ae721fc35afa3eeac0ce378488af0cffc" name="ae721fc35afa3eeac0ce378488af0cffc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter5</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, input_window&lt; TT &gt; *in4, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:ae721fc35afa3eeac0ce378488af0cffc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48e39ffd6ce5b36bb8073040c532a700"><td class="memItemLeft" align="right" valign="top"><a id="a48e39ffd6ce5b36bb8073040c532a700" name="a48e39ffd6ce5b36bb8073040c532a700"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter4</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, input_window&lt; TT &gt; *in3, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a48e39ffd6ce5b36bb8073040c532a700"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c2fe4a904ff91b95fcd38f291cc634a"><td class="memItemLeft" align="right" valign="top"><a id="a6c2fe4a904ff91b95fcd38f291cc634a" name="a6c2fe4a904ff91b95fcd38f291cc634a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter3</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, input_window&lt; TT &gt; *in2, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a6c2fe4a904ff91b95fcd38f291cc634a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9a1890e2ab7acf18bccc6b6a13a61fb"><td class="memItemLeft" align="right" valign="top"><a id="af9a1890e2ab7acf18bccc6b6a13a61fb" name="af9a1890e2ab7acf18bccc6b6a13a61fb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter2</b> (input_window&lt; TT &gt; *in0, input_window&lt; TT &gt; *in1, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:af9a1890e2ab7acf18bccc6b6a13a61fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a1590603c69d196c5e26060b9e33cd7"><td class="memItemLeft" align="right" valign="top"><a id="a5a1590603c69d196c5e26060b9e33cd7" name="a5a1590603c69d196c5e26060b9e33cd7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter1</b> (input_window&lt; TT &gt; *in0, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a5a1590603c69d196c5e26060b9e33cd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

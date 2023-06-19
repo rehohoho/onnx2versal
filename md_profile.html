@@ -93,12 +93,17 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="autotoc_md25"></a> (on aiesim)</p>
-<h2><a class="anchor" id="autotoc_md26"></a>
+<p>GRAPH=tiny_ad</p>
+<p>For float32 model run </p><div class="fragment"><div class="line">python generate.py ../models/${GRAPH}.onnx ../data/$GRAPH/X_test.npy -ndata 10</div>
+<div class="line">TARGET=hw_emu GRAPH=${GRAPH} make graph aiesim_profile</div>
+</div><!-- fragment --><p> For int8 model run </p><div class="fragment"><div class="line">python -m onnxruntime.quantization.preprocess --input ../models/${GRAPH}.onnx --output ../models/${GRAPH}_infer.onnx</div>
+<div class="line">python quantize_onnx.py ../models/${GRAPH}_infer.onnx ../models/${GRAPH}_int8.onnx ../data/$GRAPH/X_test.npy</div>
+<div class="line">rm ../models/${GRAPH}_infer.onnx</div>
+<div class="line">python generate.py ../models/${GRAPH}_int8.onnx ../data/$GRAPH/X_test.npy</div>
+<div class="line">TARGET=hw_emu GRAPH=${GRAPH}_int8 make graph aiesim_profile</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md26"></a>
 hls4ml_jettag</h2>
-<div class="fragment"><div class="line"># Run</div>
-<div class="line">python generate.py ../models/hls4ml_jettag.onnx ../data/MNIST/X_test.npy</div>
-<div class="line">TARGET=hw_emu GRAPH=hls4ml_jettag make graph aiesim_profile</div>
-</div><!-- fragment --><div class="fragment"><div class="line"># Truncated output</div>
+<div class="fragment"><div class="line"># Truncated output</div>
 <div class="line">Running GemmReluMKKN&lt;1,16,64&gt;</div>
 <div class="line">start = 1634,end = 2041,total = 407</div>
 <div class="line">Running GemmReluMKKN&lt;1,64,32&gt;</div>
@@ -112,12 +117,7 @@ hls4ml_jettag</h2>
 </div><!-- fragment --><p> total 1466 cycles</p>
 <h2><a class="anchor" id="autotoc_md27"></a>
 hls4ml_jettag_int8</h2>
-<div class="fragment"><div class="line"># Run</div>
-<div class="line">python -m onnxruntime.quantization.preprocess --input ../models/hls4ml_jettag.onnx --output ../models/hls4ml_jettag_infer.onnx</div>
-<div class="line">python quantize_onnx.py ../models/hls4ml_jettag_infer.onnx ../models/hls4ml_jettag_int8.onnx ../data/MNIST/X_test.npy</div>
-<div class="line">python generate.py ../models/hls4ml_jettag_int8.onnx ../data/MNIST/X_test.npy</div>
-<div class="line">TARGET=hw_emu GRAPH=hls4ml_jettag_int8 make graph aiesim_profile</div>
-</div><!-- fragment --><div class="fragment"><div class="line">Running QuantizeLinearVector&lt;1,16,16&gt;</div>
+<div class="fragment"><div class="line">Running QuantizeLinearVector&lt;1,16,16&gt;</div>
 <div class="line">start = 1799,end = 1869,total = 70</div>
 <div class="line">Running QgemmVector&lt;1,16,64&gt;</div>
 <div class="line">start = 2045,end = 2215,total = 170</div>
@@ -134,10 +134,7 @@ hls4ml_jettag_int8</h2>
 </div><!-- fragment --><p> total 877 cycles</p>
 <h2><a class="anchor" id="autotoc_md28"></a>
 lenet_mnist</h2>
-<div class="fragment"><div class="line"># Run</div>
-<div class="line">python generate.py ../models/lenet_mnist.onnx ../data/MNIST/X_test.npy</div>
-<div class="line">TARGET=hw_emu GRAPH=lenet_mnist make graph aiesim_profile</div>
-</div><!-- fragment --><div class="fragment"><div class="line"># Truncated outoput</div>
+<div class="fragment"><div class="line"># Truncated outoput</div>
 <div class="line">Running Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt;</div>
 <div class="line">start = 3221,end = 20149,total = 16928</div>
 <div class="line">Running Maxpool2x2FloatBCHW::filter&lt;24,24,12,12,1,6&gt;</div>
@@ -162,7 +159,7 @@ lenet_mnist</h2>
 <div class="line">start = 54825,end = 55728,total = 903</div>
 <div class="line">start = 54829,end = 55732,total = 903</div>
 <div class="line">start = 54833,end = 55736,total = 903</div>
-<div class="line">Running ConcatVector&lt;8,1,16,120&gt;::filter8</div>
+<div class="line">Running ConcatFloat&lt;8,1,16,120&gt;::filter8</div>
 <div class="line">start = 55936,end = 56062,total = 126</div>
 <div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
 <div class="line">Running GemmReluMKKN&lt;1,120,32&gt;</div>
@@ -170,7 +167,7 @@ lenet_mnist</h2>
 <div class="line">start = 56382,end = 57270,total = 888</div>
 <div class="line">start = 56386,end = 57274,total = 888</div>
 <div class="line">start = 56390,end = 57278,total = 888</div>
-<div class="line">Running ConcatVector&lt;3,1,32,84&gt;::filter3</div>
+<div class="line">Running ConcatFloat&lt;3,1,32,84&gt;::filter3</div>
 <div class="line">start = 57426,end = 57499,total = 73</div>
 <div class="line">Running GemmReluMKKN&lt;1,84,48&gt;</div>
 <div class="line">start = 57771,end = 58744,total = 973</div>
@@ -179,12 +176,7 @@ lenet_mnist</h2>
 </div><!-- fragment --><p> total 48037 cycles, note <a class="el" href="classGemmReluMKKN.html" title="Vector implementation for MK*KN, stores weights and biases, requires K%4=0, N%4=0 GemmReluMKKN&lt;7,...">GemmReluMKKN</a> runs in parallel</p>
 <h2><a class="anchor" id="autotoc_md29"></a>
 lenet_mnist_int8</h2>
-<div class="fragment"><div class="line"># Run</div>
-<div class="line">python -m onnxruntime.quantization.preprocess --input ../models/lenet_mnist.onnx --output ../models/lenet_mnist_infer.onnx</div>
-<div class="line">python quantize_onnx.py ../models/lenet_mnist_infer.onnx ../models/lenet_mnist_int8.onnx ../data/MNIST/X_test.npy</div>
-<div class="line">python generate.py ../models/lenet_mnist_int8.onnx ../data/MNIST/X_test.npy</div>
-<div class="line">TARGET=hw_emu GRAPH=lenet_mnist_int8 make graph aiesim_profile</div>
-</div><!-- fragment --><div class="fragment"><div class="line"># Truncated output</div>
+<div class="fragment"><div class="line"># Truncated output</div>
 <div class="line">Running QuantizeLinearVector&lt;28,28,32&gt;</div>
 <div class="line">start = 3035,end = 4980,total = 1945</div>
 <div class="line">Running QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt;</div>
@@ -203,8 +195,283 @@ lenet_mnist_int8</h2>
 <div class="line">start = 23827,end = 23976,total = 149</div>
 <div class="line">Running DequantizeLinearScalar&lt;16,10&gt;</div>
 <div class="line">start = 24140,end = 24222,total = 82</div>
-</div><!-- fragment --><p> total 17270 cycles </p>
-</div></div><!-- contents -->
+</div><!-- fragment --><p> total 17270 cycles</p>
+<h2><a class="anchor" id="autotoc_md30"></a>
+tiny_ad</h2>
+<div class="fragment"><div class="line">Running GemmReluMKKNStream&lt;14,640,128,0&gt;</div>
+<div class="line">Running GemmReluMKKNStream&lt;2,128,640,0&gt;</div>
+<div class="line">[run tiny_ad]: success</div>
+<div class="line">Waiting for core(s) of graph tiny_ad to finish execution ...</div>
+<div class="line">start = 155332,end = 729472,total = 574140</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">Running GemmReluMKKNStream&lt;14,640,128,0&gt;</div>
+<div class="line">start = 729612,end = 730569,total = 957</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">start = 732532,end = 740302,total = 7770</div>
+<div class="line">start = 732540,end = 740310,total = 7770</div>
+<div class="line">start = 732548,end = 740318,total = 7770</div>
+<div class="line">start = 732560,end = 740330,total = 7770</div>
+<div class="line">Running ConcatFloat&lt;4,14,32,128&gt;::filter4</div>
+<div class="line">start = 740479,end = 741284,total = 805</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">start = 741440,end = 742397,total = 957</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">start = 744364,end = 752134,total = 7770</div>
+<div class="line">start = 744364,end = 752134,total = 7770</div>
+<div class="line">start = 744372,end = 752142,total = 7770</div>
+<div class="line">start = 744376,end = 752146,total = 7770</div>
+<div class="line">Running ConcatFloat&lt;4,14,32,128&gt;::filter4</div>
+<div class="line">start = 752295,end = 753100,total = 805</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">start = 753256,end = 754213,total = 957</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">start = 756204,end = 763974,total = 7770</div>
+<div class="line">start = 756204,end = 763974,total = 7770</div>
+<div class="line">start = 756208,end = 763978,total = 7770</div>
+<div class="line">start = 756212,end = 763982,total = 7770</div>
+<div class="line">Running ConcatFloat&lt;4,14,32,128&gt;::filter4</div>
+<div class="line">start = 764131,end = 764935,total = 804</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">start = 765091,end = 766230,total = 1139</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,8,0&gt;</div>
+<div class="line">start = 766373,end = 771785,total = 5412</div>
+<div class="line">Running ConcatFloat&lt;1,14,8,8&gt;::filter7</div>
+<div class="line">start = 771928,end = 771969,total = 41</div>
+<div class="line">Running MacFloat&lt;f,14,8,1&gt;</div>
+<div class="line">start = 772113,end = 772276,total = 163</div>
+<div class="line">Running GemmReluMKKN&lt;14,8,128,0&gt;</div>
+<div class="line">start = 772419,end = 777123,total = 4704</div>
+<div class="line">Running ConcatFloat&lt;1,14,128,128&gt;::filter7</div>
+<div class="line">start = 777266,end = 777517,total = 251</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">start = 779853,end = 780810,total = 957</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">start = 783172,end = 790944,total = 7772</div>
+<div class="line">start = 783184,end = 790956,total = 7772</div>
+<div class="line">start = 783168,end = 790966,total = 7798</div>
+<div class="line">start = 783168,end = 790967,total = 7799</div>
+<div class="line">Running ConcatFloat&lt;4,14,32,128&gt;::filter4</div>
+<div class="line">start = 791120,end = 791925,total = 805</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">start = 794294,end = 795251,total = 957</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">start = 797568,end = 805338,total = 7770</div>
+<div class="line">start = 797574,end = 805344,total = 7770</div>
+<div class="line">start = 797580,end = 805350,total = 7770</div>
+<div class="line">start = 797586,end = 805356,total = 7770</div>
+<div class="line">Running ConcatFloat&lt;4,14,32,128&gt;::filter4</div>
+<div class="line">start = 805509,end = 806313,total = 804</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">start = 808657,end = 809614,total = 957</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">Running GemmReluMKKN&lt;14,128,32,0&gt;</div>
+<div class="line">start = 811990,end = 819760,total = 7770</div>
+<div class="line">start = 812002,end = 819772,total = 7770</div>
+<div class="line">start = 812014,end = 819784,total = 7770</div>
+<div class="line">start = 812018,end = 819788,total = 7770</div>
+<div class="line">Running ConcatFloat&lt;4,14,32,128&gt;::filter4</div>
+<div class="line">start = 819933,end = 820738,total = 805</div>
+<div class="line">Running MacFloat&lt;f,14,128,1&gt;</div>
+<div class="line">start = 823133,end = 824090,total = 957</div>
+<div class="line">start = 155347,end = 992030,total = 836683</div>
+<div class="line">Running GemmReluMKKNStream&lt;2,128,640,0&gt;</div>
+<div class="line">start = 992187,end = 1160031,total = 167844</div>
+<div class="line">Running GemmReluMKKNStream&lt;2,128,640,0&gt;</div>
+<div class="line">start = 1160188,end = 1328032,total = 167844</div>
+<div class="line">Running GemmReluMKKNStream&lt;2,128,640,0&gt;</div>
+<div class="line">start = 1328189,end = 1496033,total = 167844</div>
+<div class="line">Running GemmReluMKKNStream&lt;2,128,640,0&gt;</div>
+<div class="line">start = 1496190,end = 1664034,total = 167844</div>
+<div class="line">Running GemmReluMKKNStream&lt;2,128,640,0&gt;</div>
+<div class="line">start = 1664191,end = 1832035,total = 167844</div>
+<div class="line">Running GemmReluMKKNStream&lt;2,128,640,0&gt;</div>
+<div class="line">start = 1832192,end = 2000036,total = 167844</div>
+<div class="line"> </div>
+<div class="line">Checking 1/9: k32mac_goldenout_shape14x128.txt                                                 against k32mac_goldenout_shape14x128.txt                 TEST: FAILED! Only 1790/1792 passed.</div>
+<div class="line">Max absolute difference: 0.00010728799999992766</div>
+<div class="line">Max relative difference: 0.007041693105805323</div>
+<div class="line">Checking 2/9: k35gemm_goldenout_shape14x128.txt                                                against k35gemm_goldenout_shape14x128.txt                TEST: FAILED! Only 1765/1792 passed.</div>
+<div class="line">Max absolute difference: 0.0004413119999999715</div>
+<div class="line">Max relative difference: 0.00788526848162412</div>
+<div class="line">Checking 3/9: k42mac_goldenout_shape14x128.txt                                                 against k42mac_goldenout_shape14x128.txt                 TEST: FAILED! Only 1789/1792 passed.</div>
+<div class="line">Max absolute difference: 6.93202000000559e-05</div>
+<div class="line">Max relative difference: 0.0043106067460254825</div>
+<div class="line">Checking 4/9: k27mac_goldenout_shape14x128.txt                                                 against k27mac_goldenout_shape14x128.txt                 TEST: FAILED! Only 1790/1792 passed.</div>
+<div class="line">Max absolute difference: 9.059899999996901e-05</div>
+<div class="line">Max relative difference: 0.007082397836386333</div>
+<div class="line">Checking 5/9: k25gemm_goldenout_shape14x128.txt                                                against k25gemm_goldenout_shape14x128.txt                TEST: FAILED! Only 1791/1792 passed.</div>
+<div class="line">Max absolute difference: 7.057200000026853e-05</div>
+<div class="line">Max relative difference: 0.016395304116482174</div>
+<div class="line">Checking 6/9: k30gemm_goldenout_shape14x128.txt                                                against k30gemm_goldenout_shape14x128.txt                TEST: FAILED! Only 1787/1792 passed.</div>
+<div class="line">Max absolute difference: 0.0002965930000016215</div>
+<div class="line">Max relative difference: 0.003946147511753102</div>
+<div class="line">Checking 7/9: k37mac_goldenout_shape14x128.txt                                                 against k37mac_goldenout_shape14x128.txt                 TEST: FAILED! Only 1789/1792 passed.</div>
+<div class="line">Max absolute difference: 8.189700000005296e-05</div>
+<div class="line">Max relative difference: 0.009867301893236126</div>
+<div class="line">Checking 8/9: k45gemm_goldenout_shape14x640.txt                                                against k45gemm_goldenout_shape14x640.txt                TEST: OK!</div>
+<div class="line">Checking 9/9: k40gemm_goldenout_shape14x128.txt                                                against k40gemm_goldenout_shape14x128.txt                TEST: FAILED! Only 1780/1792 passed.</div>
+<div class="line">Max absolute difference: 0.00022700429999999994</div>
+<div class="line">Max relative difference: 0.04030108283833806</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md31"></a>
+tiny_ad_int8</h2>
+<div class="fragment"><div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">WARNING: scalebits 27 vs 22.678072 </div>
+<div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
+<div class="line">start = 4587,end = 7028,total = 2441</div>
+<div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
+<div class="line">start = 7191,end = 9632,total = 2441</div>
+<div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
+<div class="line">start = 9795,end = 12236,total = 2441</div>
+<div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
+<div class="line">start = 12399,end = 14840,total = 2441</div>
+<div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
+<div class="line">start = 15003,end = 17444,total = 2441</div>
+<div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
+<div class="line">start = 17607,end = 20048,total = 2441</div>
+<div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
+<div class="line">start = 20211,end = 22652,total = 2441</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">start = 23148,end = 32514,total = 9366</div>
+<div class="line">start = 23152,end = 32518,total = 9366</div>
+<div class="line">start = 23160,end = 32535,total = 9375</div>
+<div class="line">start = 23168,end = 32535,total = 9367</div>
+<div class="line">start = 23176,end = 32542,total = 9366</div>
+<div class="line">start = 23180,end = 32546,total = 9366</div>
+<div class="line">start = 23188,end = 32567,total = 9379</div>
+<div class="line">start = 23156,end = 32570,total = 9414</div>
+<div class="line">Running ConcatScalar&lt;a,8,14,16,128&gt;::filter8</div>
+<div class="line">start = 32821,end = 45833,total = 13012</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 46001,end = 47253,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">start = 47397,end = 63119,total = 15722</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 63263,end = 64515,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">start = 64659,end = 80381,total = 15722</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 80525,end = 81777,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">start = 81921,end = 97643,total = 15722</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 97787,end = 99039,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,16&gt;</div>
+<div class="line">start = 99183,end = 101379,total = 2196</div>
+<div class="line">Running QlinearMac&lt;14,16,0&gt;</div>
+<div class="line">start = 101523,end = 101722,total = 199</div>
+<div class="line">Running QgemmVector&lt;14,16,128&gt;</div>
+<div class="line">start = 101866,end = 105984,total = 4118</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 106128,end = 107380,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">start = 108073,end = 123795,total = 15722</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 124471,end = 125723,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">start = 126398,end = 142310,total = 15912</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 142966,end = 144218,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">start = 144883,end = 160605,total = 15722</div>
+<div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
+<div class="line">start = 161234,end = 162486,total = 1252</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">start = 163121,end = 178843,total = 15722</div>
+<div class="line">start = 163125,end = 178847,total = 15722</div>
+<div class="line">start = 163129,end = 178851,total = 15722</div>
+<div class="line">start = 163139,end = 178861,total = 15722</div>
+<div class="line">start = 163151,end = 178872,total = 15721</div>
+<div class="line">Running ConcatScalar&lt;a,5,14,128,640&gt;::filter5</div>
+<div class="line">start = 179467,end = 243044,total = 63577</div>
+<div class="line">Running DequantizeLinear&lt;2,640,640&gt;</div>
+<div class="line">start = 243546,end = 245150,total = 1604</div>
+<div class="line">Running DequantizeLinear&lt;2,640,640&gt;</div>
+<div class="line">start = 245313,end = 246917,total = 1604</div>
+<div class="line">Running DequantizeLinear&lt;2,640,640&gt;</div>
+<div class="line">start = 247088,end = 248693,total = 1605</div>
+<div class="line">Running DequantizeLinear&lt;2,640,640&gt;</div>
+<div class="line">start = 248856,end = 250460,total = 1604</div>
+<div class="line">Running DequantizeLinear&lt;2,640,640&gt;</div>
+<div class="line">start = 250628,end = 252232,total = 1604</div>
+<div class="line">Running DequantizeLinear&lt;2,640,640&gt;</div>
+<div class="line">start = 252395,end = 253999,total = 1604</div>
+<div class="line">Running DequantizeLinear&lt;2,640,640&gt;</div>
+<div class="line">start = 254162,end = 255766,total = 1604</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line">Checking 1/9: k17qlinearmac_goldenout_shape14x128.txt                                          against k17qlinearmac_goldenout_shape14x128.txt          TEST: FAILED! Only 1785/1792 passed.</div>
+<div class="line">Max absolute difference: 4.0</div>
+<div class="line">Max relative difference: 0.036036036036036036</div>
+<div class="line">Checking 2/9: k20qlinearmac_goldenout_shape14x128.txt                                          against k20qlinearmac_goldenout_shape14x128.txt          TEST: FAILED! Only 1766/1792 passed.</div>
+<div class="line">Max absolute difference: 10.0</div>
+<div class="line">Max relative difference: 0.0975609756097561</div>
+<div class="line">Checking 3/9: k29dequantizeLinear_goldenout_shape14x640.txt                                    against k29dequantizeLinear_goldenout_shape14x640.txt    TEST: FAILED! Only 8491/8960 passed.</div>
+<div class="line">Max absolute difference: 2.251219749999999</div>
+<div class="line">Max relative difference: 0.22222841200353474</div>
+<div class="line">Checking 4/9: k19qgemm_goldenout_shape14x128.txt                                               against k19qgemm_goldenout_shape14x128.txt               TEST: FAILED! Only 1738/1792 passed.</div>
+<div class="line">Max absolute difference: 4.0</div>
+<div class="line">Max relative difference: 1.0</div>
+<div class="line">Checking 5/9: k22qgemm_goldenout_shape14x128.txt                                               against k22qgemm_goldenout_shape14x128.txt               TEST: FAILED! Only 1719/1792 passed.</div>
+<div class="line">Max absolute difference: 7.0</div>
+<div class="line">Max relative difference: 2.5</div>
+<div class="line">Checking 6/9: k28qgemm_goldenout_shape14x640.txt                                               against k28qgemm_goldenout_shape14x640.txt               TEST: FAILED! Only 8491/8960 passed.</div>
+<div class="line">Max absolute difference: 6.0</div>
+<div class="line">Max relative difference: 3.0</div>
+<div class="line">Checking 7/9: k23qlinearmac_goldenout_shape14x128.txt                                          against k23qlinearmac_goldenout_shape14x128.txt          TEST: FAILED! Only 1762/1792 passed.</div>
+<div class="line">Max absolute difference: 11.0</div>
+<div class="line">Max relative difference: 0.2</div>
+<div class="line">Checking 8/9: k25qgemm_goldenout_shape14x128.txt                                               against k25qgemm_goldenout_shape14x128.txt               TEST: FAILED! Only 1697/1792 passed.</div>
+<div class="line">Max absolute difference: 6.0</div>
+<div class="line">Max relative difference: 2.5</div>
+<div class="line">Checking 9/9: k26qlinearmac_goldenout_shape14x128.txt                                          against k26qlinearmac_goldenout_shape14x128.txt          TEST: FAILED! Only 1721/1792 passed.</div>
+<div class="line">Max absolute difference: 13.0</div>
+<div class="line">Max relative difference: 0.15853658536585366</div>
+</div><!-- fragment --><p>convchunk test </p><div class="fragment"><div class="line">Running Pad2DScalar::filter&lt;f,1,24,24,2,2,2,2&gt;</div>
+<div class="line">Running SplitScalar&lt;f,2,1,784,448&gt;::filter2</div>
+<div class="line">start = 824,end = 13480,total = 12656</div>
+<div class="line">start = 857,end = 13868,total = 13011</div>
+<div class="line">Running ConvReluScalarStreamCacheCKK&lt;16,28,24,1,1,1,1,5,5,1&gt;</div>
+<div class="line">Running ConvReluScalarStreamCacheCKK&lt;16,28,24,1,1,1,1,5,5,1&gt;</div>
+<div class="line">start = 14018,end = 149269,total = 135251</div>
+<div class="line">start = 14022,end = 149273,total = 135251</div>
+<div class="line">Running ConcatScalar&lt;f,2,5,288,576&gt;::filter2</div>
+<div class="line">if tout.nbytes &gt; MAX_PARAM_SIZE:</div>
+<div class="line">start = 149338,end = 181050,total = 31712</div>
+</div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

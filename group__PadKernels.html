@@ -95,25 +95,22 @@ $(document).ready(function(){initNavTree('group__PadKernels.html',''); initResiz
 </div><!--header-->
 <div class="contents">
 
-<p>Pads NxINP_W to NxOUT_W shape. Requires INP_W&lt;=OUT_W.  
+<p>See padding at <a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv</a>.  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for PadKernels:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__PadKernels.png" border="0" usemap="#agroup____PadKernels" alt=""/></div>
 <map name="agroup____PadKernels" id="agroup____PadKernels">
-<area shape="rect" href="group__Pad.html" title="Pad graphs. Pads NxINP_W to NxOUT_W shape." alt="" coords="5,5,50,31"/>
-<area shape="rect" title="Pads NxINP_W to NxOUT_W shape. Requires INP_W&lt;=OUT_W." alt="" coords="98,5,186,31"/>
+<area shape="rect" href="group__Pad.html" title="See padding at https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv for Pad2D." alt="" coords="5,5,50,31"/>
+<area shape="rect" title="See padding at https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv." alt="" coords="98,5,186,31"/>
 </map>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPadScalar.html">PadScalar&lt; TT, N, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for Pad PadScalar::filter&lt;int16_t, 28, 28, 32&gt;, total = 5521.  <a href="classPadScalar.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPadVectorInt16.html">PadVectorInt16&lt; TT, N, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation for Pad PadVectorInt16::filter&lt;int16_t, 28, 28, 32&gt;, total = 5521.  <a href="classPadVectorInt16.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPad2DScalar.html">Pad2DScalar&lt; TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation for Pad2D Pad2DScalar::filter&lt;f,1,28,28,2,2,2,2&gt; takes 2964 cycles (tested 954 window, 13k mixed)  <a href="classPad2DScalar.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

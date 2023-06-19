@@ -1,5 +1,4 @@
 var group__PadKernels =
 [
-    [ "PadScalar< TT, N, INP_W, OUT_W >", "classPadScalar.html", null ],
-    [ "PadVectorInt16< TT, N, INP_W, OUT_W >", "classPadVectorInt16.html", null ]
+    [ "Pad2DScalar< TT, B, INP_H, INP_W, H0, H1, W0, W1 >", "classPad2DScalar.html", null ]
 ];

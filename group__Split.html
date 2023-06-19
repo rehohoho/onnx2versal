@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: PadScalar&lt; TT, N, INP_W, OUT_W &gt; Class Template Reference</title>
+<title>onnx2versal: Split</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classPadScalar.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('group__Split.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -90,40 +90,56 @@ $(document).ready(function(){initNavTree('classPadScalar.html',''); initResizabl
 
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classPadScalar-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">PadScalar&lt; TT, N, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
+<a href="#groups">Modules</a> &#124;
+<a href="#nested-classes">Classes</a>  </div>
+  <div class="headertitle"><div class="title">Split</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for Pad PadScalar::filter&lt;int16_t, 28, 28, 32&gt;, total = 5521.  
-</p>
-
-<p><code>#include &lt;<a class="el" href="pad_8h_source.html">pad.h</a>&gt;</code></p>
+<p>Splits width dimension of HxINP_W into split times HxOUT_W with optional overlap.  
+<a href="#details">More...</a></p>
+<div class="dynheader">
+Collaboration diagram for Split:</div>
+<div class="dyncontent">
+<div class="center"><img src="group__Split.png" border="0" usemap="#agroup____Split" alt=""/></div>
+<map name="agroup____Split" id="agroup____Split">
+<area shape="rect" title="Splits width dimension of HxINP_W into split times HxOUT_W with optional overlap." alt="" coords="5,5,53,31"/>
+<area shape="rect" href="group__SplitKernels.html" title=" " alt="" coords="101,5,192,31"/>
+</map>
+</div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:aac4d0c58653d8c4aa3be2e76002578eb"><td class="memItemLeft" align="right" valign="top"><a id="aac4d0c58653d8c4aa3be2e76002578eb" name="aac4d0c58653d8c4aa3be2e76002578eb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:aac4d0c58653d8c4aa3be2e76002578eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="groups" name="groups"></a>
+Modules</h2></td></tr>
+<tr class="memitem:group__SplitKernels"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__SplitKernels.html">SplitKernels</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:afa5506b8f68a6f36bdb1558150d068c1"><td class="memItemLeft" align="right" valign="top"><a id="afa5506b8f68a6f36bdb1558150d068c1" name="afa5506b8f68a6f36bdb1558150d068c1"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:afa5506b8f68a6f36bdb1558150d068c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSplitGraph.html">SplitGraph&lt; SPLIT, TT, H, INP_W, OUT_W, OVERLAP &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Graph wrapper for arbitrary split kernel implementation and lanes.  <a href="classSplitGraph.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following files:<ul>
-<li>design/aie_src/<a class="el" href="pad_8h_source.html">pad.h</a></li>
-<li>design/aie_src/pad.cc</li>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<ul>
+<li>Contains functions filter[k], k=1,2,...,8, registers filter based on LCNT</li>
+<li>Maximum of 8 lanes since max incoming DMA to a tile is 8</li>
 </ul>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">SPLIT</td><td>Split Kernel </td></tr>
+    <tr><td class="paramname">TT</td><td>input/output type </td></tr>
+    <tr><td class="paramname">H</td><td>input/output height </td></tr>
+    <tr><td class="paramname">INP_W</td><td>input width </td></tr>
+    <tr><td class="paramname">OUT_W</td><td>output width of each split </td></tr>
+    <tr><td class="paramname">OVERLAP</td><td>number of overlapping elements between adjacent OUT_W </td></tr>
+  </table>
+  </dd>
+</dl>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classPadScalar.html">PadScalar</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

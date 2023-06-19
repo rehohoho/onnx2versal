@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: PadGraph&lt; PAD, TT, N, INP_W, OUT_W &gt; Class Template Reference</title>
+<title>onnx2versal: Conv3x3ReluStreamCacheCKK2Row&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classPadGraph.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classConv3x3ReluStreamCacheCKK2Row.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -90,42 +90,43 @@ $(document).ready(function(){initNavTree('classPadGraph.html',''); initResizable
 
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="classPadGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">PadGraph&lt; PAD, TT, N, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a></div></div></div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="classConv3x3ReluStreamCacheCKK2Row-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">Conv3x3ReluStreamCacheCKK2Row&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Single instance graph.  
- <a href="classPadGraph.html#details">More...</a></p>
+<p>Vector stream implementation for BCHW, stores biases, requires K==3, INP_W%4==0, OUT_W%8==0, STEP_H==1, STEP_W==1 Conv3x3ReluStreamCacheCKK2Row&lt;26,28,24,1,1,1,1,4,3,1&gt; total = 9815 cycles.  
+</p>
 
-<p><code>#include &lt;<a class="el" href="graph__pad_8h_source.html">graph_pad.h</a>&gt;</code></p>
-
-<p>Inherits adf::graph.</p>
+<p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a8f2b807ed732214bbdb42dc31980b4fe"><td class="memItemLeft" align="right" valign="top"><a id="a8f2b807ed732214bbdb42dc31980b4fe" name="a8f2b807ed732214bbdb42dc31980b4fe"></a>
-adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:a8f2b807ed732214bbdb42dc31980b4fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d95be06cb1cba3ad02db665d7857b78"><td class="memItemLeft" align="right" valign="top"><a id="a1d95be06cb1cba3ad02db665d7857b78" name="a1d95be06cb1cba3ad02db665d7857b78"></a>
-adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a1d95be06cb1cba3ad02db665d7857b78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:aa3e6e31bebae4c2fa15abbadcd89f082"><td class="memItemLeft" align="right" valign="top"><a id="aa3e6e31bebae4c2fa15abbadcd89f082" name="aa3e6e31bebae4c2fa15abbadcd89f082"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Conv3x3ReluStreamCacheCKK2Row</b> (float(&amp;b)[M])</td></tr>
+<tr class="separator:aa3e6e31bebae4c2fa15abbadcd89f082"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5e2a92b669eadc7cd173e45d07072e5"><td class="memItemLeft" align="right" valign="top"><a id="af5e2a92b669eadc7cd173e45d07072e5" name="af5e2a92b669eadc7cd173e45d07072e5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, input_stream&lt; float &gt; *weights, output_stream&lt; float &gt; *out)</td></tr>
+<tr class="separator:af5e2a92b669eadc7cd173e45d07072e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a89cd51c140bbe0d7585046ea307d0497"><td class="memItemLeft" align="right" valign="top"><a id="a89cd51c140bbe0d7585046ea307d0497" name="a89cd51c140bbe0d7585046ea307d0497"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
+<tr class="separator:a89cd51c140bbe0d7585046ea307d0497"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int &gt; class PAD, typename TT, int N, int INP_W, int OUT_W&gt;<br />
-class PadGraph&lt; PAD, TT, N, INP_W, OUT_W &gt;</div><p>&lt;dl class= </p>
-<p>&lt;td class= </p>
-<p>&lt;td class= </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>design/aie_src/<a class="el" href="graph__pad_8h_source.html">graph_pad.h</a></li>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
+<li>design/aie_src/conv.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classPadGraph.html">PadGraph</a></li>
+    <li class="navelem"><a class="el" href="classConv3x3ReluStreamCacheCKK2Row.html">Conv3x3ReluStreamCacheCKK2Row</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

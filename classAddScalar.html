@@ -97,16 +97,16 @@ $(document).ready(function(){initNavTree('classAddScalar.html',''); initResizabl
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation, AddScalar&lt;float_t, 2048, 1&gt; takes 45097 cycles.  
+<p>Scalar implementation, AddScalar&lt;float_t, 16384, 1&gt; takes 131102 cycles, (window 45097*8=360776 cycles)  
 </p>
 
 <p><code>#include &lt;<a class="el" href="add_8h_source.html">add.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a38442d31d761b514de8837673db82929"><td class="memItemLeft" align="right" valign="top"><a id="a38442d31d761b514de8837673db82929" name="a38442d31d761b514de8837673db82929"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *inA, input_window&lt; TT &gt; *inB, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a38442d31d761b514de8837673db82929"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a812409ea047a56d5993d882a2a04c04b"><td class="memItemLeft" align="right" valign="top"><a id="a812409ea047a56d5993d882a2a04c04b" name="a812409ea047a56d5993d882a2a04c04b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *restrict inA, input_stream&lt; TT &gt; *restrict inB, output_stream&lt; TT &gt; *restrict out)</td></tr>
+<tr class="separator:a812409ea047a56d5993d882a2a04c04b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

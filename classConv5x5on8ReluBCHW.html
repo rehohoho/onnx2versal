@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Conv5x5on8ReluBCHW&lt; INP_W, OUT_W, B, C, M, _K_notused, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: Conv5x5on8ReluBCHW&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, _K_notused, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classConv5x5on8ReluBCHW.html',''); ini
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classConv5x5on8ReluBCHW-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Conv5x5on8ReluBCHW&lt; INP_W, OUT_W, B, C, M, _K_notused, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">Conv5x5on8ReluBCHW&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, _K_notused, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 5x5 BCHW, stores weights and biases, requires OUT_W%8=0 Conv5x5on8ReluBCHW&lt;28, 24, 1, 1, 6&gt; total = 16521 cycles.  
+<p>Vector implementation for 5x5 BCHW, stores weights and biases, requires INP_W%4==0 and OUT_W%8=0 and STEP_H==1 and STEP_W==1, assumes weights are padded to MxCx5x8, Conv5x5on8ReluBCHW&lt;28,28,24,1,1,1,1,5,5,1&gt; total = 13772 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a77268f72dc8a423ce76a5560a6daa7bf"><td class="memItemLeft" align="right" valign="top"><a id="a77268f72dc8a423ce76a5560a6daa7bf" name="a77268f72dc8a423ce76a5560a6daa7bf"></a>
+<tr class="memitem:a1775e5545c5a009462a40f92b5da7b59"><td class="memItemLeft" align="right" valign="top"><a id="a1775e5545c5a009462a40f92b5da7b59" name="a1775e5545c5a009462a40f92b5da7b59"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Conv5x5on8ReluBCHW</b> (float(&amp;w)[M *C *K *8], float(&amp;b)[M])</td></tr>
-<tr class="separator:a77268f72dc8a423ce76a5560a6daa7bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6ff52581eb5e511c70c39592246dbe2"><td class="memItemLeft" align="right" valign="top"><a id="ae6ff52581eb5e511c70c39592246dbe2" name="ae6ff52581eb5e511c70c39592246dbe2"></a>
+<tr class="separator:a1775e5545c5a009462a40f92b5da7b59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adede90d9d93370855e4183fcaa226b51"><td class="memItemLeft" align="right" valign="top"><a id="adede90d9d93370855e4183fcaa226b51" name="adede90d9d93370855e4183fcaa226b51"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:ae6ff52581eb5e511c70c39592246dbe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:adede90d9d93370855e4183fcaa226b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a17cf799b6f99a42a3515d0bf524868cd"><td class="memItemLeft" align="right" valign="top"><a id="a17cf799b6f99a42a3515d0bf524868cd" name="a17cf799b6f99a42a3515d0bf524868cd"></a>
+<tr class="memitem:a7e3f81dc397570296b75cc128abc8d10"><td class="memItemLeft" align="right" valign="top"><a id="a7e3f81dc397570296b75cc128abc8d10" name="a7e3f81dc397570296b75cc128abc8d10"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a17cf799b6f99a42a3515d0bf524868cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a7e3f81dc397570296b75cc128abc8d10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>

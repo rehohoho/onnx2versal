@@ -22,6 +22,7 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "graph_qlinearsoftmax.h", "graph__qlinearsoftmax_8h_source.html", null ],
     [ "graph_quantize_linear.h", "graph__quantize__linear_8h_source.html", null ],
     [ "graph_softmax.h", "graph__softmax_8h_source.html", null ],
+    [ "graph_split.h", "graph__split_8h_source.html", null ],
     [ "graph_transpose.h", "graph__transpose_8h_source.html", null ],
     [ "graph_utils.h", "graph__utils_8h_source.html", null ],
     [ "identity.h", "identity_8h_source.html", null ],
@@ -35,5 +36,6 @@ var dir_4fc369f3e3bb6b520cab108493a8c188 =
     [ "qlinearsoftmax.h", "qlinearsoftmax_8h_source.html", null ],
     [ "quantize_linear.h", "quantize__linear_8h_source.html", null ],
     [ "softmax.h", "softmax_8h_source.html", null ],
+    [ "split.h", "split_8h_source.html", null ],
     [ "transpose.h", "transpose_8h_source.html", null ]
 ];

@@ -115,14 +115,17 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluGraph.html">ConvReluGraph&lt; CONV, INP_W, OUT_W, B, C, M, K, IS_RELU &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.  <a href="classConvReluGraph.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluGraph.html">ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases.  <a href="classConvReluGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluStreamGraph.html">ConvReluStreamGraph&lt; CONV, INP_W, OUT_W, B, C, M, K, IS_RELU &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluStreamGraph.html">ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that streams weights and biases, significantly slower.  <a href="classConvReluStreamGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkGraph.html">ConvReluChunkGraph&lt; CONV, CONCAT, IS_BCHW, IS_KPAD, MCHUNK, INP_W, OUT_W, B, C, M, K, IS_RELU &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases. If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0. Chunks MCKK weights by M dimension into MCHUNK chunks. Each instance has max size = 16384 and 4096 bytes respectively. Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)  <a href="classConvReluChunkGraph.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkMGraph.html">ConvReluChunkMGraph&lt; CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks MCKK weights by M dimension, maximum 8 chunks If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0.  <a href="classConvReluChunkMGraph.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHGraph.html">ConvReluChunkHGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks BCHW by W dimension, maximum 8 chunks If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0.  <a href="classConvReluChunkHGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -134,14 +137,20 @@ Classes</h2></td></tr>
     <tr><td class="paramname">CONV</td><td>Conv2D Kernel </td></tr>
     <tr><td class="paramname">CONCAT</td><td>Concat Kernel (if multiinstance) </td></tr>
     <tr><td class="paramname">IS_BCHW</td><td>if BCHW or BHWC, affects concatenation (if multiinstance) </td></tr>
-    <tr><td class="paramname">IS_KPAD</td><td>if kernel weights are padded, affects chunking (if multiinstance) </td></tr>
     <tr><td class="paramname">MCHUNK</td><td>M chunk size (if multiinstance) </td></tr>
+    <tr><td class="paramname">HCHUNK</td><td>H chunk size (if multiinstance) </td></tr>
     <tr><td class="paramname">INP_W</td><td>input width/height </td></tr>
     <tr><td class="paramname">OUT_W</td><td>output width/height, = INP_W - K/2 </td></tr>
+    <tr><td class="paramname">STEP_H</td><td>stride H </td></tr>
+    <tr><td class="paramname">STEP_W</td><td>stride W </td></tr>
     <tr><td class="paramname">B</td><td>batch size </td></tr>
     <tr><td class="paramname">C</td><td>input channels </td></tr>
     <tr><td class="paramname">M</td><td>output channels </td></tr>
     <tr><td class="paramname">K</td><td>kernel width </td></tr>
+    <tr><td class="paramname">H0</td><td>Pixels added before height (default 0) </td></tr>
+    <tr><td class="paramname">H1</td><td>Pixels added after height (default 0) </td></tr>
+    <tr><td class="paramname">W0</td><td>Pixels added before width (default 0) </td></tr>
+    <tr><td class="paramname">W1</td><td>Pixels added after width (default 0) </td></tr>
   </table>
   </dd>
 </dl>

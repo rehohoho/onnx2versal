@@ -96,28 +96,28 @@ $(document).ready(function(){initNavTree('group__Pad.html',''); initResizable();
 </div><!--header-->
 <div class="contents">
 
-<p>Pad graphs. Pads NxINP_W to NxOUT_W shape.  
+<p>See padding at <a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv</a> for Pad2D.  
 <a href="#details">More...</a></p>
 <div class="dynheader">
 Collaboration diagram for Pad:</div>
 <div class="dyncontent">
 <div class="center"><img src="group__Pad.png" border="0" usemap="#agroup____Pad" alt=""/></div>
 <map name="agroup____Pad" id="agroup____Pad">
-<area shape="rect" title="Pad graphs. Pads NxINP_W to NxOUT_W shape." alt="" coords="5,5,50,31"/>
-<area shape="rect" href="group__PadKernels.html" title="Pads NxINP_W to NxOUT_W shape. Requires INP_W&lt;=OUT_W." alt="" coords="98,5,186,31"/>
+<area shape="rect" title="See padding at https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv for Pad2D." alt="" coords="5,5,50,31"/>
+<area shape="rect" href="group__PadKernels.html" title="See padding at https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv." alt="" coords="98,5,186,31"/>
 </map>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="groups" name="groups"></a>
 Modules</h2></td></tr>
 <tr class="memitem:group__PadKernels"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PadKernels.html">PadKernels</a></td></tr>
-<tr class="memdesc:group__PadKernels"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pads NxINP_W to NxOUT_W shape. Requires INP_W&lt;=OUT_W. <br /></td></tr>
+<tr class="memdesc:group__PadKernels"><td class="mdescLeft">&#160;</td><td class="mdescRight">See padding at <a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv</a>. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPadGraph.html">PadGraph&lt; PAD, TT, N, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph.  <a href="classPadGraph.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPad2DGraph.html">Pad2DGraph&lt; PAD, TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph for Pad2D.  <a href="classPad2DGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -125,9 +125,12 @@ Classes</h2></td></tr>
   <table class="tparams">
     <tr><td class="paramname">PAD</td><td>Pad Kernel </td></tr>
     <tr><td class="paramname">TT</td><td>Data type </td></tr>
-    <tr><td class="paramname">N</td><td>Number of rows </td></tr>
-    <tr><td class="paramname">INP_W</td><td>Length of input row </td></tr>
-    <tr><td class="paramname">OUT_W</td><td>Length of output row </td></tr>
+    <tr><td class="paramname">INP_H</td><td>Input height </td></tr>
+    <tr><td class="paramname">INP_W</td><td>Input width </td></tr>
+    <tr><td class="paramname">H0</td><td>Pixels added before height </td></tr>
+    <tr><td class="paramname">H1</td><td>Pixels added after height </td></tr>
+    <tr><td class="paramname">W0</td><td>Pixels added before width </td></tr>
+    <tr><td class="paramname">W1</td><td>Pixels added after width </td></tr>
   </table>
   </dd>
 </dl>
