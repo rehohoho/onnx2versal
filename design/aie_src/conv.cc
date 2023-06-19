@@ -413,3 +413,81 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
 
   PROFILE_FOOTER;
 }
+
+
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
+void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+	input_window<float>* in,      // BCHW
+  input_stream<float>* weights, // MCKK
+  output_stream<float>* out     // BMHW
+) {
+  PROFILE_HEADER(printf(
+    "Running Conv3x3ReluStreamCacheCKK<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
+    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  
+  float* w_ptr = (float *) ckk_row;
+  
+  v16float data = null_v16float();
+  v8float zeros = null_v8float();
+
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) { 
+
+      for (int i = 0; i < C*12; i+=4) {
+        *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
+      }
+      w_ptr -= C*12;
+      
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W; w+=8/STEP_W) {
+        
+          v8float acc1 = aie::broadcast<float, 8>(bias[m]);
+          
+          for (int c = 0; c < C; c++) {
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_v(data, 2, window_readincr_v4(in));
+            window_incr(in, INP_W - 12);
+            acc1 = fpmac(acc1, data, 0, 0x76543210, *(v8float *) w_ptr, 0, 0);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, *(v8float *) w_ptr, 1, 0);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, *(v8float *) w_ptr, 2, 0);
+
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_v(data, 2, window_readincr_v4(in));
+            window_incr(in, INP_W - 12);
+            acc1 = fpmac(acc1, data, 0, 0x76543210, *(v8float *) w_ptr, 3, 0);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, *(v8float *) w_ptr, 4, 0);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, *(v8float *) w_ptr, 5, 0);
+            w_ptr += 4;
+
+            data = upd_w(data, 0, window_readincr_v8(in));
+            data = upd_v(data, 2, window_readincr_v4(in));
+            window_incr(in, INP_H*INP_W - 2*INP_W - 12);
+            acc1 = fpmac(acc1, data, 0, 0x76543210, *(v8float *) w_ptr, 2, 0);
+            acc1 = fpmac(acc1, data, 1, 0x76543210, *(v8float *) w_ptr, 3, 0);
+            acc1 = fpmac(acc1, data, 2, 0x76543210, *(v8float *) w_ptr, 4, 0);
+            w_ptr += 8;
+          } // C
+          window_incr(in, -C*INP_H*INP_W + 8);
+          w_ptr -= C*12;
+
+          if (IS_RELU) {
+            acc1 = fpmax(acc1, zeros, 0, 0x76543210);
+          }
+
+          if (STEP_W == 2) {
+            acc1 = fpshuffle(acc1, 0, 0x00006420);
+            writeincr_v4(out, ext_v(acc1, 0));
+          } else {
+            writeincr_v4(out, ext_v(acc1, 0));
+            writeincr_v4(out, ext_v(acc1, 1));
+          }
+        } // W
+        window_incr(in, -OUT_W*STEP_W+INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
+      } // H
+      window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
+    } // M
+  } // B
+
+  PROFILE_FOOTER;
+}

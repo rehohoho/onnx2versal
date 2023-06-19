@@ -200,7 +200,8 @@ class ConvReluScalarStreamCacheHW {
 
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
- * ConvReluScalarStreamCacheCKK<28,28,24,1,1,1,1,5,5,1> total = 268757 cycles
+ * ConvReluScalarStreamCacheCKK<26,28,24,1,1,1,1,5,3,1> total = 92824 cycles
+ * ConvReluScalarStreamCacheCKK<24,24,11,2,2,1,1,4,3,1> total = 16593 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -224,6 +225,43 @@ class ConvReluScalarStreamCacheCKK {
     
     static void registerKernelClass() {
       REGISTER_FUNCTION(ConvReluScalarStreamCacheCKK::filter);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
+
+
+/**
+ * @brief Vector stream implementation for BCHW, stores biases,
+ * requires K==3, STEP_H==1 or 2, STEP_W==1 or 2
+ * Conv3x3ReluStreamCacheCKK<26,28,24,1,1,1,1,4,3,1> total = 10086 cycles
+ * Conv3x3ReluStreamCacheCKK<24,24,12,2,2,1,1,4,3,1> total = 3649 cycles
+ */
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+          int B, int C, int M, int K, int IS_RELU>
+class Conv3x3ReluStreamCacheCKK {
+
+  private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    alignas(32) float (&bias)[M];
+    alignas(32) float ckk_row[C*12];
+
+  public:
+    Conv3x3ReluStreamCacheCKK(
+      float (&b)[M]
+    ): bias(b) {}; 
+
+    void filter(
+      input_window<float>* in,      // BCHW
+      input_stream<float>* weights, // MCKK
+      output_stream<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      static_assert(K == 3);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+      REGISTER_FUNCTION(Conv3x3ReluStreamCacheCKK::filter);
       REGISTER_PARAMETER(bias);
     }
 
