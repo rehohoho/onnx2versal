@@ -21,10 +21,9 @@
   cycle_num[0] = tile.cycles(); // cycle counter of the AI Engine tile
 #define PROFILE_FOOTER2(NAME, ...) \
   cycle_num[1] = tile.cycles(); \
-  char name_s[strlen(NAME) + 33]; \
-  strcpy(name_s, NAME); \
-  strcat(name_s, " start = %d,end = %d,total = %d\n"); \
-  printf(name_s,  __VA_ARGS__, cycle_num[0], cycle_num[1], cycle_num[1] - cycle_num[0]);
+  char prefix[64]; \
+  sprintf(prefix, NAME, __VA_ARGS__); \
+  printf("%s start = %d,end = %d,total = %d\n", prefix, cycle_num[0], cycle_num[1], cycle_num[1] - cycle_num[0]);
 
 #else
 
