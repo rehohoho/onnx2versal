@@ -369,7 +369,7 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_REL
         } // W
         window_incr(in, -OUT_W*STEP_W + 2*INP_W*STEP_H); // go left OUT_W*STEP_W, go down 2*STEP_H
         window_incr(out, OUT_W);
-        // chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
       w_ptr += C*12;
@@ -478,6 +478,7 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
           window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
         } // W
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
     } // M
@@ -554,6 +555,7 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
           }
         } // W
         window_incr(in, -OUT_W*STEP_W+INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
     } // M
@@ -645,6 +647,8 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C
         for (int i = 0; i < OUT_W; i+=4) {
           writeincr_v4(out, *_out_row_ptr); _out_row_ptr++;
         }
+
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
 
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H

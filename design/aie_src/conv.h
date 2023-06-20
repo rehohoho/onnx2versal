@@ -330,7 +330,7 @@ class Conv3x3ReluStreamCacheCKKMultiRow {
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[C*12];
-    alignas(32) float out_row[OUT_W*2];
+    alignas(32) float out_row[OUT_W];
 
   public:
     Conv3x3ReluStreamCacheCKKMultiRow(
