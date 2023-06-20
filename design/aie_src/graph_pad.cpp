@@ -40,6 +40,8 @@ const int W1 = 1;
 
 Pad2DGraphTest<Pad2DScalar, float_t, B, INP_H, INP_W, H0, H1, W0, W1> pad2DScalar(
   "pad2DScalar", "pad_2d_fpin.txt", "pad_2d_fpout_shape2x34x34_Pad2DScalar.txt");
+Pad2DGraphTest<Pad2DFloat, float_t, B, INP_H, INP_W, H0, H1, W0, W1> pad2DFloat(
+  "pad2DFloat", "pad_2d_fpin.txt", "pad_2d_fpout_shape2x34x34_Pad2DFloat.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
@@ -47,6 +49,9 @@ int main(int argc, char ** argv) {
   adfCheck(pad2DScalar.init(), "init pad2DScalar");
   adfCheck(pad2DScalar.run(ITER_CNT), "run pad2DScalar");
 	adfCheck(pad2DScalar.end(), "end pad2DScalar");
+  adfCheck(pad2DFloat.init(), "init pad2DFloat");
+  adfCheck(pad2DFloat.run(ITER_CNT), "run pad2DFloat");
+	adfCheck(pad2DFloat.end(), "end pad2DFloat");
   return 0;
 }
 #endif
