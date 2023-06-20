@@ -29,7 +29,7 @@
 
 /**
  * @brief Scalar implementation for BHWC, stores weights and biases,
- * ConvReluScalarBHWC<28,28,24,1,1,1,1,5,5,1> total = 207629 cycles
+ * ConvReluScalarBHWC<28,28,24,1,1,1,1,4,5,1> total = 180055 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -63,7 +63,9 @@ class ConvReluScalarBHWC {
 
 /**
  * @brief Scalar implementation for BCHW, stores weights and biases,
- * ConvReluScalarBCHW<28,28,24,1,1,1,1,5,5,1> total = 196795 cycles
+ * ConvReluScalarBCHW<28,28,24,1,1,1,1,4,5,1> total = 157445
+ * ConvReluScalarBCHW<26,26,24,1,1,1,1,4,3,1> total = 66069
+ * ConvReluScalarBCHW<24,24,10,2,2,1,1,4,5,1> total = 27577
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -97,7 +99,7 @@ class ConvReluScalarBCHW {
 /**
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, 
  * requires INP_W%4==0 and OUT_W%8=0 and STEP_H==1 and STEP_W==1
- * Conv5x5ReluBCHW<28,28,24,1,1,1,1,5,5,1> total = 17671 cycles
+ * Conv5x5ReluBCHW<28,28,24,1,1,1,1,4,5,1> total = 14149
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -136,7 +138,7 @@ class Conv5x5ReluBCHW {
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, 
  * requires INP_W%4==0 and OUT_W%8=0 and STEP_H==1 and STEP_W==1,
  * assumes weights are padded to MxCx5x8,
- * Conv5x5on8ReluBCHW<28,28,24,1,1,1,1,5,5,1> total = 13772 cycles
+ * Conv5x5on8ReluBCHW<28,28,24,1,1,1,1,4,5,1> total = 11030
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -175,7 +177,7 @@ class Conv5x5on8ReluBCHW {
  * @brief Vector implementation for 3x3 BCHW, stores weights and biases, 
  * requires K==3 and INP_W%4==0 and OUT_W%8=0 and STEP_H==1 and STEP_W==1
  * assumes weights are padded to MxCx12,
- * Conv3x3on12ReluBCHW<28,28,24,1,1,1,1,5,5,1> total =  cycles
+ * Conv3x3on12ReluBCHW<26,28,24,1,1,1,1,4,3,1> total = 4860
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -212,7 +214,8 @@ class Conv3x3on12ReluBCHW {
 
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
- * ConvReluScalarStreamCacheHW<28,28,24,1,1,1,1,5,5,1> total = 1131806 cycles
+ * ConvReluScalarStreamCacheHW<26,26,24,1,1,1,1,4,3,1> total = 342293
+ * ConvReluScalarStreamCacheHW<24,24,11,2,2,1,1,4,3,1> total = 71463
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -244,8 +247,8 @@ class ConvReluScalarStreamCacheHW {
 
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
- * ConvReluScalarStreamCacheCKK<26,28,24,1,1,1,1,5,3,1> total = 92824 cycles
- * ConvReluScalarStreamCacheCKK<24,24,11,2,2,1,1,4,3,1> total = 16593 cycles
+ * ConvReluScalarStreamCacheCKK<26,28,24,1,1,1,1,4,3,1> total = 74270
+ * ConvReluScalarStreamCacheCKK<24,24,11,2,2,1,1,4,3,1> total = 16600
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -278,8 +281,8 @@ class ConvReluScalarStreamCacheCKK {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires K==3, INP_W%4==0, OUT_W%(8 or 4)==0, STEP_H==1 or 2, STEP_W==1 or 2
- * Conv3x3ReluStreamCacheCKK<26,28,24,1,1,1,1,4,3,1> total = 10086 cycles
- * Conv3x3ReluStreamCacheCKK<24,24,12,2,2,1,1,4,3,1> total = 3649 cycles
+ * Conv3x3ReluStreamCacheCKK<26,28,24,1,1,1,1,4,3,1> total = 10097
+ * Conv3x3ReluStreamCacheCKK<24,24,12,2,2,1,1,4,3,1> total = 3656
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
@@ -317,7 +320,7 @@ class Conv3x3ReluStreamCacheCKK {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires K==3, INP_W%4==0, OUT_W%8==0, STEP_H==1, STEP_W==1
- * Conv3x3ReluStreamCacheCKKMultiRow<26,28,24,1,1,1,1,4,3,1> total = 9815 cycles
+ * Conv3x3ReluStreamCacheCKKMultiRow<26,28,24,1,1,1,1,4,3,1> total = 9823
  */
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
