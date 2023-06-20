@@ -2,6 +2,11 @@
 #include "kernel_utils.h"
 
 
+#define SPLIT_PROFILE_FOOTER(filter_name, filter_i) \
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d,%d>::filter%d", \
+    filter_name, typeid(TT).name(), H, INP_W, OUT_W, OVERLAP, filter_i);
+
+
 #define WRITE_OUT(out, count) \
   for (int w = 0; w < count; w++) \
     window_writeincr(out, readincr(in));
@@ -29,8 +34,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter8(
   output_window<TT>* out6,
   output_window<TT>* out7
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter8\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -71,7 +75,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter8(
     }
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 8);
 }
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
@@ -85,8 +89,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter7(
   output_window<TT>* out5,
   output_window<TT>* out6
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter7\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -123,7 +126,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter7(
     }
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 7);
 }
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
@@ -136,8 +139,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter6(
   output_window<TT>* out4,
   output_window<TT>* out5
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter6\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -170,7 +172,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter6(
     }
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 6);
 }
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
@@ -182,8 +184,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter5(
   output_window<TT>* out3,
   output_window<TT>* out4
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter5\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -212,7 +213,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter5(
     }
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 5);
 }
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
@@ -223,8 +224,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter4(
   output_window<TT>* out2,
   output_window<TT>* out3
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter4\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -249,7 +249,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter4(
     }
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 4);
 }
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
@@ -259,8 +259,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter3(
   output_window<TT>* out1,
   output_window<TT>* out2
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter3\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -281,7 +280,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter3(
     }
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 3);
 }
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
@@ -290,8 +289,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter2(
   output_window<TT>* out0,
   output_window<TT>* out1
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter2\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -308,7 +306,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter2(
     }
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 2);
 }
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
@@ -316,13 +314,12 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter1(
 	input_stream<TT>* in,
   output_window<TT>* out0
 ) {
-  PROFILE_HEADER(printf(
-    "Running SplitScalar<%s,%d,%d,%d,%d>::filter1\n", typeid(TT).name(), H, INP_W, OUT_W, OVERLAP));
+  PROFILE_HEADER2;
 
   for (int h = 0; h < H; h++) {
     WRITE_OUT(out0, OUT_W);
     READ_IN(in, INP_W - OUT_W);
   }
 
-  PROFILE_FOOTER;
+  SPLIT_PROFILE_FOOTER("SplitScalar", 1);
 }

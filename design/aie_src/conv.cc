@@ -3,15 +3,18 @@
 #include "aie_api/aie.hpp"
 
 
+#define CONV_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU);
+
+
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
           int B, int C, int M, int K, int IS_RELU>
 void ConvReluScalarBHWC<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   output_window<float>* out     // BHWM (1x24x24x6)
 ) {
-  PROFILE_HEADER(printf(
-    "Running ConvReluScalarBHWC<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
 
   int weightIdx = 0;
 
@@ -47,7 +50,7 @@ void ConvReluScalarBHWC<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
     }
   }
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("ConvReluScalarBHWC");
 }
 
 
@@ -57,9 +60,7 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
 	input_window<float>* in,      // BCHW (1x1x28x28)
   output_window<float>* out     // BMHW (1x6x24x24)
 ) {
-  PROFILE_HEADER(printf(
-    "Running ConvReluScalarBCHW<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
 
   int weightIdx = 0;
 
@@ -96,7 +97,7 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
     } // M
   } // B
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("ConvReluScalarBCHW");
 }
 
 
@@ -114,9 +115,7 @@ void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
-  PROFILE_HEADER(printf(
-    "Running Conv5x5ReluBCHW<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
 
   v16float data = null_v16float();
   v8float zeros = null_v8float();
@@ -205,7 +204,7 @@ void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::
 
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("Conv5x5ReluBCHW");
 }
 
 
@@ -215,9 +214,7 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
-  PROFILE_HEADER(printf(
-    "Running Conv5x5on8ReluBCHW<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
 
   v16float data = null_v16float();
   v8float zeros = null_v8float();
@@ -302,7 +299,7 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
 
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("Conv5x5on8ReluBCHW");
 }
 
 
@@ -312,9 +309,7 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_REL
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
-  PROFILE_HEADER(printf(
-    "Running Conv3x3on12ReluBCHW<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
 
   v16float data = null_v16float();
   v8float zeros = null_v8float();
@@ -383,7 +378,7 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_REL
 
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("Conv3x3on12ReluBCHW");
 }
 
 
@@ -394,9 +389,7 @@ void ConvReluScalarStreamCacheHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
 ) {
-  PROFILE_HEADER(printf(
-    "Running ConvReluScalarStreamCacheHW<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
   
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) {
@@ -439,7 +432,7 @@ void ConvReluScalarStreamCacheHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K
     } // M
   } // B
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("ConvReluScalarStreamCacheHW");
 }
 
 
@@ -450,9 +443,7 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
 ) {
-  PROFILE_HEADER(printf(
-    "Running ConvReluScalarStreamCacheCKK<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
   
   int weightIdx;
 
@@ -492,7 +483,7 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
     } // M
   } // B
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("ConvReluScalarStreamCacheCKK");
 }
 
 
@@ -504,9 +495,7 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
 ) {
-  PROFILE_HEADER(printf(
-    "Running Conv3x3ReluStreamCacheCKK<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
   
   float* w_ptr = (float *) ckk_row;
   
@@ -572,7 +561,7 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
 
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("Conv3x3ReluStreamCacheCKK");
 }
 
 
@@ -584,9 +573,7 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
 ) {
-  PROFILE_HEADER(printf(
-    "Running Conv3x3ReluStreamCacheCKKMultiRow<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", 
-    INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU));
+  PROFILE_HEADER2;
   
   float* w_ptr = (float *) ckk_row;
   
@@ -666,5 +653,5 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C
 
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("Conv3x3ReluStreamCacheCKKMultiRow");
 }

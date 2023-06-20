@@ -2,6 +2,10 @@
 #include "kernel_utils.h"
 
 
+#define SOFTMAX_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%d,%d,%d>", \
+    filter_name, INP_H, INP_W, INP_W_PAD);
+
 double fastexp(float val) {
   int a = float2fix(1512775 * val, 0);
   long long b = (a + 1072632447);
@@ -36,8 +40,7 @@ void SoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<float>* in,
   output_window<float>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running SoftmaxScalar<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
+  PROFILE_HEADER2;
 
   float exp_v1[INP_W];
   float exp_scale1;
@@ -57,7 +60,7 @@ void SoftmaxScalar<INP_H, INP_W, INP_W_PAD>::filter(
     window_incr(out, INP_W_PAD - INP_W);
   }
 
-  PROFILE_FOOTER;
+  SOFTMAX_PROFILE_FOOTER("SoftmaxScalar");
 }
 
 
@@ -66,8 +69,7 @@ void SoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<float>* in,
   output_window<float>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running SoftmaxSingleaxis<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
+  PROFILE_HEADER2;
 
   float *out_ptr = (float *) out->ptr; 
 
@@ -124,7 +126,7 @@ void SoftmaxSingleaxis<INP_H, INP_W, INP_W_PAD>::filter(
     }
   }
 
-  PROFILE_FOOTER;
+  SOFTMAX_PROFILE_FOOTER("SoftmaxSingleaxis");
 }
 
 
@@ -133,8 +135,7 @@ void SoftmaxMultiaxis<INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<float>* in,
   output_window<float>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running SoftmaxMultiaxis<%d,%d,%d>\n", INP_H, INP_W, INP_W_PAD));
+  PROFILE_HEADER2;
 
   float exp_v1[INP_W_PAD];
   float exp_v2[INP_W_PAD];
@@ -202,5 +203,5 @@ void SoftmaxMultiaxis<INP_H, INP_W, INP_W_PAD>::filter(
     window_incr(in, INP_W_PAD);
   }
 
-  PROFILE_FOOTER;
+  SOFTMAX_PROFILE_FOOTER("SoftmaxMultiaxis");
 }

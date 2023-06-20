@@ -2,6 +2,10 @@
 #include "kernel_utils.h"
 
 
+#define PAD_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), B, INP_H, INP_W, H0, H1, W0, W1);
+
 #define WRITE_ZERO(out, len) \
   for (int i = 0; i < len; i++) writeincr(out, 0);
 
@@ -10,8 +14,7 @@ void Pad2DScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 	input_stream<TT>* restrict in,
   output_stream<TT>* restrict out
 ) {
-  PROFILE_HEADER(printf(
-    "Running Pad2DScalar::filter<%s,%d,%d,%d,%d,%d,%d,%d>\n", typeid(TT).name(), B, INP_H, INP_W, H0, H1, W0, W1));
+  PROFILE_HEADER2;
   
   for (int b = 0; b < B; b++) {
     WRITE_ZERO(out, H0*OUT_W);
@@ -29,5 +32,5 @@ void Pad2DScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
     WRITE_ZERO(out, H1*OUT_W);
   }
 
-  PROFILE_FOOTER;
+  PAD_PROFILE_FOOTER("Pad2DScalar");
 }

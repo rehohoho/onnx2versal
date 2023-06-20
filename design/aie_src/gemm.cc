@@ -2,6 +2,10 @@
 #include "kernel_utils.h"
 
 
+#define GEMM_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d>", \
+    filter_name, M, K, N, IS_RELU);
+
 
 template <int M, int K, int N, int IS_RELU>
 void GemmReluScalarMKNKStream<M, K, N, IS_RELU>::filter(
@@ -9,8 +13,7 @@ void GemmReluScalarMKNKStream<M, K, N, IS_RELU>::filter(
   input_stream<float>* weight,  // NxK 
   output_window<float>* out     // MxN
 ) {
-  PROFILE_HEADER(printf(
-    "Running GemmReluScalarMKNKStream<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
+  PROFILE_HEADER2;
   
   for (int i = 0; i < M; i++) {
     for (int k = 0; k < K; k++)
@@ -30,7 +33,7 @@ void GemmReluScalarMKNKStream<M, K, N, IS_RELU>::filter(
     }
   }
 
-  PROFILE_FOOTER;
+  GEMM_PROFILE_FOOTER("GemmReluScalarMKNKStream");
 }
 
 
@@ -40,8 +43,7 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
   input_stream<float>* weight,  // KxN
   output_window<float>* out     // MxN
 ) {
-  PROFILE_HEADER(printf(
-    "Running GemmReluMKKNStream<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
+  PROFILE_HEADER2;
   
   float *b_ptr = (float *) bias;
   v8float matW = null_v8float();
@@ -155,7 +157,7 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
   }
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  GEMM_PROFILE_FOOTER("GemmReluMKKNStream");
 }
 
 
@@ -164,8 +166,7 @@ void GemmReluScalarMKNK<M, K, N, IS_RELU>::filter(
 	input_window<float>* in,      // MxK
   output_window<float>* out     // MxN
 ) {
-  PROFILE_HEADER(printf(
-    "Running GemmReluScalarMKNK<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
+  PROFILE_HEADER2;
 
   int weightIdx;
 
@@ -188,7 +189,7 @@ void GemmReluScalarMKNK<M, K, N, IS_RELU>::filter(
     window_incr(in, K); // next in row for next N
   }
 
-  PROFILE_FOOTER;
+  GEMM_PROFILE_FOOTER("GemmReluScalarMKNK");
 }
 
 
@@ -198,8 +199,7 @@ void GemmReluScalarMKKN<M, K, N, IS_RELU>::filter(
                                 // KxN
   output_window<float>* out     // MxN
 ) {
-  PROFILE_HEADER(printf(
-    "Running GemmReluScalarMKKN<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
+  PROFILE_HEADER2;
 
   int weightIdx = 0;
 
@@ -231,8 +231,7 @@ void GemmReluMKKN<M, K, N, IS_RELU>::filter(
                                 // KxN
   output_window<float>* out     // MxN
 ) {
-  PROFILE_HEADER(printf(
-    "Running GemmReluMKKN<%d,%d,%d,%d>\n", M, K, N, IS_RELU));
+  PROFILE_HEADER2;
 
   float *a_ptr = (float *) in->ptr;
   float *w_ptr = (float *) weights;
@@ -301,5 +300,6 @@ void GemmReluMKKN<M, K, N, IS_RELU>::filter(
   }
 
 #undef MAC_ROW
-  PROFILE_FOOTER;
+
+  GEMM_PROFILE_FOOTER("GemmReluMKKN");
 }

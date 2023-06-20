@@ -4,13 +4,16 @@
 #include "kernel_utils.h"
 
 
+#define POOL_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d>", \
+    filter_name, INP_H, INP_W, OUT_H, OUT_W, B, C);
+
 template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
 void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
   input_window<TT>* in,      // BHWC (1x24x24x6)
   output_window<TT>* out     // BPQC (1x12x12x6)
 ) {
-  PROFILE_HEADER(printf(
-    "Running MaxpoolScalarBHWC::filter<%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C));
+  PROFILE_HEADER2;
 
   const TT min = std::numeric_limits<TT>::lowest();
 
@@ -38,7 +41,7 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
     }
   }
 
-  PROFILE_FOOTER;
+  POOL_PROFILE_FOOTER("MaxpoolScalarBHWC");
 }
 
 
@@ -47,8 +50,7 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
   input_window<TT>* in,      // BCHW (1x6x24x24)
   output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {
-  PROFILE_HEADER(printf(
-    "Running MaxpoolScalarBCHW::filter<%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C));
+  PROFILE_HEADER2;
 
   const TT min = std::numeric_limits<TT>::lowest();
 
@@ -73,7 +75,7 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
     } // C
   } // B
 
-  PROFILE_FOOTER;
+  POOL_PROFILE_FOOTER("MaxpoolScalarBCHW");
 }
 
 
@@ -82,8 +84,7 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
   input_window<float>* in_window,      // BCHW (1x6x24x24)
   output_window<float>* out_window     // BCPQ (1x6x12x12)
 ) {
-  PROFILE_HEADER(printf(
-    "Running Maxpool2x2FloatBCHW::filter<%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C));
+  PROFILE_HEADER2;
 
   const float min = std::numeric_limits<float>::lowest();
 
@@ -128,7 +129,7 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
     } // C
   } // B
 
-  PROFILE_FOOTER;
+  POOL_PROFILE_FOOTER("Maxpool2x2FloatBCHW");
 }
 
 
@@ -148,8 +149,7 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
   input_window<int8_t>* in_window,      // BCHW (1x6x24x24)
   output_window<int8_t>* out_window     // BCPQ (1x6x12x12)
 ) {
-  PROFILE_HEADER(printf(
-    "Running Maxpool2x2Int8BCHW::filter<%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C));
+  PROFILE_HEADER2;
 
   const int8_t min = std::numeric_limits<int8_t>::lowest();
   int8_t *out_ptr = (int8_t *) out_window->ptr;
@@ -196,7 +196,7 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
     } // C
   } // B
 
-  PROFILE_FOOTER;
+  POOL_PROFILE_FOOTER("Maxpool2x2Int8BCHW");
 }
 
 
@@ -205,8 +205,7 @@ void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
   input_window<TT>* in,      // BCHW (1x6x24x24)
   output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {
-  PROFILE_HEADER(printf(
-    "Running AvgpoolScalarBCHW::filter<%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C));
+  PROFILE_HEADER2;
 
   TT div_factor = inv(K*K);
 
@@ -231,5 +230,5 @@ void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
     } // C
   } // B
 
-  PROFILE_FOOTER;
+  POOL_PROFILE_FOOTER("AvgpoolScalarBCHW");
 }

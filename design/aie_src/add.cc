@@ -2,14 +2,17 @@
 #include "kernel_utils.h"
 
 
+#define ADD_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%s,%d,%d>", \
+    filter_name, typeid(TT).name(), W, IS_RELU);
+
 template <typename TT, int W, int IS_RELU>
 void AddScalar<TT, W, IS_RELU>::filter(
 	input_stream<TT>* restrict inA,
   input_stream<TT>* restrict inB,
   output_stream<TT>* restrict out
 ) {
-  PROFILE_HEADER(printf(
-    "Running AddScalar<%s,%d,%d>\n", typeid(TT).name(), W, IS_RELU));
+  PROFILE_HEADER2;
 
   for (int w = 0; w < W; w++) {
     TT c = readincr(inA) + readincr(inB);
@@ -18,7 +21,7 @@ void AddScalar<TT, W, IS_RELU>::filter(
     writeincr(out, c);
   }
 
-  PROFILE_FOOTER;
+  ADD_PROFILE_FOOTER("AddScalar");
 }
 
 
@@ -28,8 +31,7 @@ void AddFloat<TT, W, IS_RELU>::filter(
   input_stream<TT>* restrict inB,
   output_stream<TT>* restrict out
 ) {
-  PROFILE_HEADER(printf(
-    "Running AddFloat<%s,%d,%d>\n", typeid(TT).name(), W, IS_RELU));
+  PROFILE_HEADER2;
 
   v8float zeros = null_v8float();
   v8float av = undef_v8float();
@@ -47,5 +49,5 @@ void AddFloat<TT, W, IS_RELU>::filter(
     put_wms(0, ext_v(av, 0));
   }
 
-  PROFILE_FOOTER;
+  ADD_PROFILE_FOOTER("AddFloat");
 }
