@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Conv5x5ReluBCHW&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearAvgpoolScalarBCHW&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classConv5x5ReluBCHW.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQLinearAvgpoolScalarBCHW.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,41 +92,41 @@ $(document).ready(function(){initNavTree('classConv5x5ReluBCHW.html',''); initRe
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classConv5x5ReluBCHW-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Conv5x5ReluBCHW&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
+<a href="classQLinearAvgpoolScalarBCHW-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QLinearAvgpoolScalarBCHW&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pool2D.html">Pool2D</a> &raquo; <a class="el" href="group__Pool2DKernels.html">Pool2DKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 5x5 BCHW, stores weights and biases, requires INP_W%4==0 and OUT_W%8=0 and STEP_H==1 and STEP_W==1 Conv5x5ReluBCHW&lt;28,28,24,1,1,1,1,4,5,1&gt; total = 14149.  
+<p>Scalar implementation for BCHW avgpool, QLinearAvgpoolScalarBCHW::filter&lt;24,32,16,1,6&gt; total = 15766.  
 </p>
 
-<p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="qlinearpool_8h_source.html">qlinearpool.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ace9e1014ea30bbf4954ce3db7854dc7d"><td class="memItemLeft" align="right" valign="top"><a id="ace9e1014ea30bbf4954ce3db7854dc7d" name="ace9e1014ea30bbf4954ce3db7854dc7d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Conv5x5ReluBCHW</b> (float(&amp;w)[M *C *K *K], float(&amp;b)[M])</td></tr>
-<tr class="separator:ace9e1014ea30bbf4954ce3db7854dc7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84b440af7365daa03d5e234ab026a0ea"><td class="memItemLeft" align="right" valign="top"><a id="a84b440af7365daa03d5e234ab026a0ea" name="a84b440af7365daa03d5e234ab026a0ea"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:a84b440af7365daa03d5e234ab026a0ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb1d1508071a9fe404336f184f81dc97"><td class="memItemLeft" align="right" valign="top"><a id="acb1d1508071a9fe404336f184f81dc97" name="acb1d1508071a9fe404336f184f81dc97"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearAvgpoolScalarBCHW</b> (float in_scale, float out_scale, int8_t in_zero, int8_t out_zero)</td></tr>
+<tr class="separator:acb1d1508071a9fe404336f184f81dc97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cc07eb55a0a88c49844b7dee3f0a526"><td class="memItemLeft" align="right" valign="top"><a id="a3cc07eb55a0a88c49844b7dee3f0a526" name="a3cc07eb55a0a88c49844b7dee3f0a526"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_window&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a3cc07eb55a0a88c49844b7dee3f0a526"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a7e7c2bcaef5fbd4d4c214a8655941eb0"><td class="memItemLeft" align="right" valign="top"><a id="a7e7c2bcaef5fbd4d4c214a8655941eb0" name="a7e7c2bcaef5fbd4d4c214a8655941eb0"></a>
+<tr class="memitem:aa51360fa83cc7afc2dc1feacf881f040"><td class="memItemLeft" align="right" valign="top"><a id="aa51360fa83cc7afc2dc1feacf881f040" name="aa51360fa83cc7afc2dc1feacf881f040"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a7e7c2bcaef5fbd4d4c214a8655941eb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aa51360fa83cc7afc2dc1feacf881f040"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
-<li>design/aie_src/conv.cc</li>
+<li>design/aie_src/<a class="el" href="qlinearpool_8h_source.html">qlinearpool.h</a></li>
+<li>design/aie_src/qlinearpool.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classConv5x5ReluBCHW.html">Conv5x5ReluBCHW</a></li>
+    <li class="navelem"><a class="el" href="classQLinearAvgpoolScalarBCHW.html">QLinearAvgpoolScalarBCHW</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

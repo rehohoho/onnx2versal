@@ -1,0 +1,4 @@
+<map id="QLinearAdd" name="QLinearAdd">
+<area shape="rect" id="Node000001" title="QLinearAdd over W vector, See https://github.com/onnx/onnx/blob/main/docs/Operators...." alt="" coords="5,5,96,31"/>
+<area shape="rect" id="Node000002" href="$group__QLinearAddKernels.html" title="See https://github.com/onnx/onnx/blob/main/docs/Operators.md#Add, See https://github...." alt="" coords="144,5,278,31"/>
+</map>
