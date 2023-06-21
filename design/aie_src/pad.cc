@@ -13,26 +13,26 @@ void Pad2DStreamScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 ) {
   PROFILE_HEADER2;
 
-#define WRITE_ZERO(out, len) \
-  for (int i = 0; i < len; i++) writeincr(out, 0);
+#define WRITE_PAD(out, len) \
+  for (int i = 0; i < len; i++) writeincr(out, pad_value);
 
   for (int b = 0; b < B; b++) {
-    WRITE_ZERO(out, H0*OUT_W);
+    WRITE_PAD(out, H0*OUT_W);
     
     for (int h = 0; h < INP_H; h++) {
-      WRITE_ZERO(out, W0);
+      WRITE_PAD(out, W0);
 
       for (int w = 0; w < INP_W; w++) {
         writeincr(out, readincr(in));
       }
 
-      WRITE_ZERO(out, W1);
+      WRITE_PAD(out, W1);
     }
 
-    WRITE_ZERO(out, H1*OUT_W);
+    WRITE_PAD(out, H1*OUT_W);
   }
 
-#undef WRITE_ZERO
+#undef WRITE_PAD
 
   PAD_PROFILE_FOOTER("Pad2DStreamScalar");
 }
@@ -47,30 +47,30 @@ void Pad2DStreamFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
   PROFILE_HEADER2;
   
   v4float a = undef_v4float();
-  v4float zero = null_v4float();
+  v4float zero = aie::broadcast<float, 4>(pad_value);
 
-#define WRITE_ZERO(out, len) \
+#define WRITE_PAD(out, len) \
   for (int i = 0; i <= len-4; i+=4) put_wms(0, zero); \
-  for (int i = 0; i < len%4; i++) put_ms(0, 0);
+  for (int i = 0; i < len%4; i++) put_ms(0, pad_value);
 
   for (int b = 0; b < B; b++) {
-    WRITE_ZERO(out, H0*OUT_W);
+    WRITE_PAD(out, H0*OUT_W);
     
     for (int h = 0; h < INP_H; h++) {
-      WRITE_ZERO(out, W0);
+      WRITE_PAD(out, W0);
 
       for (int w = 0; w < INP_W; w+=4) {
         a = getf_wss(0);
         put_wms(0, a);
       }
 
-      WRITE_ZERO(out, W1);
+      WRITE_PAD(out, W1);
     }
 
-    WRITE_ZERO(out, H1*OUT_W);
+    WRITE_PAD(out, H1*OUT_W);
   }
 
-#undef WRITE_ZERO
+#undef WRITE_PAD
 
   PAD_PROFILE_FOOTER("Pad2DStreamFloat");
 }
@@ -84,7 +84,15 @@ void Pad2DWindowScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 ) {
   PROFILE_HEADER2;
 
-  window_incr(out, H0*OUT_W + W0);
+#define WRITE_PAD(out, len) \
+  if (pad_value == 0) { \
+    window_incr(out, len); \
+  } else { \
+    for (int i = 0; i < len; i++) \
+      window_writeincr(out, pad_value); \
+  }
+
+  WRITE_PAD(out, H0*OUT_W + W0);
   
   for (int h = 0; h < INP_H; h++) {
 
@@ -93,10 +101,12 @@ void Pad2DWindowScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
       window_writeincr(out, a);
     }
 
-    window_incr(out, W0+W1);
+    WRITE_PAD(out, W0+W1);
   }
 
-  window_incr(out, H1*OUT_W - W0);
+  WRITE_PAD(out, H1*OUT_W - W0);
+
+#undef WRITE_PAD
 
   PAD_PROFILE_FOOTER("Pad2DWindowScalar");
 }

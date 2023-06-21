@@ -17,15 +17,20 @@
 
 /**
  * @brief Scalar implementation for Pad2D
- * Pad2DStreamScalar<f,2,32,32,1,1,1,1> takes 2964 cycles
+ * Pad2DStreamScalar<f,2,32,32,1,1,1,1> takes 2973 cycles
  */
 template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
 class Pad2DStreamScalar {
   private:
     static constexpr int OUT_H = INP_H + H0 + H1;
     static constexpr int OUT_W = INP_W + W0 + W1;
+    int pad_value;
     
   public:
+    Pad2DStreamScalar(
+      int pad_value = 0
+    ): pad_value(pad_value) {};
+
     void filter(
       input_stream<TT>* in,
       output_stream<TT>* out
@@ -40,15 +45,20 @@ class Pad2DStreamScalar {
 
 /**
  * @brief Vector implementation for Float Pad2D
- * Pad2DStreamFloat<f,2,32,32,1,1,1,1> takes 2867 cycles
+ * Pad2DStreamFloat<f,2,32,32,1,1,1,1> takes 2876 cycles
  */
 template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
 class Pad2DStreamFloat {
   private:
     static constexpr int OUT_H = INP_H + H0 + H1;
     static constexpr int OUT_W = INP_W + W0 + W1;
+    int pad_value;
     
   public:
+    Pad2DStreamFloat(
+      int pad_value = 0
+    ): pad_value(pad_value) {};
+
     void filter(
       input_stream<TT>* in,
       output_stream<TT>* out
@@ -63,16 +73,21 @@ class Pad2DStreamFloat {
 
 /**
  * @brief Vector implementation for Pad2D using windows
- * Pad2DWindowScalar<f,2,32,32,1,1,1,1> takes 2*1375 cycles
- * Pad2DWindowScalar<a,2,32,32,1,1,1,1> takes 2*7455 cycles
+ * Pad2DWindowScalar<f,2,32,32,1,1,1,1> takes 2*1713 cycles
+ * Pad2DWindowScalar<a,2,32,32,1,1,1,1> takes 2*7831 cycles
  */
 template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
 class Pad2DWindowScalar {
   private:
     static constexpr int OUT_H = INP_H + H0 + H1;
     static constexpr int OUT_W = INP_W + W0 + W1;
+    int pad_value;
     
   public:
+    Pad2DWindowScalar(
+      int pad_value = 0
+    ): pad_value(pad_value) {};
+
     void filter(
       input_window<TT>* in,
       output_window<TT>* out
