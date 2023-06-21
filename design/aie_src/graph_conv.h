@@ -101,7 +101,7 @@ class ConvReluGraph : public adf::graph {
       int repeat_cnt = 1
     ) { 
       static_assert(B*C*PAD_H*PAD_W*4 <= MAX_PARAM_BYTES);
-      assert(weights.size() <= MAX_PARAM_BYTES);
+      assert(weights.size()*4 <= MAX_PARAM_BYTES);
       static_assert(B*M*OUT_H*OUT_W*4 <= MAX_PARAM_BYTES);
 
       k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>>(weights, bias);
@@ -112,13 +112,13 @@ class ConvReluGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
         adf::repetition_count(pad[0]) = repeat_cnt;
 
-        adf::connect<adf::window<B*C*PAD_H*PAD_W*4>, adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<B*C*INP_H*INP_W*4>, adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
         
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
@@ -135,7 +135,7 @@ class ConvReluGraph : public adf::graph {
       adf::location<adf::parameter>(k[0].param[1]) = tilePos;
       // weights can be padded, not necessarily MCKK
       // separate bank not required for weights vs bias
-      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((weights.size()*4+31)/32*32); // separate bank
+      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((weights.size()*4+31)/32*32);
     }
 
 };
@@ -184,13 +184,13 @@ class ConvReluStreamGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
         adf::repetition_count(pad[0]) = repeat_cnt;
 
-        adf::connect<adf::window<B*C*PAD_H*PAD_W*4>, adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<B*C*INP_H*INP_W*4>, adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
 
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
@@ -299,7 +299,7 @@ class ConvReluChunkMGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
@@ -391,7 +391,7 @@ class ConvReluChunkHGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.1;

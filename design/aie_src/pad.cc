@@ -7,7 +7,7 @@
     filter_name, typeid(TT).name(), B, INP_H, INP_W, H0, H1, W0, W1);
 
 template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
-void Pad2DScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
+void Pad2DStreamScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 	input_stream<TT>* restrict in,
   output_stream<TT>* restrict out
 ) {
@@ -34,13 +34,13 @@ void Pad2DScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 
 #undef WRITE_ZERO
 
-  PAD_PROFILE_FOOTER("Pad2DScalar");
+  PAD_PROFILE_FOOTER("Pad2DStreamScalar");
 }
 
 
 // bandwidth limited, not much speedup
 template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
-void Pad2DFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
+void Pad2DStreamFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 	input_stream<TT>* restrict in,
   output_stream<TT>* restrict out
 ) {
@@ -72,5 +72,31 @@ void Pad2DFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 
 #undef WRITE_ZERO
 
-  PAD_PROFILE_FOOTER("Pad2DFloat");
+  PAD_PROFILE_FOOTER("Pad2DStreamFloat");
+}
+
+
+// stream int8 requires shuffle since bitwidth=32 or 128
+template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+void Pad2DWindowScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
+	input_window<TT>* restrict in,
+  output_window<TT>* restrict out
+) {
+  PROFILE_HEADER2;
+
+  window_incr(out, H0*OUT_W + W0);
+  
+  for (int h = 0; h < INP_H; h++) {
+
+    for (int w = 0; w < INP_W; w++) {
+      TT a = window_readincr(in);
+      window_writeincr(out, a);
+    }
+
+    window_incr(out, W0+W1);
+  }
+
+  window_incr(out, H1*OUT_W - W0);
+
+  PAD_PROFILE_FOOTER("Pad2DWindowScalar");
 }
