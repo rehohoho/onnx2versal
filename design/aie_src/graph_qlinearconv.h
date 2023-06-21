@@ -92,12 +92,9 @@ class QLinearConvGraph : public adf::graph {
       adf::connect<adf::window<B*M*OUT_H*OUT_W>> (k[0].out[0], pout[0]);
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
-      adf::location<adf::parameter>(k[0].param[0]) = tilePos; // weight (<= 16384B)
+      adf::location<adf::parameter>(k[0].param[0]) = tilePos;
       adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
-      adf::location<adf::parameter>(k[0].param[1]) = tilePos; // bias   (<= 4096B)
-      // weights can be padded, not necessarily MCKK
-      // separate bank not required for weights vs bias
-      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((weights.size() + 31)/32*32); 
+      adf::location<adf::parameter>(k[0].param[1]) = tilePos;
     }
 
 };

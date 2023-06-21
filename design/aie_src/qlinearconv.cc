@@ -3,13 +3,16 @@
 #include "aie_api/aie.hpp"
 
 
+#define CONV_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K);
+
 template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
 void QLinearConvScalar<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running QLinearConvScalar<%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K));
+  PROFILE_HEADER2;
 
   int weightIdx = 0;
 
@@ -18,19 +21,18 @@ void QLinearConvScalar<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
     for (int m = 0; m < M; m++) { 
       
       for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_H; w++) {
+        for (int w = 0; w < OUT_W; w++) {
         
           int res = bias[m];
-          weightIdx = m*C*K*16;
+          weightIdx = m*C*K*K;
           
           for (int c = 0; c < C; c++) {
             for (int p = 0; p < K; p++) {
-              // for (int q = 0; q < K; q++) {
-              for (int q = 4; q < 4 + K*2; q+=2) {
+              for (int q = 0; q < K; q++) {
                 int a = window_readincr(in);
-                res += (a - x_zero_point) * (weights[weightIdx+q]-w_zero_point);
+                res += (a - x_zero_point) * (weights[weightIdx]-w_zero_point);
+                weightIdx++;
               }
-              weightIdx += 16;
               window_incr(in, -K+INP_W); // go left K, down 1
             }
             window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
@@ -39,16 +41,15 @@ void QLinearConvScalar<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
           res = std::min(std::max(res, -128), 127);
 
           window_writeincr(out, (int8_t) res);
-          window_incr(in, -C*INP_H*INP_W + 1); // go channel -C, right 1
-        }
-        window_incr(out, OUT_W-OUT_H);
-        window_incr(in, INP_W-OUT_H); // go left OUT_H, go down 1
-      }
-      window_incr(in, -OUT_H*INP_W); // go up OUT_H
-    }
-  }
+          window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
+        } // W
+        window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
+      } // H
+      window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
+    } // M
+  } // B
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("QLinearConvScalar");
 }
 
 
@@ -143,8 +144,7 @@ void QLinearConv5x5<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running QLinearConv5x5<%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K));
+  PROFILE_HEADER2;
   
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();
@@ -227,7 +227,7 @@ void QLinearConv5x5<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
 
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("QLinearConv5x5");
 }
 
 
@@ -272,8 +272,7 @@ void QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running QLinearConv5x5Scale32bit<%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K));
+  PROFILE_HEADER2;
   
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();
@@ -365,5 +364,5 @@ void QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::
 
 #undef MAC_ROW
 
-  PROFILE_FOOTER;
+  CONV_PROFILE_FOOTER("QLinearConv5x5Scale32bit");
 }
