@@ -3,13 +3,13 @@
 #include "aie_api/aie.hpp"
 
 
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
-void QLinearConvScalar<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
+void QLinearConvScalar<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running QLinearConvScalar<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C, M, K));
+    "Running QLinearConvScalar<%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K));
 
   int weightIdx = 0;
 
@@ -53,8 +53,8 @@ void QLinearConvScalar<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
 
 
 
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
-QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
+QLinearConv5x5<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::QLinearConv5x5(
   int8_t (&w)[M*C*K*16],
   int32_t (&b)[M],
   float x_scale,
@@ -95,7 +95,7 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
 }
 
 /**
- * QLinearConvVector<28,32,24,32,1,1,6,5>
+ * QLinearConv5x5<28,32,24,32,1,1,6,5>
  * fp scale: ~40k
  * fixed point scale: ~14k
  * precompute x_zero_weight into bias: 11341
@@ -138,13 +138,13 @@ QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVector(
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
-void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
+void QLinearConv5x5<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running QLinearConvVector<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C, M, K));
+    "Running QLinearConv5x5<%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K));
   
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();
@@ -231,8 +231,8 @@ void QLinearConvVector<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
 }
 
 
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
-QLinearConvVectorScale32bit<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConvVectorScale32bit(
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
+QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::QLinearConv5x5Scale32bit(
   int8_t (&w)[M*C*K*16],
   int32_t (&b)[M],
   float x_scale,
@@ -267,13 +267,13 @@ QLinearConvVectorScale32bit<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::QLinearConv
 }
 
 
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
-void QLinearConvVectorScale32bit<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
+void QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
   PROFILE_HEADER(printf(
-    "Running QLinearConvVectorScale32bit<%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_H, OUT_W, B, C, M, K));
+    "Running QLinearConv5x5Scale32bit<%d,%d,%d,%d,%d,%d,%d,%d,%d>\n", INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K));
   
   v64int8 wvec = null_v64int8();
   v32int8 data = null_v32int8();

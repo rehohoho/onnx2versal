@@ -2,12 +2,16 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
+template <template<int, int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K,
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvGraphTest : public adf::graph {
 
   private:
-    QLinearConvGraph<CONV, INP_H, INP_W, OUT_H, OUT_W, B, C, M, K> g;
+    typedef QLinearConvGraph<CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
+    Graph g;
+    static constexpr int OUT_H = Graph::OUT_H;
 
   public:
     adf::input_plio plin[1];
@@ -28,28 +32,50 @@ class QLinearConvGraphTest : public adf::graph {
     ): g(weights, bias, x_scale, w_scale, y_scale, x_zero_point, w_zero_point, y_zero_point) { 
       plin[0] = adf::input_plio::create("plin0_qlinearconv_"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_qlinearconv_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<B*INP_H*INP_W*C>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<B*OUT_H*OUT_W*M>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<B*C*INP_H*INP_W>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (g.pout[0], plout[0].in[0]);
     }
 };
+
 
 // instance to be compiled and used in host within xclbin
 std::vector<int8_t> fpweights {0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0, 0, 0, 0, 0, 0, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 0, 0, 0, 0, 0, 0, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 0, 0, 0, 0, 0, 0, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 0, 0, 0, 0, 0, 0, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 0, 0, 0, 0, 0, 0, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 0, 0, 0, 0, 0, 0, 30, 30, 31, 31, 32, 32, 33, 33, 34, 34, 0, 0, 0, 0, 0, 0, 35, 35, 36, 36, 37, 37, 38, 38, 39, 39, 0, 0, 0, 0, 0, 0, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 0, 0, 0, 0, 0, 0, 45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 0, 0, 0, 0, 0, 0, 50, 50, 51, 51, 52, 52, 53, 53, 54, 54, 0, 0, 0, 0, 0, 0, 55, 55, 56, 56, 57, 57, 58, 58, 59, 59, 0, 0, 0, 0, 0, 0, 60, 60, 61, 61, 62, 62, 63, 63, 64, 64, 0, 0, 0, 0, 0, 0, 65, 65, 66, 66, 67, 67, 68, 68, 69, 69, 0, 0, 0, 0, 0, 0, 70, 70, 71, 71, 72, 72, 73, 73, 74, 74, 0, 0, 0, 0, 0, 0, 75, 75, 76, 76, 77, 77, 78, 78, 79, 79, 0, 0, 0, 0, 0, 0, 80, 80, 81, 81, 82, 82, 83, 83, 84, 84, 0, 0, 0, 0, 0, 0, 85, 85, 86, 86, 87, 87, 88, 88, 89, 89, 0, 0, 0, 0, 0, 0, 90, 90, 91, 91, 92, 92, 93, 93, 94, 94, 0, 0, 0, 0, 0, 0, 95, 95, 96, 96, 97, 97, 98, 98, 99, 99, 0, 0, 0, 0, 0, 0, 100, 100, 101, 101, 102, 102, 103, 103, 104, 104, 0, 0, 0, 0, 0, 0, 105, 105, 106, 106, 107, 107, 108, 108, 109, 109, 0, 0, 0, 0, 0, 0, 110, 110, 111, 111, 112, 112, 113, 113, 114, 114, 0, 0, 0, 0, 0, 0, 115, 115, 116, 116, 117, 117, 118, 118, 119, 119, 0, 0, 0, 0, 0, 0, 120, 120, 121, 121, 122, 122, 123, 123, 124, 124, 0, 0, 0, 0, 0, 0, 125, 125, 126, 126, 127, 127, -128, -128, -127, -127, 0, 0, 0, 0, 0, 0, -126, -126, -125, -125, -124, -124, -123, -123, -122, -122, 0, 0, 0, 0, 0, 0, -121, -121, -120, -120, -119, -119, -118, -118, -117, -117, 0, 0, 0, 0, 0, 0, -116, -116, -115, -115, -114, -114, -113, -113, -112, -112, 0, 0, 0, 0, 0, 0, -111, -111, -110, -110, -109, -109, -108, -108, -107, -107, 0, 0};
 std::vector<int32_t> fpbias {0, 166, 333, 500, 666, 833};
 
-QLinearConvGraphTest<QLinearConvScalar, 28, 32, 24, 32, 1, 1, 6, 5> qLinearConvScalar(
+const int INP_H = 28;
+const int INP_W = 28;
+const int OUT_H = INP_H;
+const int OUT_W = INP_W;
+const int OUT_W_PAD16 = (OUT_W + 15)/16*16;
+const int STEP_H = 1;
+const int STEP_W = 1;
+const int B = 1;
+const int C = 1;
+const int M = 6;
+const int K = 5;
+const int PAD = K/2;
+const int W1 = (INP_W+K-1 +15)/16*16 - INP_W - PAD;
+
+QLinearConvGraphTest<QLinearConvScalar, 
+                     INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
+                     PAD, PAD, PAD, W1> qLinearConvScalar(
   "qLinearConvScalar", fpweights, fpbias, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x24x24_QLinearConvScalar.txt");
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x28x28_QLinearConvScalar.txt");
 
-QLinearConvGraphTest<QLinearConvVector, 28, 32, 24, 32, 1, 1, 6, 5> qLinearConvVector(
+QLinearConvGraphTest<QLinearConv5x5, 
+                     INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
+                     PAD, PAD, PAD, W1> qLinearConvVector(
   "qLinearConvVector", fpweights, fpbias, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x24x24_QLinearConvVector.txt");
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x28x28_QLinearConv5x5.txt");
 
-QLinearConvGraphTest<QLinearConvVectorScale32bit, 28, 32, 24, 32, 1, 1, 6, 5> qLinearConvVectorScale32bit(
+QLinearConvGraphTest<QLinearConv5x5Scale32bit, 
+                     INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
+                     PAD, PAD, PAD, W1> qLinearConvVectorScale32bit(
   "qLinearConvVectorScale32bit", fpweights, fpbias, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x24x24_QLinearConvVectorScale32bit.txt");
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x28x28_QLinearConv5x5Scale32bit.txt");
 
-#ifdef __X86SIM__
+
+#if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
   adfCheck(qLinearConvScalar.init(), "init qLinearConvScalar");
   adfCheck(qLinearConvScalar.run(ITER_CNT), "run qLinearConvScalar");
@@ -61,24 +87,6 @@ int main(int argc, char ** argv) {
 
   adfCheck(qLinearConvVectorScale32bit.init(), "init qLinearConvVectorScale32bit");
   adfCheck(qLinearConvVectorScale32bit.run(ITER_CNT), "run qLinearConvVectorScale32bit");
-	adfCheck(qLinearConvVectorScale32bit.end(), "end qLinearConvVectorScale32bit");
-  return 0;
-}
-#endif
-
-
-#ifdef __AIESIM__
-int main(int argc, char ** argv) {
-  adfCheck(qLinearConvScalar.init(), "init qLinearConvScalar");
-  get_graph_throughput_by_port(qLinearConvScalar, "plout[0]", qLinearConvScalar.plout[0], 1*6*24*32, sizeof(int8_t), ITER_CNT);
-	adfCheck(qLinearConvScalar.end(), "end qLinearConvScalar");
-
-  adfCheck(qLinearConvVector.init(), "init qLinearConvVector");
-  get_graph_throughput_by_port(qLinearConvVector, "plout[0]", qLinearConvVector.plout[0], 1*6*24*32, sizeof(int8_t), ITER_CNT);
-	adfCheck(qLinearConvVector.end(), "end qLinearConvVector");
-
-  adfCheck(qLinearConvVectorScale32bit.init(), "init qLinearConvVectorScale32bit");
-  get_graph_throughput_by_port(qLinearConvVectorScale32bit, "plout[0]", qLinearConvVectorScale32bit.plout[0], 1*6*24*32, sizeof(int8_t), ITER_CNT);
 	adfCheck(qLinearConvVectorScale32bit.end(), "end qLinearConvVectorScale32bit");
   return 0;
 }

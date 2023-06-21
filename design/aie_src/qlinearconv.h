@@ -34,10 +34,12 @@
 /**
  * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles
  */
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalar {
   
   private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+
     alignas(32) int8_t (&weights)[M*C*K*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
@@ -77,14 +79,16 @@ class QLinearConvScalar {
 
 
 /**
- * @brief Vector implementation, QLinearConvVector<28,24,1,1,6,5> takes 3237 cycles.
+ * @brief Vector implementation, QLinearConv5x5<28,24,1,1,6,5> takes 3237 cycles.
  * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
  * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0
  */
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
-class QLinearConvVector {
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
+class QLinearConv5x5 {
   
   private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+
     alignas(32) int8_t (&weights)[M*C*K*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
@@ -99,7 +103,7 @@ class QLinearConvVector {
     int16_t scale;
 	
   public:
-    QLinearConvVector (
+    QLinearConv5x5 (
       int8_t (&w)[M*C*K*16],
       int32_t (&b)[M],
       float x_scale,
@@ -116,8 +120,10 @@ class QLinearConvVector {
 		);
 
 		static void registerKernelClass() {
-      static_assert(INP_W%16==0 && OUT_W%16==0);
-			REGISTER_FUNCTION(QLinearConvVector::filter);
+      static_assert(K==5);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W%16==0);
+			REGISTER_FUNCTION(QLinearConv5x5::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
 		}
@@ -125,14 +131,16 @@ class QLinearConvVector {
 
 
 /**
- * @brief Vector implementation, QLinearConvVectorScale32bit<28,24,1,1,6,5> takes 7063 cycles.
+ * @brief Vector implementation, QLinearConv5x5Scale32bit<28,24,1,1,6,5> takes 7063 cycles.
  * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
  * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0
  */
-template <int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
-class QLinearConvVectorScale32bit {
+template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K>
+class QLinearConv5x5Scale32bit {
   
   private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+
     alignas(32) int8_t (&weights)[M*C*K*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
@@ -147,7 +155,7 @@ class QLinearConvVectorScale32bit {
     int32_t scale;
 	
   public:
-    QLinearConvVectorScale32bit (
+    QLinearConv5x5Scale32bit (
       int8_t (&w)[M*C*K*16],
       int32_t (&b)[M],
       float x_scale,
@@ -165,7 +173,7 @@ class QLinearConvVectorScale32bit {
 
 		static void registerKernelClass() {
       static_assert(INP_W%16==0 && OUT_W%16==0);
-			REGISTER_FUNCTION(QLinearConvVectorScale32bit::filter);
+			REGISTER_FUNCTION(QLinearConv5x5Scale32bit::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
 		}

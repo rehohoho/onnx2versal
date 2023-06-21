@@ -3,6 +3,8 @@
 
 #include <adf.h>
 #include "qlinearconv.h"
+#include "pad.h"
+#include "graph_utils.h"
 
 
 /**
@@ -17,8 +19,9 @@
  * @tparam CONV     Conv2D Kernel
  * @tparam INP_H    input height
  * @tparam INP_W    input width
- * @tparam OUT_H    output height, = INP_H - K/2
- * @tparam OUT_W    output width,  = INP_W - K/2
+ * @tparam OUT_W    output width, padded to vector boundary = pad(INP_W - K/2)
+ * @tparam STEP_H   stride in height dimension
+ * @tparam STEP_W   stride in width dimension
  * @tparam B        batch size
  * @tparam C        input channels
  * @tparam M        output channels
@@ -36,16 +39,22 @@
  * @connect{pout[0], B*M*OUT_H*OUT_W}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K>
+template <template<int, int, int, int, int, int, int, int, int> class CONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
+  int B, int C, int M, int K,
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
+    std::vector<adf::kernel> pad;
+    static constexpr int PAD_H = INP_H + H0 + H1;
+    static constexpr int PAD_W = INP_W + W0 + W1;
 
   public:
     adf::port<input> pin[1];
     adf::port<output> pout[1];
+    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
 
     QLinearConvGraph(
       std::vector<int8_t> weights,
@@ -57,20 +66,38 @@ class QLinearConvGraph : public adf::graph {
       int8_t w_zero_point,
       int8_t y_zero_point
     ) { 
-      k[0] = adf::kernel::create_object<CONV<INP_H, INP_W, OUT_H, OUT_W, B, C, M, K>>(
+      static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
+      assert(weights.size() <= MAX_PARAM_BYTES);
+      static_assert(B*M*OUT_H*OUT_W <= MAX_PARAM_BYTES);
+      
+      k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero_point, w_zero_point, y_zero_point);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
-      adf::connect<adf::window<B*INP_H*INP_W*C>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_H*OUT_W*M>> (k[0].out[0], pout[0]);
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DWindowScalar<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero_point));
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.6;
+
+        adf::connect<adf::window<B*C*INP_H*INP_W>, adf::window<INP_H*INP_W>> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<PAD_H*PAD_W>, adf::window<B*C*PAD_H*PAD_W>> (pad[0].out[0], k[0].in[0]);
+      } else {
+        adf::connect<adf::window<B*C*INP_H*INP_W>> (pin[0], k[0].in[0]);
+      }
+
+      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (k[0].out[0], pout[0]);
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos; // weight (<= 16384B)
-      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0x0000);
+      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
       adf::location<adf::parameter>(k[0].param[1]) = tilePos; // bias   (<= 4096B)
-      adf::location<adf::parameter>(k[0].param[1]) = adf::offset(0x4000); 
+      // weights can be padded, not necessarily MCKK
+      // separate bank not required for weights vs bias
+      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((weights.size() + 31)/32*32); 
     }
 
 };
