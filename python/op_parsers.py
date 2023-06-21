@@ -243,8 +243,7 @@ class ConvOp(OpParser):
     self.OUT_H = (self.INP_H + self.H0 + self.H1 - self.K) // self.STEP_H + 1
     self.OUT_W = (self.INP_W + self.W0 + self.W1 - self.K) // self.STEP_W + 1
     
-    assert tin.shape == (self.B, self.C, self.INP_H, self.INP_W) and \
-      tw.shape == (self.M, self.C, self.K, self.K) and \
+    assert tw.shape == (self.M, self.C, self.K, self.K) and \
       tbias.shape == (self.M, ) and \
       tout.shape == (self.B, self.M, self.OUT_H, self.OUT_W)
 
@@ -271,43 +270,40 @@ class ConvOp(OpParser):
 
     if conv_in_bytes <= MAX_PARAM_SIZE:
 
-      if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
+      if tw.nbytes <= MAX_PARAM_SIZE * 8 and tout.nbytes <= MAX_PARAM_SIZE * 8:
+        
         kernel = "ConvReluScalarBCHW"
         if self.OUT_W % 8 == 0 and self.K == 5 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
           kernel = "Conv5x5on8ReluBCHW"
           tw = pad_lastdim(tw, "Conv weights", 8)
           self.W1 = PAD_W_VEC - self.INP_W - self.W0
-        
-        self.argname_2_tensor[f"{self.name}_w"] = tw
-        self.argname_2_tensor[f"{self.name}_b"] = tbias
-
-        self.kernel_type = f"ConvReluGraph<{kernel},{self.get_conv_targs()}"
-
-      elif tw.nbytes <= MAX_PARAM_SIZE * 8 and tout.nbytes <= MAX_PARAM_SIZE * 8:
-        kernel = "ConvReluScalarBCHW"
-        if self.OUT_W % 8 == 0 and self.K == 5 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-          kernel = "Conv5x5on8ReluBCHW"
-          tw = pad_lastdim(tw, "Conv weights", 8)
+        elif self.OUT_W % 8 == 0 and self.K == 3 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
+          kernel = "Conv3x3on12ReluBCHW"
+          tw = pad_lastdim(tw.reshape(self.M, self.C, 9), "Conv weights", 12)
           self.W1 = PAD_W_VEC - self.INP_W - self.W0
         
         self.argname_2_tensor[f"{self.name}_w"] = tw
         self.argname_2_tensor[f"{self.name}_b"] = tbias
+        
+        if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
+          self.kernel_type = f"ConvReluGraph<{kernel},{self.get_conv_targs()}"
 
-        chunkSize = min(
-          MAX_PARAM_SIZE//(tw.nbytes//self.M), 
-          MAX_PARAM_SIZE//(tout.nbytes//self.M), 
-          self.M)
-        if chunkSize > 8:
-          chunkSize = chunkSize //8*8
-        concat_w = chunkSize * self.OUT_W * self.OUT_W
-        concat_block = self.M * self.OUT_W * self.OUT_W
-        concat = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
-        self.kernel_type = f"ConvReluChunkMGraph<{kernel},{concat},{1},{chunkSize},{self.get_conv_targs()}"
+        else:
+          chunkSize = min(
+            MAX_PARAM_SIZE//(tw.nbytes//self.M), 
+            MAX_PARAM_SIZE//(tout.nbytes//self.M), 
+            self.M)
+          if chunkSize > 8:
+            chunkSize = chunkSize //8*8
+          concat_w = chunkSize * self.OUT_W * self.OUT_W
+          concat_block = self.M * self.OUT_W * self.OUT_W
+          concat = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
+          self.kernel_type = f"ConvReluChunkMGraph<{kernel},{concat},{1},{chunkSize},{self.get_conv_targs()}"
       
       else:
         kernel = "ConvReluScalarStreamCacheCKK"
         if self.K == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-          kernel = "Conv3x3ReluStreamCacheCKK2Row" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
+          kernel = "Conv3x3ReluStreamCacheCKKMultiRow" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
           tw = pad_lastdim(tw.reshape(self.M, self.C, 9), "Conv weights", 12)
           self.W1 = PAD_W_VEC - self.INP_W - self.W0
         
@@ -320,7 +316,7 @@ class ConvOp(OpParser):
     else:
       kernel = "ConvReluScalarStreamCacheCKK"
       if self.K == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC + self.B*self.C*(self.K-1)*7*PAD_W_VEC*tin.dtype.itemsize <= MAX_PARAM_SIZE * 8:
-        kernel = "Conv3x3ReluStreamCacheCKK2Row" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
+        kernel = "Conv3x3ReluStreamCacheCKKMultiRow" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
         tw = pad_lastdim(tw.reshape(self.M, self.C, 9), "Conv weights", 12)
         self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
       
@@ -628,38 +624,74 @@ class QGemmOp(OpParser):
     return f"{self.kernel_type} {self.name};"
 
 
+class QLinearAddOp(OpParser):
+  include_file: str = "graph_qlinearadd.h"
+
+  def __init__(self, name: str, is_relu: bool):
+    super().__init__(name)
+    self.is_relu = is_relu
+  
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 9
+
+    ta, ta_scale, ta_zero, tb, tb_scale, tb_zero, tout_scale, tout_zero, tout = tensors
+    assert ta.shape == tb.shape == tout.shape and \
+      ta_scale.shape == ta_zero.shape == \
+      tb_scale.shape == tb_zero.shape == \
+      tout_scale.shape == tout_zero.shape == ()
+
+    self.tout = tout # reference copy to check against to compress graph
+    self.dtype = tout.dtype
+
+    self.argname_2_tensor[f"{self.name}_inA_scale"] = ta_scale
+    self.argname_2_tensor[f"{self.name}_inB_scale"] = tb_scale
+    self.argname_2_tensor[f"{self.name}_out_scale"] = tout_scale
+    self.argname_2_tensor[f"{self.name}_inA_zero"] = ta_zero
+    self.argname_2_tensor[f"{self.name}_inB_zero"] = tb_zero
+    self.argname_2_tensor[f"{self.name}_out_zero"] = tout_zero
+
+    self.filename_2_tensor[f"{self.name}_inA_{get_shape_str(ta)}.txt"] = ta
+    self.filename_2_tensor[f"{self.name}_inB_{get_shape_str(tb)}.txt"] = tb
+    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    
+    self.W = ta.size
+    self.out_size = tout.size # host buffer sizes
+  
+  def get_kernel_line(self) -> str:
+    graph = "QLinearAddGraph"
+    kernel = "QLinearAddInt8"
+    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.W},{int(self.is_relu)}> {self.name};"
+
+
 class QLinearConvOp(OpParser):
   """Use input tensor for INP_H, pad width to vector boundary for INP_W,
   Use output tensor for OUT_H, pad width to vector boundary for OUT_W
   """
   include_file: str = "graph_qlinearconv.h"
 
-  def register_params(self, tensors: List[np.ndarray]):
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 10
     tin, tin_scale, tin_zero, tw, tw_scale, tw_zero, tout_scale, tout_zero, tbias, tout = tensors
 
+    attr_d = get_attribute_dict(attributes)
+    for i in attr_d.get("dilations"):
+      if i != 1: raise NotImplementedError("Dilated convolution not implemented.")
+    if np.unique(attr_d.get("kernel_shape")).size != 1: 
+      raise NotImplementedError("Asymmetric kernel convolution not implemented")
+    self.STEP_H, self.STEP_W = attr_d.get("strides", [1, 1])
+    self.H0, self.W0, self.H1, self.W1 = attr_d.get("pads", [0, 0, 0, 0])
+
     self.B, self.C, self.INP_H, self.INP_W = tin.shape
     self.M, _, self.K, _ = tw.shape
-    _, _, self.OUT_H, self.OUT_W = tout.shape
+    self.OUT_H = (self.INP_H + self.H0 + self.H1 - self.K) // self.STEP_H + 1
+    self.OUT_W = (self.INP_W + self.W0 + self.W1 - self.K) // self.STEP_W + 1
 
     assert tw.shape == (self.M, self.C, self.K, self.K) and \
+      tbias.shape == (self.M, ) and \
       tout.shape == (self.B, self.M, self.OUT_H, self.OUT_W)
 
     self.tout = tout # reference copy to check against to compress graph
     self.dtype = tout.dtype
-    
-    tw = pad_lastdim(tw, "QLinearConvOp weights", get_vector_boundary(tw))
-    if self.K == 5:
-      tw = tw[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
-    
-    self.argname_2_tensor[f"{self.name}_w"] = tw # heap
-    self.argname_2_tensor[f"{self.name}_b"] = tbias
-    self.argname_2_tensor[f"{self.name}_xscale"] = tin_scale
-    self.argname_2_tensor[f"{self.name}_wscale"] = tw_scale
-    self.argname_2_tensor[f"{self.name}_yscale"] = tout_scale
-    self.argname_2_tensor[f"{self.name}_xzero"] = tin_zero
-    self.argname_2_tensor[f"{self.name}_wzero"] = tw_zero
-    self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
     
     # pad INP_W, OUT_W to vector boundary
     tin = pad_lastdim(tin, "QLinearConvOp tin", get_vector_boundary(tin), value=tin_zero) #files
@@ -671,15 +703,36 @@ class QLinearConvOp(OpParser):
     self.INP_W, self.OUT_W = tin.shape[-1], tout.shape[-1] 
     self.out_size = tout.size # host buffer sizes
 
-    if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE or \
-      tw.nbytes + tbias.nbytes > MAX_PARAM_SIZE:
-      raise NotImplementedError(f"No QLinearConv implementation for input size {tin.nbytes}, output size {tout.nbytes}, param size {tw.nbytes + tbias.nbytes}")
+    PAD_H = self.INP_H + self.H0 + self.H1
+    PAD_W = self.INP_W + self.W0 + self.W1    
+    PAD_W_VEC = (PAD_W + (tin.dtype.itemsize-1))//tin.dtype.itemsize*tin.dtype.itemsize
+
+    self.kernel = "QLinearConvScalar"
+    if self.K == 5 and self.INP_W % 16 == 0 and self.OUT_W % 16 == 0:
+      tw = pad_lastdim(tw, "QLinearConvOp weights", get_vector_boundary(tw))
+      tw = tw[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
+      self.kernel = "QLinearConv5x5"
+      self.W1 = PAD_W_VEC - self.INP_W - self.W0
+    
+    self.argname_2_tensor[f"{self.name}_w"] = tw # heap
+    self.argname_2_tensor[f"{self.name}_b"] = tbias
+    self.argname_2_tensor[f"{self.name}_xscale"] = tin_scale
+    self.argname_2_tensor[f"{self.name}_wscale"] = tw_scale
+    self.argname_2_tensor[f"{self.name}_yscale"] = tout_scale
+    self.argname_2_tensor[f"{self.name}_xzero"] = tin_zero
+    self.argname_2_tensor[f"{self.name}_wzero"] = tw_zero
+    self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
+
+    # if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE or \
+    #   tw.nbytes + tbias.nbytes > MAX_PARAM_SIZE:
+    #   raise NotImplementedError(f"No QLinearConv implementation for input size {tin.nbytes}, output size {tout.nbytes}, param size {tw.nbytes + tbias.nbytes}")
     
   def get_kernel_line(self) -> str:
     graph = "QLinearConvGraph"
-    kernel = "QLinearConvVector"
-    return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.M},{self.K}> {self.name};"
-
+    return f"{graph}<{self.kernel}," + \
+      f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.STEP_H},{self.STEP_W}," + \
+      f"{self.B},{self.C},{self.M},{self.K}," + \
+      f"{self.H0},{self.H1},{self.W0},{self.W1}> {self.name};"
 
 class QLinearMacOp(OpParser):
   include_file: str = "graph_qlinearmac.h"
@@ -730,6 +783,59 @@ class QLinearMacOp(OpParser):
     if self.W % 16 == 0:
       kernel = "QlinearMac"
     return f"{graph}<{kernel},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
+
+
+class QLinearPoolOp(OpParser):
+  include_file: str = "graph_qlinearpool.h"
+
+  def __init__(self, name: str, reduction_mode: str = "max"):
+    super().__init__(name)
+    self.reduction_mode = reduction_mode
+  
+  def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
+    assert len(tensors) == 6
+    
+    attr_d = get_attribute_dict(attributes)
+    if attr_d.get("strides") != attr_d.get("kernel_shape"): raise ValueError(f"Attribute error, strides {attr_d['strides']} not equal to kernel {attr_d['kernel_shape']}")
+    
+    tin, tin_scale, tin_zero, tout_scale, tout_zero, tout = tensors
+
+    self.B, self.C, self.INP_H, self.INP_W = tin.shape
+    _, _, self.OUT_H, self.OUT_W = tout.shape
+    self.unpadded_OUT_W = self.OUT_W
+    assert tout.shape == (self.B, self.C, self.OUT_H, self.OUT_W) and \
+      tin_scale.shape == tin_zero.shape == tout_scale.shape == tout_zero.shape == ()
+
+    self.tout = tout # reference copy to check against to compress graph
+    
+    self.argname_2_tensor[f"{self.name}_inscale"] = tin_scale
+    self.argname_2_tensor[f"{self.name}_outscale"] = tout_scale
+    self.argname_2_tensor[f"{self.name}_inzero"] = tin_zero
+    self.argname_2_tensor[f"{self.name}_outzero"] = tout_zero
+
+    tin = pad_lastdim(tin, "QLinearPoolOp tin", get_vector_boundary(tin)) #files
+    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+ 
+    tout = pad_lastdim(tout, "QLinearPoolOp tout", get_vector_boundary(tout))
+    assert tin.shape[:-2] == tout.shape[:-2] and tin.shape[-2] % tout.shape[-2] == 0
+    
+    self.INP_W, self.OUT_W = tin.shape[-1], tout.shape[-1]
+    self.dtype = tout.dtype
+    self.out_size = tout.size # host buffer sizes
+  
+  def get_kernel_line(self) -> str:
+    graph = "QLinearPoolGraph"
+    if self.reduction_mode == "avg":
+      kernel = "QLinearAvgpoolScalarBCHW"
+      return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C}> {self.name};"
+    else:
+      raise NotImplementedError(f"Pool for reduction mode {self.reduction_mode} not implemented.")
+  
+  def disable_output_pad(self):
+    self.OUT_W = self.unpadded_OUT_W
+    self.out_size = self.tout.size
+    super().disable_output_pad()
 
 
 class QLinearSoftmaxOp(OpParser):

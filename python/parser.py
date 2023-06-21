@@ -8,7 +8,7 @@ from onnx import numpy_helper
 
 from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
   AddOp, ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, MacOp, PoolOp, QGemmOp, \
-  QLinearConvOp, QLinearMacOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp, \
+  QLinearAddOp, QLinearConvOp, QLinearMacOp, QLinearPoolOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp, \
   TransposeOp
 
 
@@ -105,7 +105,7 @@ class Parser:
         op = AddOp(f"k{i}add", is_relu)
         
         if is_relu: # lookahead
-          print(f"WARNING: fusing Conv+Relu")
+          print(f"WARNING: fusing Add+Relu")
           i += 1
         
         onnx_out_name = self.nodes[i].output[0]
@@ -185,9 +185,30 @@ class Parser:
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
 
+      elif node.op_type == "QLinearAdd":
+        is_relu = self.get_optype(i+1) == "Relu"
+        op = QLinearAddOp(f"k{i}qlinearadd", is_relu)
+        
+        if is_relu: # lookahead
+          print(f"WARNING: fusing Add+Relu")
+          i += 1
+        
+        onnx_out_name = self.nodes[i].output[0]
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port([node.input[0], node.input[3]], [onnx_out_name], op)
+
       elif node.op_type == "QLinearConv":
         op = QLinearConvOp(f"k{i}qlinearconv")
-        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port([node.input[0]], [node.output[0]], op)
+      
+      elif node.op_type == "QLinearAveragePool":
+        op = QLinearPoolOp(f"k{i}qlinearpool", reduction_mode="avg")
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
