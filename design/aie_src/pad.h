@@ -73,7 +73,7 @@ class Pad2DStreamFloat {
 
 /**
  * @brief Vector implementation for Int8 Pad2D
- * Pad2DStreamInt8<a,2,32,32,1,1,1,1> takes 8920 cycles
+ * Pad2DStreamInt8<a,2,32,32,1,1,1,1> takes 5313 cycles
  */
 template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
 class Pad2DStreamInt8 {
