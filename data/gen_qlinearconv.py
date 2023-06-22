@@ -27,17 +27,20 @@ tbias = (np.arange(M) / (X_scale*W_scale/Y_scale)).astype(np.int32)
 save_tensor("qlinearconv_int8in.txt", tin)
 print("int8bias\n", tbias.flatten().tolist(), "\n\n\n")
 
+
 # 5x5
 K = 5
 
 tw = np.arange(M*C*K*K).astype(np.int8).reshape(M,C,K,K)
 print("int8weights_5x5\n", tw.flatten().tolist(), "\n\n\n")
 
+
 # tin = pad_lastdim(tin, "tin", get_vector_boundary(tin))
 tw = pad_lastdim(tw, "tw", get_vector_boundary(tw))
 if K == 5:
   tw = tw[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
 print("int8weights_5x5_pad\n", tw.flatten().tolist(), "\n\n\n")
+
 
 Y = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),
@@ -47,6 +50,7 @@ Y = round_away(Y) + Y_zero_point
 Y = np.clip(Y, -128, 127).astype(np.int8)
 save_tensor(f"qlinearconv_int8out_{get_shape_str(Y)}.txt", Y)
 
+
 # Fixed point arithmetic implementation
 scale = X_scale*W_scale/Y_scale
 scalebits = abs(int(math.log(scale, 2))) + 16
@@ -55,10 +59,18 @@ Y_fix = ((Y_fix + 2**(scalebits - 1)) >> scalebits) + Y_zero_point
 Y_fix = np.clip(Y, -128, 127).astype(np.int8)
 assert np.all(Y == Y_fix)
 
+
 # 3x3
 K = 3
+PAD = (16 - K*K%16) % 16
 tw_3x3 = np.arange(M*C*K*K).astype(np.int8).reshape(M,C,K,K)
 print("int8weights_3x3\n", tw_3x3.flatten().tolist(), "\n\n\n")
+
+
+tw_3x3_pad = np.pad(tw_3x3.reshape(M,C,-1), ((0,0),(0,0),(0,PAD)), 
+                    "constant", constant_values=0)
+print("int8weights_3x3_pad\n", tw_3x3_pad.flatten().tolist(), "\n\n\n")
+
 
 Y_3x3 = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),
@@ -68,6 +80,7 @@ Y_3x3 = round_away(Y_3x3) + Y_zero_point
 Y_3x3 = np.clip(Y_3x3, -128, 127).astype(np.int8)
 save_tensor(f"qlinearconv_int8out_3x3_{get_shape_str(Y_3x3)}.txt", Y_3x3)
 
+
 Y_3x3_stride2 = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),
   torch.Tensor(tw_3x3.astype(int) - W_zero_point),
@@ -75,4 +88,3 @@ Y_3x3_stride2 = torch.nn.functional.conv2d(
 Y_3x3_stride2 = round_away(Y_3x3_stride2) + Y_zero_point
 Y_3x3_stride2 = np.clip(Y_3x3_stride2, -128, 127).astype(np.int8)
 save_tensor(f"qlinearconv_int8out_3x3_stride2_{get_shape_str(Y_3x3_stride2)}.txt", Y_3x3_stride2)
-

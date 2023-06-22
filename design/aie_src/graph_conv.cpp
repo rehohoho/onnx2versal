@@ -179,7 +179,7 @@ ConvReluStreamGraphTest<Conv3x3ReluStreamCacheCKK,
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
   // init gmio
-  int fpweights_3x3_size = M*C*12 * sizeof(float_t);
+  int fpweights_3x3_size = M*C*3*3 * sizeof(float_t);
   float_t* fpweights_3x3_buf = (float_t *) adf::GMIO::malloc(fpweights_3x3_size);
   memcpy(fpweights_3x3_buf, fpweights_3x3.data(), fpweights_3x3_size);
   

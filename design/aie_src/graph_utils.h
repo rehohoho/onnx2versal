@@ -17,11 +17,8 @@
 #define adfCheck(stmt, log_name)          \
   do {                                    \
     adf::return_code ret = stmt;          \
-    if (ret != adf::ok) {                 \
-      printf("[%s]: failed\n", log_name); \
-    } else {                              \
-      printf("[%s]: success\n", log_name);\
-    }                                     \
+    if (ret != adf::ok)                   \
+      printf("ERROR [%s]: failed\n", log_name); \
   } while (0)
 
 

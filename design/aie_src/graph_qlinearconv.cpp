@@ -2,14 +2,14 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int, int, int, int> class CONV, 
+template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
   int B, int C, int M, int K,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvGraphTest : public adf::graph {
 
   private:
-    typedef QLinearConvGraph<CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
+    typedef QLinearConvGraph<QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
 
@@ -24,15 +24,54 @@ class QLinearConvGraphTest : public adf::graph {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero_point,
-      int8_t w_zero_point,
-      int8_t y_zero_point,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero,
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "qlinearconv_out.txt"
-    ): g(weights, bias, x_scale, w_scale, y_scale, x_zero_point, w_zero_point, y_zero_point) { 
+    ): g(weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
       plin[0] = adf::input_plio::create("plin0_qlinearconv_"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_qlinearconv_"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<B*C*INP_H*INP_W>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (g.pout[0], plout[0].in[0]);
+    }
+};
+
+
+template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K,
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
+class QLinearConvStreamGraphTest : public adf::graph {
+
+  private:
+    typedef QLinearConvStreamGraph<QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
+    Graph g;
+    static constexpr int OUT_H = Graph::OUT_H;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[1];
+    adf::input_gmio gmio_w;
+
+    QLinearConvStreamGraphTest(
+      const std::string& id,
+      std::vector<int32_t> bias,
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT = "qlinearconv_out.txt"
+    ): g(bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
+      plin[0] = adf::input_plio::create("plin0_qlinearconv_"+id+"_input", PLIO64_ARG(INP_TXT));
+      plout[0] = adf::output_plio::create("plout0_qlinearconv_"+id+"_output", PLIO64_ARG(OUT_TXT));
+      gmio_w = adf::input_gmio::create("gmio0_gemm"+id+"_w", 64, 1000);
+
+      adf::connect<adf::window<B*C*INP_H*INP_W>> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream>                  (gmio_w.out[0], g.pin[1]);
       adf::connect<adf::window<B*M*OUT_H*OUT_W>> (g.pout[0], plout[0].in[0]);
     }
 };
@@ -85,12 +124,19 @@ const int OUT_W_STRIDE2_3x3 = (OUT_W - K_3x3)/2+1;
 const int OUT_W_STRIDE2_PAD16_3x3 = (OUT_W_STRIDE2_3x3 + 15)/16*16;
 
 std::vector<int8_t> int8weights_3x3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53};
+std::vector<int8_t> int8weights_3x3_pad {0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 0, 0, 0, 0, 0, 0, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 0, 0, 0, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, 0, 0, 0, 0, 0, 0, 36, 37, 38, 39, 40, 41, 42, 43, 44, 0, 0, 0, 0, 0, 0, 0, 45, 46, 47, 48, 49, 50, 51, 52, 53, 0, 0, 0, 0, 0, 0, 0};
 
 QLinearConvGraphTest<QLinearConvScalar, 
-                     INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K_3x3,
+                     INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
                      PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConvScalar_3x3(
   "qLinearConvScalar_3x3", int8weights_3x3, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConvScalar.txt");
+
+QLinearConvStreamGraphTest<QLinearConvScalarStream, 
+                           INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
+                           PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConvScalarStream_3x3(
+  "qLinearConvScalarStream_3x3", int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConvScalarStream.txt");
 
 // 3x3 stride 2
 QLinearConvGraphTest<QLinearConvScalar, 
@@ -102,6 +148,11 @@ QLinearConvGraphTest<QLinearConvScalar,
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
+  // init gmio
+  int int8weights_3x3_pad_size = M*C*16 * sizeof(float_t);
+  float_t* int8weights_3x3_pad_buf = (float_t *) adf::GMIO::malloc(int8weights_3x3_pad_size);
+  memcpy(int8weights_3x3_pad_buf, int8weights_3x3_pad.data(), int8weights_3x3_pad_size);
+
   // 5x5 stride 1
   adfCheck(qLinearConvScalar.init(), "init qLinearConvScalar");
   adfCheck(qLinearConvScalar.run(ITER_CNT), "run qLinearConvScalar");
@@ -120,10 +171,18 @@ int main(int argc, char ** argv) {
   adfCheck(qLinearConvScalar_3x3.run(ITER_CNT), "run qLinearConvScalar_3x3");
 	adfCheck(qLinearConvScalar_3x3.end(), "end qLinearConvScalar_3x3");
 
+  adfCheck(qLinearConvScalarStream_3x3.init(), "init qLinearConvScalarStream_3x3");
+  qLinearConvScalarStream_3x3.gmio_w.gm2aie_nb(int8weights_3x3_pad_buf, int8weights_3x3_pad_size);
+  adfCheck(qLinearConvScalarStream_3x3.run(ITER_CNT), "run qLinearConvScalarStream_3x3");
+	adfCheck(qLinearConvScalarStream_3x3.end(), "end qLinearConvScalarStream_3x3");
+
   // 3x3 stride 2
   adfCheck(qLinearConvScalar_3x3_s2.init(), "init qLinearConvScalar_3x3_s2");
   adfCheck(qLinearConvScalar_3x3_s2.run(ITER_CNT), "run qLinearConvScalar_3x3_s2");
 	adfCheck(qLinearConvScalar_3x3_s2.end(), "end qLinearConvScalar_3x3_s2");
+
+  // cleanup gmio
+  adf::GMIO::free(int8weights_3x3_pad_buf);
   return 0;
 }
 #endif

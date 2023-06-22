@@ -195,8 +195,7 @@ class ConvReluStreamGraph : public adf::graph {
 
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
-
-        adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
+      
       } else {
         adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
       }
@@ -205,6 +204,8 @@ class ConvReluStreamGraph : public adf::graph {
       adf::connect<adf::stream> (k[0].out[0], pout[0]);
       
       adf::samples_per_iteration(k[0].out[0]) = B*M*OUT_H*OUT_W;
+      
+      adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
     }
 
 };

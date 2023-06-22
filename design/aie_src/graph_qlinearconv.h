@@ -16,7 +16,7 @@
  * Each c-th KxK kernel is applied on C dimension. This is done over M iterations to yield
  * MxHxW per instance. This is done over B iterations to yield B batches.
  * 
- * @tparam CONV     Conv2D Kernel
+ * @tparam QLINEARCONV     Conv2D Kernel
  * @tparam INP_H    input height
  * @tparam INP_W    input width
  * @tparam OUT_W    output width, padded to vector boundary = pad(INP_W - K/2)
@@ -39,7 +39,7 @@
  * @connect{pout[0], B*M*OUT_H*OUT_W}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int, int> class CONV, 
+template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
   int B, int C, int M, int K,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
@@ -62,23 +62,23 @@ class QLinearConvGraph : public adf::graph {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero_point,
-      int8_t w_zero_point,
-      int8_t y_zero_point
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
     ) { 
       static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
       assert(weights.size() <= MAX_PARAM_BYTES);
       static_assert(B*M*OUT_H*OUT_W <= MAX_PARAM_BYTES);
       
-      k[0] = adf::kernel::create_object<CONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K>>(
-        weights, bias, x_scale, w_scale, y_scale, x_zero_point, w_zero_point, y_zero_point);
+      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K>>(
+        weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DWindowScalar<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero_point));
+          adf::kernel::create_object<Pad2DWindowScalar<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
@@ -95,6 +95,73 @@ class QLinearConvGraph : public adf::graph {
       adf::location<adf::parameter>(k[0].param[0]) = tilePos;
       adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
       adf::location<adf::parameter>(k[0].param[1]) = tilePos;
+    }
+
+};
+
+
+/**
+ * @brief Single instance graph that streams weights and biases, significantly slower.
+ * 
+ * @connections
+ * @connect{pin[0], B*C*INP_H*INP_W}
+ * @connect{pin[1], stream}
+ * @connect{pout[0], stream B*M*OUT_H*OUT_W}
+ * @endconnections
+ */
+template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K, 
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
+class QLinearConvStreamGraph : public adf::graph {
+
+  private:
+    adf::kernel k[1];
+    std::vector<adf::kernel> pad;
+    static constexpr int PAD_H = INP_H + H0 + H1;
+    static constexpr int PAD_W = INP_W + W0 + W1;
+
+  public:
+    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
+
+    adf::port<input> pin[2];
+    adf::port<output> pout[1];
+
+    QLinearConvStreamGraph(
+      std::vector<int32_t> bias,
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
+    ) { 
+      static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
+      static_assert(B*M*OUT_H*OUT_W <= MAX_PARAM_BYTES);
+      
+      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K>>(
+        bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
+      adf::source(k[0]) = "qlinearconv.cc";
+      adf::headers(k[0]) = {"qlinearconv.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
+
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DWindowScalar<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.6;
+
+        adf::connect<adf::window<B*C*INP_H*INP_W>, adf::window<INP_H*INP_W>> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<PAD_H*PAD_W>, adf::window<B*C*PAD_H*PAD_W>> (pad[0].out[0], k[0].in[0]);
+
+        adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
+      } else {
+        adf::connect<adf::window<B*C*INP_H*INP_W>> (pin[0], k[0].in[0]);
+      }
+      
+      adf::connect<adf::stream> (pin[1], k[0].in[1]); // variable samples per iteration based on kernel
+      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (k[0].out[0], pout[0]);
     }
 
 };
