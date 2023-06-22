@@ -72,6 +72,36 @@ class Pad2DStreamFloat {
 
 
 /**
+ * @brief Vector implementation for Int8 Pad2D
+ * Pad2DStreamInt8<a,2,32,32,1,1,1,1> takes 8920 cycles
+ */
+template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+class Pad2DStreamInt8 {
+  private:
+    static constexpr int OUT_H = INP_H + H0 + H1;
+    static constexpr int OUT_W = INP_W + W0 + W1;
+    int pad_value;
+    
+  public:
+    Pad2DStreamInt8(
+      int pad_value = 0
+    ): pad_value(pad_value) {};
+
+    void filter(
+      input_stream<TT>* in,
+      output_stream<TT>* out
+    );
+
+    static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
+      static_assert((B*OUT_H*OUT_W) % 4 == 0);
+      static_assert(INP_W % 16 == 0);
+      REGISTER_FUNCTION(Pad2DStreamInt8::filter);
+    }
+};
+
+
+/**
  * @brief Vector implementation for Pad2D using windows
  * Pad2DWindowScalar<f,2,32,32,1,1,1,1> takes 2*1713 cycles
  * Pad2DWindowScalar<a,2,32,32,1,1,1,1> takes 2*7831 cycles

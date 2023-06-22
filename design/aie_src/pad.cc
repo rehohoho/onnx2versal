@@ -1,5 +1,6 @@
 #include "pad.h"
 #include "kernel_utils.h"
+#include "aie_api/aie.hpp"
 
 
 #define PAD_PROFILE_FOOTER(filter_name) \
@@ -73,6 +74,67 @@ void Pad2DStreamFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 #undef WRITE_PAD
 
   PAD_PROFILE_FOOTER("Pad2DStreamFloat");
+}
+
+
+template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
+	input_stream<TT>* restrict in,
+  output_stream<TT>* restrict out
+) {
+  PROFILE_HEADER2;
+  
+  aie::vector<int8_t,32> data = aie::broadcast<int8_t,32>(pad_value);
+  aie::vector<int8_t,16> pad_value_v = aie::broadcast<int8_t,16>(pad_value);
+  int data_offset = 0;
+  int len_rem;
+
+  // for top and bottom pads, assume OUT_W >= 16
+#define WRITE_PAD(out, len) \
+  for (int w = data_offset+16; w < 32; w++) \
+    data[w] = pad_value; \
+  put_wms(0, ext_v(data, 1)); \
+  len_rem = len - (16 - data_offset); \
+  for (int i = 0; i <= len_rem-16; i+=16) \
+    put_wms(0, pad_value_v); \
+  for (int w = 16; w < 16 + (len_rem & 0xf); w++) \
+    data[w] = pad_value; \
+  data_offset = (len_rem & 0xf);
+
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B, B) {
+    WRITE_PAD(out, H0*OUT_W+W0);
+    
+    for (int h = 0; h < INP_H; h++) chess_prepare_for_pipelining chess_loop_range(INP_W, INP_W) {
+      for (int w = 0; w < INP_W; w+=16) chess_prepare_for_pipelining chess_loop_range(INP_W/16, INP_W/16) {
+        // data: | new data | remaining old data , ... |
+        data = aie::shuffle_up(data, 16 - data_offset);
+        // data: | new data | ... , remaining old data |
+        data = upd_v(data, 0, getb_wss(0));
+        // data: | remaining old data | new data | ... |
+        data = aie::shuffle_up(data, data_offset);
+        put_wms(0, ext_v(data, 0)); 
+      }
+
+      if (data_offset + W0+W1 >= 16) {
+        for (int w = data_offset+16; w < 32; w++)
+          data[w] = pad_value;
+        put_wms(0, ext_v(data, 1));
+        data_offset -= 16;
+      }
+      for (int w = data_offset+16; w < data_offset+16 + W0+W1; w++)
+        data[w] = pad_value;
+      data_offset += W0+W1;
+    }
+
+    WRITE_PAD(out, H1*OUT_W-W0);
+  }
+
+  for (int i = 0; i < data_offset; i+=4)
+    put_ms(0, 0);
+
+#undef WRITE_PAD
+
+  PAD_PROFILE_FOOTER("Pad2DStreamInt8");
 }
 
 
