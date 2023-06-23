@@ -38,6 +38,7 @@ const int INP_W = 64;
 const int OUT_W = 22;
 const int OVERLAP = 1;
 
+// float
 SplitGraphTest<SplitScalar, float_t, H, INP_W, OUT_W, OVERLAP> splitScalar(
   "splitScalar", "split_fpin.txt", 
   {
@@ -53,8 +54,30 @@ SplitGraphTest<SplitScalar, float_t, H, INP_W, 31, -1> splitScalar_neg(
     "split_fpout1_shape10x31_splitScalar.txt"
   });
 
+// int8
+const int INP_W_INT8 = 160;
+const int OUT_W_INT8 = 64;
+const int OVERLAP_INT8 = 16;
+
+SplitGraphTest<SplitInt8, int8_t, H, INP_W_INT8, OUT_W_INT8, OVERLAP_INT8> splitInt8(
+  "splitInt8", "split_int8in_shape10x160.txt", 
+  {
+    "split_int8out0_shape10x64_splitInt8.txt", 
+    "split_int8out1_shape10x64_splitInt8.txt",
+    "split_int8out2_shape10x64_splitInt8.txt"
+  });
+
+SplitGraphTest<SplitInt8, int8_t, H, INP_W_INT8, 64, -32> splitInt8_neg(
+  "splitInt8_neg", "split_int8in_shape10x160.txt", 
+  {
+    "split_int8out0_neg_shape10x64_splitInt8.txt", 
+    "split_int8out1_neg_shape10x64_splitInt8.txt"
+  });
+
+
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
+  // float
   adfCheck(splitScalar.init(), "init splitScalar");
   adfCheck(splitScalar.run(ITER_CNT), "run splitScalar");
 	adfCheck(splitScalar.end(), "end splitScalar");
@@ -62,6 +85,15 @@ int main(int argc, char ** argv) {
   adfCheck(splitScalar_neg.init(), "init splitScalar_neg");
   adfCheck(splitScalar_neg.run(ITER_CNT), "run splitScalar_neg");
 	adfCheck(splitScalar_neg.end(), "end splitScalar_neg");
+
+  // int8
+  adfCheck(splitInt8.init(), "init splitInt8");
+  adfCheck(splitInt8.run(ITER_CNT), "run splitInt8");
+	adfCheck(splitInt8.end(), "end splitInt8");
+
+  adfCheck(splitInt8_neg.init(), "init splitInt8_neg");
+  adfCheck(splitInt8_neg.run(ITER_CNT), "run splitInt8_neg");
+	adfCheck(splitInt8_neg.end(), "end splitInt8_neg");
   return 0;
 }
 #endif
