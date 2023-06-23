@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Pad</title>
+<title>onnx2versal: Pad2DStreamGraph&lt; PAD, TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('group__Pad.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classPad2DStreamGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -90,58 +90,42 @@ $(document).ready(function(){initNavTree('group__Pad.html',''); initResizable();
 
 <div class="header">
   <div class="summary">
-<a href="#groups">Modules</a> &#124;
-<a href="#nested-classes">Classes</a>  </div>
-  <div class="headertitle"><div class="title">Pad</div></div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="classPad2DStreamGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">Pad2DStreamGraph&lt; PAD, TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>See padding at <a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv</a> for Pad2D.  
-<a href="#details">More...</a></p>
-<div class="dynheader">
-Collaboration diagram for Pad:</div>
-<div class="dyncontent">
-<div class="center"><img src="group__Pad.png" border="0" usemap="#agroup____Pad" alt=""/></div>
-<map name="agroup____Pad" id="agroup____Pad">
-<area shape="rect" title="See padding at https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv for Pad2D." alt="" coords="5,5,50,31"/>
-<area shape="rect" href="group__PadKernels.html" title="See padding at https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv." alt="" coords="98,5,186,31"/>
-</map>
-</div>
+<p>Single instance graph for Pad2D.  
+ <a href="classPad2DStreamGraph.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="graph__pad_8h_source.html">graph_pad.h</a>&gt;</code></p>
+
+<p>Inherits adf::graph.</p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="groups" name="groups"></a>
-Modules</h2></td></tr>
-<tr class="memitem:group__PadKernels"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PadKernels.html">PadKernels</a></td></tr>
-<tr class="memdesc:group__PadKernels"><td class="mdescLeft">&#160;</td><td class="mdescRight">See padding at <a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv</a>. <br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPad2DStreamGraph.html">Pad2DStreamGraph&lt; PAD, TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph for Pad2D.  <a href="classPad2DStreamGraph.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPad2DWindowScalarGraph.html">Pad2DWindowScalarGraph&lt; PAD, TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph for Pad2D.  <a href="classPad2DWindowScalarGraph.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ab23fbce3b83ea4049659ec6f474f9a9c"><td class="memItemLeft" align="right" valign="top"><a id="ab23fbce3b83ea4049659ec6f474f9a9c" name="ab23fbce3b83ea4049659ec6f474f9a9c"></a>
+adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
+<tr class="separator:ab23fbce3b83ea4049659ec6f474f9a9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e583510e51b4ace95a4794987df0e32"><td class="memItemLeft" align="right" valign="top"><a id="a6e583510e51b4ace95a4794987df0e32" name="a6e583510e51b4ace95a4794987df0e32"></a>
+adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
+<tr class="separator:a6e583510e51b4ace95a4794987df0e32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<dl class="tparams"><dt>Template Parameters</dt><dd>
-  <table class="tparams">
-    <tr><td class="paramname">PAD</td><td>Pad Kernel </td></tr>
-    <tr><td class="paramname">TT</td><td>Data type </td></tr>
-    <tr><td class="paramname">INP_H</td><td>Input height </td></tr>
-    <tr><td class="paramname">INP_W</td><td>Input width </td></tr>
-    <tr><td class="paramname">H0</td><td>Pixels added before height </td></tr>
-    <tr><td class="paramname">H1</td><td>Pixels added after height </td></tr>
-    <tr><td class="paramname">W0</td><td>Pixels added before width </td></tr>
-    <tr><td class="paramname">W1</td><td>Pixels added after width </td></tr>
-  </table>
-  </dd>
-</dl>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int, int, int, int &gt; class PAD, typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1&gt;<br />
+class Pad2DStreamGraph&lt; PAD, TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
+<p>&lt;td class= </p>
+<p>&lt;td class= </p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
+<li>design/aie_src/<a class="el" href="graph__pad_8h_source.html">graph_pad.h</a></li>
+</ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
+    <li class="navelem"><a class="el" href="classPad2DStreamGraph.html">Pad2DStreamGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

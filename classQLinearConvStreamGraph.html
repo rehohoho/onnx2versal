@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConvGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearConvStreamGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearConvGraph.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQLinearConvStreamGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -93,13 +93,13 @@ $(document).ready(function(){initNavTree('classQLinearConvGraph.html',''); initR
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
-<a href="classQLinearConvGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConvGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
+<a href="classQLinearConvStreamGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QLinearConvStreamGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.  
- <a href="classQLinearConvGraph.html#details">More...</a></p>
+<p>Single instance graph that streams weights and biases, significantly slower.  
+ <a href="classQLinearConvStreamGraph.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="graph__qlinearconv_8h_source.html">graph_qlinearconv.h</a>&gt;</code></p>
 
@@ -107,28 +107,29 @@ $(document).ready(function(){initNavTree('classQLinearConvGraph.html',''); initR
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a2035100e0cd3f9a0c6b6c156e457d8ae"><td class="memItemLeft" align="right" valign="top"><a id="a2035100e0cd3f9a0c6b6c156e457d8ae" name="a2035100e0cd3f9a0c6b6c156e457d8ae"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvGraph</b> (std::vector&lt; int8_t &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
-<tr class="separator:a2035100e0cd3f9a0c6b6c156e457d8ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf3938e03cc1b1f3cdbcd49212c6913b"><td class="memItemLeft" align="right" valign="top"><a id="acf3938e03cc1b1f3cdbcd49212c6913b" name="acf3938e03cc1b1f3cdbcd49212c6913b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvStreamGraph</b> (std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
+<tr class="separator:acf3938e03cc1b1f3cdbcd49212c6913b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:aa41a26e786ac3694791ff4482e4761dc"><td class="memItemLeft" align="right" valign="top"><a id="aa41a26e786ac3694791ff4482e4761dc" name="aa41a26e786ac3694791ff4482e4761dc"></a>
-adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:aa41a26e786ac3694791ff4482e4761dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a874d8ded13a812f504ee98d7a80f105e"><td class="memItemLeft" align="right" valign="top"><a id="a874d8ded13a812f504ee98d7a80f105e" name="a874d8ded13a812f504ee98d7a80f105e"></a>
+<tr class="memitem:a5e01107e84b2b9a86ca688895790a03a"><td class="memItemLeft" align="right" valign="top"><a id="a5e01107e84b2b9a86ca688895790a03a" name="a5e01107e84b2b9a86ca688895790a03a"></a>
+adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [2]</td></tr>
+<tr class="separator:a5e01107e84b2b9a86ca688895790a03a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac856d0d0b04cd241f69f1182e300bdfb"><td class="memItemLeft" align="right" valign="top"><a id="ac856d0d0b04cd241f69f1182e300bdfb" name="ac856d0d0b04cd241f69f1182e300bdfb"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a874d8ded13a812f504ee98d7a80f105e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ac856d0d0b04cd241f69f1182e300bdfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a7d65933c8d3c3b1d37074f4144cecac2"><td class="memItemLeft" align="right" valign="top"><a id="a7d65933c8d3c3b1d37074f4144cecac2" name="a7d65933c8d3c3b1d37074f4144cecac2"></a>
+<tr class="memitem:ae2664cb5ce3e38c066aeba64f0025aed"><td class="memItemLeft" align="right" valign="top"><a id="ae2664cb5ce3e38c066aeba64f0025aed" name="ae2664cb5ce3e38c066aeba64f0025aed"></a>
 static constexpr int&#160;</td><td class="memItemRight" valign="bottom"><b>OUT_H</b> = (PAD_H - K) / STEP_H + 1</td></tr>
-<tr class="separator:a7d65933c8d3c3b1d37074f4144cecac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ae2664cb5ce3e38c066aeba64f0025aed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int, int, int, int &gt; class QLINEARCONV, int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
-class QLinearConvGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
+class QLinearConvStreamGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
+<p>&lt;td class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
@@ -139,7 +140,7 @@ class QLinearConvGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, 
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQLinearConvGraph.html">QLinearConvGraph</a></li>
+    <li class="navelem"><a class="el" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

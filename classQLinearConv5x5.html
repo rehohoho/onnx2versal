@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConvVector&lt; INP_H, INP_W, OUT_H, OUT_W, B, C, M, K &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearConv5x5&lt; INP_H, INP_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearConvVector.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQLinearConv5x5.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,41 +92,41 @@ $(document).ready(function(){initNavTree('classQLinearConvVector.html',''); init
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classQLinearConvVector-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConvVector&lt; INP_H, INP_W, OUT_H, OUT_W, B, C, M, K &gt; Class Template Reference</div></div>
+<a href="classQLinearConv5x5-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QLinearConv5x5&lt; INP_H, INP_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation, QLinearConvVector&lt;28,24,1,1,6,5&gt; takes 3237 cycles. Requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], due to int8 indexing restriction. Requires INP_W%16=0, OUT_W%16=0.  
+<p>Vector implementation, QLinearConv5x5&lt;28,24,1,1,6,5&gt; takes 3237 cycles. Requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], due to int8 indexing restriction. Requires INP_W%16=0, OUT_W_PAD%16=0.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae27f7940793485ff7121f15aff9e1832"><td class="memItemLeft" align="right" valign="top"><a id="ae27f7940793485ff7121f15aff9e1832" name="ae27f7940793485ff7121f15aff9e1832"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvVector</b> (int8_t(&amp;w)[M *C *K *16], int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero_point, int8_t w_zero_point, int8_t y_zero_point)</td></tr>
-<tr class="separator:ae27f7940793485ff7121f15aff9e1832"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fa8173c6083a1c04664b265d1295e17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvVector.html#a2fa8173c6083a1c04664b265d1295e17">filter</a> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a2fa8173c6083a1c04664b265d1295e17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18a161e179a0aa53b5133263b0f3f38d"><td class="memItemLeft" align="right" valign="top"><a id="a18a161e179a0aa53b5133263b0f3f38d" name="a18a161e179a0aa53b5133263b0f3f38d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConv5x5</b> (int8_t(&amp;w)[M *C *K *16], int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
+<tr class="separator:a18a161e179a0aa53b5133263b0f3f38d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe856d1130f94cdc41eb0a467d157a62"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConv5x5.html#abe856d1130f94cdc41eb0a467d157a62">filter</a> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
+<tr class="separator:abe856d1130f94cdc41eb0a467d157a62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a6d995b6dc7a9c8eaa41d00f7ac24aa24"><td class="memItemLeft" align="right" valign="top"><a id="a6d995b6dc7a9c8eaa41d00f7ac24aa24" name="a6d995b6dc7a9c8eaa41d00f7ac24aa24"></a>
+<tr class="memitem:adb44308e948edea2bd21dcc644837338"><td class="memItemLeft" align="right" valign="top"><a id="adb44308e948edea2bd21dcc644837338" name="adb44308e948edea2bd21dcc644837338"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a6d995b6dc7a9c8eaa41d00f7ac24aa24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:adb44308e948edea2bd21dcc644837338"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a2fa8173c6083a1c04664b265d1295e17" name="a2fa8173c6083a1c04664b265d1295e17"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2fa8173c6083a1c04664b265d1295e17">&#9670;&#160;</a></span>filter()</h2>
+<a id="abe856d1130f94cdc41eb0a467d157a62" name="abe856d1130f94cdc41eb0a467d157a62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe856d1130f94cdc41eb0a467d157a62">&#9670;&#160;</a></span>filter()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int K&gt; </div>
+template&lt;int INP_H, int INP_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classQLinearConvVector.html">QLinearConvVector</a>&lt; INP_H, INP_W, OUT_H, OUT_W, B, C, M, K &gt;::filter </td>
+          <td class="memname">void <a class="el" href="classQLinearConv5x5.html">QLinearConv5x5</a>&lt; INP_H, INP_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;::filter </td>
           <td>(</td>
           <td class="paramtype">input_window&lt; int8_t &gt; *&#160;</td>
           <td class="paramname"><em>in</em>, </td>
@@ -144,7 +144,7 @@ template&lt;int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int
         </tr>
       </table>
 </div><div class="memdoc">
-<p>QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt; fp scale: ~40k fixed point scale: ~14k precompute x_zero_weight into bias: 11341 int16*int8: 9177 int8*int8: 6724 precompute y_zero: 5174 two accs: 4541 use aieapi for acc+scalar, reduce vector spil: 4225 remove precomputing y_zero: ~4700 move y_zero and precompute bias into acc: 3237</p>
+<p>QLinearConv5x5&lt;28,32,24,32,1,1,6,5&gt; fp scale: ~40k fixed point scale: ~14k precompute x_zero_weight into bias: 11341 int16*int8: 9177 int8*int8: 6724 precompute y_zero: 5174 two accs: 4541 use aieapi for acc+scalar, reduce vector spil: 4225 remove precomputing y_zero: ~4700 move y_zero and precompute bias into acc: 3237</p>
 <p><a href="https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits">https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits</a> 24 selects 4*4=16, (4+2+1)*4=28 =&gt; rows (16,18),(17,19),(28,30),(29,30) before square square executes on 4x2 matrix</p>
 <p>int8 * int8: Requires: x indexing %4, z indexing %2 expand 5 weights into 16 long vector [0,0,0,0, a,a, b,b, c,c, d,d, e,e, 0,0]</p>
 <p>acc0 += x4*z0 + x6*z1 x8*z2 + x10*z3 x12*z4 acc1 += x5*z1 + x7*z2 x9*z3 + x11*z4 x13*z5 acc2 += x0 x2 x4*z2 + x6*z3 x8*z4 + x10*z5 x12*z6 acc3 += x1 x3 x5*z3 + x7*z4 x9*z5 + x11*z6 x13*z7</p>
@@ -164,7 +164,7 @@ template&lt;int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int M, int
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQLinearConvVector.html">QLinearConvVector</a></li>
+    <li class="navelem"><a class="el" href="classQLinearConv5x5.html">QLinearConv5x5</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

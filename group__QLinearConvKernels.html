@@ -102,8 +102,8 @@ Collaboration diagram for QLinearConvKernels:</div>
 </map>
 </div>
 <p>See <a href="https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv">https://github.com/onnx/onnx/blob/main/docs/Operators.md#QLinearConv</a>.</p><ul>
-<li>y = saturate ((x / y_scale) + y_zero_point)</li>
-<li>Bias must be quantized using scale = x_scale * w_scale and zero_point = 0</li>
+<li>y = saturate ((x / y_scale) + y_zero)</li>
+<li>Bias must be quantized using scale = x_scale * w_scale and zero = 0</li>
 </ul>
 <p>Computation</p><ul>
 <li>x = (qx - qx_zero) * qx_scale</li>

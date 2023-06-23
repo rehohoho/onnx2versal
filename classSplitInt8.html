@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: SplitScalar&lt; TT, H, INP_W, OUT_W, OVERLAP &gt; Class Template Reference</title>
+<title>onnx2versal: SplitInt8&lt; TT, H, INP_W, OUT_W, OVERLAP &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classSplitScalar.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classSplitInt8.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,48 +92,48 @@ $(document).ready(function(){initNavTree('classSplitScalar.html',''); initResiza
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classSplitScalar-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">SplitScalar&lt; TT, H, INP_W, OUT_W, OVERLAP &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Split.html">Split</a> &raquo; <a class="el" href="group__SplitKernels.html">SplitKernels</a></div></div></div>
+<a href="classSplitInt8-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">SplitInt8&lt; TT, H, INP_W, OUT_W, OVERLAP &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Split.html">Split</a> &raquo; <a class="el" href="group__SplitKernels.html">SplitKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for 32-bit stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 SplitScalar&lt;f,3,10,64,22&gt;::filter3 takes 9505 cycles <a class="el" href="classSplitScalar.html" title="Scalar implementation for 32-bit stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE ==...">SplitScalar</a>&lt;f,10,64,31,-1&gt;filter2 takes 9547 cycles.  
+<p>Scalar implementation for int8 stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 SplitInt8&lt;a,10,160,64,16&gt;::filter3 takes 1649 cycles <a class="el" href="classSplitInt8.html" title="Scalar implementation for int8 stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0...">SplitInt8</a>&lt;a,10,160,64,-32&gt;filter2 takes 1237 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="split_8h_source.html">split.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0eb281275058ac2c4b1deabd97405ac0"><td class="memItemLeft" align="right" valign="top"><a id="a0eb281275058ac2c4b1deabd97405ac0" name="a0eb281275058ac2c4b1deabd97405ac0"></a>
+<tr class="memitem:a74d05a4df8364d81ec664f16ef90a82f"><td class="memItemLeft" align="right" valign="top"><a id="a74d05a4df8364d81ec664f16ef90a82f" name="a74d05a4df8364d81ec664f16ef90a82f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter8</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0, output_window&lt; TT &gt; *out1, output_window&lt; TT &gt; *out2, output_window&lt; TT &gt; *out3, output_window&lt; TT &gt; *out4, output_window&lt; TT &gt; *out5, output_window&lt; TT &gt; *out6, output_window&lt; TT &gt; *out7)</td></tr>
-<tr class="separator:a0eb281275058ac2c4b1deabd97405ac0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88c5f442b48aff980a4c970dc77b2530"><td class="memItemLeft" align="right" valign="top"><a id="a88c5f442b48aff980a4c970dc77b2530" name="a88c5f442b48aff980a4c970dc77b2530"></a>
+<tr class="separator:a74d05a4df8364d81ec664f16ef90a82f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afff3eaea64e9621d9aca668508a9e112"><td class="memItemLeft" align="right" valign="top"><a id="afff3eaea64e9621d9aca668508a9e112" name="afff3eaea64e9621d9aca668508a9e112"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter7</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0, output_window&lt; TT &gt; *out1, output_window&lt; TT &gt; *out2, output_window&lt; TT &gt; *out3, output_window&lt; TT &gt; *out4, output_window&lt; TT &gt; *out5, output_window&lt; TT &gt; *out6)</td></tr>
-<tr class="separator:a88c5f442b48aff980a4c970dc77b2530"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5791c4b7a9ab99071d6047a7843d4146"><td class="memItemLeft" align="right" valign="top"><a id="a5791c4b7a9ab99071d6047a7843d4146" name="a5791c4b7a9ab99071d6047a7843d4146"></a>
+<tr class="separator:afff3eaea64e9621d9aca668508a9e112"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a042cd8d89b693c0777469d447d084bcc"><td class="memItemLeft" align="right" valign="top"><a id="a042cd8d89b693c0777469d447d084bcc" name="a042cd8d89b693c0777469d447d084bcc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter6</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0, output_window&lt; TT &gt; *out1, output_window&lt; TT &gt; *out2, output_window&lt; TT &gt; *out3, output_window&lt; TT &gt; *out4, output_window&lt; TT &gt; *out5)</td></tr>
-<tr class="separator:a5791c4b7a9ab99071d6047a7843d4146"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abdcb28b0dca9cd8e301923b690325c68"><td class="memItemLeft" align="right" valign="top"><a id="abdcb28b0dca9cd8e301923b690325c68" name="abdcb28b0dca9cd8e301923b690325c68"></a>
+<tr class="separator:a042cd8d89b693c0777469d447d084bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb7e47c204a5e8f08d213d5e1722f564"><td class="memItemLeft" align="right" valign="top"><a id="acb7e47c204a5e8f08d213d5e1722f564" name="acb7e47c204a5e8f08d213d5e1722f564"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter5</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0, output_window&lt; TT &gt; *out1, output_window&lt; TT &gt; *out2, output_window&lt; TT &gt; *out3, output_window&lt; TT &gt; *out4)</td></tr>
-<tr class="separator:abdcb28b0dca9cd8e301923b690325c68"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09ec87e9ebfe69e41faef7711fbff1d4"><td class="memItemLeft" align="right" valign="top"><a id="a09ec87e9ebfe69e41faef7711fbff1d4" name="a09ec87e9ebfe69e41faef7711fbff1d4"></a>
+<tr class="separator:acb7e47c204a5e8f08d213d5e1722f564"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4313db7d382258de73316490c0fce3a1"><td class="memItemLeft" align="right" valign="top"><a id="a4313db7d382258de73316490c0fce3a1" name="a4313db7d382258de73316490c0fce3a1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter4</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0, output_window&lt; TT &gt; *out1, output_window&lt; TT &gt; *out2, output_window&lt; TT &gt; *out3)</td></tr>
-<tr class="separator:a09ec87e9ebfe69e41faef7711fbff1d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3f3b33a156cf1cb10c0df339fbd5bfb"><td class="memItemLeft" align="right" valign="top"><a id="ab3f3b33a156cf1cb10c0df339fbd5bfb" name="ab3f3b33a156cf1cb10c0df339fbd5bfb"></a>
+<tr class="separator:a4313db7d382258de73316490c0fce3a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85e6181b974dc278d76e93d46e28d130"><td class="memItemLeft" align="right" valign="top"><a id="a85e6181b974dc278d76e93d46e28d130" name="a85e6181b974dc278d76e93d46e28d130"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter3</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0, output_window&lt; TT &gt; *out1, output_window&lt; TT &gt; *out2)</td></tr>
-<tr class="separator:ab3f3b33a156cf1cb10c0df339fbd5bfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab4a3401761dcf2047ec6cef810efd687"><td class="memItemLeft" align="right" valign="top"><a id="ab4a3401761dcf2047ec6cef810efd687" name="ab4a3401761dcf2047ec6cef810efd687"></a>
+<tr class="separator:a85e6181b974dc278d76e93d46e28d130"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e5f45cad4f18cef2e9e0a64d12147c1"><td class="memItemLeft" align="right" valign="top"><a id="a8e5f45cad4f18cef2e9e0a64d12147c1" name="a8e5f45cad4f18cef2e9e0a64d12147c1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter2</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0, output_window&lt; TT &gt; *out1)</td></tr>
-<tr class="separator:ab4a3401761dcf2047ec6cef810efd687"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a888a0a0bfda87ffba7baa15da5818543"><td class="memItemLeft" align="right" valign="top"><a id="a888a0a0bfda87ffba7baa15da5818543" name="a888a0a0bfda87ffba7baa15da5818543"></a>
+<tr class="separator:a8e5f45cad4f18cef2e9e0a64d12147c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5edaa859fdc830274263f5123532aa3"><td class="memItemLeft" align="right" valign="top"><a id="ad5edaa859fdc830274263f5123532aa3" name="ad5edaa859fdc830274263f5123532aa3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter1</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out0)</td></tr>
-<tr class="separator:a888a0a0bfda87ffba7baa15da5818543"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ad5edaa859fdc830274263f5123532aa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a1403aa7ceb2199c6a502bf6234410721"><td class="memItemLeft" align="right" valign="top"><a id="a1403aa7ceb2199c6a502bf6234410721" name="a1403aa7ceb2199c6a502bf6234410721"></a>
+<tr class="memitem:ae4d02f8313b4f62f386fae110fcfa078"><td class="memItemLeft" align="right" valign="top"><a id="ae4d02f8313b4f62f386fae110fcfa078" name="ae4d02f8313b4f62f386fae110fcfa078"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a1403aa7ceb2199c6a502bf6234410721"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ae4d02f8313b4f62f386fae110fcfa078"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="split_8h_source.html">split.h</a></li>
@@ -144,7 +144,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernel
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classSplitScalar.html">SplitScalar</a></li>
+    <li class="navelem"><a class="el" href="classSplitInt8.html">SplitInt8</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>
