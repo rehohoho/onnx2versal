@@ -25,6 +25,7 @@ Y_zero_point = 19
 tin = np.arange(C*INP_H*INP_W).astype(np.int8).reshape(1,C,INP_H,INP_W)
 tbias = (np.arange(M) / (X_scale*W_scale/Y_scale)).astype(np.int32)
 save_tensor("qlinearconv_int8in.txt", tin)
+save_tensor("qlinearconv_int8in_pad.txt", pad_lastdim(tin, "qlinearconv tin", get_vector_boundary(tin), value=X_zero_point))
 print("int8bias\n", tbias.flatten().tolist(), "\n\n\n")
 
 
