@@ -39,7 +39,6 @@ class QLinearConvScalar {
   
   private:
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    static constexpr int OUT_W = (INP_W - K) / STEP_W + 1;
 
     alignas(32) int8_t (&weights)[M*C*K*16];
     alignas(32) int32_t (&bias)[M];
@@ -88,7 +87,6 @@ class QLinearConvScalarStream {
   
   private:
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    static constexpr int OUT_W = (INP_W - K) / STEP_W + 1;
     static constexpr int CKK_ROW_SIZE = C*16;
 
     alignas(32) int32_t (&bias)[M];
