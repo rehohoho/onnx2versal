@@ -304,6 +304,27 @@ class ConcatScalarStream {
 			REGISTER_FUNCTION(ConcatScalarStream::filter);
 		}
 };
+
+
+/**
+ * @brief Vector implementation for stream concat with int8, 
+ * ConcatInt8Stream<f,4,32,32,64> takes  cycles
+ */
+template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
+class ConcatInt8Stream {
+	public:
+		void filter(
+			input_stream<TT>* in0,
+			input_stream<TT>* in1,
+			output_stream<TT>* out
+		);
+		static void registerKernelClass() {
+			static_assert(INP_W1 % 16 == 0 && INP_W2 % 16 == 0 && OUT_W % 16 == 0);
+			static_assert((std::is_same<TT, int8_t>::value));
+			// also expects INP_W1 < OUT_W, not included due to conditional instances in graph
+			REGISTER_FUNCTION(ConcatInt8Stream::filter);
+		}
+};
 /** @}*/
 
 

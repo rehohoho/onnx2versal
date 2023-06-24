@@ -700,3 +700,33 @@ void ConcatScalarStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
   PROFILE_FOOTER2("ConcatScalarStream<%s,%d,%d,%d,%d>", 
     typeid(TT).name(), H, INP_W1, INP_W2, OUT_W);
 }
+
+
+template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
+void ConcatInt8Stream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
+	input_stream<TT>* in0,
+  input_stream<TT>* in1,
+  output_stream<TT>* out
+) {
+  PROFILE_HEADER2;
+
+  for (int i = 0; i < H; i++) {
+    for (int i = 0; i < INP_W1; i+=16)
+      writeincr_v16(out, readincr_v16(in0));
+    
+    if (INP_W1 + INP_W2 <= OUT_W) {
+      for (int i = 0; i < INP_W2; i+=16)
+        writeincr_v16(out, readincr_v16(in1));
+      for (int i = 0; i < OUT_W - INP_W1 - INP_W2; i+=16)
+        writeincr_v16(out, null_v16int8());
+    } else {
+      for (int i = 0; i < OUT_W - INP_W1; i+=16)
+        writeincr_v16(out, readincr_v16(in1));  
+      for (int i = 0; i < INP_W1 + INP_W2 - OUT_W; i+=16)
+        readincr_v16(in1);
+    }
+  }
+
+  PROFILE_FOOTER2("ConcatInt8Stream<%s,%d,%d,%d,%d>", 
+    typeid(TT).name(), H, INP_W1, INP_W2, OUT_W);
+}

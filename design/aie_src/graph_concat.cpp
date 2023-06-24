@@ -97,7 +97,7 @@ const int H = 4;
 const int INP_W = 32; // % 16 for int8, % 8 for float
 
 
-// float32
+// float32 window
 std::vector<std::string> fp_txts {
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", 
   "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt", "concat_fpin.txt" 
@@ -110,7 +110,7 @@ ConcatGraphTest<ConcatFloat, float_t, LCNT, H, INP_W, OUT_W> concatFloat(
   "concatFloat", "concat_fpout_shape4x144_ConcatFloat.txt", fp_txts);
 
 
-// stream
+// float32 stream
 ConcatStreamGraphTest<ConcatScalarStream, float_t, 2, H, INP_W, 48> concatStreamScalar2(
   "concatStreamScalar2", "concat_fpout_shape4x48_ConcatStreamScalar.txt", fp_txts);
 ConcatStreamGraphTest<ConcatScalarStream, float_t, 3, H, INP_W, 80> concatStreamScalar3(
@@ -127,13 +127,29 @@ ConcatStreamGraphTest<ConcatScalarStream, float_t, 8, H, INP_W, 240> concatStrea
   "concatStreamScalar8", "concat_fpout_shape4x240_ConcatStreamScalar.txt", fp_txts);
 
 
-// int8
+// int8 window
 std::vector<std::string> int8_txts {
   "concat_int8in.txt", "concat_int8in.txt", "concat_int8in.txt", "concat_int8in.txt", 
-  "concat_int8in.txt"
+  "concat_int8in.txt", "concat_int8in.txt", "concat_int8in.txt", "concat_int8in.txt"
 };
 ConcatGraphTest<ConcatInt8, int8_t, LCNT, H, INP_W, OUT_W> concatInt8(
   "concatInt8", "concat_int8out_shape4x144_ConcatInt8.txt", int8_txts);
+
+// int8 stream
+ConcatStreamGraphTest<ConcatInt8Stream, int8_t, 2, H, INP_W, 48> concatInt8Stream2(
+  "concatInt8Stream2", "concat_int8out_shape4x48_concatInt8Stream.txt", int8_txts);
+ConcatStreamGraphTest<ConcatInt8Stream, int8_t, 3, H, INP_W, 80> concatInt8Stream3(
+  "concatInt8Stream3", "concat_int8out_shape4x80_concatInt8Stream.txt", int8_txts);
+ConcatStreamGraphTest<ConcatInt8Stream, int8_t, 4, H, INP_W, 112> concatInt8Stream4(
+  "concatInt8Stream4", "concat_int8out_shape4x112_concatInt8Stream.txt", int8_txts);
+ConcatStreamGraphTest<ConcatInt8Stream, int8_t, 5, H, INP_W, 144> concatInt8Stream5(
+  "concatInt8Stream5", "concat_int8out_shape4x144_concatInt8Stream.txt", int8_txts);
+ConcatStreamGraphTest<ConcatInt8Stream, int8_t, 6, H, INP_W, 176> concatInt8Stream6(
+  "concatInt8Stream6", "concat_int8out_shape4x176_concatInt8Stream.txt", int8_txts);
+ConcatStreamGraphTest<ConcatInt8Stream, int8_t, 7, H, INP_W, 208> concatInt8Stream7(
+  "concatInt8Stream7", "concat_int8out_shape4x208_concatInt8Stream.txt", int8_txts);
+ConcatStreamGraphTest<ConcatInt8Stream, int8_t, 8, H, INP_W, 240> concatInt8Stream8(
+  "concatInt8Stream8", "concat_int8out_shape4x240_concatInt8Stream.txt", int8_txts);
 
 // multi concat
 // const int MULTI_LCNT = 52; 
@@ -202,6 +218,36 @@ int main(int argc, char ** argv) {
   adfCheck(concatInt8.init(), "init concatInt8");
   adfCheck(concatInt8.run(ITER_CNT), "run concatInt8");
 	adfCheck(concatInt8.end(), "end concatInt8");
+
+  // stream
+  adfCheck(concatInt8Stream2.init(), "init concatInt8Stream2");
+  adfCheck(concatInt8Stream2.run(ITER_CNT), "run concatInt8Stream2");
+	adfCheck(concatInt8Stream2.end(), "end concatInt8Stream2");
+  
+  adfCheck(concatInt8Stream3.init(), "init concatInt8Stream3");
+  adfCheck(concatInt8Stream3.run(ITER_CNT), "run concatInt8Stream3");
+	adfCheck(concatInt8Stream3.end(), "end concatInt8Stream3");
+
+  adfCheck(concatInt8Stream4.init(), "init concatInt8Stream4");
+  adfCheck(concatInt8Stream4.run(ITER_CNT), "run concatInt8Stream4");
+	adfCheck(concatInt8Stream4.end(), "end concatInt8Stream4");
+  
+  adfCheck(concatInt8Stream5.init(), "init concatInt8Stream5");
+  adfCheck(concatInt8Stream5.run(ITER_CNT), "run concatInt8Stream5");
+	adfCheck(concatInt8Stream5.end(), "end concatInt8Stream5");
+
+  adfCheck(concatInt8Stream6.init(), "init concatInt8Stream6");
+  adfCheck(concatInt8Stream6.run(ITER_CNT), "run concatInt8Stream6");
+	adfCheck(concatInt8Stream6.end(), "end concatInt8Stream6");
+
+  adfCheck(concatInt8Stream7.init(), "init concatInt8Stream7");
+  adfCheck(concatInt8Stream7.run(ITER_CNT), "run concatInt8Stream7");
+	adfCheck(concatInt8Stream7.end(), "end concatInt8Stream7");
+
+  adfCheck(concatInt8Stream8.init(), "init concatInt8Stream8");
+  adfCheck(concatInt8Stream8.run(ITER_CNT), "run concatInt8Stream8");
+	adfCheck(concatInt8Stream8.end(), "end concatInt8Stream8");
+  
 
   // not very feasible mapping into array
   // adfCheck(multiConcatFloat.init(), "init multiConcatFloat");
