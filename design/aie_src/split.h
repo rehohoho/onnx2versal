@@ -189,11 +189,11 @@ class SplitInt8 {
 		);
 		static void registerKernelClass() {
 			static_assert((std::is_same<TT, int8_t>::value));
-			static_assert((OVERLAP < 0) || (FIRST_STRIDE % 4 == 0 && OVERLAP % 4 == 0 && STRIDE % 4 == 0));
+			static_assert((OVERLAP < 0) || (FIRST_STRIDE%16==0 && OVERLAP%16==0 && STRIDE%16==0));
 			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
 
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
-			static_assert((OVERLAP > 0) || (OUT_W % 4 == 0 && OVERLAP % 4 == 0));
+			static_assert((OVERLAP > 0) || (OUT_W%16==0 && OVERLAP%16==0));
 
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(SplitInt8::filter8);

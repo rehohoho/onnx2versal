@@ -325,9 +325,7 @@ class ConvReluChunkMGraph : public adf::graph {
 
 /**
  * @brief Multiinstance graph that stores weights and biases, 
- * chunks BCHW by W dimension, maximum 8 chunks
- * If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. 
- * If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0. 
+ * chunks BCHW by H dimension, maximum 8 chunks
  * 
  * @connections
  * @connect{pin[0], stream B*C*INP_W*INP_W*4}

@@ -95,7 +95,7 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
   data = upd_w(data, 1, pad_value_vint16); \
   data = aie::shuffle_down_replicate((aie::vector<int16_t,32>) data, 16-data_offset); \
   put_wms(0, pack(ext_w(data, 0))); \
-  for (int i = 0; i < (len - (16 - data_offset)) - 16; i+=16) \
+  for (int i = 0; i <= (len - (16 - data_offset)) - 16; i+=16) \
     put_wms(0, pad_value_v); \
   data_offset = (len - (16 - data_offset)) & 0xf; \
 
@@ -104,11 +104,9 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
     
     for (int h = 0; h < INP_H; h++) chess_prepare_for_pipelining chess_loop_range(INP_W, INP_W) {
       for (int w = 0; w < INP_W; w+=16) chess_prepare_for_pipelining chess_loop_range(INP_W/16, INP_W/16) {
-        // data: | new data | remaining old data , ... |
+        // shuffle remaining data to end, update front, shuffle rotate so data starts with remaining data
         data = aie::shuffle_up((aie::vector<int16_t,32>) data, 16 - data_offset);
-        // data: | new data | ... , remaining old data |
         data = upd_w(data, 0, unpack(getb_wss(0)));
-        // data: | remaining old data | new data | ... |
         data = aie::shuffle_up((aie::vector<int16_t,32>) data, data_offset);
         put_wms(0, pack(ext_w(data, 0))); 
       }
@@ -124,7 +122,6 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
         data_offset += W0+W1;
       }
     }
-
     WRITE_PAD(out, H1*OUT_W-W0);
   }
 
