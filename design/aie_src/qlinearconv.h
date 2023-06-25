@@ -34,7 +34,7 @@
 /**
  * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles
  */
-template <int INP_H, int INP_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalar {
   
   private:
@@ -82,7 +82,7 @@ class QLinearConvScalar {
  * @brief Scalar implementation streaming weights, QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles,
  * expects weights stream to be padded from MxCxKxK to MxCx16, K < 5
  */
-template <int INP_H, int INP_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalarStream {
   
   private:
@@ -131,7 +131,7 @@ class QLinearConvScalarStream {
  * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
  * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W_PAD%16=0
  */
-template <int INP_H, int INP_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConv5x5 {
   
   private:
@@ -183,7 +183,7 @@ class QLinearConv5x5 {
  * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
  * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W_PAD%16=0
  */
-template <int INP_H, int INP_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConv5x5Scale32bit {
   
   private:

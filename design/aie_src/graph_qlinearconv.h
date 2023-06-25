@@ -20,8 +20,9 @@
  * 
  * @tparam QLINEARCONV  Conv2D Kernel
  * @tparam INP_H        input height
- * @tparam INP_W        input width, DO NOT PAD
- * @tparam OUT_W    output width, padded to vector boundary = pad(INP_W - K/2)
+ * @tparam INP_W        input width
+ * @tparam OUT_W        output width, unable to infer due to width padding
+ * @tparam OUT_W_PAD    output width, padded to vector boundary
  * @tparam STEP_H       stride in height dimension
  * @tparam STEP_W       stride in width dimension
  * @tparam B            batch size
@@ -38,11 +39,11 @@
  * 
  * @connections
  * @connect{pin[0], B*C*INP_H*INP_W}
- * @connect{pout[0], B*M*OUT_H*OUT_W}
+ * @connect{pout[0], B*M*OUT_H*OUT_W_PAD}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
-  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
+template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int K,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvGraph : public adf::graph {
@@ -70,9 +71,9 @@ class QLinearConvGraph : public adf::graph {
     ) { 
       static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
       assert(weights.size() <= MAX_PARAM_BYTES);
-      static_assert(B*M*OUT_H*OUT_W <= MAX_PARAM_BYTES);
+      static_assert(B*M*OUT_H*OUT_W_PAD <= MAX_PARAM_BYTES);
       
-      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K>>(
+      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
@@ -91,7 +92,7 @@ class QLinearConvGraph : public adf::graph {
         adf::connect<adf::window<B*C*INP_H*INP_W>> (pin[0], k[0].in[0]);
       }
 
-      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W_PAD>> (k[0].out[0], pout[0]);
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos;
@@ -108,11 +109,11 @@ class QLinearConvGraph : public adf::graph {
  * @connections
  * @connect{pin[0], B*C*INP_H*INP_W}
  * @connect{pin[1], stream}
- * @connect{pout[0], stream B*M*OUT_H*OUT_W}
+ * @connect{pout[0], stream B*M*OUT_H*OUT_W_PAD}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
-  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
   int B, int C, int M, int K, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvStreamGraph : public adf::graph {
@@ -139,9 +140,9 @@ class QLinearConvStreamGraph : public adf::graph {
       int8_t y_zero
     ) { 
       static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
-      static_assert(B*M*OUT_H*OUT_W <= MAX_PARAM_BYTES);
+      static_assert(B*M*OUT_H*OUT_W_PAD <= MAX_PARAM_BYTES);
       
-      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K>>(
+      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>>(
         bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
@@ -163,7 +164,7 @@ class QLinearConvStreamGraph : public adf::graph {
       }
       
       adf::connect<adf::stream> (pin[1], k[0].in[1]); // variable samples per iteration based on kernel
-      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W_PAD>> (k[0].out[0], pout[0]);
       
       adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
     }
@@ -177,15 +178,15 @@ class QLinearConvStreamGraph : public adf::graph {
  * 
  * @connections
  * @connect{pin[0], stream B*C*INP_W*INP_W}
- * @connect{pout[0], B*M*OUT_W*OUT_W}
+ * @connect{pout[0], B*M*OUT_H*OUT_W_PAD}
  * @endconnections
  */
 template <
   template<typename, int, int, int, int> class SPLIT,
-  template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W,
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int K, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvChunkHGraph : public adf::graph {
@@ -205,7 +206,7 @@ class QLinearConvChunkHGraph : public adf::graph {
 
     static constexpr int HCHUNK_OUT = (HCHUNK - K) / STEP_H + 1;
     static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
-    ConcatStreamGraph<CONCAT, int8_t, LCNT, B*M, HCHUNK_OUT*OUT_W, OUT_H*OUT_W> concat_graph;
+    ConcatStreamGraph<CONCAT, int8_t, LCNT, B*M, HCHUNK_OUT*OUT_W_PAD, OUT_H*OUT_W_PAD> concat_graph;
 
     adf::relative_coordinate tileOffsets[8] = {
       {.col_offset = -1, .row_offset = 1}, // top left, clockwise
@@ -260,17 +261,17 @@ class QLinearConvChunkHGraph : public adf::graph {
       }
 
       for (int i = 0; i < LCNT; i++) {
-        k[i] = adf::kernel::create_object<QLINEARCONV<HCHUNK, PAD_W, OUT_W, STEP_H, STEP_W, B, C, M, K>>(
+        k[i] = adf::kernel::create_object<QLINEARCONV<HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>>(
           bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
         adf::source(k[i]) = "qlinearconv.cc";
         adf::headers(k[i]) = {"qlinearconv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
 
-        // set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_H,OUT_W,STEP_H,STEP_W,B,C,M,K>(k[i]);
+        // set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_H,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>(k[i]);
 
         adf::connect<adf::window<B*C*HCHUNK*PAD_W>>              (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::stream>                                (pin[1], k[i].in[1]);
-        adf::connect<adf::window<B*M*HCHUNK*OUT_W>, adf::stream> (k[i].out[0], concat_graph.pin[i]);
+        adf::connect<adf::window<B*M*HCHUNK*OUT_W_PAD>, adf::stream> (k[i].out[0], concat_graph.pin[i]);
 
         adf::location<adf::kernel>(k[i]) = 
           adf::location<adf::kernel>(split_graph.k[0]) + adf::relative_offset(tileOffsets[i]);

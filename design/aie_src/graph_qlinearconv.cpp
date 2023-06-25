@@ -2,14 +2,14 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
-  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
+template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int K,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvGraphTest : public adf::graph {
 
   private:
-    typedef QLinearConvGraph<QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
+    typedef QLinearConvGraph<QLINEARCONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
 
@@ -33,19 +33,19 @@ class QLinearConvGraphTest : public adf::graph {
       plin[0] = adf::input_plio::create("plin0_qlinearconv_"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_qlinearconv_"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<B*C*INP_H*INP_W>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W_PAD>> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
-template <template<int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
-  int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-  int B, int C, int M, int K,
+template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+  int B, int C, int M, int K, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvStreamGraphTest : public adf::graph {
 
   private:
-    typedef QLinearConvStreamGraph<QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
+    typedef QLinearConvStreamGraph<QLINEARCONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
 
@@ -72,7 +72,7 @@ class QLinearConvStreamGraphTest : public adf::graph {
 
       adf::connect<adf::window<B*C*INP_H*INP_W>> (plin[0].out[0], g.pin[0]);
       adf::connect<adf::stream>                  (gmio_w.out[0], g.pin[1]);
-      adf::connect<adf::window<B*M*OUT_H*OUT_W>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<B*M*OUT_H*OUT_W_PAD>> (g.pout[0], plout[0].in[0]);
     }
 };
 
@@ -99,19 +99,19 @@ std::vector<int8_t> int8weights_5x5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1
 std::vector<int8_t> int8weights_5x5_pad {0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0, 0, 0, 0, 0, 0, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 0, 0, 0, 0, 0, 0, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 0, 0, 0, 0, 0, 0, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 0, 0, 0, 0, 0, 0, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 0, 0, 0, 0, 0, 0, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 0, 0, 0, 0, 0, 0, 30, 30, 31, 31, 32, 32, 33, 33, 34, 34, 0, 0, 0, 0, 0, 0, 35, 35, 36, 36, 37, 37, 38, 38, 39, 39, 0, 0, 0, 0, 0, 0, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 0, 0, 0, 0, 0, 0, 45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 0, 0, 0, 0, 0, 0, 50, 50, 51, 51, 52, 52, 53, 53, 54, 54, 0, 0, 0, 0, 0, 0, 55, 55, 56, 56, 57, 57, 58, 58, 59, 59, 0, 0, 0, 0, 0, 0, 60, 60, 61, 61, 62, 62, 63, 63, 64, 64, 0, 0, 0, 0, 0, 0, 65, 65, 66, 66, 67, 67, 68, 68, 69, 69, 0, 0, 0, 0, 0, 0, 70, 70, 71, 71, 72, 72, 73, 73, 74, 74, 0, 0, 0, 0, 0, 0, 75, 75, 76, 76, 77, 77, 78, 78, 79, 79, 0, 0, 0, 0, 0, 0, 80, 80, 81, 81, 82, 82, 83, 83, 84, 84, 0, 0, 0, 0, 0, 0, 85, 85, 86, 86, 87, 87, 88, 88, 89, 89, 0, 0, 0, 0, 0, 0, 90, 90, 91, 91, 92, 92, 93, 93, 94, 94, 0, 0, 0, 0, 0, 0, 95, 95, 96, 96, 97, 97, 98, 98, 99, 99, 0, 0, 0, 0, 0, 0, 100, 100, 101, 101, 102, 102, 103, 103, 104, 104, 0, 0, 0, 0, 0, 0, 105, 105, 106, 106, 107, 107, 108, 108, 109, 109, 0, 0, 0, 0, 0, 0, 110, 110, 111, 111, 112, 112, 113, 113, 114, 114, 0, 0, 0, 0, 0, 0, 115, 115, 116, 116, 117, 117, 118, 118, 119, 119, 0, 0, 0, 0, 0, 0, 120, 120, 121, 121, 122, 122, 123, 123, 124, 124, 0, 0, 0, 0, 0, 0, 125, 125, 126, 126, 127, 127, -128, -128, -127, -127, 0, 0, 0, 0, 0, 0, -126, -126, -125, -125, -124, -124, -123, -123, -122, -122, 0, 0, 0, 0, 0, 0, -121, -121, -120, -120, -119, -119, -118, -118, -117, -117, 0, 0, 0, 0, 0, 0, -116, -116, -115, -115, -114, -114, -113, -113, -112, -112, 0, 0, 0, 0, 0, 0, -111, -111, -110, -110, -109, -109, -108, -108, -107, -107, 0, 0};
 
 QLinearConvGraphTest<QLinearConvScalar, 
-                     INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K,
+                     INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
                      PAD, PAD, PAD, W1> qLinearConvScalar(
   "qLinearConvScalar", int8weights_5x5, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x26x28_QLinearConvScalar.txt");
 
 QLinearConvGraphTest<QLinearConv5x5, 
-                     INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
+                     INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
                      PAD, PAD, PAD, W1> qLinearConvVector(
   "qLinearConvVector", int8weights_5x5_pad, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x26x28_QLinearConv5x5.txt");
 
 QLinearConvGraphTest<QLinearConv5x5Scale32bit, 
-                     INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
+                     INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K,
                      PAD, PAD, PAD, W1> qLinearConvVectorScale32bit(
   "qLinearConvVectorScale32bit", int8weights_5x5_pad, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_shape1x6x26x28_QLinearConv5x5Scale32bit.txt");
@@ -127,20 +127,20 @@ std::vector<int8_t> int8weights_3x3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1
 std::vector<int8_t> int8weights_3x3_pad {0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 0, 0, 0, 0, 0, 0, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 0, 0, 0, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, 0, 0, 0, 0, 0, 0, 36, 37, 38, 39, 40, 41, 42, 43, 44, 0, 0, 0, 0, 0, 0, 0, 45, 46, 47, 48, 49, 50, 51, 52, 53, 0, 0, 0, 0, 0, 0, 0};
 
 QLinearConvGraphTest<QLinearConvScalar, 
-                     INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
+                     INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
                      PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConvScalar_3x3(
   "qLinearConvScalar_3x3", int8weights_3x3, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConvScalar.txt");
 
 QLinearConvStreamGraphTest<QLinearConvScalarStream, 
-                           INP_H, INP_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
+                           INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
                            PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConvScalarStream_3x3(
   "qLinearConvScalarStream_3x3", int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConvScalarStream.txt");
 
 // 3x3 stride 2
 QLinearConvGraphTest<QLinearConvScalar, 
-                     INP_H, INP_W, OUT_W_STRIDE2_3x3, 2, 2, B, C, M, K_3x3,
+                     INP_H, INP_W, OUT_W_STRIDE2_3x3, OUT_W_STRIDE2_PAD16_3x3, 2, 2, B, C, M, K_3x3,
                      0, 0, 0, 0> qLinearConvScalar_3x3_s2(
   "qLinearConvScalar_3x3_s2", int8weights_3x3, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_stride2_shape1x6x12x13_QLinearConvScalar.txt");
