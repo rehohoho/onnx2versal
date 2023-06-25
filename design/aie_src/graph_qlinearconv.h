@@ -9,6 +9,19 @@
 #include "graph_utils.h"
 
 
+template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int B, int C, int M, int K>
+void set_heap_size(adf::kernel k) {
+  if ((std::is_same<
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
+    QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value)
+  ) {
+    adf::heap_size(k) = C*16 + 1024; // caches CKK weights
+  }
+}
+
+
 /**
  * @defgroup QLinearConv
  * 
@@ -267,7 +280,7 @@ class QLinearConvChunkHGraph : public adf::graph {
         adf::headers(k[i]) = {"qlinearconv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
 
-        // set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_H,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>(k[i]);
+        set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>(k[i]);
 
         adf::connect<adf::window<B*C*HCHUNK*PAD_W>>              (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::stream>                                (pin[1], k[i].in[1]);

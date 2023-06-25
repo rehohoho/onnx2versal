@@ -32,7 +32,8 @@
 
 
 /**
- * @brief Scalar implementation, QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles
+ * @brief Scalar implementation, 
+ * QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalar {
@@ -40,7 +41,7 @@ class QLinearConvScalar {
   private:
     static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
 
-    alignas(32) int8_t (&weights)[M*C*K*16];
+    alignas(32) int8_t (&weights)[M*C*K*K];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
@@ -53,7 +54,7 @@ class QLinearConvScalar {
 	
   public:
     QLinearConvScalar (
-      int8_t (&w)[M*C*K*16],
+      int8_t (&w)[M*C*K*K],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -79,8 +80,9 @@ class QLinearConvScalar {
 
 
 /**
- * @brief Scalar implementation streaming weights, QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles,
- * expects weights stream to be padded from MxCxKxK to MxCx16, K < 5
+ * @brief Scalar implementation streaming weights, 
+ * expects weights stream to be padded from MxCxKxK to MxCx16, K < 5,
+ * QLinearConvScalarStream<28,24,1,1,6,5> takes 1027692 cycles,
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalarStream {
