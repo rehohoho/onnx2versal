@@ -125,12 +125,19 @@ const int OUT_W_STRIDE2_PAD16_3x3 = (OUT_W_STRIDE2_3x3 + 15)/16*16;
 
 std::vector<int8_t> int8weights_3x3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53};
 std::vector<int8_t> int8weights_3x3_pad {0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 0, 0, 0, 0, 0, 0, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 0, 0, 0, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, 0, 0, 0, 0, 0, 0, 36, 37, 38, 39, 40, 41, 42, 43, 44, 0, 0, 0, 0, 0, 0, 0, 45, 46, 47, 48, 49, 50, 51, 52, 53, 0, 0, 0, 0, 0, 0, 0};
+std::vector<int8_t> int8weights_3x3_int16int8mac {0, 1, 2, 0, 3, 4, 5, 0, 6, 7, 8, 0, 0, 0, 0, 0, 9, 10, 11, 0, 12, 13, 14, 0, 15, 16, 17, 0, 0, 0, 0, 0, 18, 19, 20, 0, 21, 22, 23, 0, 24, 25, 26, 0, 0, 0, 0, 0, 27, 28, 29, 0, 30, 31, 32, 0, 33, 34, 35, 0, 0, 0, 0, 0, 36, 37, 38, 0, 39, 40, 41, 0, 42, 43, 44, 0, 0, 0, 0, 0, 45, 46, 47, 0, 48, 49, 50, 0, 51, 52, 53, 0, 0, 0, 0, 0};
 
 QLinearConvGraphTest<QLinearConvScalar, 
                      INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
                      PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConvScalar_3x3(
   "qLinearConvScalar_3x3", int8weights_3x3, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConvScalar.txt");
+
+QLinearConvGraphTest<QLinearConv3x3, 
+                     INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
+                     PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConv3x3(
+  "qLinearConv3x3", int8weights_3x3_int16int8mac, int8bias, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConv3x3.txt");
 
 QLinearConvStreamGraphTest<QLinearConvScalarStream, 
                            INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
@@ -170,6 +177,10 @@ int main(int argc, char ** argv) {
   adfCheck(qLinearConvScalar_3x3.init(), "init qLinearConvScalar_3x3");
   adfCheck(qLinearConvScalar_3x3.run(ITER_CNT), "run qLinearConvScalar_3x3");
 	adfCheck(qLinearConvScalar_3x3.end(), "end qLinearConvScalar_3x3");
+
+  adfCheck(qLinearConv3x3.init(), "init qLinearConv3x3");
+  adfCheck(qLinearConv3x3.run(ITER_CNT), "run qLinearConv3x3");
+	adfCheck(qLinearConv3x3.end(), "end qLinearConv3x3");
 
   adfCheck(qLinearConvScalarStream_3x3.init(), "init qLinearConvScalarStream_3x3");
   qLinearConvScalarStream_3x3.gmio_w.gm2aie_nb(int8weights_3x3_pad_buf, int8weights_3x3_pad_size);

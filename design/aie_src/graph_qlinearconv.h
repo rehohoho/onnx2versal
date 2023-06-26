@@ -160,6 +160,8 @@ class QLinearConvStreamGraph : public adf::graph {
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      
+      set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>(k[0]);
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(

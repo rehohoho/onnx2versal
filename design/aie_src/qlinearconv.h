@@ -33,7 +33,9 @@
 
 /**
  * @brief Scalar implementation, 
- * QLinearConvScalar<28,24,1,1,6,5> takes 1027692 cycles
+ * QLinearConvScalar<30,32,28,32,1,1,1,1,6,5> total = 1282213
+ * QLinearConvScalar<28,32,28,32,1,1,1,1,6,3> total = 867213
+ * QLinearConvScalar<26,28,13,16,2,2,1,1,6,3> total = 189225
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalar {
@@ -82,7 +84,7 @@ class QLinearConvScalar {
 /**
  * @brief Scalar implementation streaming weights, 
  * expects weights stream to be padded from MxCxKxK to MxCx16, K < 5,
- * QLinearConvScalarStream<28,24,1,1,6,5> takes 1027692 cycles,
+ * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 682564
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalarStream {
@@ -129,9 +131,10 @@ class QLinearConvScalarStream {
 
 
 /**
- * @brief Vector implementation, QLinearConv5x5<28,24,1,1,6,5> takes 3237 cycles.
- * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
- * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W_PAD%16=0
+ * @brief Vector implementation for QLinearConv 5x5,
+ * requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
+ * requires INP_W%16=0, OUT_W_PAD%16=0,
+ * QLinearConv5x5<30,32,28,32,1,1,1,1,6,5> total = 3513
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConv5x5 {
@@ -181,9 +184,10 @@ class QLinearConv5x5 {
 
 
 /**
- * @brief Vector implementation, QLinearConv5x5Scale32bit<28,24,1,1,6,5> takes 7063 cycles.
- * Requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
- * due to int8 indexing restriction. Requires INP_W%16=0, OUT_W_PAD%16=0
+ * @brief Vector implementation for 3x3 QLinearConv,
+ * requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
+ * requires INP_W%16=0, OUT_W_PAD%16=0
+ * QLinearConv5x5Scale32bit<30,32,28,32,1,1,1,1,6,5> total = 7652
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConv5x5Scale32bit {
@@ -222,8 +226,61 @@ class QLinearConv5x5Scale32bit {
 		);
 
 		static void registerKernelClass() {
-      static_assert(INP_W%16==0 && OUT_W_PAD%16==0);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
 			REGISTER_FUNCTION(QLinearConv5x5Scale32bit::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+/**
+ * @brief Vector implementation for 3x3 QLinearConv,
+ * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
+ * requires INP_W%16=0, OUT_W_PAD%16=0,
+ * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2971
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+class QLinearConv3x3 {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+
+    alignas(32) int8_t (&weights)[M*C*16];
+    alignas(32) int32_t (&bias)[M];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    int8_t x_zero;
+    int8_t w_zero;
+    int8_t y_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConv3x3 (
+      int8_t (&w)[M*C*16],
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
+    );
+
+		void filter(
+			input_window<int8_t>* in,
+			output_window<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert(K==3);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+			REGISTER_FUNCTION(QLinearConv3x3::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
 		}
