@@ -82,57 +82,9 @@ class QLinearConvScalar {
 
 
 /**
- * @brief Scalar implementation streaming weights, 
- * expects weights stream to be padded from MxCxKxK to MxCx16, K < 5,
- * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 682564
- */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-class QLinearConvScalarStream {
-  
-  private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*16;
-
-    alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
-    float x_scale;
-    float w_scale;
-    float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
-
-    float scale;
-	
-  public:
-    QLinearConvScalarStream (
-      int32_t (&b)[M],
-      float x_scale,
-      float w_scale,
-      float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
-    ): bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
-      scale = x_scale*w_scale/y_scale;
-    };
-
-		void filter(
-			input_window<int8_t>* in,
-      input_stream<int8_t>* weights,
-			output_window<int8_t>* out
-		);
-
-		static void registerKernelClass() {
-			REGISTER_FUNCTION(QLinearConvScalarStream::filter);
-      REGISTER_PARAMETER(bias);
-		}
-};
-
-
-/**
  * @brief Vector implementation for QLinearConv 5x5,
  * requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
+ * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
  * requires INP_W%16=0, OUT_W_PAD%16=0,
  * QLinearConv5x5<30,32,28,32,1,1,1,1,6,5> total = 3513
  */
@@ -186,6 +138,7 @@ class QLinearConv5x5 {
 /**
  * @brief Vector implementation for 3x3 QLinearConv,
  * requires data to be arranged in [a,b,c,d,e] -> [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], 
+ * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
  * requires INP_W%16=0, OUT_W_PAD%16=0
  * QLinearConv5x5Scale32bit<30,32,28,32,1,1,1,1,6,5> total = 7652
  */
@@ -237,6 +190,7 @@ class QLinearConv5x5Scale32bit {
 /**
  * @brief Vector implementation for 3x3 QLinearConv,
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
+ * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
  * requires INP_W%16=0, OUT_W_PAD%16=0,
  * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2971
  */
@@ -282,6 +236,56 @@ class QLinearConv3x3 {
       static_assert(OUT_W_PAD%16==0);
 			REGISTER_FUNCTION(QLinearConv3x3::filter);
       REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
+ * @brief Scalar implementation streaming weights, 
+ * requires weights stream to be padded from MxCxKxK to MxCx16, K < 5,
+ * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
+ * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 682564
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+class QLinearConvScalarStream {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int CKK_ROW_SIZE = C*16;
+
+    alignas(32) int32_t (&bias)[M];
+    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    int8_t x_zero;
+    int8_t w_zero;
+    int8_t y_zero;
+
+    float scale;
+	
+  public:
+    QLinearConvScalarStream (
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
+    ): bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
+      scale = x_scale*w_scale/y_scale;
+    };
+
+		void filter(
+			input_window<int8_t>* in,
+      input_stream<int8_t>* weights,
+			output_window<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+			REGISTER_FUNCTION(QLinearConvScalarStream::filter);
       REGISTER_PARAMETER(bias);
 		}
 };
