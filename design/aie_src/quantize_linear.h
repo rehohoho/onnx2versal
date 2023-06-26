@@ -17,7 +17,9 @@
 
 
 /**
- * @brief Scalar implementation, QuantizeLinearScalar<1*1*28*28> takes 92401 cycles
+ * @brief Scalar implementation, 
+ * requires INP_W <= OUT_W, 
+ * QuantizeLinearScalar<1*1*28*28> takes 92401 cycles
  */
 template <int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearScalar {
@@ -38,14 +40,16 @@ class QuantizeLinearScalar {
 		);
 
 		static void registerKernelClass() {
+      static_assert(INP_W <= OUT_W);
 			REGISTER_FUNCTION(QuantizeLinearScalar::filter);
 		}
 };
 
 
 /**
- * @brief Vector implementation, QuantizeLinear<1*1*28*28> takes 1945 cycles,
- * requires INP_W%4==0, OUT_W%16==0
+ * @brief Vector implementation, 
+ * requires INP_W%4==0, OUT_W%16==0, INP_W <= OUT_W, 
+ * QuantizeLinear<1*1*28*28> takes 1945 cycles
  */
 template <int INP_H, int INP_W, int OUT_W>
 class QuantizeLinear {
@@ -72,14 +76,16 @@ class QuantizeLinear {
 
 		static void registerKernelClass() {
       static_assert(INP_W%4 == 0 && OUT_W%16 == 0);
+      static_assert(INP_W <= OUT_W);
 			REGISTER_FUNCTION(QuantizeLinear::filter);
 		}
 };
 
 
 /**
- * @brief Vector implementation, QuantizeLinearFmul<1*1*28*28> takes 1526 cycles,
- * requires INP_W%4==0, OUT_W%16==0
+ * @brief Vector implementation,
+ * requires INP_W%4==0, OUT_W%16==0, INP_W <= OUT_W, 
+ * QuantizeLinearFmul<1*1*28*28> takes 1526 cycles,
  */
 template <int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearFmul {
@@ -101,7 +107,39 @@ class QuantizeLinearFmul {
 
 		static void registerKernelClass() {
       static_assert(INP_W%4 == 0 && OUT_W%16 == 0);
+      static_assert(INP_W <= OUT_W);
 			REGISTER_FUNCTION(QuantizeLinearFmul::filter);
+		}
+};
+
+
+/**
+ * @brief Vector stream implementation,
+ * requires INP_W%4==0, OUT_W%16==0, INP_W <= OUT_W, 
+ * QuantizeLinearFmul<1*1*28*28> takes 1718 cycles,
+ */
+template <int INP_H, int INP_W, int OUT_W>
+class QuantizeLinearFmulStream {
+  
+  private:
+    float y_scale;
+    int8_t y_zero; // same type as output
+
+  public:
+    QuantizeLinearFmulStream (
+      float y_scale,
+      int8_t y_zero
+    ): y_scale(y_scale), y_zero(y_zero) {};
+
+		void filter(
+			input_stream<float>* in,
+			output_stream<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert(INP_W%4 == 0 && OUT_W%16 == 0);
+      static_assert(INP_W <= OUT_W);
+			REGISTER_FUNCTION(QuantizeLinearFmulStream::filter);
 		}
 };
 /** @}*/

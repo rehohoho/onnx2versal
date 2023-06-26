@@ -57,6 +57,44 @@ class QuantizeLinearGraph : public adf::graph {
     }
 
 };
+
+
+/**
+ * @brief Single instance stream graph
+ * 
+ * @connections
+ * @connect{pin[0], stream INP_H*INP_W*4}
+ * @connect{pout[0], stream INP_H*OUT_W}
+ * @endconnections
+ */
+template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
+class QuantizeLinearStreamGraph : public adf::graph {
+
+  private:
+    adf::kernel k[1];
+    std::string id;
+
+  public:
+    adf::port<input> pin[1];
+    adf::port<output> pout[1];
+
+    QuantizeLinearStreamGraph(
+      float y_scale,
+      int8_t y_zero
+    ) { 
+      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<INP_H, INP_W, OUT_W>>(y_scale, y_zero);
+      adf::source(k[0]) = "quantize_linear.cc";
+      adf::headers(k[0]) = {"quantize_linear.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
+      
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+
+      adf::samples_per_iteration(k[0].in[0]) = INP_H*INP_W;
+      adf::samples_per_iteration(k[0].out[0]) = INP_H*OUT_W;
+    }
+
+};
 /** @} */
 
 
