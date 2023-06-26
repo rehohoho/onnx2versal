@@ -13,14 +13,14 @@
 
 /**
  * @brief Scalar implementation for BHWC to BCHW,
- * TransposeScalarBHWC2BCHW::filter<1, 4, 4, 16>, total = 373
+ * TransposeScalarBHWC2BCHW::filter<f,1,4,4,16>, total = 373
  */
-template <int B, int H, int W, int C>
+template <typename TT, int B, int H, int W, int C>
 class TransposeScalarBHWC2BCHW {
   public:
     void filter(
-      input_window<float>* in,      // BHWC (1x4x4x16)
-      output_window<float>* out     // BCHW (1x16x4x4)
+      input_window<TT>* in,      // BHWC (1x4x4x16)
+      output_window<TT>* out     // BCHW (1x16x4x4)
     );
 
     static void registerKernelClass() {
