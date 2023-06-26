@@ -145,6 +145,12 @@ QLinearConvStreamGraphTest<QLinearConvScalarStream,
   "qLinearConvScalarStream_3x3", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConvScalarStream.txt");
 
+QLinearConvStreamGraphTest<QLinearConv3x3Stream, 
+                           INP_H, INP_W, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
+                           PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConv3x3Stream(
+  "qLinearConv3x3Stream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in.txt", "qlinearconv_int8out_3x3_shape1x6x26x28_QLinearConv3x3Stream.txt");
+
 // 3x3 stride 2
 QLinearConvGraphTest<QLinearConvScalar, 
                      INP_H, INP_W, OUT_W_STRIDE2_3x3, OUT_W_STRIDE2_PAD16_3x3, 2, 2, B, C, M, K_3x3,
@@ -159,6 +165,9 @@ int main(int argc, char ** argv) {
   int int8weights_3x3_pad_size = M*C*16 * sizeof(float_t);
   float_t* int8weights_3x3_pad_buf = (float_t *) adf::GMIO::malloc(int8weights_3x3_pad_size);
   memcpy(int8weights_3x3_pad_buf, int8weights_3x3_pad.data(), int8weights_3x3_pad_size);
+  int int8weights_3x3_int16int8mac_size = M*C*16 * sizeof(float_t);
+  float_t* int8weights_3x3_int16int8mac_buf = (float_t *) adf::GMIO::malloc(int8weights_3x3_int16int8mac_size);
+  memcpy(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac.data(), int8weights_3x3_int16int8mac_size);
 
   // 5x5 stride 1
   adfCheck(qLinearConvScalar.init(), "init qLinearConvScalar");
@@ -187,6 +196,11 @@ int main(int argc, char ** argv) {
   adfCheck(qLinearConvScalarStream_3x3.run(ITER_CNT), "run qLinearConvScalarStream_3x3");
 	adfCheck(qLinearConvScalarStream_3x3.end(), "end qLinearConvScalarStream_3x3");
 
+  adfCheck(qLinearConv3x3Stream.init(), "init qLinearConv3x3Stream");
+  qLinearConv3x3Stream.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
+  adfCheck(qLinearConv3x3Stream.run(ITER_CNT), "run qLinearConv3x3Stream");
+	adfCheck(qLinearConv3x3Stream.end(), "end qLinearConv3x3Stream");
+
   // 3x3 stride 2
   adfCheck(qLinearConvScalar_3x3_s2.init(), "init qLinearConvScalar_3x3_s2");
   adfCheck(qLinearConvScalar_3x3_s2.run(ITER_CNT), "run qLinearConvScalar_3x3_s2");
@@ -194,6 +208,7 @@ int main(int argc, char ** argv) {
 
   // cleanup gmio
   adf::GMIO::free(int8weights_3x3_pad_buf);
+  adf::GMIO::free(int8weights_3x3_int16int8mac_buf);
   return 0;
 }
 #endif
