@@ -372,8 +372,26 @@ $(document).ready(function(){initNavTree('concat_8h_source.html',''); initResiza
 <div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>            REGISTER_FUNCTION(ConcatScalarStream::filter);</div>
 <div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        }</div>
 <div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>};</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span><span class="preprocessor">#endif </span><span class="comment">// CONCAT_H_</span></div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span> </div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span> </div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> H, <span class="keywordtype">int</span> INP_W1, <span class="keywordtype">int</span> INP_W2, <span class="keywordtype">int</span> OUT_W&gt;</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno"><a class="line" href="classConcatInt8Stream.html">  314</a></span><span class="keyword">class </span><a class="code hl_class" href="classConcatInt8Stream.html">ConcatInt8Stream</a> {</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>    <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>        <span class="keywordtype">void</span> filter(</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>            input_stream&lt;TT&gt;* in0,</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>            input_stream&lt;TT&gt;* in1,</div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>            output_stream&lt;TT&gt;* out</div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>        );</div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>            <span class="keyword">static_assert</span>(INP_W1 % 16 == 0 &amp;&amp; INP_W2 % 16 == 0 &amp;&amp; OUT_W % 16 == 0);</div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>            <span class="keyword">static_assert</span>((std::is_same&lt;TT, int8_t&gt;::value));</div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>            <span class="comment">// also expects INP_W1 &lt; OUT_W, not included due to conditional instances in graph</span></div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>            REGISTER_FUNCTION(ConcatInt8Stream::filter);</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>        }</div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>};</div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span><span class="preprocessor">#endif </span><span class="comment">// CONCAT_H_</span></div>
 <div class="ttc" id="aclassConcatFloat_html"><div class="ttname"><a href="classConcatFloat.html">ConcatFloat</a></div><div class="ttdoc">Vector implementation, requires INP_W%4=0, OUT_W%4=0. ConcatFloat&lt;f,5,4,32,144&gt; takes 715 cycles (~30...</div><div class="ttdef"><b>Definition</b> concat.h:113</div></div>
+<div class="ttc" id="aclassConcatInt8Stream_html"><div class="ttname"><a href="classConcatInt8Stream.html">ConcatInt8Stream</a></div><div class="ttdoc">Vector implementation for stream concat with int8, ConcatInt8Stream&lt;f,4,32,32,64&gt; takes cycles.</div><div class="ttdef"><b>Definition</b> concat.h:314</div></div>
 <div class="ttc" id="aclassConcatInt8_html"><div class="ttname"><a href="classConcatInt8.html">ConcatInt8</a></div><div class="ttdoc">Vector implementation for int8_t, requires INP_W%16=0, OUT_W%16=0, ConcatInt8&lt;f,5,...</div><div class="ttdef"><b>Definition</b> concat.h:204</div></div>
 <div class="ttc" id="aclassConcatScalarStream_html"><div class="ttname"><a href="classConcatScalarStream.html">ConcatScalarStream</a></div><div class="ttdoc">Scalar implementation for stream concat, ConcatScalarStream&lt;f,4,32,32,64&gt; takes ~1000 cycles.</div><div class="ttdef"><b>Definition</b> concat.h:294</div></div>
 <div class="ttc" id="aclassConcatScalar_html"><div class="ttname"><a href="classConcatScalar.html">ConcatScalar</a></div><div class="ttdoc">Scalar implementation, ConcatScalar&lt;f,5,4,32,144&gt; takes 5858 cycles (~850 for output window)</div><div class="ttdef"><b>Definition</b> concat.h:22</div></div>

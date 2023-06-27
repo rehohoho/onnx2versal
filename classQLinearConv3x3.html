@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConv5x5Scale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearConv3x3&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearConv5x5Scale32bit.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQLinearConv3x3.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,31 +92,65 @@ $(document).ready(function(){initNavTree('classQLinearConv5x5Scale32bit.html',''
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classQLinearConv5x5Scale32bit-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConv5x5Scale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt; Class Template Reference</div></div>
+<a href="classQLinearConv3x3-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QLinearConv3x3&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 3x3 QLinearConv, requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point requires INP_W%16=0, OUT_W_PAD%16=0 QLinearConv5x5Scale32bit&lt;30,32,28,32,1,1,1,1,6,5&gt; total = 7652.  
+<p>Vector implementation for 3x3 QLinearConv, requires data to be arranged in [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point requires INP_W%16=0, OUT_W_PAD%16=0, QLinearConv3x3&lt;28,32,28,32,1,1,1,1,6,3&gt; total = 2906.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab6679f71cf59cc5e214d0fbd46dbbb8c"><td class="memItemLeft" align="right" valign="top"><a id="ab6679f71cf59cc5e214d0fbd46dbbb8c" name="ab6679f71cf59cc5e214d0fbd46dbbb8c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConv5x5Scale32bit</b> (int8_t(&amp;w)[M *C *K *16], int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
-<tr class="separator:ab6679f71cf59cc5e214d0fbd46dbbb8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d8b1a157733a0c3941d422199f7e2ec"><td class="memItemLeft" align="right" valign="top"><a id="a9d8b1a157733a0c3941d422199f7e2ec" name="a9d8b1a157733a0c3941d422199f7e2ec"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a9d8b1a157733a0c3941d422199f7e2ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac31fda3dd0b6626feb784284431f42e1"><td class="memItemLeft" align="right" valign="top"><a id="ac31fda3dd0b6626feb784284431f42e1" name="ac31fda3dd0b6626feb784284431f42e1"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConv3x3</b> (int8_t(&amp;w)[M *C *16], int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
+<tr class="separator:ac31fda3dd0b6626feb784284431f42e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a86ab3ad07279e21a7617b5a1e9f6d5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConv3x3.html#a3a86ab3ad07279e21a7617b5a1e9f6d5">filter</a> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
+<tr class="separator:a3a86ab3ad07279e21a7617b5a1e9f6d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a2b022085fb67518223c3eb0d732e7286"><td class="memItemLeft" align="right" valign="top"><a id="a2b022085fb67518223c3eb0d732e7286" name="a2b022085fb67518223c3eb0d732e7286"></a>
+<tr class="memitem:a6f76604b1ff913d948e407a3256f5687"><td class="memItemLeft" align="right" valign="top"><a id="a6f76604b1ff913d948e407a3256f5687" name="a6f76604b1ff913d948e407a3256f5687"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a2b022085fb67518223c3eb0d732e7286"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a6f76604b1ff913d948e407a3256f5687"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a3a86ab3ad07279e21a7617b5a1e9f6d5" name="a3a86ab3ad07279e21a7617b5a1e9f6d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a86ab3ad07279e21a7617b5a1e9f6d5">&#9670;&#160;</a></span>filter()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classQLinearConv3x3.html">QLinearConv3x3</a>&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;::filter </td>
+          <td>(</td>
+          <td class="paramtype">input_window&lt; int8_t &gt; *&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">output_window&lt; int8_t &gt; *&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>QLinearConv3x3&lt;28,32,24,32,1,1,6,5&gt;</p>
+<p>int16 * int8: expands 9 weights into 16 long vector [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0]</p>
+<p>acc0 += z0*x0 + z1*x1 z2*x2 + z3*x3 acc1 += z0*x1 + z1*x2 z2*x3 + z3*x4 ... acc14 += z0*x14 + z1*x15 z2*x16 + z3*x17 acc15 += z0*x15 + z1*x16 z2*x17 + z3*x18</p>
+<p>Vector registers can hold 256 int8 at most, 128 int16 at most. </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a></li>
 <li>design/aie_src/qlinearconv.cc</li>
@@ -126,7 +160,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernel
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQLinearConv5x5Scale32bit.html">QLinearConv5x5Scale32bit</a></li>
+    <li class="navelem"><a class="el" href="classQLinearConv3x3.html">QLinearConv3x3</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

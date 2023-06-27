@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: TransposeScalarBHWC2BCHW&lt; B, H, W, C &gt; Class Template Reference</title>
+<title>onnx2versal: TransposeScalarBHWC2BCHW&lt; TT, B, H, W, C &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,26 +93,26 @@ $(document).ready(function(){initNavTree('classTransposeScalarBHWC2BCHW.html',''
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classTransposeScalarBHWC2BCHW-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">TransposeScalarBHWC2BCHW&lt; B, H, W, C &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Transpose.html">Transpose</a> &raquo; <a class="el" href="group__TransposeKernels.html">TransposeKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">TransposeScalarBHWC2BCHW&lt; TT, B, H, W, C &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Transpose.html">Transpose</a> &raquo; <a class="el" href="group__TransposeKernels.html">TransposeKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for BHWC to BCHW, TransposeScalarBHWC2BCHW::filter&lt;1, 4, 4, 16&gt;, total = 373.  
+<p>Scalar implementation for BHWC to BCHW, TransposeScalarBHWC2BCHW::filter&lt;f,1,4,4,16&gt;, total = 373.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="transpose_8h_source.html">transpose.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aef580abbbad965dcb0e070a05f238822"><td class="memItemLeft" align="right" valign="top"><a id="aef580abbbad965dcb0e070a05f238822" name="aef580abbbad965dcb0e070a05f238822"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:aef580abbbad965dcb0e070a05f238822"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae641e7a4500817b2bbe86520a404957b"><td class="memItemLeft" align="right" valign="top"><a id="ae641e7a4500817b2bbe86520a404957b" name="ae641e7a4500817b2bbe86520a404957b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_window&lt; TT &gt; *out)</td></tr>
+<tr class="separator:ae641e7a4500817b2bbe86520a404957b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a4a0feb6bf61d9762172b1449282c8ab3"><td class="memItemLeft" align="right" valign="top"><a id="a4a0feb6bf61d9762172b1449282c8ab3" name="a4a0feb6bf61d9762172b1449282c8ab3"></a>
+<tr class="memitem:a453c626acd5d6547a5e021b610392c9f"><td class="memItemLeft" align="right" valign="top"><a id="a453c626acd5d6547a5e021b610392c9f" name="a453c626acd5d6547a5e021b610392c9f"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a4a0feb6bf61d9762172b1449282c8ab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a453c626acd5d6547a5e021b610392c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="transpose_8h_source.html">transpose.h</a></li>

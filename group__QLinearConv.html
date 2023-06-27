@@ -115,11 +115,14 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvGraph.html">QLinearConvGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvGraph.html">QLinearConvGraph&lt; PAD, QLINEARCONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.  <a href="classQLinearConvGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph&lt; QLINEARCONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph&lt; PAD, QLINEARCONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that streams weights and biases, significantly slower.  <a href="classQLinearConvStreamGraph.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvChunkHGraph.html">QLinearConvChunkHGraph&lt; SPLIT, QLINEARCONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.  <a href="classQLinearConvChunkHGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -128,7 +131,8 @@ Classes</h2></td></tr>
     <tr><td class="paramname">QLINEARCONV</td><td>Conv2D Kernel </td></tr>
     <tr><td class="paramname">INP_H</td><td>input height </td></tr>
     <tr><td class="paramname">INP_W</td><td>input width </td></tr>
-    <tr><td class="paramname">OUT_W</td><td>output width, padded to vector boundary = pad(INP_W - K/2) </td></tr>
+    <tr><td class="paramname">OUT_W</td><td>output width, unable to infer due to width padding </td></tr>
+    <tr><td class="paramname">OUT_W_PAD</td><td>output width, padded to vector boundary </td></tr>
     <tr><td class="paramname">STEP_H</td><td>stride in height dimension </td></tr>
     <tr><td class="paramname">STEP_W</td><td>stride in width dimension </td></tr>
     <tr><td class="paramname">B</td><td>batch size </td></tr>

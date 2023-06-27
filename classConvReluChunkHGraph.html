@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classConvReluChunkHGraph.html',''); in
 </div><!--header-->
 <div class="contents">
 
-<p>Multiinstance graph that stores weights and biases, chunks BCHW by W dimension, maximum 8 chunks If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0.  
+<p>Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.  
  <a href="classConvReluChunkHGraph.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="graph__conv_8h_source.html">graph_conv.h</a>&gt;</code></p>

@@ -125,7 +125,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks MCKK weights by M dimension, maximum 8 chunks If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0.  <a href="classConvReluChunkMGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHGraph.html">ConvReluChunkHGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks BCHW by W dimension, maximum 8 chunks If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W*OUT_W%8=0 and M*OUT_W*OUT_W%4=0.  <a href="classConvReluChunkHGraph.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.  <a href="classConvReluChunkHGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

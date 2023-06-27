@@ -107,13 +107,16 @@ Collaboration diagram for QuantizeLinearKernels:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinearScalar.html">QuantizeLinearScalar&lt; INP_H, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, QuantizeLinearScalar&lt;1*1*28*28&gt; takes 92401 cycles.  <a href="classQuantizeLinearScalar.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation, requires INP_W &lt;= OUT_W, QuantizeLinearScalar&lt;1*1*28*28&gt; takes 92401 cycles.  <a href="classQuantizeLinearScalar.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinear.html">QuantizeLinear&lt; INP_H, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, QuantizeLinear&lt;1*1*28*28&gt; takes 1945 cycles, requires INP_W%4==0, OUT_W%16==0.  <a href="classQuantizeLinear.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinear&lt;1*1*28*28&gt; takes 1945 cycles.  <a href="classQuantizeLinear.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinearFmul.html">QuantizeLinearFmul&lt; INP_H, INP_W, OUT_W &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, QuantizeLinearFmul&lt;1*1*28*28&gt; takes 1526 cycles, requires INP_W%4==0, OUT_W%16==0.  <a href="classQuantizeLinearFmul.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinearFmul&lt;1*1*28*28&gt; takes 1526 cycles,.  <a href="classQuantizeLinearFmul.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQuantizeLinearFmulStream.html">QuantizeLinearFmulStream&lt; INP_H, INP_W, OUT_W &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector stream implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinearFmul&lt;1*1*28*28&gt; takes 1718 cycles,.  <a href="classQuantizeLinearFmulStream.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
