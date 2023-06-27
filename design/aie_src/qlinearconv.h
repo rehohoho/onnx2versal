@@ -346,6 +346,63 @@ class QLinearConv3x3Stream {
       REGISTER_PARAMETER(bias);
 		}
 };
+
+
+/**
+ * @brief Vector implementation for 3x3 QLinearConv using 32bit scale for precision,
+ * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
+ * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
+ * requires K==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * QLinearConv3x3StreamScale32bit<28,48,28,32,1,1,1,1,6,3> total = 
+ * QLinearConv3x3StreamScale32bit<26,32,13,16,2,2,1,1,6,3> total = 
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+class QLinearConv3x3StreamScale32bit {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int CKK_ROW_SIZE = C*16;
+
+    alignas(32) int32_t (&bias)[M];
+    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    int8_t x_zero;
+    int8_t w_zero;
+    int8_t y_zero;
+
+    // precomputation
+    int scalebits;
+    int32_t scale;
+	
+  public:
+    QLinearConv3x3StreamScale32bit (
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
+    );
+
+		void filter(
+			input_window<int8_t>* in,
+      input_stream<int8_t>* weights,
+			output_stream<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert(K==3);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+			REGISTER_FUNCTION(QLinearConv3x3StreamScale32bit::filter);
+      REGISTER_PARAMETER(bias);
+		}
+};
 /** @}*/
 
 

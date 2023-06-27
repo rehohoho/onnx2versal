@@ -275,7 +275,7 @@ class QLinearConvChunkHGraph : public adf::graph {
           adf::kernel::create_object<Pad2DStreamInt8<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
-        adf::runtime<ratio>(pad[0]) = 0.1;
+        adf::runtime<ratio>(pad[0]) = 0.6;
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
@@ -296,9 +296,9 @@ class QLinearConvChunkHGraph : public adf::graph {
 
         set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>(k[i]);
 
-        adf::connect<adf::window<B*C*HCHUNK*PAD_W>>              (split_graph.pout[i], k[i].in[0]);
-        adf::connect<adf::stream>                                (pin[1], k[i].in[1]);
-        adf::connect<adf::stream> (k[i].out[0], concat_graph.pin[i]);
+        adf::connect<adf::window<B*C*HCHUNK*PAD_W>> (split_graph.pout[i], k[i].in[0]);
+        adf::connect<adf::stream>                   (pin[1], k[i].in[1]);
+        adf::connect<adf::stream>                   (k[i].out[0], concat_graph.pin[i]);
 
         adf::location<adf::kernel>(k[i]) = 
           adf::location<adf::kernel>(split_graph.k[0]) + adf::relative_offset(tileOffsets[i]);

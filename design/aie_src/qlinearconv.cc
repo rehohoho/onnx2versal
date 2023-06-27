@@ -640,3 +640,118 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 
   CONV_PROFILE_FOOTER("QLinearConv3x3Stream");
 }
+
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv3x3StreamScale32bit(
+  int32_t (&b)[M],
+  float x_scale,
+  float w_scale,
+  float y_scale,
+  int8_t x_zero,
+  int8_t w_zero,
+  int8_t y_zero
+):
+  bias(b), 
+  x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
+  x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
+{ 
+  assert(w_zero == 0);
+  scalebits = 31;
+  scale = float2fix(x_scale*w_scale/y_scale, scalebits);
+}
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+void QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+	input_window<int8_t>* in,
+  input_stream<int8_t>* weights,
+  output_stream<int8_t>* out
+) {
+  PROFILE_HEADER2;
+  
+  v32int16 data = null_v32int16();
+  v32int8 wvec = null_v32int8();
+
+  v16acc48 acc1 = undef_v16acc48();
+  aie::accum<acc80,8> acc_shift;
+  aie::accum<acc48,16> acc_bias;
+  acc_shift.from_vector(aie::broadcast<int16_t, 8>(y_zero), scalebits);
+
+  v16int8 *ckk_row_ptr;
+  int8_t *in_ptr = (int8_t *) in->ptr;
+
+  int res_updi = 0;
+  v16int16 res = null_v16int16(); // for STEP_W == 2
+  
+// xoffsets: 4b offset for lane 0,2,4,6, for 04, off0=2*4, off2=(0+4 +1)*2 => 8,9, 10,11
+// xoffsetshi: 4b offset for lane 8,10,12,14, same selection scheme
+#define MAC_ROW(acc, widx) \
+  acc = mac16(acc, data, 0, 0x03020100, 0x07060504, 2, 0x2110, wvec, widx, 0x0, 0x0, 2, 0x1010);
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  // BHWM
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
+
+      ckk_row_ptr = (v16int8 *) ckk_row;
+      for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
+        *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
+      }
+      
+      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
+      
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
+
+          acc1 = acc_bias;
+          ckk_row_ptr = (v16int8 *) ckk_row;
+          
+          for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+            wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 0);
+
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 4);
+
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
+            MAC_ROW(acc1, 8);
+          }
+          
+          // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
+          v8int32 accbuf1_1 = lsrs(ext_lo(acc1), 0);
+          auto aieacc1_1 = aie::mac(acc_shift, (aie::vector<int32_t,8>) accbuf1_1, scale);
+          v8int32 accbuf1_2 = lsrs(ext_hi(acc1), 0);
+          auto aieacc1_2 = aie::mac(acc_shift, (aie::vector<int32_t,8>) accbuf1_2, scale);
+          auto fat_acc1 = aie::concat(aieacc1_1, aieacc1_2);
+
+          if (STEP_W == 2) {
+            auto tmp = fat_acc1.to_vector<int16_t>(scalebits);
+            v8int16 tmphalf = aie::filter_even(tmp, 1);
+            if (res_updi == 1) {
+              res = upd_v(res, 1, tmphalf);
+              writeincr_v16(out, pack(res));
+            } else {
+              res = upd_v(res, 0, tmphalf);
+            }
+            res_updi = (res_updi + 1) & 0x1;
+          
+          } else {
+            writeincr_v16(out, fat_acc1.to_vector<int8_t>(scalebits));
+          }
+          in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
+        } // W
+        
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+        in_ptr += INP_W*STEP_W - OUT_W_PAD*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
+      } // H
+      in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+    } // M
+  } // B
+
+#undef MAC_ROW
+
+  CONV_PROFILE_FOOTER("QLinearConv3x3StreamScale32bit");
+}
