@@ -13,9 +13,13 @@ template <template<int, int, int, int, int, int, int, int, int,int> class QLINEA
   int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int K>
 void set_heap_size(adf::kernel k) {
-  if ((std::is_same<
+  if (
+    (std::is_same<
     QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
-    QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value)
+    QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
+    (std::is_same<
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
+    QLinearConv3x3StreamMultiRow<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) 
   ) {
     adf::heap_size(k) = C*16 + 1024; // caches CKK weights
   }
@@ -55,7 +59,9 @@ void set_heap_size(adf::kernel k) {
  * @connect{pout[0], B*M*OUT_H*OUT_W_PAD}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+template <
+  template<typename, int, int, int, int, int, int, int> class PAD,
+  template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
   int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int K,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
@@ -94,13 +100,13 @@ class QLinearConvGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DWindowScalar<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
+          adf::kernel::create_object<PAD<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
 
-        adf::connect<adf::window<B*C*INP_H*INP_W>, adf::window<INP_H*INP_W>> (pin[0], pad[0].in[0]);
-        adf::connect<adf::window<PAD_H*PAD_W>, adf::window<B*C*PAD_H*PAD_W>> (pad[0].out[0], k[0].in[0]);
+        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W>> (pad[0].out[0], k[0].in[0]);
       } else {
         adf::connect<adf::window<B*C*INP_H*INP_W>> (pin[0], k[0].in[0]);
       }
@@ -125,7 +131,9 @@ class QLinearConvGraph : public adf::graph {
  * @connect{pout[0], stream B*M*OUT_H*OUT_W_PAD}
  * @endconnections
  */
-template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+template <
+  template<typename, int, int, int, int, int, int, int> class PAD,
+  template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
   int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
   int B, int C, int M, int K, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
@@ -165,13 +173,13 @@ class QLinearConvStreamGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DWindowScalar<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
+          adf::kernel::create_object<PAD<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
 
-        adf::connect<adf::window<B*C*INP_H*INP_W>, adf::window<INP_H*INP_W>> (pin[0], pad[0].in[0]);
-        adf::connect<adf::window<PAD_H*PAD_W>, adf::window<B*C*PAD_H*PAD_W>> (pad[0].out[0], k[0].in[0]);
+        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W>> (pad[0].out[0], k[0].in[0]);
 
         adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
       } else {
