@@ -19,7 +19,7 @@ void set_heap_size(adf::kernel k) {
     QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
     (std::is_same<
     QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
-    QLinearConv3x3StreamMultiRow<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) 
+    QLinearConv3x3Stream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) 
   ) {
     adf::heap_size(k) = C*16 + 1024; // caches CKK weights
   }
@@ -181,13 +181,17 @@ class QLinearConvStreamGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W>> (pad[0].out[0], k[0].in[0]);
 
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
+
         adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
       } else {
         adf::connect<adf::window<B*C*INP_H*INP_W>> (pin[0], k[0].in[0]);
       }
       
       adf::connect<adf::stream> (pin[1], k[0].in[1]); // variable samples per iteration based on kernel
-      adf::connect<adf::window<B*M*OUT_H*OUT_W_PAD>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      adf::samples_per_iteration(k[0].out[0]) = B*M*OUT_H*OUT_W_PAD;
       
       adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
     }
@@ -294,7 +298,7 @@ class QLinearConvChunkHGraph : public adf::graph {
 
         adf::connect<adf::window<B*C*HCHUNK*PAD_W>>              (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::stream>                                (pin[1], k[i].in[1]);
-        adf::connect<adf::window<B*M*HCHUNK*OUT_W_PAD>, adf::stream> (k[i].out[0], concat_graph.pin[i]);
+        adf::connect<adf::stream> (k[i].out[0], concat_graph.pin[i]);
 
         adf::location<adf::kernel>(k[i]) = 
           adf::location<adf::kernel>(split_graph.k[0]) + adf::relative_offset(tileOffsets[i]);

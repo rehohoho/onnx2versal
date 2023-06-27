@@ -373,14 +373,15 @@ void QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>:
   v32int8 wvec = null_v32int8();
 
   v16acc48 acc1 = undef_v16acc48();
-  v16acc48 acc2 = undef_v16acc48();
   aie::accum<acc48,16> acc_shift;
   aie::accum<acc48,16> acc_bias;
   acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
 
   int8_t *in_ptr = (int8_t *) in->ptr;
   v16int8 *w_ptr = (v16int8 *) weights;
-  v16int8 *out_ptr = (v16int8 *) out->ptr;
+
+  int res_updi = 0;
+  v16int16 res = null_v16int16(); // for STEP_W == 2
   
 // xoffsets: 4b offset for lane 0,2,4,6, for 04, off0=2*4, off2=(0+4 +1)*2 => 8,9, 10,11
 // xoffsetshi: 4b offset for lane 8,10,12,14, same selection scheme
@@ -391,16 +392,15 @@ void QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>:
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
 
   // BHWM
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
       
       acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
-      for (int h = 0; h < OUT_H; h+=2) {
-        for (int w = 0; w < OUT_W_PAD; w+=16) {
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
 
           acc1 = acc_bias;
-          acc2 = acc_bias;
         
           for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_v(wvec, 0, *w_ptr); w_ptr++;
@@ -408,33 +408,37 @@ void QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>:
             MAC_ROW(acc1, 0);
 
             data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc2, 0);
             MAC_ROW(acc1, 4);
 
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc2, 4);
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
             MAC_ROW(acc1, 8);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 3*INP_W; // channel+1, up 3
-            MAC_ROW(acc2, 8);
           }
           
           // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
-          acc2 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc2, 0), scale);
-          *out_ptr = bsrs(acc1, scalebits);
-          out_ptr += OUT_W_PAD/16;
-          *out_ptr = bsrs(acc2, scalebits);
-          out_ptr += 1-OUT_W_PAD/16;
+          if (STEP_W == 2) {
+            v16int16 tmp = srs(acc1, scalebits);
+            v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+            if (res_updi == 1) {
+              res = upd_v(res, 1, tmphalf);
+              window_writeincr(out, pack(res));
+            } else {
+              res = upd_v(res, 0, tmphalf);
+            }
+            res_updi = (res_updi + 1) & 0x1;
+          
+          } else {
+            window_writeincr(out, bsrs(acc1, scalebits));
+          }
 
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
           w_ptr -= C;
         } // W
         
-        in_ptr += 2*INP_W - OUT_W_PAD; // go left OUT_W_PAD, down 2
-        out_ptr += OUT_W_PAD/16;
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+        in_ptr += INP_W*STEP_W - OUT_W_PAD*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
       } // H
-      in_ptr -= OUT_H*INP_W; // go up OUT_H
+      in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
       w_ptr += C;
     } // M
   } // B
@@ -449,12 +453,20 @@ template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W
 void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
-  output_window<int8_t>* out
+  output_stream<int8_t>* out
 ) {
   PROFILE_HEADER2;
 
   int weightIdx;
   v16int8 *ckk_row_ptr;
+  
+  int resvi = 0;
+  v16int16 resv = null_v16int16();
+
+#define WRITE_OUT(res) \
+  resv = upd_elem(resv, resvi, res); \
+  if (resvi == 15) writeincr_v16(out, pack(resv)); \
+  resvi = (resvi + 1) & 0xf;
 
   // BHWM
   for (int b = 0; b < B; b++) {
@@ -462,7 +474,7 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
 
       ckk_row_ptr = (v16int8 *) ckk_row;
       for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
-        *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
+        *ckk_row_ptr = aie::sub((aie::vector<int8_t,16>) readincr_v16(weights), w_zero); ckk_row_ptr++;
       }
       
       for (int h = 0; h < OUT_H; h++) {
@@ -475,7 +487,7 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
             for (int p = 0; p < K; p++) {
               for (int q = 0; q < K; q++) {
                 int a = window_readincr(in);
-                res += a * (ckk_row[weightIdx]-w_zero);
+                res += a * ckk_row[weightIdx];
                 weightIdx++;
               }
               window_incr(in, -K+INP_W); // go left K, down 1
@@ -486,12 +498,13 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
           res = y_zero + round(scale * res);
           res = std::min(std::max(res, -128), 127);
 
-          window_writeincr(out, (int8_t) res);
+          WRITE_OUT(res);
           window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
         } // W
 
-        for (int w = 0; w < OUT_W_PAD - OUT_W; w++)
-          window_writeincr(out, y_zero);
+        for (int w = 0; w < OUT_W_PAD - OUT_W; w++) {
+          WRITE_OUT(y_zero);
+        }
         
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
       } // H
@@ -519,7 +532,7 @@ QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>
 { 
   assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
-  scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
+  scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
   assert(scalebits <= 28); // K*K*int8*int8*scale <= acc48, for K=3
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
@@ -542,7 +555,7 @@ template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W
 void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
-  output_window<int8_t>* out
+  output_stream<int8_t>* out
 ) {
   PROFILE_HEADER2;
   
@@ -556,7 +569,6 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 
   v16int8 *ckk_row_ptr;
   int8_t *in_ptr = (int8_t *) in->ptr;
-  int8_t *out_ptr = (int8_t *) out->ptr;
 
   int res_updi = 0;
   v16int16 res = null_v16int16(); // for STEP_W == 2
@@ -605,14 +617,14 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
             v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
             if (res_updi == 1) {
               res = upd_v(res, 1, tmphalf);
-              window_writeincr(out, pack(res));
+              writeincr_v16(out, pack(res));
             } else {
               res = upd_v(res, 0, tmphalf);
             }
             res_updi = (res_updi + 1) & 0x1;
           
           } else {
-            window_writeincr(out, bsrs(acc1, scalebits));
+            writeincr_v16(out, bsrs(acc1, scalebits));
           }
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
         } // W
@@ -627,114 +639,4 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 #undef MAC_ROW
 
   CONV_PROFILE_FOOTER("QLinearConv3x3Stream");
-}
-
-
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv3x3StreamMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv3x3StreamMultiRow(
-  int32_t (&b)[M],
-  float x_scale,
-  float w_scale,
-  float y_scale,
-  int8_t x_zero,
-  int8_t w_zero,
-  int8_t y_zero
-):
-  bias(b), 
-  x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
-  x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
-{ 
-  assert(w_zero == 0);
-  // -1 due to rounding, -1 to fit in 16b
-  scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  assert(scalebits <= 28); // K*K*int8*int8*scale <= acc48, for K=3
-  scale = float2fix(x_scale*w_scale/y_scale, scalebits);
-}
-
-
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv3x3StreamMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
-	input_window<int8_t>* in,
-  input_stream<int8_t>* weights,
-  output_window<int8_t>* out
-) {
-  PROFILE_HEADER2;
-  
-  v32int16 data = null_v32int16();
-  v32int8 wvec = null_v32int8();
-
-  v16acc48 acc1 = undef_v16acc48();
-  v16acc48 acc2 = undef_v16acc48();
-  aie::accum<acc48,16> acc_shift;
-  aie::accum<acc48,16> acc_bias;
-  acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
-
-  v16int8 *ckk_row_ptr;
-  int8_t *in_ptr = (int8_t *) in->ptr;
-  v16int8 *out_ptr = (v16int8 *) out->ptr;
-  
-// xoffsets: 4b offset for lane 0,2,4,6, for 04, off0=2*4, off2=(0+4 +1)*2 => 8,9, 10,11
-// xoffsetshi: 4b offset for lane 8,10,12,14, same selection scheme
-#define MAC_ROW(acc, widx) \
-  acc = mac16(acc, data, 0, 0x03020100, 0x07060504, 2, 0x2110, wvec, widx, 0x0, 0x0, 2, 0x1010);
-  
-  set_sat();
-  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
-
-  // BHWM
-  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
-    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
-
-      ckk_row_ptr = (v16int8 *) ckk_row;
-      for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
-        *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
-      }
-      
-      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
-      
-      for (int h = 0; h < OUT_H; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
-        for (int w = 0; w < OUT_W_PAD; w+=16) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD/16,) {
-
-          acc1 = acc_bias;
-          acc2 = acc_bias;
-          ckk_row_ptr = (v16int8 *) ckk_row;
-          
-          for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
-            wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc1, 0);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc2, 0);
-            MAC_ROW(acc1, 4);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc2, 4);
-            MAC_ROW(acc1, 8);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 3*INP_W; // channel+1, up 3
-            MAC_ROW(acc2, 8);
-          }
-          
-          // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
-          acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
-          acc2 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc2, 0), scale);
-          *out_ptr = bsrs(acc1, scalebits);
-          out_ptr += OUT_W_PAD/16;
-          *out_ptr = bsrs(acc2, scalebits);
-          out_ptr += 1-OUT_W_PAD/16;
-
-          in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
-        } // W
-        
-        in_ptr += 2*INP_W - OUT_W_PAD; // go left OUT_W_PAD, down 2
-        out_ptr += OUT_W_PAD/16;
-      } // H
-      in_ptr -= OUT_H*INP_W; // go up OUT_H
-    } // M
-  } // B
-
-#undef MAC_ROW
-
-  CONV_PROFILE_FOOTER("QLinearConv3x3StreamMultiRow");
 }

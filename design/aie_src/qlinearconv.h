@@ -192,7 +192,7 @@ class QLinearConv5x5Scale32bit {
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
  * requires INP_W%16=0, OUT_W_PAD%16=0,
- * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2971
+ * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2906
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConv3x3 {
@@ -245,7 +245,7 @@ class QLinearConv3x3 {
  * @brief Scalar implementation streaming weights, 
  * requires weights stream to be padded from MxCxKxK to MxCx16, K < 5,
  * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
- * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 682564
+ * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 776955 (output_window 682564)
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConvScalarStream {
@@ -281,7 +281,7 @@ class QLinearConvScalarStream {
 		void filter(
 			input_window<int8_t>* in,
       input_stream<int8_t>* weights,
-			output_window<int8_t>* out
+			output_stream<int8_t>* out
 		);
 
 		static void registerKernelClass() {
@@ -296,8 +296,8 @@ class QLinearConvScalarStream {
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
  * requires K==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConv3x3Stream<28,48,28,32,1,1,1,1,6,3> total = 2963
- * QLinearConv3x3Stream<26,32,13,16,2,2,1,1,6,3> total = 1960
+ * QLinearConv3x3Stream<28,48,28,32,1,1,1,1,6,3> total = 3529 (output_window 2963)
+ * QLinearConv3x3Stream<26,32,13,16,2,2,1,1,6,3> total = 2546 (output window 1960)
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
 class QLinearConv3x3Stream {
@@ -333,7 +333,7 @@ class QLinearConv3x3Stream {
 		void filter(
 			input_window<int8_t>* in,
       input_stream<int8_t>* weights,
-			output_window<int8_t>* out
+			output_stream<int8_t>* out
 		);
 
 		static void registerKernelClass() {
@@ -343,62 +343,6 @@ class QLinearConv3x3Stream {
       static_assert(STEP_H == 1 || STEP_H == 2);
       static_assert(STEP_W == 1 || STEP_W == 2);
 			REGISTER_FUNCTION(QLinearConv3x3Stream::filter);
-      REGISTER_PARAMETER(bias);
-		}
-};
-
-
-/**
- * @brief Vector implementation for 3x3 QLinearConv,
- * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
- * requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point
- * requires K==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1, STEP_W==1, 
- * QLinearConv3x3StreamMultiRow<28,32,28,32,1,1,1,1,6,3> total = 4021
- */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-class QLinearConv3x3StreamMultiRow {
-  
-  private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*16;
-
-    alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
-    float x_scale;
-    float w_scale;
-    float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
-
-    // precomputation
-    int scalebits;
-    int16_t scale;
-	
-  public:
-    QLinearConv3x3StreamMultiRow (
-      int32_t (&b)[M],
-      float x_scale,
-      float w_scale,
-      float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
-    );
-
-		void filter(
-			input_window<int8_t>* in,
-      input_stream<int8_t>* weights,
-			output_window<int8_t>* out
-		);
-
-		static void registerKernelClass() {
-      static_assert(K==3);
-      static_assert(INP_W%16==0);
-      static_assert(OUT_W_PAD%16==0);
-      static_assert(STEP_H == 1);
-      static_assert(STEP_W == 1);
-			REGISTER_FUNCTION(QLinearConv3x3StreamMultiRow::filter);
       REGISTER_PARAMETER(bias);
 		}
 };
