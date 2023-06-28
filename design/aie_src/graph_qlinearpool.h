@@ -27,16 +27,15 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], B*INP_H*INP_W*C*TTSIZE}
- * @connect{pout[0], B*OUT_H*OUT_W*C*TTSIZE}
+ * @connect{pin[0], B*INP_H*INP_W*C*sizeof(TT)}
+ * @connect{pout[0], stream B*OUT_H*OUT_W*C*sizeof(TT)}
  * @endconnections
  */
 template <template<typename, int, int, int, int, int, int> class QLINEARPOOL,
   typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
-class QLinearPoolGraph : public adf::graph {
+class QLinearPoolStreamGraph : public adf::graph {
 
   private:
-    static constexpr int TTSIZE = sizeof(TT);
     static constexpr int K = INP_H / OUT_H;
     adf::kernel k[1];
     std::string id;
@@ -45,7 +44,7 @@ class QLinearPoolGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    QLinearPoolGraph(
+    QLinearPoolStreamGraph(
       float in_scale,
       float out_scale,
       int8_t in_zero,
@@ -57,8 +56,10 @@ class QLinearPoolGraph : public adf::graph {
       adf::headers(k[0]) = {"qlinearpool.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<B*INP_H*INP_W*C*TTSIZE>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_H*OUT_W*C*TTSIZE>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*INP_H*INP_W*C*sizeof(TT)>> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream>                             (k[0].out[0], pout[0]);
+
+      adf::samples_per_iteration(k[0].out[0]) = B*C*OUT_H*OUT_W;
     }
 
 };

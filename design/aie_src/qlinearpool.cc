@@ -11,10 +11,18 @@
 
 template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
 void QLinearAvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
-  input_window<TT>* in,      // BCHW (1x6x24x24)
-  output_window<TT>* out     // BCPQ (1x6x12x12)
+  input_window<TT>* in,
+  output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
+
+  int resvi = 0;
+  v16int16 resv = null_v16int16();
+
+#define WRITE_OUT(res) \
+  resv = upd_elem(resv, resvi, res); \
+  if (resvi == 15) writeincr_v16(out, pack(resv)); \
+  resvi = (resvi + 1) & 0xf;
 
   float scale = in_scale * inv(K*K * out_scale);
 
@@ -35,12 +43,13 @@ void QLinearAvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
           sum = round(sum * scale) + out_zero;
           sum = std::min(std::max(sum, -128), 127);
 
-          window_writeincr(out, (int8_t) sum);
+          WRITE_OUT(sum);
         } // W
         window_incr(in, -OUT_W*K  + K*INP_W); // down K, left OUT_W*K , account for padding
       } // H
     } // C
   } // B
+#undef WRITE_OUT
 
   QLINEARPOOL_PROFILE_FOOTER("QLinearAvgpoolScalarBCHW");
 }

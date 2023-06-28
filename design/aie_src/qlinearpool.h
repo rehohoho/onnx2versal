@@ -20,7 +20,8 @@
 
 /**
  * @brief Scalar implementation for BCHW avgpool,
- * QLinearAvgpoolScalarBCHW::filter<24,32,16,1,6> total = 15766
+ * requires B*C*OUT_H*OUT_W % 16 == 0
+ * QLinearAvgpoolScalarBCHW::filter<24,32,16,1,6> total = 17365 (output_window 15766)
  */
 template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
 class QLinearAvgpoolScalarBCHW {
@@ -40,8 +41,8 @@ class QLinearAvgpoolScalarBCHW {
     ): in_scale(in_scale), out_scale(out_scale), in_zero(in_zero), out_zero(out_zero) {}
 
     void filter(
-      input_window<TT>* in,      // BCHW (1x6x24x24)
-      output_window<TT>* out     // BCPQ (1x6x12x12)
+      input_window<TT>* in,
+      output_stream<TT>* out
     );
     static void registerKernelClass() {
       REGISTER_FUNCTION(QLinearAvgpoolScalarBCHW::filter);
