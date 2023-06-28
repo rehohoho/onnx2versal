@@ -30,7 +30,7 @@
  */
 template <template<int, int, int> class QLINEARSOFTMAX, 
   int INP_H, int INP_W, int INP_W_PAD>
-class QlinearsoftmaxGraph : public adf::graph {
+class QlinearsoftmaxStreamGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -40,7 +40,7 @@ class QlinearsoftmaxGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    QlinearsoftmaxGraph(
+    QlinearsoftmaxStreamGraph(
       float x_scale,
       float y_scale,
       int8_t x_zero,
@@ -53,7 +53,8 @@ class QlinearsoftmaxGraph : public adf::graph {
       adf::runtime<ratio>(k[0]) = 0.6;
       
       adf::connect<adf::window<INP_H*INP_W_PAD>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<INP_H*INP_W_PAD>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      adf::samples_per_iteration(k[0].out[0]) = INP_H*INP_W_PAD;
     }
 
 };

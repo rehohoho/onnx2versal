@@ -22,7 +22,7 @@
 
 /**
  * @brief Scalar implementation.
- * QlinearsoftmaxScalar<10,20,32> takes 517922 cycles for expf, cycles 158931 for fastexp2.
+ * QlinearsoftmaxScalar<10,20,32> takes 517922 cycles for expf, cycles 164026 for fastexp2.
  */
 template <int INP_H, int INP_W, int INP_W_PAD>
 class QlinearsoftmaxScalar {
@@ -45,7 +45,7 @@ class QlinearsoftmaxScalar {
 
     void filter(
       input_window<int8_t>* in,
-      output_window<int8_t>* out
+      output_stream<int8_t>* out
     );
     
     static void registerKernelClass() {
@@ -56,7 +56,7 @@ class QlinearsoftmaxScalar {
 
 /**
  * @brief Vector implementation using fastexp2 method, float multiplication for exp estimation
- * QlinearsoftmaxFloatmul<10,10,16> takes 3891 cycles
+ * QlinearsoftmaxFloatmul<10,10,16> takes 3886 cycles
  * requires INP_W_PAD%16=0.
  */
 template <int INP_H, int INP_W, int INP_W_PAD>
@@ -85,7 +85,7 @@ class QlinearsoftmaxFloatmul {
 
 		void filter(
 			input_window<int8_t>* in,
-			output_window<int8_t>* out
+			output_stream<int8_t>* out
 		);
 
 		static void registerKernelClass() {
@@ -97,7 +97,7 @@ class QlinearsoftmaxFloatmul {
 
 /**
  * @brief Vector implementation using fastexp2 method for single axis, 
- * QlinearsoftmaxSingleaxis<10,10,16> takes 2257 cycles
+ * QlinearsoftmaxSingleaxis<10,10,16> takes 2239 cycles
  * requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.
  */
 template <int INP_H, int INP_W, int INP_W_PAD>
@@ -127,7 +127,7 @@ class QlinearsoftmaxSingleaxis {
 
 		void filter(
 			input_window<int8_t>* in,
-			output_window<int8_t>* out
+			output_stream<int8_t>* out
 		);
 
 		static void registerKernelClass() {
