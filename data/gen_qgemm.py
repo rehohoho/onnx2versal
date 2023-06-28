@@ -20,11 +20,14 @@ tout_zero = 19
 tin = np.tile(np.arange(11), M*K//11+1).astype(np.int8)[:M*K].reshape(M,K)
 tw = np.tile(np.arange(11), K*N//11+1).astype(np.int8)[:K*N].reshape(K,N)
 tbias = (np.arange(N) / (tin_scale*tw_scale/tout_scale)).astype(np.int32)
+tbias_shift = (tbias - tw.sum(0) * tin_zero).astype(np.int32)
 
 # padding for vector read/write
-vector_size = get_vector_boundary(tw)
-tw = pad_lastdim(tw, "QGemm weights", vector_size)
-tbias = pad_lastdim(tbias, "QGemm bias", vector_size)
+tw = pad_lastdim(tw, "QGemm weights", get_vector_boundary(tw))
+tbias = pad_lastdim(tbias, "QGemm tbias", get_vector_boundary(tbias))
+tbias_shift = pad_lastdim(tbias_shift, "QGemm tbias_shift", get_vector_boundary(tbias_shift))
+print("int8weights\n", tw.flatten().tolist(), "\n\n\n")
+print("int8bias\n", tbias_shift.flatten().tolist(), "\n\n\n")
 
 tout = torch.nn.functional.linear(
   torch.Tensor(tin.astype(int) - tin_zero),
@@ -36,5 +39,3 @@ tout = np.clip(tout, -128, 127).astype(np.int8)
 # save
 save_tensor("qgemm_int8in.txt", tin)
 save_tensor(f"qgemm_int8out_shape{M}x{N}.txt", tout)
-print("int8weights\n", tw.flatten().tolist(), "\n\n\n")
-print("int8bias\n", tbias.flatten().tolist(), "\n\n\n")

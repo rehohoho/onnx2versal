@@ -3,16 +3,26 @@
 #include "aie_api/aie.hpp"
 
 
+#define QGEMM_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%d,%d,%d>", \
+    filter_name, M, K, N);
+
 template <int M, int K, int N>
-void QgemmScalar<M, K, N>::filter(
+void QgemmScalarStream<M, K, N>::filter(
 	input_window<int8_t>* in,      // MxK
                                  // KxN
-  output_window<int8_t>* out     // MxN
+  output_stream<int8_t>* out     // MxN
 ) {
-  PROFILE_HEADER(printf(
-    "Running QgemmScalar<%d,%d,%d>\n", M, K, N));
+  PROFILE_HEADER2;
 
   int weightIdx = 0;
+  int resvi = 0;
+  v16int16 resv = null_v16int16();
+
+#define WRITE_OUT(res) \
+  resv = upd_elem(resv, resvi, res); \
+  if (resvi == 15) writeincr_v16(out, pack(resv)); \
+  resvi = (resvi + 1) & 0xf;
 
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) {
@@ -22,22 +32,23 @@ void QgemmScalar<M, K, N>::filter(
         int a = window_readincr(in);
         int b = weights[weightIdx];
         weightIdx += N;
-        res += (a-x_zero) * (b-w_zero);
+        res += a * (b-w_zero);
       }
       res = y_zero + round(scale * res);
       res = std::min(std::max(res, -128), 127);
-      window_writeincr(out, (int8_t) res);
+      WRITE_OUT(res);
       window_incr(in, -K); // repeat same in row for next j
     }
     window_incr(in, K); // next in row for next N
   }
+#undef WRITE_OUT
 
-  PROFILE_FOOTER;
+  QGEMM_PROFILE_FOOTER("QgemmScalarStream");
 }
 
 
 template <int M, int K, int N>
-QgemmVector<M, K, N>::QgemmVector (
+QgemmStream<M, K, N>::QgemmStream (
   int8_t (&w)[K*N],
   int32_t (&b)[N],
   float x_scale,
@@ -47,22 +58,6 @@ QgemmVector<M, K, N>::QgemmVector (
   int8_t w_zero,
   int8_t y_zero
 ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
-  
-  int8_t *w_ptr = (int8_t *) weights;
-  int32_t *b_ptr = (int32_t *) bias;
-  aie::accum<acc48,16> aieacc;
-
-  // precompute x_zero_weights into bias
-  for (int j = 0; j < N; j+=16) {
-    aieacc.from_vector(aie::load_v<16>(b_ptr), 0);
-    for (int k = 0; k < K; k++) {
-      aieacc = aie::msc(aieacc, aie::load_v<16>(w_ptr), x_zero); w_ptr += N;
-    }
-    aie::store_v(b_ptr, aieacc.to_vector<int32_t>(0)); 
-    b_ptr += 16;
-    w_ptr += -K*N + 16;
-  }
-  
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
   if (scalebits >= 48 - log(K)/log(2) - 16)
@@ -71,7 +66,7 @@ QgemmVector<M, K, N>::QgemmVector (
 };
 
 /**
- * QgemmVector<28,32,24,32,1,1,6,5>
+ * QgemmStream<28,32,24,32,1,1,6,5>
  * 
  * https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits
  * int8 * int8 requires x indexing %4, z indexing %2
@@ -101,18 +96,16 @@ QgemmVector<M, K, N>::QgemmVector (
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
 template <int M, int K, int N>
-void QgemmVector<M, K, N>::filter(
+void QgemmStream<M, K, N>::filter(
 	input_window<int8_t>* in,      // MxK
                                  // KxN
-  output_window<int8_t>* out     // MxN
+  output_stream<int8_t>* out     // MxN
 ) {
-  PROFILE_HEADER(printf(
-    "Running QgemmVector<%d,%d,%d>\n", M, K, N));
+  PROFILE_HEADER2;
 
   int8_t *in_ptr = (int8_t *) in->ptr;
   int8_t *w_ptr = (int8_t *) weights;
   int32_t *b_ptr = (int32_t *) bias;
-  v16int8 *out_ptr = (v16int8 *) out->ptr;
 
   v128int8 wmat = null_v128int8();
   v32int8 inmat = null_v32int8();
@@ -163,8 +156,7 @@ void QgemmVector<M, K, N>::filter(
 
       aieacc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
       aieacc1 = aie::mac(acc_shift1, aieacc1.to_vector<int32_t>(0), scale);
-      *out_ptr = aieacc1.to_vector<int8_t>(scalebits);
-      out_ptr++;
+      writeincr_v16(out, aieacc1.to_vector<int8_t>(scalebits));
 
       in_ptr -= K;        // reset
       w_ptr += -K*N + 16; // next
@@ -175,11 +167,11 @@ void QgemmVector<M, K, N>::filter(
     chess_separator_scheduler();
 
     in_ptr += K;
-    b_ptr -= N/16*16; // reset
+    b_ptr -= N; // reset
     w_ptr -= N;    // reset
   } // M
 
 #undef LOAD_W
 
-  PROFILE_FOOTER;
+  QGEMM_PROFILE_FOOTER("QgemmStream");
 }

@@ -28,11 +28,11 @@
  * 
  * @connections
  * @connect{pin[0], M*K}
- * @connect{pout[0], M*N}
+ * @connect{pout[0], stream M*N}
  * @endconnections
  */
 template <template<int, int, int> class QGEMM, int M, int K, int N>
-class QgemmGraph : public adf::graph {
+class QgemmStreamGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -41,7 +41,7 @@ class QgemmGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    QgemmGraph(
+    QgemmStreamGraph(
       std::vector<int8_t> weights,
       std::vector<int32_t> bias,
       float x_scale,
@@ -66,7 +66,9 @@ class QgemmGraph : public adf::graph {
       adf::location<adf::parameter>(k[0].param[1]) = adf::offset((K*N+31)/32*32);
 
       adf::connect<adf::window<M*K>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<M*N>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      
+      adf::samples_per_iteration(k[0].out[0]) = M*N;
     }
 
 };
@@ -83,7 +85,7 @@ template <
   template<int, int, int> class QGEMM, 
   template<typename, int, int, int, int> class CONCAT, 
   int NCHUNK, int M, int K, int N>
-class QgemmMkknChunkGraph : public adf::graph {
+class QgemmChunkNStreamGraph : public adf::graph {
 
   private:
     adf::relative_coordinate tileOffsets[8] = {
@@ -105,7 +107,7 @@ class QgemmMkknChunkGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    QgemmMkknChunkGraph(
+    QgemmChunkNStreamGraph(
       std::vector<int8_t> weights,  // KxN
       std::vector<int32_t> bias,    // N
       float x_scale,
@@ -155,7 +157,8 @@ class QgemmMkknChunkGraph : public adf::graph {
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
         adf::connect<adf::window<M*K>> (pin[0], k[i].in[0]);
-        adf::connect<adf::window<M*NCHUNK>> (k[i].out[0], concat_g.pin[i]);
+        adf::connect<adf::stream> (k[i].out[0], concat_g.pin[i]);
+        adf::samples_per_iteration(k[i].out[0]) = M*N;
       }
       adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
     }

@@ -25,10 +25,10 @@
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * QgemmScalar<1,84,16> takes 16966 cycles
+ * QgemmScalarStream<1,84,16> takes 34262 cycles
  */
 template <int M, int K, int N>
-class QgemmScalar {
+class QgemmScalarStream {
   
   private:
     alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
@@ -43,7 +43,7 @@ class QgemmScalar {
     float scale;
   
   public:
-    QgemmScalar (
+    QgemmScalarStream (
       int8_t (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
@@ -58,11 +58,11 @@ class QgemmScalar {
 
     void filter(
       input_window<int8_t>* in,   // MxK  (1x256)
-      output_window<int8_t>* out  // MxN  (1x120)
+      output_stream<int8_t>* out  // MxN  (1x120)
     );
     
     static void registerKernelClass() {
-      REGISTER_FUNCTION(QgemmScalar::filter);
+      REGISTER_FUNCTION(QgemmScalarStream::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
     };
@@ -71,10 +71,10 @@ class QgemmScalar {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0
- * QgemmVector<1,84,16> takes 135 cycles
+ * QgemmStream<1,84,16> takes 273 cycles (output window same cycles)
  */
 template <int M, int K, int N>
-class QgemmVector {
+class QgemmStream {
   
   private:
     alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
@@ -97,7 +97,7 @@ class QgemmVector {
     static constexpr int RUN_LASTCHUNK = K_REM8 > 0;
   
   public:
-    QgemmVector (
+    QgemmStream (
       int8_t (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
@@ -110,12 +110,12 @@ class QgemmVector {
 
     void filter(
       input_window<int8_t>* in,   // MxK  (1x256)
-      output_window<int8_t>* out  // MxN  (1x120)
+      output_stream<int8_t>* out  // MxN  (1x120)
     );
     
     static void registerKernelClass() {
       static_assert(N % 16 == 0);
-      REGISTER_FUNCTION(QgemmVector::filter);
+      REGISTER_FUNCTION(QgemmStream::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
     };
