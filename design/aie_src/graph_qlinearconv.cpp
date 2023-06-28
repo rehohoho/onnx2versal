@@ -160,6 +160,12 @@ QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3Stream,
   "qLinearConv3x3Stream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConv3x3Stream.txt");
 
+QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3StreamPad, 
+                           INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
+                           PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConv3x3StreamPad(
+  "qLinearConv3x3StreamPad", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConv3x3StreamPad.txt");
+
 QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3StreamScale32bit, 
                            INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, K_3x3,
                            PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> qLinearConv3x3StreamScale32bit(
@@ -260,6 +266,11 @@ int main(int argc, char ** argv) {
   qLinearConv3x3Stream.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
   adfCheck(qLinearConv3x3Stream.run(ITER_CNT), "run qLinearConv3x3Stream");
 	adfCheck(qLinearConv3x3Stream.end(), "end qLinearConv3x3Stream");
+
+  adfCheck(qLinearConv3x3StreamPad.init(), "init qLinearConv3x3StreamPad");
+  qLinearConv3x3StreamPad.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
+  adfCheck(qLinearConv3x3StreamPad.run(ITER_CNT), "run qLinearConv3x3StreamPad");
+	adfCheck(qLinearConv3x3StreamPad.end(), "end qLinearConv3x3StreamPad");
 
   adfCheck(qLinearConv3x3StreamScale32bit.init(), "init qLinearConv3x3StreamScale32bit");
   qLinearConv3x3StreamScale32bit.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);

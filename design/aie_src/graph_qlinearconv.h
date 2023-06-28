@@ -19,7 +19,13 @@ void set_heap_size(adf::kernel k) {
     QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
     (std::is_same<
     QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
-    QLinearConv3x3Stream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) 
+    QLinearConv3x3Stream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
+    (std::is_same<
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
+    QLinearConv3x3StreamPad<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
+    (std::is_same<
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
+    QLinearConv3x3StreamScale32bit<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value)
   ) {
     adf::heap_size(k) = C*16 + 1024; // caches CKK weights
   }
