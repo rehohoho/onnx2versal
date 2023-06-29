@@ -132,17 +132,11 @@ ConvReluGraphTest<Conv3x3on12ReluBCHW, INP_H, INP_W, OUT_W, STEP_H, STEP_W,
 
 
 // 3x3 BCHW stream, stride = 1
-ConvReluStreamGraphTest<ConvReluScalarStreamCacheHW, 
-                        INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K_3x3, IS_RELU,
-                        PAD_3x3, PAD_3x3, PAD_3x3, PAD_3x3> convReluScalarStreamCacheHW(
-  "convReluScalarStreamCacheHW", fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvReluScalarStreamCacheHW.txt");
-
 ConvReluStreamGraphTest<ConvReluScalarStreamCacheCKK, 
                         INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K_3x3, IS_RELU,
                         PAD_3x3, PAD_3x3, PAD_3x3, W1_3x3> convReluScalarStreamCacheCKK(
   "convReluScalarStreamCacheCKK", fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_Conv3x3ReluStreamCacheCKK.txt");
+  "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvReluScalarStreamCacheCKK.txt");
 
 ConvReluStreamGraphTest<Conv3x3ReluStreamCacheCKK, 
                         INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K_3x3, IS_RELU,
@@ -158,11 +152,6 @@ ConvReluStreamGraphTest<Conv3x3ReluStreamCacheCKKMultiRow,
 
 
 // 3x3 BCHW stream, stride = 2
-ConvReluStreamGraphTest<ConvReluScalarStreamCacheHW, INP_H, INP_W, OUT_W_STRIDE2_3x3, 2, 2, 
-                        B, C, M, K_3x3, IS_RELU, 0, 0, 0, 0> convReluScalarStreamCacheHW_s2(
-  "convReluScalarStreamCacheHW_s2", fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_3x3_stride2_shape1x4x11x11_ConvReluScalarStreamCacheHW.txt");
-
 ConvReluStreamGraphTest<ConvReluScalarStreamCacheCKK, 
                         INP_H, INP_W, OUT_W_STRIDE2_3x3, 2, 2, B, C, M, K_3x3, IS_RELU,
                         0, 0, 0, 0> convReluScalarStreamCacheCKK_s2(
@@ -219,11 +208,6 @@ int main(int argc, char ** argv) {
 	adfCheck(conv3x3on12ReluBCHW.end(), "end conv3x3on12ReluBCHW");
 
   // 3x3 BCHW stream, stride = 1
-  adfCheck(convReluScalarStreamCacheHW.init(), "init convReluScalarStreamCacheHW");
-  convReluScalarStreamCacheHW.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
-  adfCheck(convReluScalarStreamCacheHW.run(ITER_CNT), "run convReluScalarStreamCacheHW");
-	adfCheck(convReluScalarStreamCacheHW.end(), "end convReluScalarStreamCacheHW");
-  
   adfCheck(convReluScalarStreamCacheCKK.init(), "init convReluScalarStreamCacheCKK");
   convReluScalarStreamCacheCKK.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
   adfCheck(convReluScalarStreamCacheCKK.run(ITER_CNT), "run convReluScalarStreamCacheCKK");
@@ -240,11 +224,6 @@ int main(int argc, char ** argv) {
 	adfCheck(conv3x3ReluStreamCacheCKK_3x3Row.end(), "end conv3x3ReluStreamCacheCKK_3x3Row");
 
   // 3x3 BCHW stream, stride = 2
-  adfCheck(convReluScalarStreamCacheHW_s2.init(), "init convReluScalarStreamCacheHW_s2");
-  convReluScalarStreamCacheHW_s2.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
-  adfCheck(convReluScalarStreamCacheHW_s2.run(ITER_CNT), "run convReluScalarStreamCacheHW_s2");
-	adfCheck(convReluScalarStreamCacheHW_s2.end(), "end convReluScalarStreamCacheHW_s2");
-
   adfCheck(convReluScalarStreamCacheCKK_s2.init(), "init convReluScalarStreamCacheCKK_s2");
   convReluScalarStreamCacheCKK_s2.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
   adfCheck(convReluScalarStreamCacheCKK_s2.run(ITER_CNT), "run convReluScalarStreamCacheCKK_s2");

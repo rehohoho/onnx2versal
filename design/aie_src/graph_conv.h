@@ -14,13 +14,7 @@ template <template<int, int, int, int, int, int, int, int, int, int> class CONV,
   int INP_H, int INP_W, int OUT_H, int OUT_W, int STEP_H, int STEP_W, 
   int B, int C, int M, int K, int IS_RELU>
 void set_heap_size(adf::kernel k) {
-  if ((std::is_same<
-    CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
-    ConvReluScalarStreamCacheHW<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value)
-  ) {
-    adf::heap_size(k) = OUT_H*OUT_W*4 + 1024; // caches HoWo partial products
-  } 
-  else if (
+  if (
     (std::is_same<
       CONV<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>, 
       ConvReluScalarStreamCacheCKK<INP_H,INP_W,OUT_W,STEP_H,STEP_W,B,C,M,K,IS_RELU>>::value) ||
