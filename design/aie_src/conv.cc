@@ -4,13 +4,13 @@
 
 
 #define CONV_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
-    filter_name, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU);
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU);
 
 
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarBHWC<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void ConvReluScalarBHWC<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BHWC (1x28x28x1)
   output_window<float>* out     // BHWM (1x24x24x6)
 ) {
@@ -21,33 +21,33 @@ void ConvReluScalarBHWC<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
   // BHWM
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
-      for (int w = 0; w < OUT_W; w++) chess_prepare_for_pipelining chess_loop_range(OUT_W,) {
+      for (int w = 0; w < OUT_W_PAD; w++) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD,) {
         
         for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) {
 
           // KKC
           float res = bias[m];
           
-          for (int p = 0; p < K; p++) chess_flatten_loop {
-            for (int q = 0; q < K; q++) chess_flatten_loop {
+          for (int p = 0; p < KH; p++) chess_flatten_loop {
+            for (int q = 0; q < KW; q++) chess_flatten_loop {
               for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) {
                 res += window_readincr(in) * weights[weightIdx];
                 weightIdx++;
               }
             }
-            window_incr(in, C*(-K + INP_W)); // go back K, go down 1
+            window_incr(in, C*(-KW + INP_W)); // go back KW, go down 1
           }
 
           if (IS_RELU) {
             res = std::max(res, 0.0f);
           }
           window_writeincr(out, res);
-          window_incr(in, C*(-K*INP_W)); // go up K
+          window_incr(in, C*(-KH*INP_W)); // go up KH
         }
         weightIdx = 0;                   // reset weight
         window_incr(in, C);              // next position
       }
-      window_incr(in, C*K - C);          // next row
+      window_incr(in, C*KW - C);         // next row
     }
   }
 
@@ -55,14 +55,16 @@ void ConvReluScalarBHWC<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW (1x1x28x28)
   output_window<float>* out     // BMHW (1x6x24x24)
 ) {
   PROFILE_HEADER2;
 
+  // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1, C_PER_M, H, W)
+  int C_PER_M = C / GROUP;
   int weightIdx = 0;
 
   // BHWM
@@ -70,33 +72,38 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
       
       for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_W; w++) chess_prepare_for_pipelining chess_loop_range(OUT_W,) {
+        for (int w = 0; w < OUT_W; w++) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD,) {
         
           float res = bias[m];
           
-          for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) {
-            for (int p = 0; p < K; p++) chess_flatten_loop {
-              for (int q = 0; q < K; q++) chess_flatten_loop {
+          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) {
+            for (int p = 0; p < KH; p++) chess_flatten_loop {
+              for (int q = 0; q < KW; q++) chess_flatten_loop {
                 float a = window_readincr(in);
                 res += a * weights[weightIdx];
                 weightIdx++;
               }
-              window_incr(in, -K+INP_W); // go left K, down 1
+              window_incr(in, -KW+INP_W); // go left KW, down 1
             }
-            window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
-          }
+            window_incr(in, -KH*INP_W + INP_H*INP_W); // go up KH, channel 1
+          } // C
 
           if (IS_RELU) {
             res = std::max(res, 0.0f);
           }
           window_writeincr(out, res);
-          window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
-          weightIdx -= C*K*K;
+          window_incr(in, -C_PER_M*INP_H*INP_W + STEP_W); // go channel -C_PER_M, right STEP_W
+          weightIdx -= C*KH*KW;
         } // W
+
+        window_incr(out, OUT_W_PAD - OUT_W);
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
-      weightIdx += C*K*K;
+      weightIdx += C*KH*KW;
+      if (m % C_PER_M == 0) {
+        window_incr(in, C_PER_M*INP_H*INP_W); // next C_PER_M channels
+      }
     } // M
   } // B
 
@@ -112,9 +119,9 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
   wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
 #endif
 
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
@@ -137,8 +144,8 @@ void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::
   // BHWM
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) {// computes one output channel
-      for (int h = 0; h < OUT_W; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
-        for (int w = 0; w < OUT_W; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W/8,) { // computes 8 output channel pixels
+      for (int h = 0; h < OUT_W_PAD; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
+        for (int w = 0; w < OUT_W_PAD; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD/8,) { // computes 8 output channel pixels
           
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           v8float acc2 = aie::broadcast<float, 8>(bias[m]);
@@ -192,13 +199,13 @@ void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::
             acc2 = fpmax(acc2, zeros, 0, 0x76543210);
           }
           window_write(out, acc1);
-          window_incr(out, OUT_W);
+          window_incr(out, OUT_W_PAD);
           window_write(out, acc2);
-          window_incr(out, -OUT_W+8);
+          window_incr(out, -OUT_W_PAD+8);
 
         } // W
-        window_incr(in, 2*INP_W-OUT_W); // go left OUT_W, go down 1
-        window_incr(out, OUT_W);
+        window_incr(in, 2*INP_W-OUT_W_PAD); // go left OUT_W_PAD, go down 1
+        window_incr(out, OUT_W_PAD);
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -OUT_H*INP_W); // go up OUT_H
@@ -211,9 +218,9 @@ void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
@@ -234,7 +241,7 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) {// computes one output channel
       for (int h = 0; h < OUT_H; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
-        for (int w = 0; w < OUT_W; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W/8,) { // computes 8 output channel pixels
+        for (int w = 0; w < OUT_W_PAD; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD/8,) { // computes 8 output channel pixels
           
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           v8float acc2 = aie::broadcast<float, 8>(bias[m]);
@@ -285,14 +292,14 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
             acc2 = fpmax(acc2, zeros, 0, 0x76543210);
           }
           window_write(out, acc1);
-          window_incr(out, OUT_W);
+          window_incr(out, OUT_W_PAD);
           window_write(out, acc2);
-          window_incr(out, -OUT_W+8);
+          window_incr(out, -OUT_W_PAD+8);
           wvec -= C*5;
 
         } // W
-        window_incr(in, 2*INP_W-OUT_W); // go left OUT_W, go down 1
-        window_incr(out, OUT_W);
+        window_incr(in, 2*INP_W-OUT_W_PAD); // go left OUT_W_PAD, go down 1
+        window_incr(out, OUT_W_PAD);
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -OUT_H*INP_W); // go up OUT_H
@@ -306,9 +313,9 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
@@ -328,7 +335,7 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_REL
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { // computes one output channel
       for (int h = 0; h < OUT_H; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
-        for (int w = 0; w < OUT_W; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W/8,) { // computes 8 output channel pixels
+        for (int w = 0; w < OUT_W_PAD; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD/8,) { // computes 8 output channel pixels
           
           v8float acc1 = aie::broadcast<float, 8>(*b_ptr);
           v8float acc2 = aie::broadcast<float, 8>(*b_ptr);
@@ -366,13 +373,13 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_REL
             acc2 = fpmax(acc2, zeros, 0, 0x76543210);
           }
           window_write(out, acc1);
-          window_incr(out, OUT_W);
+          window_incr(out, OUT_W_PAD);
           window_write(out, acc2);
-          window_incr(out, -OUT_W+8);
+          window_incr(out, -OUT_W_PAD+8);
 
         } // W
-        window_incr(in, -OUT_W*STEP_W + 2*INP_W*STEP_H); // go left OUT_W*STEP_W, go down 2*STEP_H
-        window_incr(out, OUT_W);
+        window_incr(in, -OUT_W_PAD*STEP_W + 2*INP_W*STEP_H); // go left OUT_W_PAD*STEP_W, go down 2*STEP_H
+        window_incr(out, OUT_W_PAD);
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
@@ -387,21 +394,23 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_REL
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
 ) {
   PROFILE_HEADER2;
   
+  // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1, C_PER_M, H, W)
+  int C_PER_M = C / GROUP;
   int weightIdx;
 
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
 
-      for (int i = 0; i < C*K*K; i++) {
+      for (int i = 0; i < C/GROUP*KH*KW; i++) {
         ckk_row[i] = readincr(weights);
       }
       
@@ -411,27 +420,35 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
           float res = bias[m];
           weightIdx = 0;
           
-          for (int c = 0; c < C; c++) {
-            for (int p = 0; p < K; p++) {
-              for (int q = 0; q < K; q++) {
+          for (int c = 0; c < C_PER_M; c++) {
+            for (int p = 0; p < KH; p++) {
+              for (int q = 0; q < KW; q++) {
                 float a = window_readincr(in);
                 res += a * ckk_row[weightIdx];
                 weightIdx++;
               }
-              window_incr(in, -K+INP_W); // go left K, down 1
+              window_incr(in, -KW+INP_W); // go left KW, down 1
             }
-            window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
-          }
+            window_incr(in, -KH*INP_W + INP_H*INP_W); // go up KH, channel 1
+          } // C
 
-          if (IS_RELU)
+          if (IS_RELU) {
             if (res < 0) res = 0;
+          }
           writeincr(out, res);
-          window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
+          window_incr(in, -C_PER_M*INP_H*INP_W + STEP_W); // go channel -C_PER_M, right STEP_W
         } // W
+
+        for (int w = 0; w < OUT_W_PAD - OUT_W; w++) {
+          writeincr(out, 0);
+        }
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
+      if (m % C_PER_M == 0) {
+        window_incr(in, C_PER_M*INP_H*INP_W); // next C_PER_M channels
+      }
     } // M
   } // B
 
@@ -440,9 +457,9 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, 
 
 
 // double acc require store in cache and write where VLIW underutilized
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
@@ -468,7 +485,7 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
       w_ptr -= C*12;
       
       for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_W; w+=8/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=8/STEP_W) {
         
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           
@@ -505,7 +522,7 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
             writeincr_v4(out, ext_v(acc1, 1));
           }
         } // W
-        window_incr(in, -OUT_W*STEP_W+INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
+        window_incr(in, -OUT_W_PAD*STEP_W+INP_W*STEP_H); // go left OUT_W_PAD*STEP_W, go down STEP_H
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
@@ -519,9 +536,9 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, 
 
 
 // stride > 1 have no reuse of data down the row
-template <int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, 
-          int B, int C, int M, int K, int IS_RELU>
-void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
@@ -550,7 +567,7 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C
         
         v8float *out_row_ptr = (v8float *) out_row;
         
-        for (int w = 0; w < OUT_W; w+=8/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=8/STEP_W) {
         
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           v8float acc2 = aie::broadcast<float, 8>(bias[m]);
@@ -592,10 +609,10 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C
           *out_row_ptr = acc2; out_row_ptr++;
         } // W
 
-        window_incr(in, -OUT_W*STEP_W+2*INP_W*STEP_H); // go left OUT_W*STEP_W, go down 2*STEP_H
+        window_incr(in, -OUT_W_PAD*STEP_W+2*INP_W*STEP_H); // go left OUT_W_PAD*STEP_W, go down 2*STEP_H
         
         v4float *_out_row_ptr = (v4float *) out_row;
-        for (int i = 0; i < OUT_W; i+=4) {
+        for (int i = 0; i < OUT_W_PAD; i+=4) {
           writeincr_v4(out, *_out_row_ptr); _out_row_ptr++;
         }
 
