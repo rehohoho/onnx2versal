@@ -2,13 +2,16 @@
 #include "kernel_utils.h"
 
 
+#define DEQUANTIZE_LINEAR_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%d,%d,%d>", \
+    filter_name, INP_H, INP_W, INP_W_PAD);
+
 template <int B, int INP_W, int OUT_W>
 void DequantizeLinearScalar<B, INP_W, OUT_W>::filter(
 	input_window<int8_t>* in,
   output_window<float>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running DequantizeLinearScalar<%d,%d,%d>\n", B, INP_W, OUT_W));
+  PROFILE_HEADER2;
 
   for (int i = 0; i < B; i++) {
     for (int j = 0; j < OUT_W; j++) {
@@ -19,7 +22,7 @@ void DequantizeLinearScalar<B, INP_W, OUT_W>::filter(
     window_incr(in, OUT_W - INP_W);
   }
 
-  PROFILE_FOOTER;
+  DEQUANTIZE_LINEAR_PROFILE_FOOTER("DequantizeLinearScalar");
 }
 
 
@@ -39,8 +42,7 @@ void DequantizeLinear<B, INP_W, OUT_W>::filter(
 	input_window<int8_t>* in,
   output_window<float>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running DequantizeLinear<%d,%d,%d>\n", B, INP_W, OUT_W));
+  PROFILE_HEADER2;
   
   aie::accum<acc48, 16> acc_shift;
   acc_shift.from_vector(aie::broadcast<int32_t, 16>(ishift), 0);
@@ -77,5 +79,5 @@ void DequantizeLinear<B, INP_W, OUT_W>::filter(
     
   }
 
-  PROFILE_FOOTER;
+  DEQUANTIZE_LINEAR_PROFILE_FOOTER("DequantizeLinear");
 }

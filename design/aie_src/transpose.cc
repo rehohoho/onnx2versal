@@ -2,13 +2,16 @@
 #include "kernel_utils.h"
 
 
+#define TRANSPOSE_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), B, H, W, C);
+
 template <typename TT, int B, int H, int W, int C>
 void TransposeScalarBHWC2BCHW<TT, B, H, W, C>::filter(
 	input_window<TT>* in,      // BHWC (1x4x4x16)
   output_window<TT>* out     // BCHW (1x16x4x4)
 ) {
-  PROFILE_HEADER(printf(
-    "Running TransposeScalarBHWC2BCHW::filter<%s,%d,%d,%d,%d>\n", typeid(TT).name(), B, H, W, C));
+  PROFILE_HEADER2;
 
   for (int b = 0; b < B; b++) {
     for (int h = 0; h < H; h++) {
@@ -25,5 +28,5 @@ void TransposeScalarBHWC2BCHW<TT, B, H, W, C>::filter(
     }
   }
 
-  PROFILE_FOOTER;
+  TRANSPOSE_PROFILE_FOOTER("TransposeScalarBHWC2BCHW");
 }

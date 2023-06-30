@@ -511,6 +511,7 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
     } // M
   } // B
+#undef WRITE_OUT
 
   CONV_PROFILE_FOOTER("QLinearConvScalarStream");
 }

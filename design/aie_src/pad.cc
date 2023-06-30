@@ -82,7 +82,6 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 	input_stream<TT>* restrict in,
   output_stream<TT>* restrict out
 ) {
-  printf("Pad2DStreamInt8<%s,%d,%d,%d,%d,%d,%d,%d>", typeid(TT).name(), B, INP_H, INP_W, H0, H1, W0, W1);
   PROFILE_HEADER2;
   
   v32int16 data = aie::broadcast<int16_t,32>(pad_value);
@@ -104,11 +103,11 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
   } \
   data_offset = (data_offset + len) & 0xf;
 
-  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B, B) {
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     WRITE_PAD(out, H0*OUT_W+W0);
     
-    for (int h = 0; h < INP_H; h++) chess_prepare_for_pipelining chess_loop_range(INP_W, INP_W) {
-      for (int w = 0; w < INP_W; w+=16) chess_prepare_for_pipelining chess_loop_range(INP_W/16, INP_W/16) {
+    for (int h = 0; h < INP_H; h++) chess_prepare_for_pipelining chess_loop_range(INP_W,) {
+      for (int w = 0; w < INP_W; w+=16) chess_prepare_for_pipelining chess_loop_range(INP_W/16,) {
         // shuffle remaining data to end, update front, shuffle rotate so data starts with remaining data
         data = aie::shuffle_up((aie::vector<int16_t,32>) data, 16 - data_offset);
         data = upd_w(data, 0, unpack(getb_wss(0)));
