@@ -5,11 +5,11 @@
 
 
 #define POOL_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d>", \
-    filter_name, INP_H, INP_W, OUT_H, OUT_W, B, C);
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW);
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
-void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
   input_window<TT>* in,      // BHWC (1x24x24x6)
   output_window<TT>* out     // BPQC (1x12x12x6)
 ) {
@@ -18,26 +18,26 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
   const TT min = std::numeric_limits<TT>::lowest();
 
   for (int b = 0; b < B; b++) {
-    for (int h = 0; h < INP_H/K; h++) {
+    for (int h = 0; h < OUT_H; h++) {
       for (int w = 0; w < OUT_W; w++) {
 
         TT arr[C] = {min};
-        for (int p = 0; p < K; p++) {
-          for (int q = 0; q < K; q++) {
+        for (int p = 0; p < KH; p++) {
+          for (int q = 0; q < KW; q++) {
             for (int c = 0; c < C; c++) {
               TT a = window_readincr(in);
               arr[c] = (arr[c] < a) ? a : arr[c];
             }
           }
-          window_incr(in, C*(-K+INP_W)); // go back K, go down 1
+          window_incr(in, C*(-KW+INP_W)); // go back KW, go down 1
         }
         
         for (int c = 0; c < C; c++)
           window_writeincr(out, arr[c]);
 
-        window_incr(in, C*(-K*INP_W + K)); // go up K, go right K (next pos)
+        window_incr(in, C*(-KH*INP_W + KW)); // go up KH, go right KW (next pos)
       }
-      window_incr(in, C*(-OUT_W*K + K*INP_W)); // go down K, go left OUT_W*K, account for padding
+      window_incr(in, C*(-OUT_W*KW + KH*INP_W)); // go down KH, go left OUT_W*KW, account for padding
     }
   }
 
@@ -45,8 +45,8 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
 }
 
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
-void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
   input_window<TT>* in,      // BCHW (1x6x24x24)
   output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {
@@ -56,21 +56,21 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
 
   for (int b = 0; b < B; b++) {
     for (int c = 0; c < C; c++) {
-      for (int h = 0; h < INP_H/K; h++) {
+      for (int h = 0; h < OUT_H; h++) {
         for (int w = 0; w < OUT_W; w++) {
 
           TT c = min;
-          for (int p = 0; p < K; p++) {
-            for (int q = 0; q < K; q++) {
+          for (int p = 0; p < KH; p++) {
+            for (int q = 0; q < KW; q++) {
               TT a = window_readincr(in);
               c = (a > c) ? a : c;
             }
-            window_incr(in, -K+INP_W); // left K, down 1
+            window_incr(in, -KW+INP_W); // left KW, down 1
           }
-          window_incr(in, -K*INP_W + K); // up K, right K
+          window_incr(in, -KH*INP_W + KW); // up KH, right KW
           window_writeincr(out, c);
         } // W
-        window_incr(in, -OUT_W*K  + K*INP_W); // down K, left OUT_W*K , account for padding
+        window_incr(in, KH*INP_W - OUT_W*KW); // left OUT_W*KW, down KH
       } // H
     } // C
   } // B
@@ -79,8 +79,8 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
 }
 
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
-void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
   input_window<float>* in_window,      // BCHW (1x6x24x24)
   output_window<float>* out_window     // BCPQ (1x6x12x12)
 ) {
@@ -144,8 +144,8 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
  * 
  * 128 int16 max
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
-void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
   input_window<int8_t>* in_window,      // BCHW (1x6x24x24)
   output_window<int8_t>* out_window     // BCPQ (1x6x12x12)
 ) {
@@ -200,14 +200,14 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
 }
 
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
-void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
   input_window<TT>* in,      // BCHW (1x6x24x24)
   output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {
   PROFILE_HEADER2;
 
-  TT div_factor = inv(K*K);
+  TT div_factor = inv(KH*KW);
 
   for (int b = 0; b < B; b++) {
     for (int c = 0; c < C; c++) {
@@ -215,17 +215,17 @@ void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>::filter(
         for (int w = 0; w < OUT_W; w++) {
 
           TT sum = 0;
-          for (int p = 0; p < K; p++) {
-            for (int q = 0; q < K; q++) {
+          for (int p = 0; p < KH; p++) {
+            for (int q = 0; q < KW; q++) {
               TT a = window_readincr(in);
               sum += a;
             }
-            window_incr(in, -K+INP_W); // left K, down 1
+            window_incr(in, -KW+INP_W); // left KW, down 1
           }
-          window_incr(in, -K*INP_W + K); // up K, right K
+          window_incr(in, -KH*INP_W + KW); // up KH, right KW
           window_writeincr(out, sum * div_factor);
         } // W
-        window_incr(in, -OUT_W*K  + K*INP_W); // down K, left OUT_W*K , account for padding
+        window_incr(in, KH*INP_W - OUT_W*KW); // left OUT_W*KW, down KH
       } // H
     } // C
   } // B
