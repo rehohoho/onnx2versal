@@ -250,7 +250,10 @@ class Parser:
         self.register_port([node.input[0]], [node.output[0]], op)
 
       elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
-        if len(node.output[0]) != 0 and np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
+        if len(self.op_list) == 0:
+          print(f"Adding output output {node.output[0]} output")
+          self.nodeout_2_adfport[node.output[0]] = "plin[0].out[0]"
+        elif len(node.output[0]) != 0 and np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
           print(f"Found matching output {node.output[0]} and {op.name} output")
           self.nodeout_2_adfport[node.output[0]] = f"{op.name}.pout[0]"
           self.op_list[-1].disable_output_pad()
