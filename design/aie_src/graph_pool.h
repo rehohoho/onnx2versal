@@ -3,6 +3,8 @@
 
 #include <adf.h>
 #include "pool.h"
+#include "graph_split.h"
+#include "graph_concat.h"
 
 
 /**
@@ -29,8 +31,8 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], B*INP_H*INP_W*C*TTSIZE}
- * @connect{pout[0], B*OUT_H*OUT_W*C*TTSIZE}
+ * @connect{pin[0], B*INP_H*INP_W*C*sizeof(TT)}
+ * @connect{pout[0], B*OUT_H*OUT_W*C*sizeof(TT)}
  * @endconnections
  */
 template <template<typename, int, int, int, int, int, int, int, int> class POOL,
@@ -38,8 +40,6 @@ template <template<typename, int, int, int, int, int, int, int, int> class POOL,
 class PoolGraph : public adf::graph {
 
   private:
-    static constexpr int TTSIZE = sizeof(TT);
-    static constexpr int K = INP_H / OUT_H;
     adf::kernel k[1];
     std::string id;
 
@@ -53,8 +53,48 @@ class PoolGraph : public adf::graph {
       adf::headers(k[0]) = {"pool.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<B*INP_H*INP_W*C*TTSIZE>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<B*OUT_H*OUT_W*C*TTSIZE>> (k[0].out[0], pout[0]);
+      adf::connect<adf::window<B*INP_H*INP_W*C*sizeof(TT)>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<B*OUT_H*OUT_W*C*sizeof(TT)>> (k[0].out[0], pout[0]);
+    }
+
+};
+
+
+template <
+  template<typename, int, int, int, int> class SPLIT,
+  template<typename, int, int, int, int, int, int, int, int> class POOL,
+  template<typename, int, int, int, int> class CONCAT, 
+  int CCHUNK,
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+class PoolChunkCGraph : public adf::graph {
+
+  private:
+    typedef SplitGraph<SPLIT, TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0> mSplitGraph;
+    mSplitGraph split_graph;
+    static constexpr int LCNT = mSplitGraph::LCNT;
+    ConcatStreamGraph<CONCAT, TT, LCNT, B, CCHUNK*OUT_H*OUT_W, C*OUT_H*OUT_W> concat_graph;
+
+    adf::kernel k[LCNT];
+    std::string id;
+
+  public:
+    adf::port<input> pin[1];
+    adf::port<output> pout[1];
+
+    PoolChunkCGraph() { 
+      adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
+
+      for (int i = 0; i < LCNT; i++) {
+        k[i] = adf::kernel::create_object<POOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, CCHUNK, KH, KW>>();
+        adf::source(k[i]) = "pool.cc";
+        adf::headers(k[i]) = {"pool.h"};
+        adf::runtime<ratio>(k[i]) = 0.6;
+        
+        adf::connect<adf::window<B*CCHUNK*INP_H*INP_W*sizeof(TT)>> (split_graph.pout[i], k[i].in[0]);
+        adf::connect<adf::window<B*CCHUNK*OUT_H*OUT_W*sizeof(TT)>> (k[i].out[0], concat_graph.pin[i]);
+      }
+
+      adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
     }
 
 };
