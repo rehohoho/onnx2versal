@@ -76,6 +76,45 @@ class ConvReluChunkHGraphTest : public adf::graph {
 };
 
 
+template <
+  template<typename, int, int, int, int> class SPLIT,
+  template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int HCHUNK,
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU,
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
+class ConvReluChunkHStreamGraphTest : public adf::graph {
+
+  private:
+    typedef ConvReluChunkHStreamGraph<SPLIT, CONV, CONCAT, HCHUNK, 
+                                      INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
+                                      B, C, M, KH, KW, GROUP, IS_RELU,
+                                      H0, H1, W0, W1> Graph;
+    Graph g;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[1];
+    adf::input_gmio gmio_w;
+
+    ConvReluChunkHStreamGraphTest(
+      const std::string& id,
+      std::vector<float> bias,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT = "conv_out.txt"
+    ): g(bias) { 
+      plin[0] = adf::input_plio::create("plin0_conv"+id+"_input", PLIO64_ARG(INP_TXT));
+      plout[0] = adf::output_plio::create("plout0_conv"+id+"_output", PLIO64_ARG(OUT_TXT));
+
+      gmio_w = adf::input_gmio::create("gmio0_gemm"+id+"_w", 64, 1000);
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream> (gmio_w.out[0], g.pin[1]);
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+    }
+};
+
+
 // instance to be compiled and used in host within xclbin
 const int INP_H = 24;
 const int INP_W = 24;
@@ -128,6 +167,13 @@ ConvReluChunkHGraphTest<SplitScalar, ConvReluScalarStreamCacheCKK, ConcatScalarS
   "convReluScalarStreamCacheCKK", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarStreamCacheCKK.txt");
 
+ConvReluChunkHStreamGraphTest<SplitScalarSingleStream,ConvReluScalarStreamCacheCKK,ConcatScalarStream, HCHUNK, 
+                              INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+                              B, C, M, KH, KW, GROUP, IS_RELU,
+                              PADH, PADH, PADW, PADW> convReluScalarStreamCacheCKK_splitstream(
+  "convReluScalarStreamCacheCKK_splitstream", fpbias, 
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarStreamCacheCKKSplitstream.txt");
+
 // BHWC, ConcatFloat requires CONCAT_BLOCK=M%4=0
 ConvReluChunkMGraphTest<ConvReluScalarBHWC, ConcatScalar, 0, MCHUNK, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
@@ -161,6 +207,11 @@ int main(int argc, char ** argv) {
   convReluScalarStreamCacheCKK.gmio_w.gm2aie_nb(mckk_buf, mckk_bufsize);
   adfCheck(convReluScalarStreamCacheCKK.run(ITER_CNT), "run convReluScalarStreamCacheCKK");
 	adfCheck(convReluScalarStreamCacheCKK.end(), "end convReluScalarStreamCacheCKK");
+  
+  adfCheck(convReluScalarStreamCacheCKK_splitstream.init(), "init convReluScalarStreamCacheCKK_splitstream");
+  convReluScalarStreamCacheCKK_splitstream.gmio_w.gm2aie_nb(mckk_buf, mckk_bufsize);
+  adfCheck(convReluScalarStreamCacheCKK_splitstream.run(ITER_CNT), "run convReluScalarStreamCacheCKK_splitstream");
+	adfCheck(convReluScalarStreamCacheCKK_splitstream.end(), "end convReluScalarStreamCacheCKK_splitstream");
 
   // BHWC
   adfCheck(convReluScalarBHWC.init(), "init convReluScalarBHWC");

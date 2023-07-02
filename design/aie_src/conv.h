@@ -77,6 +77,7 @@ class ConvReluScalarBCHW {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
     alignas(32) float (&weights)[M*KH*KW*C];
     alignas(32) float (&bias)[M];
 
@@ -235,6 +236,7 @@ class ConvReluScalarStreamCacheCKK {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[C/GROUP*KH*KW];
 

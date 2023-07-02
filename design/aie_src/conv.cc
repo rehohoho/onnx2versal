@@ -63,8 +63,6 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
 ) {
   PROFILE_HEADER2;
 
-  // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1, C_PER_M, H, W)
-  int C_PER_M = C / GROUP;
   int weightIdx = 0;
 
   // BHWM
@@ -403,8 +401,6 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W
 ) {
   PROFILE_HEADER2;
   
-  // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1, C_PER_M, H, W)
-  int C_PER_M = C / GROUP;
   int weightIdx;
 
   for (int b = 0; b < B; b++) {
