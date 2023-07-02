@@ -81,7 +81,7 @@ class ConcatStreamGraph : public adf::graph {
       adf::kernel new_k = adf::kernel::create_object<CONCAT_STREAM<TT, H, mINP_W1, mINP_W2, mOUT_W>>();
       adf::source(new_k) = "concat.cc";
       adf::headers(new_k) = {"concat.h"};
-      adf::runtime<ratio>(new_k) = 0.1;
+      adf::runtime<ratio>(new_k) = 0.6;
       return new_k;
     }
 

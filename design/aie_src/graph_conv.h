@@ -500,15 +500,19 @@ class ConvReluChunkHStreamGraph : public adf::graph {
         adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;
         adf::samples_per_iteration(k[i].out[0]) = B*M*HCHUNK_OUT*OUT_W_PAD;
 
-        if (i > 0) {
+        if ((i & 0x1) != 0) {
           adf::location<adf::kernel>(k[i]) =
             adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=0});
         }
         adf::location<adf::kernel>(split[i]) = 
            adf::location<adf::kernel>(k[i]) + adf::relative_offset({.col_offset=0, .row_offset=-1});        
+        
         adf::location_constraint kTilePos = adf::location<adf::kernel>(k[i]);
         adf::location<adf::parameter>(k[i].param[0]) = kTilePos; // may bust tiles adjacent to split
         adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
+        adf::location<adf::stack>(k[i]) = kTilePos;
+        adf::location<adf::stack>(split[i]) = kTilePos;
+        
         adf::location_constraint sTilePos = adf::location<adf::kernel>(split[i]);
         adf::location<adf::buffer>(k[i].in[0]) = sTilePos; // may bust tiles adjacent to split
         adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0)};
@@ -532,6 +536,11 @@ class ConvReluChunkHStreamGraph : public adf::graph {
       } else {
         for (int i = 0; i < LCNT; i++)
           adf::connect<adf::stream> (pin[0], split[i].in[0]);
+      }
+
+      for (int i = 0; i < concat_graph.k1.size(); i++) {
+        adf::location<adf::kernel>(concat_graph.k1[i]) = 
+          adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
       }
     }
 };
