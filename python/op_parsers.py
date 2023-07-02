@@ -271,55 +271,54 @@ class ConvOp(OpParser):
     PAD_W = self.INP_W + self.W0 + self.W1
     conv_in_bytes = self.B*self.C*PAD_H*PAD_W*tin.dtype.itemsize
     
-    if conv_in_bytes + self.B*self.C*(self.KH-1)*7*PAD_W*tin.dtype.itemsize > MAX_PARAM_SIZE * 8:
+    if conv_in_bytes + self.B*self.C*(self.KH-1)*7*PAD_W*tin.dtype.itemsize > TILE_SIZE * 8:
       raise NotImplementedError(f"No Conv implementation for padded input size {conv_in_bytes}")
 
     PAD_W_VEC = (PAD_W + (tin.dtype.itemsize-1))//tin.dtype.itemsize*tin.dtype.itemsize
 
-    if conv_in_bytes <= MAX_PARAM_SIZE:
 
-      if tw.nbytes <= MAX_PARAM_SIZE * 8 and tout.nbytes <= MAX_PARAM_SIZE * 8:
-        
-        kernel = "ConvReluScalarBCHW"
-        if self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 5 and self.STEP_H == self.STEP_W == 1 and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-          kernel = "Conv5x5on8ReluBCHW"
-          tw = pad_lastdim(tw, "Conv weights", 8)
-          self.W1 = PAD_W_VEC - self.INP_W - self.W0
-        elif self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 3 and self.STEP_H == self.STEP_W == 1 and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-          kernel = "Conv3x3on12ReluBCHW"
-          tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
-          self.W1 = PAD_W_VEC - self.INP_W - self.W0
-        
-        self.argname_2_tensor[f"{self.name}_w"] = tw
-        self.argname_2_tensor[f"{self.name}_b"] = tbias
-        
-        if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
-          self.kernel_type = f"ConvReluGraph<{kernel},{self.get_conv_targs()}"
-
-        else:
-          chunkSize = min(
-            MAX_PARAM_SIZE//(tw.nbytes//self.M), 
-            MAX_PARAM_SIZE//( tout.nbytes//self.M), 
-            self.M)
-          if chunkSize > 8:
-            chunkSize = chunkSize //8*8
-          concat_w = chunkSize * self.OUT_H * self.OUT_W_PAD
-          concat_block = self.M * self.OUT_H * self.OUT_W_PAD
-          concat = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
-          self.kernel_type = f"ConvReluChunkMGraph<{kernel},{concat},{1},{chunkSize},{self.get_conv_targs()}"
+    if conv_in_bytes <= MAX_PARAM_SIZE and tw.nbytes <= MAX_PARAM_SIZE * 8 and tout.nbytes <= MAX_PARAM_SIZE * 2:
       
+      kernel = "ConvReluScalarBCHW"
+      if self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 5 and self.STEP_H == self.STEP_W == 1 and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
+        kernel = "Conv5x5on8ReluBCHW"
+        tw = pad_lastdim(tw, "Conv weights", 8)
+        self.W1 = PAD_W_VEC - self.INP_W - self.W0
+      elif self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 3 and self.STEP_H == self.STEP_W == 1 and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
+        kernel = "Conv3x3on12ReluBCHW"
+        tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
+        self.W1 = PAD_W_VEC - self.INP_W - self.W0
+      
+      self.argname_2_tensor[f"{self.name}_w"] = tw
+      self.argname_2_tensor[f"{self.name}_b"] = tbias
+      
+      if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
+        self.kernel_type = f"ConvReluGraph<{kernel},{self.get_conv_targs()}"
+
       else:
-        kernel = "ConvReluScalarStreamCacheCKK"
-        if self.KH == self.KW == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-          kernel = "Conv3x3ReluStreamCacheCKKMultiRow" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
-          tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
-          self.W1 = PAD_W_VEC - self.INP_W - self.W0
-        
-        self.gmioname_2_tensor[f"{self.name}_w"] = tw
-        self.gmio_repeats = 1
-        self.argname_2_tensor[f"{self.name}_b"] = tbias
-        
-        self.kernel_type = f"ConvReluStreamGraph<{kernel},{self.get_conv_targs()}"
+        chunkSize = min(
+          MAX_PARAM_SIZE//(tw.nbytes//self.M), 
+          MAX_PARAM_SIZE//( tout.nbytes//self.M), 
+          self.M)
+        if chunkSize > 8:
+          chunkSize = chunkSize //8*8
+        concat_w = chunkSize * self.OUT_H * self.OUT_W_PAD
+        concat_block = self.M * self.OUT_H * self.OUT_W_PAD
+        concat = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
+        self.kernel_type = f"ConvReluChunkMGraph<{kernel},{concat},{1},{chunkSize},{self.get_conv_targs()}"
+    
+    elif conv_in_bytes <= MAX_PARAM_SIZE:
+      kernel = "ConvReluScalarStreamCacheCKK"
+      if self.KH == self.KW == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
+        kernel = "Conv3x3ReluStreamCacheCKKMultiRow" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
+        tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
+        self.W1 = PAD_W_VEC - self.INP_W - self.W0
+      
+      self.gmioname_2_tensor[f"{self.name}_w"] = tw
+      self.gmio_repeats = 1
+      self.argname_2_tensor[f"{self.name}_b"] = tbias
+      
+      self.kernel_type = f"ConvReluStreamGraph<{kernel},{self.get_conv_targs()}"
     
     else:
       kernel = "ConvReluScalarStreamCacheCKK"
@@ -334,12 +333,17 @@ class ConvOp(OpParser):
       
       # HCHUNK = OUT_H' * strides + overlap, OVERLAP = K - strides
       multiplier = self.B * self.C * PAD_W * self.STEP_H * tin.dtype.itemsize
-      offset = self.B * self.C * (-(self.STEP_H - 1) + (self.KH - 1)) * PAD_W * tin.dtype.itemsize
+      OVERLAP = self.KH - self.STEP_H
+      offset = self.B * self.C * OVERLAP * PAD_W * tin.dtype.itemsize
       HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset) # ChunkH graph uses single buffer
-      HCHUNK = HCHUNK * self.STEP_H - (self.STEP_H - 1) + (self.KH - 1)
-      HCHUNK_OUT = (HCHUNK - self.KH) / self.STEP_H + 1
+      HCHUNK = HCHUNK * self.STEP_H + OVERLAP
+      HCHUNK_OUT = (HCHUNK - self.KH) // self.STEP_H + 1
+
+      LCNT = (PAD_H - HCHUNK) // (HCHUNK - OVERLAP) + 1
+      if LCNT > 8:
+        raise NotImplementedError(F"ConvReluChunkHStreamGraph of LCNT {LCNT} not implemented. Maximum LCNT = 8.")
       
-      if self.KH - self.STEP_H > 0:
+      if (self.KH - self.STEP_H) // 2 > 0:
         assert (self.INP_H+self.H0+self.H1-HCHUNK) % (HCHUNK - (self.KH - self.STEP_H)) == 0
       else:
         assert self.OUT_H % ((HCHUNK - (self.KH - self.STEP_H)) // self.STEP_H) == 0
@@ -347,7 +351,8 @@ class ConvOp(OpParser):
       concat_w = HCHUNK_OUT * self.OUT_W_PAD
       concat_block = self.OUT_H * self.OUT_W_PAD
       concat_kernel = "ConcatScalarStream"
-      self.kernel_type = f"ConvReluChunkHGraph<SplitScalar,{kernel},{concat_kernel},{HCHUNK},{self.get_conv_targs()}"
+      split_kernel = "SplitScalarSingleStream"
+      self.kernel_type = f"ConvReluChunkHStreamGraph<{split_kernel},{kernel},{concat_kernel},{HCHUNK},{self.get_conv_targs()}"
   
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
@@ -544,19 +549,25 @@ class PoolOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    graph = "PoolGraph"
     if self.reduction_mode == "max":
       kernel = "MaxpoolScalarBCHW"
       if self.INP_W % 8 == 0 and self.OUT_W % 4 == 0 and self.KH == self.KW == 2 and self.dtype == "float32":
         kernel = "Maxpool2x2FloatBCHW"
       elif self.INP_W % 16 == 0 and self.OUT_W % 8 == 0 and self.KH == self.KW == 2 and self.dtype == "int8":
         kernel = "Maxpool2x2Int8BCHW"
-      return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
     elif self.reduction_mode == "avg":
       kernel = "AvgpoolScalarBCHW"
-      return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
     else:
       raise NotImplementedError(f"Pool for reduction mode {self.reduction_mode} not implemented.")
+    
+    if self.B*self.C*self.INP_H*self.INP_W*self.dtype.itemsize <= MAX_PARAM_SIZE:
+      return f"PoolGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+    else:
+      split_kernel = "SplitScalar" if self.dtype == "float32" else "SplitInt8"
+      concat_kernel = "ConcatScalarStream" if self.dtype == "float32" else "ConcatInt8Stream"
+      CCHUNK, _ = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
+      return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
+        f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
 
 
 class QGemmOp(OpParser):

@@ -83,6 +83,8 @@ if __name__ == "__main__":
       data_basename = "_".join(res_fn.split("_")[:-1])+".txt"
       if os.path.exists(os.path.join(DATA_DIR, data_basename)):
         filepairs.append((res_fn, data_basename))
+    
+    filepairs.sort()
       
     for i, (res_fn, data_fn) in enumerate(filepairs):
       print(f"Checking {i+1}/{len(filepairs)}: {res_fn:<80} against {data_fn:<48}", end="\t")
