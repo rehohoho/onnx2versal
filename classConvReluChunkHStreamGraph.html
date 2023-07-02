@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearPoolGraph&lt; QLINEARPOOL, TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt; Class Template Reference</title>
+<title>onnx2versal: ConvReluChunkHStreamGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearPoolGraph.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classConvReluChunkHStreamGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,47 +92,47 @@ $(document).ready(function(){initNavTree('classQLinearPoolGraph.html',''); initR
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="classQLinearPoolGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearPoolGraph&lt; QLINEARPOOL, TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearPool2D.html">QLinearPool2D</a></div></div></div>
+<a href="classConvReluChunkHStreamGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">ConvReluChunkHStreamGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Single instance graph.  
- <a href="classQLinearPoolGraph.html#details">More...</a></p>
+<p>Multiinstance graph that stores biases, chunks BCHW by H dimension.  
+ <a href="classConvReluChunkHStreamGraph.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="graph__qlinearpool_8h_source.html">graph_qlinearpool.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="graph__conv_8h_source.html">graph_conv.h</a>&gt;</code></p>
 
 <p>Inherits adf::graph.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a71b5fe71483b2cab94d05b305bd8f230"><td class="memItemLeft" align="right" valign="top"><a id="a71b5fe71483b2cab94d05b305bd8f230" name="a71b5fe71483b2cab94d05b305bd8f230"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearPoolGraph</b> (float in_scale, float out_scale, int8_t in_zero, int8_t out_zero)</td></tr>
-<tr class="separator:a71b5fe71483b2cab94d05b305bd8f230"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3b94f9d6bae716d6c2454cda981a095"><td class="memItemLeft" align="right" valign="top"><a id="ae3b94f9d6bae716d6c2454cda981a095" name="ae3b94f9d6bae716d6c2454cda981a095"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ConvReluChunkHStreamGraph</b> (std::vector&lt; float &gt; bias)</td></tr>
+<tr class="separator:ae3b94f9d6bae716d6c2454cda981a095"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a1ee78be62e982c88f5d9f48b99db6684"><td class="memItemLeft" align="right" valign="top"><a id="a1ee78be62e982c88f5d9f48b99db6684" name="a1ee78be62e982c88f5d9f48b99db6684"></a>
-adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:a1ee78be62e982c88f5d9f48b99db6684"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15796404f283f9166b749260febb99f0"><td class="memItemLeft" align="right" valign="top"><a id="a15796404f283f9166b749260febb99f0" name="a15796404f283f9166b749260febb99f0"></a>
-adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a15796404f283f9166b749260febb99f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36b1dd3fb276185bcc99f55b4c49a793"><td class="memItemLeft" align="right" valign="top"><a id="a36b1dd3fb276185bcc99f55b4c49a793" name="a36b1dd3fb276185bcc99f55b4c49a793"></a>
+adf::port&lt; adf::input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [2]</td></tr>
+<tr class="separator:a36b1dd3fb276185bcc99f55b4c49a793"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53e1569f83b68562d450e960369dcd59"><td class="memItemLeft" align="right" valign="top"><a id="a53e1569f83b68562d450e960369dcd59" name="a53e1569f83b68562d450e960369dcd59"></a>
+adf::port&lt; adf::output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
+<tr class="separator:a53e1569f83b68562d450e960369dcd59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int, int, int &gt; class QLINEARPOOL, typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C&gt;<br />
-class QLinearPoolGraph&lt; QLINEARPOOL, TT, INP_H, INP_W, OUT_H, OUT_W, B, C &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int &gt; class SPLIT, template&lt; int, int, int, int, int, int, int, int, int, int, int, int, int &gt; class CONV, template&lt; typename, int, int, int, int &gt; class CONCAT, int HCHUNK, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
+class ConvReluChunkHStreamGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>design/aie_src/<a class="el" href="graph__qlinearpool_8h_source.html">graph_qlinearpool.h</a></li>
+<li>design/aie_src/<a class="el" href="graph__conv_8h_source.html">graph_conv.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQLinearPoolGraph.html">QLinearPoolGraph</a></li>
+    <li class="navelem"><a class="el" href="classConvReluChunkHStreamGraph.html">ConvReluChunkHStreamGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

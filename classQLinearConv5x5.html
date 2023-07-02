@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQLinearConv5x5.html',''); initRes
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for QLinearConv 5x5, requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], requires bias to be shifted, i.e. tbias - tw_3x3.reshape(6,-1).sum(1) * X_zero_point requires INP_W%16=0, OUT_W_PAD%16=0, QLinearConv5x5&lt;30,32,28,32,1,1,1,1,6,5&gt; total = 3513.  
+<p>Vector implementation for QLinearConv 5x5, requires data to be arranged in [a,b,c,d,e] -&gt; [0,0,0,0,a,a,b,b,c,c,d,d,e,e,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires INP_W%16=0, OUT_W_PAD%16=0, QLinearConv5x5&lt;30,32,28,32,1,1,1,1,6,5&gt; total = 3513.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>

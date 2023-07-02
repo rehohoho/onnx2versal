@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('classConvReluGraph.html',''); initResi
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classConvReluGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
+  <div class="headertitle"><div class="title">ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -107,28 +107,28 @@ $(document).ready(function(){initNavTree('classConvReluGraph.html',''); initResi
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab91958dd1cac98d443967275f9d3a02e"><td class="memItemLeft" align="right" valign="top"><a id="ab91958dd1cac98d443967275f9d3a02e" name="ab91958dd1cac98d443967275f9d3a02e"></a>
+<tr class="memitem:aab932f017d76598115c9c758a7be793d"><td class="memItemLeft" align="right" valign="top"><a id="aab932f017d76598115c9c758a7be793d" name="aab932f017d76598115c9c758a7be793d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ConvReluGraph</b> (std::vector&lt; float &gt; weights, std::vector&lt; float &gt; bias, int repeat_cnt=1)</td></tr>
-<tr class="separator:ab91958dd1cac98d443967275f9d3a02e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aab932f017d76598115c9c758a7be793d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a114181a810e53987b0e87a40786b0d61"><td class="memItemLeft" align="right" valign="top"><a id="a114181a810e53987b0e87a40786b0d61" name="a114181a810e53987b0e87a40786b0d61"></a>
+<tr class="memitem:a9e6dbe0b347e029daabfcf6828a09839"><td class="memItemLeft" align="right" valign="top"><a id="a9e6dbe0b347e029daabfcf6828a09839" name="a9e6dbe0b347e029daabfcf6828a09839"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:a114181a810e53987b0e87a40786b0d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4edf224a8d808268657942ab1de801a"><td class="memItemLeft" align="right" valign="top"><a id="aa4edf224a8d808268657942ab1de801a" name="aa4edf224a8d808268657942ab1de801a"></a>
+<tr class="separator:a9e6dbe0b347e029daabfcf6828a09839"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a407ddec2200468463ba458eaee0e21b6"><td class="memItemLeft" align="right" valign="top"><a id="a407ddec2200468463ba458eaee0e21b6" name="a407ddec2200468463ba458eaee0e21b6"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:aa4edf224a8d808268657942ab1de801a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a407ddec2200468463ba458eaee0e21b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a413cbc6b08513de48df0832163e3a60b"><td class="memItemLeft" align="right" valign="top"><a id="a413cbc6b08513de48df0832163e3a60b" name="a413cbc6b08513de48df0832163e3a60b"></a>
-static constexpr int&#160;</td><td class="memItemRight" valign="bottom"><b>OUT_H</b> = (PAD_H - K) / STEP_H + 1</td></tr>
-<tr class="separator:a413cbc6b08513de48df0832163e3a60b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c60ae75603a1f512d169955f86c5f46"><td class="memItemLeft" align="right" valign="top"><a id="a9c60ae75603a1f512d169955f86c5f46" name="a9c60ae75603a1f512d169955f86c5f46"></a>
+static constexpr int&#160;</td><td class="memItemRight" valign="bottom"><b>OUT_H</b> = (PAD_H - KH) / STEP_H + 1</td></tr>
+<tr class="separator:a9c60ae75603a1f512d169955f86c5f46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int, int, int, int, int &gt; class CONV, int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K, int IS_RELU, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
-class ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int, int, int, int, int, int, int, int &gt; class CONV, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
+class ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>

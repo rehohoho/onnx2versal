@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('classConvReluStreamGraph.html',''); in
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classConvReluStreamGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
+  <div class="headertitle"><div class="title">ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -107,28 +107,28 @@ $(document).ready(function(){initNavTree('classConvReluStreamGraph.html',''); in
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a394f6ba7900a3180bd9c41bff60984bc"><td class="memItemLeft" align="right" valign="top"><a id="a394f6ba7900a3180bd9c41bff60984bc" name="a394f6ba7900a3180bd9c41bff60984bc"></a>
+<tr class="memitem:a959d5ee85ed87347e6ea7803a873ae51"><td class="memItemLeft" align="right" valign="top"><a id="a959d5ee85ed87347e6ea7803a873ae51" name="a959d5ee85ed87347e6ea7803a873ae51"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ConvReluStreamGraph</b> (std::vector&lt; float &gt; bias, int repeat_cnt=1)</td></tr>
-<tr class="separator:a394f6ba7900a3180bd9c41bff60984bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a959d5ee85ed87347e6ea7803a873ae51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a6a3da421d050b7fd3fcf52122f673eef"><td class="memItemLeft" align="right" valign="top"><a id="a6a3da421d050b7fd3fcf52122f673eef" name="a6a3da421d050b7fd3fcf52122f673eef"></a>
+<tr class="memitem:a667fb588c11fc2b6143199982877756c"><td class="memItemLeft" align="right" valign="top"><a id="a667fb588c11fc2b6143199982877756c" name="a667fb588c11fc2b6143199982877756c"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [2]</td></tr>
-<tr class="separator:a6a3da421d050b7fd3fcf52122f673eef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01035530805f97b1e20bb6aefa40ef1f"><td class="memItemLeft" align="right" valign="top"><a id="a01035530805f97b1e20bb6aefa40ef1f" name="a01035530805f97b1e20bb6aefa40ef1f"></a>
+<tr class="separator:a667fb588c11fc2b6143199982877756c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0deebb324d78476078394a53c531e86b"><td class="memItemLeft" align="right" valign="top"><a id="a0deebb324d78476078394a53c531e86b" name="a0deebb324d78476078394a53c531e86b"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a01035530805f97b1e20bb6aefa40ef1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a0deebb324d78476078394a53c531e86b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a4327b221d791868ccdef28b572dee30f"><td class="memItemLeft" align="right" valign="top"><a id="a4327b221d791868ccdef28b572dee30f" name="a4327b221d791868ccdef28b572dee30f"></a>
-static constexpr int&#160;</td><td class="memItemRight" valign="bottom"><b>OUT_H</b> = (PAD_H - K) / STEP_H + 1</td></tr>
-<tr class="separator:a4327b221d791868ccdef28b572dee30f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8350057df302c0555713234998007784"><td class="memItemLeft" align="right" valign="top"><a id="a8350057df302c0555713234998007784" name="a8350057df302c0555713234998007784"></a>
+static constexpr int&#160;</td><td class="memItemRight" valign="bottom"><b>OUT_H</b> = (PAD_H - KH) / STEP_H + 1</td></tr>
+<tr class="separator:a8350057df302c0555713234998007784"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int, int, int, int, int &gt; class CONV, int INP_H, int INP_W, int OUT_W, int STEP_H, int STEP_W, int B, int C, int M, int K, int IS_RELU, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
-class ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int, int, int, int, int, int, int, int, int, int &gt; class CONV, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
+class ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>

@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQLinearAvgpoolScalarBCHW.html',''
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for BCHW avgpool, QLinearAvgpoolScalarBCHW::filter&lt;24,32,16,1,6&gt; total = 15766.  
+<p>Scalar implementation for BCHW avgpool, requires B*C*OUT_H*OUT_W % 16 == 0 QLinearAvgpoolScalarBCHW::filter&lt;24,32,16,1,6&gt; total = 17365 (output_window 15766)  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearpool_8h_source.html">qlinearpool.h</a>&gt;</code></p>
@@ -107,9 +107,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acb1d1508071a9fe404336f184f81dc97"><td class="memItemLeft" align="right" valign="top"><a id="acb1d1508071a9fe404336f184f81dc97" name="acb1d1508071a9fe404336f184f81dc97"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>QLinearAvgpoolScalarBCHW</b> (float in_scale, float out_scale, int8_t in_zero, int8_t out_zero)</td></tr>
 <tr class="separator:acb1d1508071a9fe404336f184f81dc97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cc07eb55a0a88c49844b7dee3f0a526"><td class="memItemLeft" align="right" valign="top"><a id="a3cc07eb55a0a88c49844b7dee3f0a526" name="a3cc07eb55a0a88c49844b7dee3f0a526"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a3cc07eb55a0a88c49844b7dee3f0a526"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57728d505b9222e456b53b6776caaaa9"><td class="memItemLeft" align="right" valign="top"><a id="a57728d505b9222e456b53b6776caaaa9" name="a57728d505b9222e456b53b6776caaaa9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a57728d505b9222e456b53b6776caaaa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

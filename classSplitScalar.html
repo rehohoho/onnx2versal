@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classSplitScalar.html',''); initResiza
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for 32-bit stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 SplitScalar&lt;f,3,10,64,22&gt;::filter3 takes 9505 cycles <a class="el" href="classSplitScalar.html" title="Scalar implementation for 32-bit stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE ==...">SplitScalar</a>&lt;f,10,64,31,-1&gt;filter2 takes 9547 cycles.  
+<p>Scalar implementation for 32-bit stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP &gt; 0, requires OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W, if OVERLAP &lt;= 0, SplitScalar&lt;f,3,10,64,22&gt;::filter3 takes 9505 cycles <a class="el" href="classSplitScalar.html" title="Scalar implementation for 32-bit stream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE ==...">SplitScalar</a>&lt;f,10,64,31,-1&gt;filter2 takes 9547 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="split_8h_source.html">split.h</a>&gt;</code></p>

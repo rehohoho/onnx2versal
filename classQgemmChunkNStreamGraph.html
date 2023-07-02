@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QgemmMkknChunkGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt; Class Template Reference</title>
+<title>onnx2versal: QgemmChunkNStreamGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQgemmMkknChunkGraph.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQgemmChunkNStreamGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -93,8 +93,8 @@ $(document).ready(function(){initNavTree('classQgemmMkknChunkGraph.html',''); in
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
-<a href="classQgemmMkknChunkGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QgemmMkknChunkGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a></div></div></div>
+<a href="classQgemmChunkNStreamGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QgemmChunkNStreamGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -105,10 +105,10 @@ $(document).ready(function(){initNavTree('classQgemmMkknChunkGraph.html',''); in
 
 <p>Inherits adf::graph.</p>
 <div class="dynheader">
-Collaboration diagram for QgemmMkknChunkGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt;:</div>
+Collaboration diagram for QgemmChunkNStreamGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt;:</div>
 <div class="dyncontent">
-<div class="center"><img src="classQgemmMkknChunkGraph__coll__graph.png" border="0" usemap="#aQgemmMkknChunkGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map" alt="Collaboration graph"/></div>
-<map name="aQgemmMkknChunkGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map" id="aQgemmMkknChunkGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map">
+<div class="center"><img src="classQgemmChunkNStreamGraph__coll__graph.png" border="0" usemap="#aQgemmChunkNStreamGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map" alt="Collaboration graph"/></div>
+<map name="aQgemmChunkNStreamGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map" id="aQgemmChunkNStreamGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_01_4_coll__map">
 <area shape="rect" title="Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,..." alt="" coords="5,124,219,180"/>
 <area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="27,5,197,61"/>
 <area shape="poly" title=" " alt="" coords="115,76,115,123,109,123,109,76"/>
@@ -117,30 +117,30 @@ Collaboration diagram for QgemmMkknChunkGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a355ba86200cc697045cfb4298f6a9dab"><td class="memItemLeft" align="right" valign="top"><a id="a355ba86200cc697045cfb4298f6a9dab" name="a355ba86200cc697045cfb4298f6a9dab"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmMkknChunkGraph</b> (std::vector&lt; int8_t &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero, int repeat_cnt=1)</td></tr>
-<tr class="separator:a355ba86200cc697045cfb4298f6a9dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab377c611e190ca9200f23458a5f14b6c"><td class="memItemLeft" align="right" valign="top"><a id="ab377c611e190ca9200f23458a5f14b6c" name="ab377c611e190ca9200f23458a5f14b6c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmChunkNStreamGraph</b> (std::vector&lt; int8_t &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero, int repeat_cnt=1)</td></tr>
+<tr class="separator:ab377c611e190ca9200f23458a5f14b6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:addd190ee7e0b5bd2f23fc54f35df2f53"><td class="memItemLeft" align="right" valign="top"><a id="addd190ee7e0b5bd2f23fc54f35df2f53" name="addd190ee7e0b5bd2f23fc54f35df2f53"></a>
+<tr class="memitem:abff28787fb86b99a161e46806b1b5dc3"><td class="memItemLeft" align="right" valign="top"><a id="abff28787fb86b99a161e46806b1b5dc3" name="abff28787fb86b99a161e46806b1b5dc3"></a>
 adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>k</b> [CHUNK_COUNT]</td></tr>
-<tr class="separator:addd190ee7e0b5bd2f23fc54f35df2f53"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87782f848fd8ade5f14f2e307e6104cc"><td class="memItemLeft" align="right" valign="top"><a id="a87782f848fd8ade5f14f2e307e6104cc" name="a87782f848fd8ade5f14f2e307e6104cc"></a>
+<tr class="separator:abff28787fb86b99a161e46806b1b5dc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acae10b03dda48b10ad1ffd30cb8b7ad3"><td class="memItemLeft" align="right" valign="top"><a id="acae10b03dda48b10ad1ffd30cb8b7ad3" name="acae10b03dda48b10ad1ffd30cb8b7ad3"></a>
 <a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, int8_t, CHUNK_COUNT, M, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
-<tr class="separator:a87782f848fd8ade5f14f2e307e6104cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac81c500f33d83cc90e060b3ca426a649"><td class="memItemLeft" align="right" valign="top"><a id="ac81c500f33d83cc90e060b3ca426a649" name="ac81c500f33d83cc90e060b3ca426a649"></a>
+<tr class="separator:acae10b03dda48b10ad1ffd30cb8b7ad3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31e19722b5e26cd2e94257d32477ab64"><td class="memItemLeft" align="right" valign="top"><a id="a31e19722b5e26cd2e94257d32477ab64" name="a31e19722b5e26cd2e94257d32477ab64"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:ac81c500f33d83cc90e060b3ca426a649"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa14eb0b00484ee234bd9291ccc3543aa"><td class="memItemLeft" align="right" valign="top"><a id="aa14eb0b00484ee234bd9291ccc3543aa" name="aa14eb0b00484ee234bd9291ccc3543aa"></a>
+<tr class="separator:a31e19722b5e26cd2e94257d32477ab64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a361724959ddd3d123205bf887851ed3e"><td class="memItemLeft" align="right" valign="top"><a id="a361724959ddd3d123205bf887851ed3e" name="a361724959ddd3d123205bf887851ed3e"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:aa14eb0b00484ee234bd9291ccc3543aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a361724959ddd3d123205bf887851ed3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a69cae7997439c5871f83a0b3eabf2f1d"><td class="memItemLeft" align="right" valign="top"><a id="a69cae7997439c5871f83a0b3eabf2f1d" name="a69cae7997439c5871f83a0b3eabf2f1d"></a>
+<tr class="memitem:ab03ccddbb0da08895be83e2c3e63df56"><td class="memItemLeft" align="right" valign="top"><a id="ab03ccddbb0da08895be83e2c3e63df56" name="ab03ccddbb0da08895be83e2c3e63df56"></a>
 static const int&#160;</td><td class="memItemRight" valign="bottom"><b>CHUNK_COUNT</b> = (N + NCHUNK - 1) / NCHUNK</td></tr>
-<tr class="separator:a69cae7997439c5871f83a0b3eabf2f1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ab03ccddbb0da08895be83e2c3e63df56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>design/aie_src/<a class="el" href="graph__qgemm_8h_source.html">graph_qgemm.h</a></li>
@@ -150,7 +150,7 @@ static const int&#160;</td><td class="memItemRight" valign="bottom"><b>CHUNK_COU
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQgemmMkknChunkGraph.html">QgemmMkknChunkGraph</a></li>
+    <li class="navelem"><a class="el" href="classQgemmChunkNStreamGraph.html">QgemmChunkNStreamGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

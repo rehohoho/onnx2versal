@@ -1,5 +1,5 @@
-<map id="ConvReluChunkMGraph&lt; CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;" name="ConvReluChunkMGraph&lt; CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU, H0, H1, W0, W1 &gt;">
-<area shape="rect" id="Node000001" title="Multiinstance graph that stores weights and biases, chunks MCKK weights by M dimension,..." alt="" coords="23,139,227,240"/>
+<map id="ConvReluChunkMGraph&lt; CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;" name="ConvReluChunkMGraph&lt; CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;">
+<area shape="rect" id="Node000001" title="Multiinstance graph that stores weights and biases, chunks MCKK weights by M dimension,..." alt="" coords="18,139,232,255"/>
 <area shape="rect" id="Node000002" href="$classConcatGraph.html" title=" " alt="" coords="5,5,245,76"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="128,91,128,139,122,139,122,91"/>
 </map>

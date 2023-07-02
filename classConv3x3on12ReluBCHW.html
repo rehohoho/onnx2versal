@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Conv3x3on12ReluBCHW&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: Conv3x3on12ReluBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classConv3x3on12ReluBCHW.html',''); in
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classConv3x3on12ReluBCHW-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Conv3x3on12ReluBCHW&lt; INP_H, INP_W, OUT_W, STEP_H, STEP_W, B, C, M, K, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">Conv3x3on12ReluBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 3x3 BCHW, stores weights and biases, requires K==3 and INP_W%4==0 and OUT_W%8=0 and STEP_H==1 and STEP_W==1 assumes weights are padded to MxCx12, Conv3x3on12ReluBCHW&lt;26,28,24,1,1,1,1,4,3,1&gt; total = 4860.  
+<p>Vector implementation for 3x3 BCHW, stores weights and biases, requires KH==KW==3, INP_W%4==0, OUT_W_PAD%8=0, STEP_H==1, STEP_W==1, GROUP==1, assumes weights are padded to MxCx12, Conv3x3on12ReluBCHW&lt;26,28,24,1,1,1,1,4,3,1&gt; start = 421518,end = 426929,total = 5411 (5363)  
 </p>
 
 <p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3c96ed4fe8157b02ed80f6eb00bdf3d7"><td class="memItemLeft" align="right" valign="top"><a id="a3c96ed4fe8157b02ed80f6eb00bdf3d7" name="a3c96ed4fe8157b02ed80f6eb00bdf3d7"></a>
+<tr class="memitem:afabcdc595b55967dfdc44b18ce3855f4"><td class="memItemLeft" align="right" valign="top"><a id="afabcdc595b55967dfdc44b18ce3855f4" name="afabcdc595b55967dfdc44b18ce3855f4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Conv3x3on12ReluBCHW</b> (float(&amp;w)[M *C *12], float(&amp;b)[M])</td></tr>
-<tr class="separator:a3c96ed4fe8157b02ed80f6eb00bdf3d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace3f9c4aedd0270b0cbb7c89bf6fa50c"><td class="memItemLeft" align="right" valign="top"><a id="ace3f9c4aedd0270b0cbb7c89bf6fa50c" name="ace3f9c4aedd0270b0cbb7c89bf6fa50c"></a>
+<tr class="separator:afabcdc595b55967dfdc44b18ce3855f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af98d1d150f504e807a790dc59259eb90"><td class="memItemLeft" align="right" valign="top"><a id="af98d1d150f504e807a790dc59259eb90" name="af98d1d150f504e807a790dc59259eb90"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:ace3f9c4aedd0270b0cbb7c89bf6fa50c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:af98d1d150f504e807a790dc59259eb90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a22a120b919078e61844a3ba44aef3626"><td class="memItemLeft" align="right" valign="top"><a id="a22a120b919078e61844a3ba44aef3626" name="a22a120b919078e61844a3ba44aef3626"></a>
+<tr class="memitem:a4573a21e37e8d8b64c2cdd94f4154702"><td class="memItemLeft" align="right" valign="top"><a id="a4573a21e37e8d8b64c2cdd94f4154702" name="a4573a21e37e8d8b64c2cdd94f4154702"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a22a120b919078e61844a3ba44aef3626"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a4573a21e37e8d8b64c2cdd94f4154702"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
