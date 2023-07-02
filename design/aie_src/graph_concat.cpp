@@ -7,7 +7,6 @@ template <template<typename, int, int, int, int> class CONCAT,
 class ConcatGraphTest : public adf::graph {
 
   private:
-    static const int TTSIZE = sizeof(TT);
     ConcatGraph<CONCAT, TT, LCNT, H, INP_W, OUT_W> g;
 
   public:
@@ -22,7 +21,7 @@ class ConcatGraphTest : public adf::graph {
       for (int i = 0; i < LCNT; i++) {
         std::string plin_name = "plin"+std::to_string(i)+"_concat_"+id+"_input"; 
         plin[i] = adf::input_plio::create(plin_name, PLIO64_ARG(INP_TXT[i]));
-        adf::connect<adf::window<H*INP_W*TTSIZE>> (plin[i].out[0], g.pin[i]);
+        adf::connect<adf::window<H*INP_W*sizeof(TT)>> (plin[i].out[0], g.pin[i]);
       }
 
       plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
@@ -37,7 +36,6 @@ template <template<typename, int, int, int, int> class CONCAT,
 class ConcatStreamGraphTest : public adf::graph {
 
   private:
-    static const int TTSIZE = sizeof(TT);
     ConcatStreamGraph<CONCAT, TT, LCNT, H, INP_W, OUT_W> g;
 
   public:
@@ -64,10 +62,38 @@ class ConcatStreamGraphTest : public adf::graph {
 
 template <template<typename, int, int, int, int> class CONCAT,
   typename TT, int LCNT, int H, int INP_W, int OUT_W>
+class ConcatTwoStreamGraphTest : public adf::graph {
+
+  private:
+    ConcatTwoStreamGraph<CONCAT, TT, LCNT, H, INP_W, OUT_W> g;
+  
+  public:
+    adf::input_plio plin[2];
+    adf::output_plio plout[1];
+
+    ConcatTwoStreamGraphTest(
+      const std::string& id,
+      const std::string& INP_TXT0,
+      const std::string& INP_TXT1,
+      const std::string& OUT_TXT = "concat_out.txt"
+    ) {
+      plin[0] = adf::input_plio::create("plin0_concat_"+id+"_input", PLIO64_ARG(INP_TXT0));
+      plin[1] = adf::input_plio::create("plin1_concat_"+id+"_input", PLIO64_ARG(INP_TXT1));
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream> (plin[1].out[0], g.pin[1]);
+
+      plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+    }
+
+};
+
+
+template <template<typename, int, int, int, int> class CONCAT,
+  typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatTwiceGraphTest : public adf::graph {
 
   private:
-    static const int TTSIZE = sizeof(TT);
     ConcatTwiceGraph<CONCAT, TT, LCNT, H, INP_W, OUT_W> g;
 
   public:
@@ -82,11 +108,11 @@ class ConcatTwiceGraphTest : public adf::graph {
       for (int i = 0; i < LCNT; i++) {
         std::string plin_name = "plin"+std::to_string(i)+"_concat_"+id+"_input"; 
         plin[i] = adf::input_plio::create(plin_name, PLIO64_ARG(INP_TXT[i]));
-        adf::connect<adf::window<H*INP_W*TTSIZE>> (plin[i].out[0], g.pin[i]);
+        adf::connect<adf::window<H*INP_W*sizeof(TT)>> (plin[i].out[0], g.pin[i]);
       }
       
       plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<H*OUT_W*TTSIZE>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::window<H*OUT_W*sizeof(TT)>> (g.pout[0], plout[0].in[0]);
     }
 
 };
@@ -126,6 +152,8 @@ ConcatStreamGraphTest<ConcatScalarStream, float_t, 7, H, INP_W, 208> concatStrea
 ConcatStreamGraphTest<ConcatScalarStream, float_t, 8, H, INP_W, 240> concatStreamScalar8(
   "concatStreamScalar8", "concat_fpout_shape4x240_ConcatStreamScalar.txt", fp_txts);
 
+ConcatTwoStreamGraphTest<ConcatTwo32bitStreams, float_t, 2, H, INP_W/8, 64> concatTwo32bitStreams(
+  "concatTwo32bitStreams", "concat_fpin.txt", "concat_fpin.txt", "concat_fpout_2stream_shape4x64_ConcatTwo32bitStreams.txt");
 
 // int8 window
 std::vector<std::string> int8_txts {
@@ -213,6 +241,11 @@ int main(int argc, char ** argv) {
   adfCheck(concatStreamScalar8.init(), "init concatStreamScalar8");
   adfCheck(concatStreamScalar8.run(ITER_CNT), "run concatStreamScalar8");
 	adfCheck(concatStreamScalar8.end(), "end concatStreamScalar8");
+
+  // 2 stream
+  adfCheck(concatTwo32bitStreams.init(), "init concatTwo32bitStreams");
+  adfCheck(concatTwo32bitStreams.run(ITER_CNT), "run concatTwo32bitStreams");
+	adfCheck(concatTwo32bitStreams.end(), "end concatTwo32bitStreams");
 
   // int8
   adfCheck(concatInt8.init(), "init concatInt8");

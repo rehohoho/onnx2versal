@@ -32,7 +32,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter8(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     CAT(in1);
@@ -64,7 +64,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter7(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     CAT(in1);
@@ -94,7 +94,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter6(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     CAT(in1);
@@ -122,7 +122,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter5(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     CAT(in1);
@@ -148,7 +148,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter4(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     CAT(in1);
@@ -172,7 +172,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter3(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     CAT(in1);
@@ -194,7 +194,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter2(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     CAT(in1);
@@ -214,7 +214,7 @@ void ConcatScalar<TT, LCNT, H, INP_W, OUT_W>::filter1(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT(in0);
     if (OUT_W > INP_W*LCNT) {
@@ -254,7 +254,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter8(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     CAT_FLOAT(in1);
@@ -286,7 +286,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter7(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     CAT_FLOAT(in1);
@@ -316,7 +316,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter6(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     CAT_FLOAT(in1);
@@ -344,7 +344,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter5(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     CAT_FLOAT(in1);
@@ -370,7 +370,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter4(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     CAT_FLOAT(in1);
@@ -394,7 +394,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter3(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     CAT_FLOAT(in1);
@@ -416,7 +416,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter2(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     CAT_FLOAT(in1);
@@ -436,7 +436,7 @@ void ConcatFloat<TT, LCNT, H, INP_W, OUT_W>::filter1(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_FLOAT(in0);
     if (OUT_W > INP_W*LCNT) {
@@ -477,7 +477,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter8(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     CAT_INT8(in1);
@@ -509,7 +509,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter7(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     CAT_INT8(in1);
@@ -539,7 +539,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter6(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     CAT_INT8(in1);
@@ -567,7 +567,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter5(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     CAT_INT8(in1);
@@ -593,7 +593,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter4(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     CAT_INT8(in1);
@@ -617,7 +617,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter3(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     CAT_INT8(in1);
@@ -639,7 +639,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter2(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     CAT_INT8(in1);
@@ -659,7 +659,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter1(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     int outi = 0;
     CAT_INT8(in0);
     if (OUT_W > INP_W*LCNT) {
@@ -680,7 +680,7 @@ void ConcatScalarStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     for (int i = 0; i < INP_W1; i++)
       writeincr(out, readincr(in0));
     
@@ -710,7 +710,7 @@ void ConcatInt8Stream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
 ) {
   PROFILE_HEADER2;
 
-  for (int i = 0; i < H; i++) {
+  for (int h = 0; h < H; h++) {
     for (int i = 0; i < INP_W1; i+=16)
       writeincr_v16(out, readincr_v16(in0));
     
@@ -729,4 +729,33 @@ void ConcatInt8Stream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
 
   PROFILE_FOOTER2("ConcatInt8Stream<%s,%d,%d,%d,%d>", 
     typeid(TT).name(), H, INP_W1, INP_W2, OUT_W);
+}
+
+
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatTwo32bitStreams<TT, LCNT, H, INP_W, OUT_W>::filter(
+	input_stream<TT>* in0,
+  input_stream<TT>* in1,
+  output_stream<TT>* out
+) {
+  PROFILE_HEADER2;
+
+  TT a;
+
+#define WRITE_OUT(in_idx, count) \
+  for (int w = 0; w < count; w++) { \
+    a = get_ss(in_idx); \
+    put_ms(0, a); \
+  }
+
+  for (int h = 0; h < H; h++) {
+    for (int i = 0; i < OUT_W / INP_W; i++) {
+      WRITE_OUT((i & 0x1), INP_W);
+    }
+  }
+
+#undef WRITE_OUT
+
+  PROFILE_FOOTER2("ConcatTwo32bitStreams<%s,%d,%d,%d,%d>", 
+    typeid(TT).name(), LCNT, H, INP_W, OUT_W);
 }

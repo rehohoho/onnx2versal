@@ -325,6 +325,25 @@ class ConcatInt8Stream {
 			REGISTER_FUNCTION(ConcatInt8Stream::filter);
 		}
 };
+
+/**
+ * @brief Scalar implementation for concatenating 2 chunked streams, 
+ * ConcatTwo32bitStreams<f,4,32,32,64> takes ~1000 cycles
+ */
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+class ConcatTwo32bitStreams {
+	public:
+		void filter(
+			input_stream<TT>* in0,
+			input_stream<TT>* in1,
+			output_stream<TT>* out
+		);
+		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4); // 32-bit stream
+			static_assert(OUT_W % INP_W == 0);
+			REGISTER_FUNCTION(ConcatTwo32bitStreams::filter);
+		}
+};
 /** @}*/
 
 

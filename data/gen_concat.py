@@ -21,6 +21,8 @@ save_tensor(f"concat_fpout_shape{H}x176.txt", np.tile(fpin, 6)[:, :176])
 save_tensor(f"concat_fpout_shape{H}x208.txt", np.tile(fpin, 7)[:, :208])
 save_tensor(f"concat_fpout_shape{H}x240.txt", np.tile(fpin, 8)[:, :240])
 
+save_tensor(f"concat_fpout_2stream_shape4x64.txt", np.repeat(fpin.reshape(4,8,-1), 2, axis=1))
+
 int8in = fpin.astype(np.int8)
 int8in = pad_lastdim(int8in, "concat int8in", get_vector_boundary(int8in))
 

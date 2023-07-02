@@ -28,17 +28,14 @@
  * @brief Graph wrapper for arbitrary concat kernel implementation and lanes
  * 
  * @connections
- * @connect{pin[0:LCNT], H*INP_W*TTSIZE}
- * @connect{pout[0], stream H*OUT_W*TTSIZE}
+ * @connect{pin[0:LCNT], H*INP_W*sizeof(TT)}
+ * @connect{pout[0], stream H*OUT_W*sizeof(TT)}
  * @endconnections
  */
 template <template<typename, int, int, int, int> class CONCAT,
   typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatGraph : public adf::graph {
 
-  private:
-    static const int TTSIZE = sizeof(TT);
-  
   public:
     adf::kernel k[1];
     adf::port<input> pin[LCNT];
@@ -52,7 +49,7 @@ class ConcatGraph : public adf::graph {
       adf::runtime<ratio>(k[0]) = 0.6;
 
       for (int i = 0; i < LCNT; i++) {
-        adf::connect<adf::window<H*INP_W*TTSIZE>> (pin[i], k[0].in[i]);
+        adf::connect<adf::window<H*INP_W*sizeof(TT)>> (pin[i], k[0].in[i]);
         adf::single_buffer(k[0].in[i]);
       }
       
@@ -69,7 +66,6 @@ template <template<typename, int, int, int, int> class CONCAT_STREAM,
 class ConcatStreamGraph : public adf::graph {
 
   private:
-    static constexpr int TTSIZE = sizeof(TT);
     static constexpr int L1_LCNT = LCNT / 2;
   
   public:
@@ -176,13 +172,45 @@ class ConcatStreamGraph : public adf::graph {
 };
 
 
+/**
+ * @brief Graph wrapper for concatenating two chunked streams, inverse of SplitTwoStreamGraph
+ * 
+ * @connections
+ * @connect{pin[0:LCNT], H*INP_W*sizeof(TT)}
+ * @connect{pout[0], stream H*OUT_W*sizeof(TT)}
+ * @endconnections
+ */
+template <template<typename, int, int, int, int> class CONCAT,
+  typename TT, int LCNT, int H, int INP_W, int OUT_W>
+class ConcatTwoStreamGraph : public adf::graph {
+
+  public:
+    adf::kernel k[1];
+    adf::port<input> pin[2];
+    adf::port<output> pout[1];
+
+    ConcatTwoStreamGraph() { 
+      k[0] = adf::kernel::create_object<CONCAT<TT, LCNT, H, INP_W, OUT_W>>();
+      adf::source(k[0]) = "concat.cc";
+      adf::headers(k[0]) = {"concat.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
+
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (pin[1], k[0].in[1]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+
+      adf::samples_per_iteration(k[0].in[0]) = H*INP_W* ((LCNT+1)/2);
+      adf::samples_per_iteration(k[0].in[1]) = H*INP_W * (LCNT/2);
+      adf::samples_per_iteration(k[0].out[0]) = H*OUT_W;
+    }
+
+};
+
+
 template <template<typename, int, int, int, int> class CONCAT,
   typename TT, int LCNT, int H, int INP_W, int OUT_W>
 class ConcatTwiceGraph : public adf::graph {
 
-  private:
-    static const int TTSIZE = sizeof(TT);
-  
   public:
     static constexpr int CONCAT_CNT = (LCNT+7)/8;
     static constexpr int LCNT_REM = (LCNT % 8 == 0) ? 8 : LCNT % 8;
@@ -208,7 +236,7 @@ class ConcatTwiceGraph : public adf::graph {
           adf::runtime<ratio>(k[i]) = 0.6;
 
           for (int j = 0; j < 8; j++)
-            adf::connect<adf::window<H*INP_W*TTSIZE>> (pin[i*8+j], k[i].in[j]);
+            adf::connect<adf::window<H*INP_W*sizeof(TT)>> (pin[i*8+j], k[i].in[j]);
           adf::connect<adf::stream> (k[i].out[0], klast.in[i]);
         }
       }
@@ -221,7 +249,7 @@ class ConcatTwiceGraph : public adf::graph {
       adf::runtime<ratio>(k[i]) = 0.6;
       
       for (int j = 0; j < LCNT_REM; j++)
-        adf::connect<adf::window<H*INP_W*TTSIZE>> (pin[i*8+j], k[i].in[j]);
+        adf::connect<adf::window<H*INP_W*sizeof(TT)>> (pin[i*8+j], k[i].in[j]);
       adf::connect<adf::stream> (k[i].out[0], klast.in[i]);
       
       adf::connect<adf::stream> (klast.out[0], pout[0]);
