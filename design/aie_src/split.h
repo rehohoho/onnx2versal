@@ -245,6 +245,40 @@ class SplitTwo32bitStreams {
 			REGISTER_FUNCTION(SplitTwo32bitStreams::filter);
 		}
 };
+
+
+/**
+ * @brief Scalar implementation for slicing out portion of 32-bit stream input, 
+ * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP > 0, 
+ * requires OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W, if OVERLAP <= 0, 
+ * SplitScalarSingleStream<f,10,64,22,1>::filter2 total = 
+ */
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+class SplitScalarSingleStream {
+	private:
+		static constexpr int FIRST_STRIDE = OUT_W - OVERLAP;
+		static constexpr int LCNT = (INP_W - OUT_W) / FIRST_STRIDE + 1;
+		static constexpr int STRIDE = OUT_W - OVERLAP - OVERLAP;
+
+		int lane_idx;
+	
+	public:
+		SplitScalarSingleStream(
+			int lane_idx
+		): lane_idx(lane_idx) {};
+
+		void filter(
+			input_stream<TT>* in,
+  		output_stream<TT>* out0
+		);
+
+		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4);
+			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
+			REGISTER_FUNCTION(SplitScalarSingleStream::filter);
+		}
+};
 /** @}*/
 
 

@@ -710,3 +710,42 @@ void SplitTwo32bitStreams<TT, H, INP_W, OUT_W, OVERLAP>::filter(
   SPLIT_PROFILE_FOOTER("SplitTwo32bitStreams", 2);
 }
 
+
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+void SplitScalarSingleStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
+	input_stream<TT>* in,
+  output_stream<TT>* out0
+) {
+  PROFILE_HEADER2;
+
+  TT a;
+  int pre_read_lanes = lane_idx;
+  int post_read_lanes = LCNT - lane_idx - 1;
+
+#define WRITE_OUT(count) \
+  for (int w = 0; w < count; w++) \
+    put_ms(0, get_ss(0));
+
+#define READ_IN(count) \
+  for (int w = 0; w < count; w++) \
+    get_ss(0);
+
+  if (OVERLAP > 0) {
+    for (int h = 0; h < H; h++) {
+      READ_IN(pre_read_lanes * FIRST_STRIDE);
+      WRITE_OUT(OUT_W);
+      READ_IN(post_read_lanes * FIRST_STRIDE);
+    }
+  } else {
+    for (int h = 0; h < H; h++) {
+      READ_IN(pre_read_lanes * (OUT_W - OVERLAP));
+      WRITE_OUT(OUT_W);
+      READ_IN(post_read_lanes * (OUT_W - OVERLAP));
+    }
+  }
+
+#undef WRITE_OUT
+#undef READ_IN
+
+  SPLIT_PROFILE_FOOTER("SplitScalarSingleStream", lane_idx);
+}
