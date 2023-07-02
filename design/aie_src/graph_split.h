@@ -28,8 +28,8 @@
  * @brief Graph wrapper for arbitrary split kernel implementation and lanes
  * 
  * @connections
- * @connect{pin[0:LCNT], stream H*INP_W}
- * @connect{pout[0], H*OUT_W*sizeof(TT)}
+ * @connect{pin[0], stream H*INP_W*sizeof(TT)}
+ * @connect{pout[0:LCNT], H*OUT_W*sizeof(TT)}
  * @endconnections
  */
 template <template<typename, int, int, int, int> class SPLIT,
@@ -57,6 +57,41 @@ class SplitGraph : public adf::graph {
         adf::connect<adf::window<H*OUT_W*sizeof(TT)>> (k[0].out[i], pout[i]);
         adf::single_buffer(k[0].out[i]);
       }
+    }
+
+};
+
+/**
+ * @brief Graph wrapper for two stream split
+ * 
+ * @connections
+ * @connect{pin[0], stream H*INP_W*sizeof(TT)}
+ * @connect{pout[0:2], stream H*OUT_W*sizeof(TT)}
+ * @endconnections
+ */
+template <template<typename, int, int, int, int> class SPLIT,
+  typename TT, int H, int INP_W, int OUT_W, int OVERLAP = 0>
+class SplitTwoStreamGraph : public adf::graph {
+
+  public:
+		static constexpr int LCNT = (INP_W - OUT_W) / (OUT_W - OVERLAP) + 1;
+    adf::kernel k[1];
+    adf::port<input> pin[1];
+    adf::port<output> pout[2];
+
+    SplitTwoStreamGraph() { 
+      k[0] = adf::kernel::create_object<SPLIT<TT, H, INP_W, OUT_W, OVERLAP>>();
+      adf::source(k[0]) = "split.cc";
+      adf::headers(k[0]) = {"split.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
+
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (k[0].out[1], pout[1]);
+      
+      adf::samples_per_iteration(k[0].in[0]) = H*INP_W;
+      adf::samples_per_iteration(k[0].out[0]) = H*OUT_W* ((LCNT+1)/2);
+      adf::samples_per_iteration(k[0].out[1]) = H*OUT_W* (LCNT/2);
     }
 
 };

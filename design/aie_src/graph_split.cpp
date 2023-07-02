@@ -24,9 +24,38 @@ class SplitGraphTest : public adf::graph {
       adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
 
       for (int i = 0; i < LCNT; i++) {
-        plout[i] = adf::output_plio::create("plout"+std::to_string(i)+"_split_"+id+"_input", PLIO64_ARG(OUT_TXT[i]));
+        plout[i] = adf::output_plio::create("plout"+std::to_string(i)+"_split_"+id+"_output", PLIO64_ARG(OUT_TXT[i]));
         adf::connect<adf::window<H*OUT_W*sizeof(TT)>> (g.pout[i], plout[i].in[0]);
       }
+    }
+
+};
+
+
+template <template<typename, int, int, int, int> class SPLIT,
+  typename TT, int H, int INP_W, int OUT_W, int OVERLAP = 0>
+class SplitTwoStreamGraphTest : public adf::graph {
+
+  private:
+    SplitTwoStreamGraph<SPLIT, TT, H, INP_W, OUT_W, OVERLAP> g;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[2];
+
+    SplitTwoStreamGraphTest(
+      const std::string& id,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT0,
+      const std::string& OUT_TXT1
+    ) {
+      plin[0] = adf::input_plio::create("plin0_split_"+id+"_input", PLIO64_ARG(INP_TXT));      
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+
+      plout[0] = adf::output_plio::create("plout0_split_"+id+"_output", PLIO64_ARG(OUT_TXT0));
+      plout[1] = adf::output_plio::create("plout1_split_"+id+"_output", PLIO64_ARG(OUT_TXT1));
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::stream> (g.pout[1], plout[1].in[0]);
     }
 
 };
@@ -47,12 +76,21 @@ SplitGraphTest<SplitScalar, float_t, H, INP_W, OUT_W, OVERLAP> splitScalar(
     "split_fpout2_shape10x22_splitScalar.txt"
   });
 
+SplitTwoStreamGraphTest<SplitTwo32bitStreams, float, H, INP_W, OUT_W, OVERLAP> splitTwo32bitStreams(
+  "splitTwo32bitStreams", "split_fpin.txt", 
+  "split_fpout0_2stream_shape10x44_SplitTwo32bitStreams.txt", "split_fpout1_2stream_shape10x22_SplitTwo32bitStreams.txt");
+
 SplitGraphTest<SplitScalar, float_t, H, INP_W, 31, -1> splitScalar_neg(
   "splitScalar_neg", "split_fpin.txt", 
   {
     "split_fpout0_shape10x31_splitScalar.txt", 
     "split_fpout1_shape10x31_splitScalar.txt"
   });
+
+SplitTwoStreamGraphTest<SplitTwo32bitStreams, float, H, INP_W, 31, -1> splitTwo32bitStreams_neg(
+  "splitTwo32bitStreams_neg", "split_fpin.txt", 
+  "split_fpout0_neg2stream_shape10x31_SplitTwo32bitStreams.txt", "split_fpout1_neg2stream_shape10x31_SplitTwo32bitStreams.txt");
+
 
 // int8
 const int INP_W_INT8 = 160;
@@ -82,9 +120,17 @@ int main(int argc, char ** argv) {
   adfCheck(splitScalar.run(ITER_CNT), "run splitScalar");
 	adfCheck(splitScalar.end(), "end splitScalar");
 
+  adfCheck(splitTwo32bitStreams.init(), "init splitTwo32bitStreams");
+  adfCheck(splitTwo32bitStreams.run(ITER_CNT), "run splitTwo32bitStreams");
+	adfCheck(splitTwo32bitStreams.end(), "end splitTwo32bitStreams");
+
   adfCheck(splitScalar_neg.init(), "init splitScalar_neg");
   adfCheck(splitScalar_neg.run(ITER_CNT), "run splitScalar_neg");
 	adfCheck(splitScalar_neg.end(), "end splitScalar_neg");
+
+  adfCheck(splitTwo32bitStreams_neg.init(), "init splitTwo32bitStreams_neg");
+  adfCheck(splitTwo32bitStreams_neg.run(ITER_CNT), "run splitTwo32bitStreams_neg");
+	adfCheck(splitTwo32bitStreams_neg.end(), "end splitTwo32bitStreams_neg");
 
   // int8
   adfCheck(splitInt8.init(), "init splitInt8");

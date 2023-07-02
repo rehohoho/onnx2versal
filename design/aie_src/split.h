@@ -16,7 +16,8 @@
 
 /**
  * @brief Scalar implementation for 32-bit stream, 
- * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0
+ * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP > 0, 
+ * requires OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W, if OVERLAP <= 0, 
  * SplitScalar<f,3,10,64,22>::filter3 takes 9505 cycles
  * SplitScalar<f,10,64,31,-1>::filter2 takes 9547 cycles
  */
@@ -115,7 +116,8 @@ class SplitScalar {
 
 /**
  * @brief Scalar implementation for int8 stream, 
- * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0
+ * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP > 0, 
+ * requires OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W, if OVERLAP <= 0, 
  * SplitInt8<a,10,160,64,16>::filter3 takes 1649 cycles
  * SplitInt8<a,10,160,64,-32>::filter2 takes 1237 cycles
  */
@@ -212,6 +214,35 @@ class SplitInt8 {
 			} else if (LCNT == 1) {
 				REGISTER_FUNCTION(SplitInt8::filter1);
 			}
+		}
+};
+
+
+/**
+ * @brief Scalar implementation for chunking 32-bit stream input into two separate streams, 
+ * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP > 0, 
+ * requires OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W, if OVERLAP <= 0, 
+ * SplitTwo32bitStreams<f,10,64,22,1>::filter2 total = 676
+ * SplitTwo32bitStreams<f,10,64,31,-1>::filter2 total = 812
+ */
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+class SplitTwo32bitStreams {
+	private:
+		static constexpr int FIRST_STRIDE = OUT_W - OVERLAP;
+		static constexpr int LCNT = (INP_W - OUT_W) / FIRST_STRIDE + 1;
+		static constexpr int STRIDE = OUT_W - OVERLAP - OVERLAP;
+	
+	public:
+		void filter(
+			input_stream<TT>* in,
+			output_stream<TT>* restrict out0,
+			output_stream<TT>* restrict out1
+		);
+		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4);
+			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
+			REGISTER_FUNCTION(SplitTwo32bitStreams::filter);
 		}
 };
 /** @}*/

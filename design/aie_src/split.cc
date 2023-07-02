@@ -652,3 +652,61 @@ void SplitInt8<TT, H, INP_W, OUT_W, OVERLAP>::filter1(
 #undef WRITE_OUT
 #undef WRITE_TWO_OUTS
 #undef READ_IN
+
+
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+void SplitTwo32bitStreams<TT, H, INP_W, OUT_W, OVERLAP>::filter(
+	input_stream<TT>* in,
+  output_stream<TT>* restrict out0,
+  output_stream<TT>* restrict out1
+) {
+  PROFILE_HEADER2;
+
+  TT a;
+
+#define WRITE_OUT(out_idx, count) \
+  for (int w = 0; w < count; w++) { \
+    a = get_ss(0); \
+    put_ms(out_idx, a); \
+  }
+
+#define WRITE_TWO_OUTS(count) \
+  for (int w = 0; w < count; w++) { \
+    a = get_ss(0); \
+    put_ms(0, a); \
+    put_ms(1, a); \
+  }
+
+#define READ_IN(count) \
+  for (int w = 0; w < count; w++) \
+    get_ss(0);
+
+  if (OVERLAP > 0) {
+    for (int h = 0; h < H; h++) {
+      WRITE_OUT(0, OVERLAP);
+      WRITE_OUT(0, STRIDE);
+      
+      for (int i = 1; i < LCNT; i++) {
+        WRITE_TWO_OUTS(OVERLAP);
+        WRITE_OUT((i & 0x1), STRIDE);
+      }
+
+      WRITE_OUT(((LCNT-1) & 0x1), OVERLAP);
+    }
+  } else {
+    for (int h = 0; h < H; h++) {
+      for (int i = 0; i < LCNT; i++) {
+        WRITE_OUT((i & 0x1), OUT_W);
+        READ_IN(-OVERLAP);
+      }
+      READ_IN(INP_W - OUT_W*2 + 2*OVERLAP);
+    }
+  }
+
+#undef WRITE_OUT
+#undef WRITE_TWO_OUTS
+#undef READ_IN
+
+  SPLIT_PROFILE_FOOTER("SplitTwo32bitStreams", 2);
+}
+
