@@ -712,7 +712,7 @@ void SplitTwo32bitStreams<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
-void SplitScalarSingleStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
+void SplitFilterFloatStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 	input_stream<TT>* in,
   output_stream<TT>* out0
 ) {
@@ -722,6 +722,7 @@ void SplitScalarSingleStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
   int pre_read_lanes = lane_idx;
   int post_read_lanes = LCNT - lane_idx - 1;
 
+// 32-bit read / cycle or 128-bit read / 4 cycle
 #define WRITE_OUT(count) \
   for (int w = 0; w < count; w++) \
     put_ms(0, get_ss(0));
@@ -747,5 +748,59 @@ void SplitScalarSingleStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 #undef WRITE_OUT
 #undef READ_IN
 
-  SPLIT_PROFILE_FOOTER("SplitScalarSingleStream", lane_idx);
+  SPLIT_PROFILE_FOOTER("SplitFilterFloatStream", lane_idx);
+}
+
+
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+void SplitFilterFloatStreamTwice<TT, H, INP_W, OUT_W, OVERLAP>::filter(
+	input_stream<TT>* in,
+  output_stream<TT>* out0,
+  output_stream<TT>* out1
+) {
+  PROFILE_HEADER2;
+
+  v4float vec;
+  int pre_read_lanes = lane_idx;
+  int post_read_lanes = LCNT - lane_idx - 2;
+
+// 32-bit read / cycle or 128-bit read / 4 cycle
+#define WRITE_OUT(outidx, count) \
+  for (int w = 0; w < count; w++) \
+    put_ms(outidx, get_ss(0));
+
+#define WRITE_OUT_TWICE(count) \
+  for (int w = 0; w < count; w++) { \
+    auto a = get_ss(0); \
+    put_ms(0, a); \
+    put_ms(1, a); \
+  }
+
+#define READ_IN(count) \
+  for (int w = 0; w < count; w++) \
+    get_ss(0);
+
+  if (OVERLAP > 0) {
+    for (int h = 0; h < H; h++) {
+      READ_IN(pre_read_lanes * FIRST_STRIDE);
+      WRITE_OUT(0, FIRST_STRIDE);
+      WRITE_OUT_TWICE(OVERLAP);
+      WRITE_OUT(1, FIRST_STRIDE);
+      READ_IN(post_read_lanes * FIRST_STRIDE);
+    }
+  } else {
+    for (int h = 0; h < H; h++) {
+      READ_IN(pre_read_lanes * (OUT_W - OVERLAP));
+      WRITE_OUT(0, OUT_W);
+      READ_IN(- OVERLAP);
+      WRITE_OUT(1, OUT_W);
+      READ_IN(post_read_lanes * (OUT_W - OVERLAP));
+    }
+  }
+
+#undef WRITE_OUT
+#undef WRITE_OUT_TWICE
+#undef READ_IN
+
+  SPLIT_PROFILE_FOOTER("SplitFilterFloatStreamTwice", lane_idx);
 }

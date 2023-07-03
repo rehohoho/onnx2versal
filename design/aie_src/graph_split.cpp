@@ -61,6 +61,63 @@ class SplitTwoStreamGraphTest : public adf::graph {
 };
 
 
+template <template<typename, int, int, int, int> class SPLIT,
+  typename TT, int H, int INP_W, int OUT_W, int OVERLAP = 0>
+class SplitFilterStreamGraphTest : public adf::graph {
+
+  private:
+    SplitFilterStreamGraph<SPLIT, TT, H, INP_W, OUT_W, OVERLAP> g;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[1];
+
+    SplitFilterStreamGraphTest(
+      const std::string& id,
+      int lane_idx,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT0
+    ): g(lane_idx) {
+      plin[0] = adf::input_plio::create("plin0_split_"+id+"_input", PLIO64_ARG(INP_TXT));      
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+
+      plout[0] = adf::output_plio::create("plout0_split_"+id+"_output", PLIO64_ARG(OUT_TXT0));
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+    }
+
+};
+
+
+template <template<typename, int, int, int, int> class SPLIT,
+  typename TT, int H, int INP_W, int OUT_W, int OVERLAP = 0>
+class SplitFilterStreamTwiceGraphTest : public adf::graph {
+
+  private:
+    SplitFilterStreamTwiceGraph<SPLIT, TT, H, INP_W, OUT_W, OVERLAP> g;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[2];
+
+    SplitFilterStreamTwiceGraphTest(
+      const std::string& id,
+      int lane_idx,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT0,
+      const std::string& OUT_TXT1
+    ): g(lane_idx) {
+      plin[0] = adf::input_plio::create("plin0_split_"+id+"_input", PLIO64_ARG(INP_TXT));      
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+
+      plout[0] = adf::output_plio::create("plout0_split_"+id+"_output", PLIO64_ARG(OUT_TXT0));
+      plout[1] = adf::output_plio::create("plout1_split_"+id+"_output", PLIO64_ARG(OUT_TXT1));
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::stream> (g.pout[1], plout[1].in[0]);
+    }
+
+};
+
+
 // instance to be compiled and used in host within xclbin
 const int H = 10;
 const int INP_W = 64;
@@ -79,6 +136,16 @@ SplitGraphTest<SplitScalar, float_t, H, INP_W, OUT_W, OVERLAP> splitScalar(
 SplitTwoStreamGraphTest<SplitTwo32bitStreams, float, H, INP_W, OUT_W, OVERLAP> splitTwo32bitStreams(
   "splitTwo32bitStreams", "split_fpin.txt", 
   "split_fpout0_2stream_shape10x44_SplitTwo32bitStreams.txt", "split_fpout1_2stream_shape10x22_SplitTwo32bitStreams.txt");
+
+SplitFilterStreamGraphTest<SplitFilterFloatStream, float, H, INP_W, OUT_W, OVERLAP> splitFilterFloatStream(
+  "splitFilterFloatStream", 1,
+  "split_fpin.txt", "split_fpout1_shape10x22_SplitFilterFloatStream.txt");
+
+SplitFilterStreamTwiceGraphTest<SplitFilterFloatStreamTwice, float, H, INP_W, OUT_W, OVERLAP> splitFilterFloatStreamTwice(
+  "splitFilterFloatStreamTwiceTwice", 1,
+  "split_fpin.txt", 
+  "split_fpout1_shape10x22_SplitFilterFloatStreamTwice.txt",
+  "split_fpout2_shape10x22_SplitFilterFloatStreamTwice.txt");
 
 SplitGraphTest<SplitScalar, float_t, H, INP_W, 31, -1> splitScalar_neg(
   "splitScalar_neg", "split_fpin.txt", 
@@ -123,6 +190,14 @@ int main(int argc, char ** argv) {
   adfCheck(splitTwo32bitStreams.init(), "init splitTwo32bitStreams");
   adfCheck(splitTwo32bitStreams.run(ITER_CNT), "run splitTwo32bitStreams");
 	adfCheck(splitTwo32bitStreams.end(), "end splitTwo32bitStreams");
+
+  adfCheck(splitFilterFloatStream.init(), "init splitFilterFloatStream");
+  adfCheck(splitFilterFloatStream.run(ITER_CNT), "run splitFilterFloatStream");
+	adfCheck(splitFilterFloatStream.end(), "end splitFilterFloatStream");
+
+  adfCheck(splitFilterFloatStreamTwice.init(), "init splitFilterFloatStreamTwice");
+  adfCheck(splitFilterFloatStreamTwice.run(ITER_CNT), "run splitFilterFloatStreamTwice");
+	adfCheck(splitFilterFloatStreamTwice.end(), "end splitFilterFloatStreamTwice");
 
   adfCheck(splitScalar_neg.init(), "init splitScalar_neg");
   adfCheck(splitScalar_neg.run(ITER_CNT), "run splitScalar_neg");
