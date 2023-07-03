@@ -462,7 +462,7 @@ class ConvReluChunkHStreamGraph : public adf::graph {
 
     static constexpr int OVERLAP = KH-STEP_H;
     static constexpr int LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;
-    adf::kernel split[LCNT];
+    adf::kernel split[(LCNT+1)/2];
     adf::kernel k[LCNT];
 
     static constexpr int HCHUNK_OUT = (HCHUNK - KH) / STEP_H + 1;
@@ -478,12 +478,28 @@ class ConvReluChunkHStreamGraph : public adf::graph {
     ) {
       static_assert((HCHUNK % STEP_H) == (KH % STEP_H));
 
-      for (int i = 0; i < LCNT; i++) {
-        split[i] = adf::kernel::create_object<SPLIT<float_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W>>(i);
+      for (int i = 0; i < LCNT/2; i++) {
+        split[i] = adf::kernel::create_object<SplitFilterFloatStreamTwice<float_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W>>(i*2);
         adf::source(split[i]) = "split.cc";
         adf::headers(split[i]) = {"split.h"};
         adf::runtime<ratio>(split[i]) = 0.6;
-        
+
+        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;
+        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;
+        adf::samples_per_iteration(split[i].out[1]) = B*C*HCHUNK*PAD_W;
+      }
+      if ((LCNT & 0x1) == 1) {
+        int i = (LCNT+1)/2 - 1;
+        split[i] = adf::kernel::create_object<SplitFilterFloatStream<float_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W>>(LCNT-1);
+        adf::source(split[i]) = "split.cc";
+        adf::headers(split[i]) = {"split.h"};
+        adf::runtime<ratio>(split[i]) = 0.6;
+
+        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;
+        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;
+      }
+      
+      for (int i = 0; i < LCNT; i++) {
         k[i] = adf::kernel::create_object<CONV<HCHUNK,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>(bias);
         adf::source(k[i]) = "conv.cc";
         adf::headers(k[i]) = {"conv.h"};
@@ -492,29 +508,27 @@ class ConvReluChunkHStreamGraph : public adf::graph {
 
         set_heap_size<CONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>(k[i]);
 
-        adf::connect<adf::stream, adf::window<B*C*HCHUNK*PAD_W*4>> (split[i].out[0], k[i].in[0]);
+        adf::connect<adf::stream, adf::window<B*C*HCHUNK*PAD_W*4>> (split[i/2].out[i&0x1], k[i].in[0]);
         adf::connect<adf::stream>                     (pin[1], k[i].in[1]);
         adf::connect<adf::stream>                     (k[i].out[0], concat_graph.pin[i]);
 
-        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;
-        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;
         adf::samples_per_iteration(k[i].out[0]) = B*M*HCHUNK_OUT*OUT_W_PAD;
 
         if ((i & 0x1) != 0) {
           adf::location<adf::kernel>(k[i]) =
             adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=0});
+          adf::location<adf::kernel>(split[i/2]) = 
+            adf::location<adf::kernel>(k[i]) + adf::relative_offset({.col_offset=0, .row_offset=-1});
+          
+          adf::location_constraint sTilePos = adf::location<adf::kernel>(split[i/2]);
+          adf::location<adf::stack>(split[i/2]) = sTilePos;
+          adf::location<adf::stack>(k[i]) = sTilePos;
+          adf::location<adf::parameter>(k[i].param[0]) = sTilePos;
+          adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
         }
-        adf::location<adf::kernel>(split[i]) = 
-           adf::location<adf::kernel>(k[i]) + adf::relative_offset({.col_offset=0, .row_offset=-1});        
         
         adf::location_constraint kTilePos = adf::location<adf::kernel>(k[i]);
-        adf::location<adf::parameter>(k[i].param[0]) = kTilePos; // may bust tiles adjacent to split
-        adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
-        adf::location<adf::stack>(k[i]) = kTilePos;
-        adf::location<adf::stack>(split[i]) = kTilePos;
-        
-        adf::location_constraint sTilePos = adf::location<adf::kernel>(split[i]);
-        adf::location<adf::buffer>(k[i].in[0]) = sTilePos; // may bust tiles adjacent to split
+        adf::location<adf::buffer>(k[i].in[0]) = kTilePos; // may bust tiles adjacent to split
         adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0)};
       }
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
@@ -527,20 +541,26 @@ class ConvReluChunkHStreamGraph : public adf::graph {
         adf::runtime<ratio>(pad[0]) = 0.1;
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
-        for (int i = 0; i < LCNT; i++)
+        for (int i = 0; i < (LCNT+1)/2; i++)
           adf::connect<adf::stream> (pad[0].out[0], split[i].in[0]);
         
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
         // split and pad can't be placed on same tile due to stream co-placement constraints
       } else {
-        for (int i = 0; i < LCNT; i++)
+        for (int i = 0; i < (LCNT+1)/2; i++)
           adf::connect<adf::stream> (pin[0], split[i].in[0]);
       }
 
       for (int i = 0; i < concat_graph.k1.size(); i++) {
         adf::location<adf::kernel>(concat_graph.k1[i]) = 
           adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        
+        adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
+        adf::location<adf::parameter>(k[i*2].param[0]) = cTilePos;
+        adf::location<adf::parameter>(k[i*2].param[0]) = adf::offset(0);
+        adf::location<adf::stack>(k[i*2]) = cTilePos;
+        adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
       }
     }
 };
