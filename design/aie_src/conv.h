@@ -340,6 +340,48 @@ class Conv3x3ReluStreamCacheCKKMultiRow {
     }
 
 };
+
+
+/**
+ * @brief Vector stream implementation for BCHW, stores biases,
+ * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
+ * Conv1x1ReluStream<24,24,24,24,1,1,1,1,4,1,1,1,1> total = 4226
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+class Conv1x1ReluStream {
+
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int CKK_ROW_SIZE = (C+3)/4*4;
+
+    alignas(32) float (&bias)[M];
+    alignas(32) float ckk_row[CKK_ROW_SIZE];
+
+  public:
+    Conv1x1ReluStream(
+      float (&b)[M]
+    ): bias(b) {}; 
+
+    void filter(
+      input_window<float>* in,      // BCHW
+      input_stream<float>* weights, // MCKK
+      output_stream<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      static_assert(GROUP == 1);
+      static_assert(KH==1);
+      static_assert(KW==1);
+      static_assert(INP_W%4==0);
+      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+      REGISTER_FUNCTION(Conv1x1ReluStream::filter);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
 /** @}*/
 
 
