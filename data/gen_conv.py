@@ -9,17 +9,16 @@ np.random.seed(0)
 INP_H = 24
 INP_W = 24
 B = 1
-C = 1 # loop dependency missed issue occurs at C=1
+C = 2 # loop dependency missed issue occurs at C=1
 M = 4 # even number if padding/striding cause H and W to be non-even
 K = 5
-PAD = (8 - K%8) % 8
 
 # 5x5
 tin = np.random.random(C*INP_W*INP_W).reshape(B,C,INP_W,INP_W).astype(np.float32) - 0.5
 save_tensor("conv_fpin.txt", pad_lastdim(tin, "conv tin", get_vector_boundary(tin)))
 
 fpweights_5x5 = np.random.random(M*C*K*K).reshape(M,C,K,K).astype(np.float32) - 0.5
-fpweights_5x5_pad = pad_lastdim(fpweights_5x5, "conv fpweights_5x5", PAD)
+fpweights_5x5_pad = pad_lastdim(fpweights_5x5, "conv fpweights_5x5", 8)
 fpbias = np.random.random((M)).astype(np.float32) - 0.5
 print("fpweights_5x5\n", fpweights_5x5.flatten().tolist(), "\n\n\n")
 print("fpweights_5x5_pad\n", fpweights_5x5_pad.flatten().tolist(), "\n\n\n")
@@ -40,23 +39,15 @@ tout_bchw_stride2 = torch.nn.functional.conv2d(
 tout_bchw_stride2 = torch.nn.functional.relu(torch.Tensor(tout_bchw_stride2)).numpy()
 save_tensor(f"convbchw_fpout_stride2_{get_shape_str(tout_bchw_stride2)}.txt", tout_bchw_stride2)
 
-# bhwc
-tout_bhwc = torch.nn.functional.conv2d(
-  torch.Tensor(tin.reshape(1,INP_W,INP_W,C).transpose(0,3,1,2)), 
-  torch.Tensor(fpweights_5x5.reshape(M,K,K,C).transpose(0,3,1,2)), 
-  torch.Tensor(fpbias.reshape(M)), padding="same").numpy().transpose(0,2,3,1)
-tout_bhwc = torch.nn.functional.relu(torch.Tensor(tout_bhwc)).numpy()
-save_tensor(f"convbhwc_fpout_{get_shape_str(tout_bhwc)}.txt", tout_bhwc)
-
 
 # 3x3
 K = 3
-PAD = (4 - K*K%4) % 4
-
 fpweights_3x3 = np.random.random(M*C*K*K).reshape(M,C,K,K).astype(np.float32) - 0.5
-fpweights_3x3_pad = pad_lastdim(fpweights_3x3.reshape(M,C,-1), "conv fpweights_3x3", PAD)
+fpweights_3x3_pad = pad_lastdim(fpweights_3x3.reshape(M,C,-1), "conv fpweights_3x3", 12)
+fpweights_3x3_groupC = pad_lastdim(fpweights_3x3.reshape(M,C,-1)[:,0:1,...], "conv fpweights_3x3", 12)
 print("fpweights_3x3\n", fpweights_3x3.flatten().tolist(), "\n\n\n")
 print("fpweights_3x3_pad\n", fpweights_3x3_pad.flatten().tolist(), "\n\n\n")
+print("fpweights_3x3_groupC\n", fpweights_3x3_groupC.flatten().tolist(), "\n\n\n")
 
 tout_bchw_3x3 = torch.nn.functional.conv2d(
   torch.Tensor(tin.reshape(1,C,INP_W,INP_W)), 
@@ -64,6 +55,14 @@ tout_bchw_3x3 = torch.nn.functional.conv2d(
   torch.Tensor(fpbias.reshape(M)), padding="same").numpy()
 tout_bchw_3x3 = torch.nn.functional.relu(torch.Tensor(tout_bchw_3x3)).numpy()
 save_tensor(f"convbchw_fpout_3x3_{get_shape_str(tout_bchw_3x3)}.txt", tout_bchw_3x3)
+
+# At groups=2, the operation becomes equivalent to having two conv layers side by side, each seeing half the input channels and producing half the output channels, and both subsequently concatenated.
+tout_bchw_3x3_groupC = torch.nn.functional.conv2d(
+  torch.Tensor(tin.reshape(1,C,INP_W,INP_W)), 
+  torch.Tensor(fpweights_3x3.reshape(M,C,K,K)[:,0:1,...]), 
+  torch.Tensor(fpbias.reshape(M)), padding="same", groups=C).numpy()
+tout_bchw_3x3_groupC = torch.nn.functional.relu(torch.Tensor(tout_bchw_3x3_groupC)).numpy()
+save_tensor(f"convbchw_fpout_3x3_group{C}_{get_shape_str(tout_bchw_3x3_groupC)}.txt", tout_bchw_3x3_groupC)
 
 tout_bchw_3x3_stride2 = torch.nn.functional.conv2d(
   torch.Tensor(tin.reshape(1,C,INP_W,INP_W)), 

@@ -28,48 +28,12 @@
 
 
 /**
- * @brief Scalar implementation for BHWC, stores weights and biases, 
- * requires STEP_H==STEP_W==1, GROUP==1, 
- * ConvReluScalarBHWC<28,28,24,1,1,1,1,4,5,1> total = 147947 cycles
- */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
-          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-class ConvReluScalarBHWC {
-
-  private:
-    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    alignas(32) float (&weights)[M*KH*KW*C];
-    alignas(32) float (&bias)[M];
-
-  public:
-    ConvReluScalarBHWC(
-      float (&w)[M*KH*KW*C],
-      float (&b)[M]
-    ): weights(w), bias(b) {}; 
-
-    void filter(
-      input_window<float>* in,      // BHWC (1x28x28x1)
-      output_window<float>* out     // BHWM (1x24x24x6)
-    );
-    
-    static void registerKernelClass() {
-      static_assert(GROUP == 1);
-      static_assert(STEP_H == 1);
-      static_assert(STEP_W == 1);
-      REGISTER_FUNCTION(ConvReluScalarBHWC::filter);
-      REGISTER_PARAMETER(weights);
-      REGISTER_PARAMETER(bias);
-    }
-
-};
-
-
-/**
  * @brief Scalar implementation for BCHW, stores weights and biases,
  * requires GROUP==1, 
- * ConvReluScalarBCHW<28,28,24,1,1,1,1,4,5,5,1,1> total = 140059
- * ConvReluScalarBCHW<26,26,24,1,1,1,1,4,3,3,1,1> total = 65443
- * ConvReluScalarBCHW<24,24,10,2,2,1,1,4,5,5,1,1> total = 24798
+ * ConvReluScalarBCHW<28,28,24,24,1,1,1,2,4,5,5,1,1> total = 369505
+ * ConvReluScalarBCHW<24,24,10,10,2,2,1,2,4,5,5,1,1> total = 64413
+ * ConvReluScalarBCHW<26,26,24,24,1,1,1,2,4,3,3,1,1> total = 148320
+ *
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -106,6 +70,7 @@ class ConvReluScalarBCHW {
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, 
  * requires KH==KW==5, INP_W%4==0, OUT_W_PAD%8=0, STEP_H==STEP_W==1, GROUP==1, 
  * Conv5x5ReluBCHW<28,28,24,1,1,1,1,4,5,1> total = 14148
+ * Conv5x5ReluBCHW<28,28,24,24,1,1,1,2,4,5,5,1,1> total = 5519
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -146,7 +111,7 @@ class Conv5x5ReluBCHW {
  * @brief Vector implementation for 5x5 BCHW, stores weights and biases, 
  * requires KH==KW==5, INP_W%4==0, OUT_W_PAD%8=0, STEP_H==STEP_W==1, GROUP==1, 
  * assumes weights are padded to MxCx5x8,
- * Conv5x5on8ReluBCHW<28,28,24,1,1,1,1,4,5,1> total = 11030
+ * Conv5x5on8ReluBCHW<28,28,24,24,1,1,1,2,4,5,5,1,1> total = 21401
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -187,7 +152,7 @@ class Conv5x5on8ReluBCHW {
  * @brief Vector implementation for 3x3 BCHW, stores weights and biases, 
  * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%8=0, STEP_H==1, STEP_W==1, GROUP==1, 
  * assumes weights are padded to MxCx12,
- * Conv3x3on12ReluBCHW<26,28,24,1,1,1,1,4,3,1> start = 421518,end = 426929,total = 5411 (5363)
+ * Conv3x3on12ReluBCHW<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 8899
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -227,8 +192,8 @@ class Conv3x3on12ReluBCHW {
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
  * requires GROUP==1, 
- * ConvReluScalarStreamCacheCKK<26,28,24,1,1,1,1,4,3,1> total = 74845
- * ConvReluScalarStreamCacheCKK<24,24,11,2,2,1,1,4,3,1> total = 16863
+ * ConvReluScalarStreamCacheCKK<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 252185
+ * ConvReluScalarStreamCacheCKK<24,24,11,12,2,2,1,2,4,3,3,1,1> total = 54420
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -263,8 +228,9 @@ class ConvReluScalarStreamCacheCKK {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
- * Conv3x3ReluStreamCacheCKK<26,28,24,1,1,1,1,4,3,1> total = 11059
- * Conv3x3ReluStreamCacheCKK<24,24,12,2,2,1,1,4,3,1> total = 3656
+ * Conv3x3ReluStreamCacheCKK<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 16009
+ * Conv3x3ReluStreamCacheCKK<26,28,24,24,1,1,1,2,4,3,3,2,1> total = 11088
+ * Conv3x3ReluStreamCacheCKK<24,24,11,12,2,2,1,2,4,3,3,1,1> total = 7716
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -272,8 +238,9 @@ class Conv3x3ReluStreamCacheCKK {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
     alignas(32) float (&bias)[M];
-    alignas(32) float ckk_row[C*12];
+    alignas(32) float ckk_row[C_PER_M*12];
 
   public:
     Conv3x3ReluStreamCacheCKK(
@@ -287,7 +254,6 @@ class Conv3x3ReluStreamCacheCKK {
     );
     
     static void registerKernelClass() {
-      static_assert(GROUP == 1);
       static_assert(KH==3);
       static_assert(KW==3);
       static_assert(INP_W%4==0);
@@ -304,7 +270,7 @@ class Conv3x3ReluStreamCacheCKK {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%8==0, STEP_H==1, STEP_W==1, GROUP==1, 
- * Conv3x3ReluStreamCacheCKKMultiRow<26,28,24,1,1,1,1,4,3,1> total = 10672
+ * Conv3x3ReluStreamCacheCKKMultiRow<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 15137
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -345,7 +311,7 @@ class Conv3x3ReluStreamCacheCKKMultiRow {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
- * Conv1x1ReluStream<24,24,24,24,1,1,1,1,4,1,1,1,1> total = 4226
+ * Conv1x1ReluStream<24,24,24,24,1,1,1,2,4,1,1,1,1> total = 4867
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
