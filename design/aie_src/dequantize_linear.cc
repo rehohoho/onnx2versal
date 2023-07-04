@@ -4,7 +4,7 @@
 
 #define DEQUANTIZE_LINEAR_PROFILE_FOOTER(filter_name) \
   PROFILE_FOOTER2("%s<%d,%d,%d>", \
-    filter_name, INP_H, INP_W, INP_W_PAD);
+    filter_name, B, INP_W, OUT_W);
 
 template <int B, int INP_W, int OUT_W>
 void DequantizeLinearScalar<B, INP_W, OUT_W>::filter(

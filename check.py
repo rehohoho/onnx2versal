@@ -1,6 +1,7 @@
 import argparse
-import re
+import math
 import os
+import re
 import sys
 
 import numpy as np
@@ -29,6 +30,8 @@ def is_file_match(res_path: str,
     shape = re.findall(r"(?<=shape).*?(?=[_,.])", data_path)[-1].split("x")
     shape = [int(i) for i in shape]
     res_arr = res_arr.reshape(*shape[:-1], -1)[..., :shape[-1]]
+    if data_arr.size - math.prod(shape) < shape[-1]:
+      data_arr = data_arr.flatten()[:math.prod(shape)]
     data_arr = data_arr.reshape(*shape[:-1], -1)[..., :shape[-1]]
   
   if res_arr.shape == data_arr.shape:

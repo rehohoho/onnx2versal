@@ -44,14 +44,14 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
           }
           window_writeincr(out, res);
           window_incr(in, -C_PER_M*INP_H*INP_W + STEP_W); // go channel -C_PER_M, right STEP_W
-          weightIdx -= C*KH*KW;
+          weightIdx -= C_PER_M*KH*KW;
         } // W
 
         window_incr(out, OUT_W_PAD - OUT_W);
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
-      weightIdx += C*KH*KW;
+      weightIdx += C_PER_M*KH*KW;
       if (m % (M/GROUP) == M/GROUP - 1) {
         window_incr(in, C_PER_M*INP_H*INP_W); // next C_PER_M channels
       }
