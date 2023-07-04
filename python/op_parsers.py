@@ -309,10 +309,15 @@ class ConvOp(OpParser):
     
     elif conv_in_bytes <= MAX_PARAM_SIZE:
       kernel = "ConvReluScalarStreamCacheCKK"
-      if self.KH == self.KW == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-        kernel = "Conv3x3ReluStreamCacheCKKMultiRow" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
-        tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
-        self.W1 = PAD_W_VEC - self.INP_W - self.W0
+      if self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC + self.B*self.C*(self.KH-1)*7*PAD_W_VEC*tin.dtype.itemsize <= TILE_SIZE * 8:
+        if self.KH == self.KW == 3:
+          kernel = "Conv3x3ReluStreamCacheCKK"
+          tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
+          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
+        elif self.KH == self.KW == 1 and self.GROUP == 1:
+          kernel = "Conv1x1ReluStream"
+          tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
+          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
       
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
       self.gmio_repeats = 1
@@ -322,10 +327,15 @@ class ConvOp(OpParser):
     
     else:
       kernel = "ConvReluScalarStreamCacheCKK"
-      if self.KH == self.KW == 3 and self.STEP_H in [1,2] and self.STEP_W in [1,2] and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC + self.B*self.C*(self.KH-1)*7*PAD_W_VEC*tin.dtype.itemsize <= MAX_PARAM_SIZE * 8:
-        kernel = "Conv3x3ReluStreamCacheCKKMultiRow" if self.STEP_H == self.STEP_W == 1 else "Conv3x3ReluStreamCacheCKK"
-        tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
-        self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
+      if self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC + self.B*self.C*(self.KH-1)*7*PAD_W_VEC*tin.dtype.itemsize <= TILE_SIZE * 8:
+        if self.KH == self.KW == 3:
+          kernel = "Conv3x3ReluStreamCacheCKK"
+          tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
+          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
+        elif self.KH == self.KW == 1 and self.GROUP == 1:
+          kernel = "Conv1x1ReluStream"
+          tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
+          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
       
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
       self.gmio_repeats = 1
@@ -350,8 +360,8 @@ class ConvOp(OpParser):
       
       concat_w = HCHUNK_OUT * self.OUT_W_PAD
       concat_block = self.OUT_H * self.OUT_W_PAD
-      concat_kernel = "ConcatScalarStream"
-      split_kernel = "SplitScalarSingleStream"
+      concat_kernel = "ConcatFloatStream"
+      split_kernel = "SplitFilterFloatStream"
       self.kernel_type = f"ConvReluChunkHStreamGraph<{split_kernel},{kernel},{concat_kernel},{HCHUNK},{self.get_conv_targs()}"
   
   def get_kernel_line(self) -> str:
@@ -564,7 +574,7 @@ class PoolOp(OpParser):
       return f"PoolGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
     else:
       split_kernel = "SplitScalar" if self.dtype == "float32" else "SplitInt8"
-      concat_kernel = "ConcatScalarStream" if self.dtype == "float32" else "ConcatInt8Stream"
+      concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
       CCHUNK, _ = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
       return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
         f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
@@ -696,17 +706,16 @@ class QLinearConvOp(OpParser):
     attr_d = get_attribute_dict(attributes)
     for i in attr_d.get("dilations"):
       if i != 1: raise NotImplementedError("Dilated convolution not implemented.")
-    if np.unique(attr_d.get("kernel_shape")).size != 1: 
-      raise NotImplementedError("Asymmetric kernel convolution not implemented")
+    self.GROUP = attr_d.get("group", 1)
     self.STEP_H, self.STEP_W = attr_d.get("strides", [1, 1])
     self.H0, self.W0, self.H1, self.W1 = attr_d.get("pads", [0, 0, 0, 0])
 
     self.B, self.C, self.INP_H, self.INP_W = tin.shape
-    self.M, _, self.K, _ = tw.shape
-    self.OUT_H = (self.INP_H + self.H0 + self.H1 - self.K) // self.STEP_H + 1
-    self.OUT_W = (self.INP_W + self.W0 + self.W1 - self.K) // self.STEP_W + 1
+    self.M, _, self.KH, self.KW = tw.shape
+    self.OUT_H = (self.INP_H + self.H0 + self.H1 - self.KH) // self.STEP_H + 1
+    self.OUT_W = (self.INP_W + self.W0 + self.W1 - self.KW) // self.STEP_W + 1
 
-    assert tw.shape == (self.M, self.C, self.K, self.K) and \
+    assert tw.shape == (self.M, self.C//self.GROUP, self.KH, self.KW) and \
       tbias.shape == (self.M, ) and \
       tout.shape == (self.B, self.M, self.OUT_H, self.OUT_W)
 
@@ -717,9 +726,8 @@ class QLinearConvOp(OpParser):
     tin = pad_lastdim(tin, "QLinearConvOp tin", get_vector_boundary(tin), value=tin_zero) #files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
-    
-    tout = pad_lastdim(tout, "QLinearConvOp tout", get_vector_boundary(tout), value=tin_zero)
 
+    tout = pad_lastdim(tout, "QLinearConvOp tout", get_vector_boundary(tout), value=tout_zero)
     self.INP_W, self.OUT_W_PAD = tin.shape[-1], tout.shape[-1] 
     self.out_size = tout.size # host buffer sizes
 
@@ -729,22 +737,22 @@ class QLinearConvOp(OpParser):
     self.W1 = PAD_W - self.INP_W - self.W0
     conv_in_bytes = self.B*self.C*PAD_H*PAD_W*tin.dtype.itemsize
 
-    if conv_in_bytes + self.B*self.C*(self.K-1)*7*PAD_W*tin.dtype.itemsize > MAX_PARAM_SIZE * 8 or tout.nbytes > MAX_PARAM_SIZE:
-      raise NotImplementedError(f"No QLinearConv implementation for padded input size {conv_in_bytes}, output size {tout.nbytes}")
+    # if conv_in_bytes + self.B*self.C*(self.KH-1)*7*PAD_W*tin.dtype.itemsize > MAX_PARAM_SIZE * 8 or tout.nbytes > MAX_PARAM_SIZE:
+    #   raise NotImplementedError(f"No QLinearConv implementation for padded input size {conv_in_bytes}, output size {tout.nbytes}")
 
     tbias = tbias - tw.reshape(self.M, -1).sum(1).astype(np.int32) * tin_zero
     pad_kernel = "Pad2DStreamInt8" if self.INP_W % 16 == 0 and self.B*self.C*self.INP_H*self.INP_W % 4 == 0 else "Pad2DWindowScalar"
     
     kernel = "QLinearConvScalarStream"
-    if self.K == 3 and self.INP_W % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
-      tw = pad_lastdim(tw.reshape(self.M, self.C, -1), "QLinearConvOp weights", get_vector_boundary(tw))
+    if self.KH == self.KW == 3 and self.INP_W % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
+      tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "QLinearConvOp weights", get_vector_boundary(tw))
       tw = tw[..., [0,1,2,9, 3,4,5,9, 6,7,8,9, 9,9,9,9]]
       kernel = "QLinearConv3x3StreamPad" if self.OUT_W < self.OUT_W_PAD else "QLinearConv3x3Stream" # "QLinearConv3x3StreamScale32bit"
-    elif self.K == 1 and self.INP_W % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
+    elif self.KH == self.KW == 1 and self.GROUP == 1 and self.INP_W % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
       tw = pad_lastdim(tw.reshape(self.M,-1), "QLinearConvOp weights", get_vector_boundary(tw))
       kernel = "QLinearConv1x1Stream"
     else:
-      tw = pad_lastdim(tw.reshape(self.M, self.C, -1), "QLinearConvOp weights", get_vector_boundary(tw))
+      tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, -1), "QLinearConvOp weights", get_vector_boundary(tw))
 
     self.gmioname_2_tensor[f"{self.name}_w"] = tw
     self.gmio_repeats = 1
@@ -755,20 +763,21 @@ class QLinearConvOp(OpParser):
       
       self.kernel_type = f"{graph}<{pad_kernel},{kernel}," + \
         f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.OUT_W_PAD},{self.STEP_H},{self.STEP_W}," + \
-        f"{self.B},{self.C},{self.M},{self.K}," + \
+        f"{self.B},{self.C},{self.M},{self.KH},{self.KW},{self.GROUP}," + \
         f"{self.H0},{self.H1},{self.W0},{self.W1}>"
     
     else:
       graph = "QLinearConvChunkHGraph"
 
       multiplier = self.B * self.C * PAD_W * self.STEP_H * tin.dtype.itemsize
-      offset = self.B * self.C * (-(self.STEP_H - 1) + (self.K - 1)) * PAD_W * tin.dtype.itemsize
+      OVERLAP = self.KH - self.STEP_H
+      offset = self.B * self.C * OVERLAP * PAD_W * tin.dtype.itemsize
       HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_PARAM_SIZE, offset)
-      HCHUNK = HCHUNK * self.STEP_H - (self.STEP_H - 1) + (self.K - 1)
+      HCHUNK = HCHUNK * self.STEP_H + OVERLAP
 
       self.kernel_type = f"{graph}<SplitInt8,{kernel},ConcatInt8Stream,{HCHUNK}," + \
         f"{self.INP_H},{self.INP_W},{self.OUT_W},{self.OUT_W_PAD},{self.STEP_H},{self.STEP_W}," + \
-        f"{self.B},{self.C},{self.M},{self.K}," + \
+        f"{self.B},{self.C},{self.M},{self.KH},{self.KW},{self.GROUP}," + \
         f"{self.H0},{self.H1},{self.W0},{self.W1}>"
     
     self.argname_2_tensor[f"{self.name}_b"] = tbias
@@ -846,6 +855,9 @@ class QLinearPoolOp(OpParser):
     
     attr_d = get_attribute_dict(attributes)
     if attr_d.get("strides") != attr_d.get("kernel_shape"): raise ValueError(f"Attribute error, strides {attr_d['strides']} not equal to kernel {attr_d['kernel_shape']}")
+    kernel_shape = attr_d.get("kernel_shape")
+    if len(kernel_shape) != 2: raise NotImplementedError(f"Pool for kernel shape {kernel_shape} not supported. Only Pool2D supported.")
+    self.KH, self.KW = kernel_shape
     
     tin, tin_scale, tin_zero, tout_scale, tout_zero, tout = tensors
 
@@ -874,12 +886,20 @@ class QLinearPoolOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    graph = "QLinearPoolStreamGraph"
     if self.reduction_mode == "avg":
       kernel = "QLinearAvgpoolScalarBCHW"
-      return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C}> {self.name};"
     else:
       raise NotImplementedError(f"Pool for reduction mode {self.reduction_mode} not implemented.")
+    
+    if self.B*self.C*self.INP_H*self.INP_W*self.dtype.itemsize <= MAX_PARAM_SIZE:
+      return f"QLinearPoolStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+    else:
+      split_kernel = "SplitScalar" if self.dtype == "float32" else "SplitInt8"
+      concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
+      CCHUNK, _ = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
+      return f"QLinearPoolChunkCStreamGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
+        f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+    
   
   def disable_output_pad(self):
     self.OUT_W = self.unpadded_OUT_W
@@ -968,15 +988,13 @@ class QuantizeLinearOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    graph = "QuantizeLinearStreamGraph"
     if self.INP_W % 4 == 0 and self.OUT_W % 16 == 0:
-      kernel = "QuantizeLinearFmulStream"
+      return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
     else:
       raise NotImplementedError(f"Expect INP_W%4==0, OUT_W%16==0, but got INP_W {self.INP_W}, OUT_W {self.OUT_W}")
-    return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
   
   def disable_input_pad(self):
-    self.INP_W = self.inW
+    # self.INP_W = self.inW
     super().disable_input_pad()
 
 
