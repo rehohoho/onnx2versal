@@ -3,6 +3,8 @@
 
 #include <adf.h>
 #include "qlinearpool.h"
+#include "graph_concat.h"
+#include "graph_split.h"
 
 
 /**
@@ -61,6 +63,61 @@ class QLinearPoolStreamGraph : public adf::graph {
       adf::connect<adf::stream>                             (k[0].out[0], pout[0]);
 
       adf::samples_per_iteration(k[0].out[0]) = B*C*OUT_H*OUT_W;
+    }
+
+};
+
+
+/**
+ * @brief Multi instance graph
+ * 
+ * @connections
+ * @connect{pin[0], B*INP_H*INP_W*C*sizeof(TT)}
+ * @connect{pout[0], stream B*OUT_H*OUT_W*C*sizeof(TT)}
+ * @endconnections
+ */
+template <
+  template<typename, int, int, int, int> class SPLIT,
+  template<typename, int, int, int, int, int, int, int, int> class QLINEARPOOL,
+  template<typename, int, int, int, int> class CONCAT, 
+  int CCHUNK, 
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+class QLinearPoolChunkCStreamGraph : public adf::graph {
+
+  private:
+    typedef SplitGraph<SPLIT, TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0> mSplitGraph;
+    mSplitGraph split_graph;
+    static constexpr int LCNT = mSplitGraph::LCNT;
+    ConcatStreamGraph<CONCAT, TT, LCNT, B, CCHUNK*OUT_H*OUT_W, C*OUT_H*OUT_W> concat_graph;
+
+    adf::kernel k[LCNT];
+    std::string id;
+
+  public:
+    adf::port<input> pin[1];
+    adf::port<output> pout[1];
+
+    QLinearPoolChunkCStreamGraph(
+      float in_scale,
+      float out_scale,
+      int8_t in_zero,
+      int8_t out_zero
+    ) { 
+      static_assert(LCNT <= 8);
+      adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
+
+      for (int i = 0; i < LCNT; i++) {
+        k[i] = adf::kernel::create_object<QLINEARPOOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>>(
+          in_scale, out_scale, in_zero, out_zero);
+        adf::source(k[i]) = "qlinearpool.cc";
+        adf::headers(k[i]) = {"qlinearpool.h"};
+        adf::runtime<ratio>(k[i]) = 0.6;
+        
+        adf::connect<adf::window<B*CCHUNK*INP_H*INP_W*sizeof(TT)>> (split_graph.pout[i], k[i].in[0]);
+        adf::connect<adf::stream, adf::window<B*CCHUNK*OUT_H*OUT_W*sizeof(TT)>> (k[i].out[0], concat_graph.pin[i]);
+      }
+      
+      adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
     }
 
 };

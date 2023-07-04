@@ -137,19 +137,19 @@ ConcatGraphTest<ConcatFloat, float_t, LCNT, H, INP_W, OUT_W> concatFloat(
 
 
 // float32 stream
-ConcatStreamGraphTest<ConcatScalarStream, float_t, 2, H, INP_W, 48> concatStreamScalar2(
+ConcatStreamGraphTest<ConcatFloatStream, float_t, 2, H, INP_W, 48> concatStreamScalar2(
   "concatStreamScalar2", "concat_fpout_shape4x48_ConcatStreamScalar.txt", fp_txts);
-ConcatStreamGraphTest<ConcatScalarStream, float_t, 3, H, INP_W, 80> concatStreamScalar3(
+ConcatStreamGraphTest<ConcatFloatStream, float_t, 3, H, INP_W, 80> concatStreamScalar3(
   "concatStreamScalar3", "concat_fpout_shape4x80_ConcatStreamScalar.txt", fp_txts);
-ConcatStreamGraphTest<ConcatScalarStream, float_t, 4, H, INP_W, 112> concatStreamScalar4(
+ConcatStreamGraphTest<ConcatFloatStream, float_t, 4, H, INP_W, 112> concatStreamScalar4(
   "concatStreamScalar4", "concat_fpout_shape4x112_ConcatStreamScalar.txt", fp_txts);
-ConcatStreamGraphTest<ConcatScalarStream, float_t, 5, H, INP_W, 144> concatStreamScalar5(
+ConcatStreamGraphTest<ConcatFloatStream, float_t, 5, H, INP_W, 144> concatStreamScalar5(
   "concatStreamScalar5", "concat_fpout_shape4x144_ConcatStreamScalar.txt", fp_txts);
-ConcatStreamGraphTest<ConcatScalarStream, float_t, 6, H, INP_W, 176> concatStreamScalar6(
+ConcatStreamGraphTest<ConcatFloatStream, float_t, 6, H, INP_W, 176> concatStreamScalar6(
   "concatStreamScalar6", "concat_fpout_shape4x176_ConcatStreamScalar.txt", fp_txts);
-ConcatStreamGraphTest<ConcatScalarStream, float_t, 7, H, INP_W, 208> concatStreamScalar7(
+ConcatStreamGraphTest<ConcatFloatStream, float_t, 7, H, INP_W, 208> concatStreamScalar7(
   "concatStreamScalar7", "concat_fpout_shape4x208_ConcatStreamScalar.txt", fp_txts);
-ConcatStreamGraphTest<ConcatScalarStream, float_t, 8, H, INP_W, 240> concatStreamScalar8(
+ConcatStreamGraphTest<ConcatFloatStream, float_t, 8, H, INP_W, 240> concatStreamScalar8(
   "concatStreamScalar8", "concat_fpout_shape4x240_ConcatStreamScalar.txt", fp_txts);
 
 ConcatTwoStreamGraphTest<ConcatTwo32bitStreams, float_t, 2, H, INP_W/8, 64> concatTwo32bitStreams(

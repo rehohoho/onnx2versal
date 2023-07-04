@@ -673,7 +673,7 @@ void ConcatInt8<TT, LCNT, H, INP_W, OUT_W>::filter1(
 
 
 template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
-void ConcatScalarStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
+void ConcatFloatStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
 	input_stream<TT>* in0,
   input_stream<TT>* in1,
   output_stream<TT>* out
@@ -697,7 +697,7 @@ void ConcatScalarStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
     }
   }
 
-  PROFILE_FOOTER2("ConcatScalarStream<%s,%d,%d,%d,%d>", 
+  PROFILE_FOOTER2("ConcatFloatStream<%s,%d,%d,%d,%d>", 
     typeid(TT).name(), H, INP_W1, INP_W2, OUT_W);
 }
 

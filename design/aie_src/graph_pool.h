@@ -82,6 +82,7 @@ class PoolChunkCGraph : public adf::graph {
     adf::port<output> pout[1];
 
     PoolChunkCGraph() { 
+      static_assert(LCNT <= 8);
       adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
 
       for (int i = 0; i < LCNT; i++) {

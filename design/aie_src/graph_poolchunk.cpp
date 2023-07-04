@@ -44,13 +44,13 @@ const int KH = 2;
 const int KW = 2;
 
 // BCHW
-PoolChunkCGraphTest<SplitScalar, MaxpoolScalarBCHW, ConcatScalarStream, 
+PoolChunkCGraphTest<SplitScalar, MaxpoolScalarBCHW, ConcatFloatStream, 
                     CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW> maxpoolScalarBCHW(
   "maxpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_MaxpoolScalarBCHW.txt");
-PoolChunkCGraphTest<SplitScalar, Maxpool2x2FloatBCHW, ConcatScalarStream, 
+PoolChunkCGraphTest<SplitScalar, Maxpool2x2FloatBCHW, ConcatFloatStream, 
                     CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW> maxpool2x2BCHW(
   "maxpool2x2BCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_Maxpool2x2FloatBCHW.txt");
-PoolChunkCGraphTest<SplitScalar, AvgpoolScalarBCHW, ConcatScalarStream, 
+PoolChunkCGraphTest<SplitScalar, AvgpoolScalarBCHW, ConcatFloatStream, 
                     CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW> avgpoolScalarBCHW(
   "avgpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_avg_fpout_shape1x6x12x12_AvgpoolScalarBCHW.txt");
 PoolChunkCGraphTest<SplitInt8, Maxpool2x2Int8BCHW, ConcatInt8Stream, 
