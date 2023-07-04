@@ -23,10 +23,9 @@
  * requires B*C*OUT_H*OUT_W % 16 == 0
  * QLinearAvgpoolScalarBCHW::filter<24,32,16,1,6> total = 17365 (output_window 15766)
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
 class QLinearAvgpoolScalarBCHW {
   private:
-    static constexpr int K = INP_H/OUT_H;
     float in_scale;
     float out_scale;
     int8_t in_zero;

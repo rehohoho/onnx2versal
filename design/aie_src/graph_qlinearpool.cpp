@@ -2,12 +2,12 @@
 #include "graph_utils.h"
 
 
-template <template<typename, int, int, int, int, int, int> class QLINEARPOOL,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
+template <template<typename, int, int, int, int, int, int, int, int> class QLINEARPOOL,
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
 class QLinearPoolStreamGraphTest : public adf::graph {
 
   private:
-    QLinearPoolStreamGraph<QLINEARPOOL, TT, INP_H, INP_W, OUT_H, OUT_W, B, C> g;
+    QLinearPoolStreamGraph<QLINEARPOOL, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW> g;
 
   public:
     adf::input_plio plin[1];
@@ -31,7 +31,7 @@ class QLinearPoolStreamGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-QLinearPoolStreamGraphTest<QLinearAvgpoolScalarBCHW,int8_t,8,16,1,1,1,64> k14qlinearpool(
+QLinearPoolStreamGraphTest<QLinearAvgpoolScalarBCHW,int8_t,8,16,1,1,1,64,8,8> k14qlinearpool(
   "k14qlinearpool", 0.12030204, 0.022007886, -128, -128,
   "k14qlinearpool_in_shape1x64x8x16.txt", 
   "k14qlinearpool_goldenout_shape1x64x1x1.txt");

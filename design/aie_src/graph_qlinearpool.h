@@ -19,6 +19,8 @@
  * @tparam OUT_W        output width
  * @tparam B            batch size
  * @tparam C            input channels
+ * @tparam KH           kernel height
+ * @tparam KW           kernel width
  * 
  * @{
  */
@@ -31,12 +33,11 @@
  * @connect{pout[0], stream B*OUT_H*OUT_W*C*sizeof(TT)}
  * @endconnections
  */
-template <template<typename, int, int, int, int, int, int> class QLINEARPOOL,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C>
+template <template<typename, int, int, int, int, int, int, int, int> class QLINEARPOOL,
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
 class QLinearPoolStreamGraph : public adf::graph {
 
   private:
-    static constexpr int K = INP_H / OUT_H;
     adf::kernel k[1];
     std::string id;
 
@@ -50,7 +51,7 @@ class QLinearPoolStreamGraph : public adf::graph {
       int8_t in_zero,
       int8_t out_zero
     ) { 
-      k[0] = adf::kernel::create_object<QLINEARPOOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, C>>(
+      k[0] = adf::kernel::create_object<QLINEARPOOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>>(
         in_scale, out_scale, in_zero, out_zero);
       adf::source(k[0]) = "qlinearpool.cc";
       adf::headers(k[0]) = {"qlinearpool.h"};
