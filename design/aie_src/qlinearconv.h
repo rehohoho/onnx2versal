@@ -28,6 +28,7 @@
  * - int32 bias: -qx_zero*(qw_zero): k*int8*int8 > 16bits
  * - int8 shifted qy_zero: shift added into acc
  * - int16 scale: saturated to 8 bits
+ * - each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W) for kernels that allow GROUP != 1
  */
 
 
@@ -38,13 +39,14 @@
  * QLinearConvScalar<26,32,28,32,1,1,1,1,6,1> total = 625226, 
  * QLinearConvScalar<26,28,13,16,2,2,1,1,6,3> total = 189225
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvScalar {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
 
-    alignas(32) int8_t (&weights)[M*C*K*K];
+    alignas(32) int8_t (&weights)[M*C_PER_M*KH*KW];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
@@ -57,7 +59,7 @@ class QLinearConvScalar {
 	
   public:
     QLinearConvScalar (
-      int8_t (&w)[M*C*K*K],
+      int8_t (&w)[M*C*KH*KW],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -89,13 +91,13 @@ class QLinearConvScalar {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv5x5<30,32,28,32,1,1,1,1,6,5> total = 3513
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv5x5 {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
-    alignas(32) int8_t (&weights)[M*C*K*16];
+    alignas(32) int8_t (&weights)[M*C*KH*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
@@ -110,7 +112,7 @@ class QLinearConv5x5 {
 	
   public:
     QLinearConv5x5 (
-      int8_t (&w)[M*C*K*16],
+      int8_t (&w)[M*C*KH*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -126,7 +128,9 @@ class QLinearConv5x5 {
 		);
 
 		static void registerKernelClass() {
-      static_assert(K==5);
+      static_assert(KH==5);
+      static_assert(KW==5);
+      static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
 			REGISTER_FUNCTION(QLinearConv5x5::filter);
@@ -143,13 +147,13 @@ class QLinearConv5x5 {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv5x5Scale32bit<30,32,28,32,1,1,1,1,6,5> total = 7652
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv5x5Scale32bit {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
-    alignas(32) int8_t (&weights)[M*C*K*16];
+    alignas(32) int8_t (&weights)[M*C*KH*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
@@ -164,7 +168,7 @@ class QLinearConv5x5Scale32bit {
 	
   public:
     QLinearConv5x5Scale32bit (
-      int8_t (&w)[M*C*K*16],
+      int8_t (&w)[M*C*KH*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -180,6 +184,7 @@ class QLinearConv5x5Scale32bit {
 		);
 
 		static void registerKernelClass() {
+      static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
 			REGISTER_FUNCTION(QLinearConv5x5Scale32bit::filter);
@@ -195,11 +200,11 @@ class QLinearConv5x5Scale32bit {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2906
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv3x3 {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
     alignas(32) int8_t (&weights)[M*C*16];
     alignas(32) int32_t (&bias)[M];
@@ -232,7 +237,9 @@ class QLinearConv3x3 {
 		);
 
 		static void registerKernelClass() {
-      static_assert(K==3);
+      static_assert(KH==3);
+      static_assert(KW==3);
+      static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
 			REGISTER_FUNCTION(QLinearConv3x3::filter);
@@ -244,16 +251,17 @@ class QLinearConv3x3 {
 
 /**
  * @brief Scalar implementation streaming weights, 
- * requires weights stream to be padded from MxCxKxK to MxCx16, K < 5,
+ * requires weights stream to be padded from MxCxKxK to MxCx16, KH=KW < 5,
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 776955 (output_window 682564)
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvScalarStream {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*16;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+15)/16*16;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
@@ -296,16 +304,17 @@ class QLinearConvScalarStream {
  * @brief Vector implementation for 3x3 QLinearConv, 
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
- * requires K==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  * QLinearConv3x3Stream<28,48,28,32,1,1,1,1,8,3> total = 4689 (output_window slightly faster ~0.85x time), 
  * QLinearConv3x3Stream<26,32,13,16,2,2,1,1,8,3> total = 3376
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv3x3Stream {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*16;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*16;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
@@ -338,7 +347,8 @@ class QLinearConv3x3Stream {
 		);
 
 		static void registerKernelClass() {
-      static_assert(K==3);
+      static_assert(KH==3);
+      static_assert(KW==3);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
@@ -353,15 +363,16 @@ class QLinearConv3x3Stream {
  * @brief Vector implementation for 3x3 QLinearConv, padding with y_zero, 
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
- * requires K==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  * QLinearConv3x3StreamPad<28,48,28,32,1,1,1,1,8,3> total = 5373
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv3x3StreamPad {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*16;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*16;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
@@ -394,7 +405,8 @@ class QLinearConv3x3StreamPad {
 		);
 
 		static void registerKernelClass() {
-      static_assert(K==3);
+      static_assert(KH==3);
+      static_assert(KW==3);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
@@ -409,15 +421,15 @@ class QLinearConv3x3StreamPad {
  * @brief Vector implementation for 3x3 QLinearConv using 32bit scale for precision, 
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
- * requires K==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  * QLinearConv3x3StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 7408, 
  * QLinearConv3x3StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 9329
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv3x3StreamScale32bit {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int CKK_ROW_SIZE = C*16;
 
     alignas(32) int32_t (&bias)[M];
@@ -451,7 +463,9 @@ class QLinearConv3x3StreamScale32bit {
 		);
 
 		static void registerKernelClass() {
-      static_assert(K==3);
+      static_assert(KH==3);
+      static_assert(KW==3);
+      static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
@@ -465,14 +479,14 @@ class QLinearConv3x3StreamScale32bit {
  * @brief Vector implementation for 3x3 QLinearConv, 
  * requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, 
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
- * requires K==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,6,1> total = 2188
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1Stream {
   
   private:
-    static constexpr int OUT_H = (INP_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
 
     alignas(32) int32_t (&bias)[M];
@@ -506,7 +520,9 @@ class QLinearConv1x1Stream {
 		);
 
 		static void registerKernelClass() {
-      static_assert(K==1);
+      static_assert(KH==1);
+      static_assert(KW==1);
+      static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);

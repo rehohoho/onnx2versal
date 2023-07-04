@@ -4,12 +4,12 @@
 
 
 #define CONV_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
-    filter_name, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K);
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP);
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConvScalar<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConvScalar<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
@@ -25,24 +25,24 @@ void QLinearConvScalar<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
         for (int w = 0; w < OUT_W; w++) {
         
           int res = bias[m];
-          weightIdx = m*C*K*K;
+          weightIdx = m*C*KH*KW;
           
-          for (int c = 0; c < C; c++) {
-            for (int p = 0; p < K; p++) {
-              for (int q = 0; q < K; q++) {
+          for (int c = 0; c < C_PER_M; c++) {
+            for (int p = 0; p < KH; p++) {
+              for (int q = 0; q < KW; q++) {
                 int a = window_readincr(in);
                 res += a * (weights[weightIdx]-w_zero);
                 weightIdx++;
               }
-              window_incr(in, -K+INP_W); // go left K, down 1
+              window_incr(in, -KW+INP_W); // go left KW, down 1
             }
-            window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
+            window_incr(in, -KH*INP_W + INP_H*INP_W); // go up KH, channel 1
           }
           res = y_zero + round(scale * res);
           res = std::min(std::max(res, -128), 127);
 
           window_writeincr(out, (int8_t) res);
-          window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
+          window_incr(in, -C_PER_M*INP_H*INP_W + STEP_W); // go channel -C_PER_M, right STEP_W
         } // W
 
         for (int w = 0; w < OUT_W_PAD - OUT_W; w++)
@@ -51,6 +51,9 @@ void QLinearConvScalar<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
+      if (m % (M/GROUP) == M/GROUP - 1) {
+        window_incr(in, C_PER_M*INP_H*INP_W); // next C_PER_M channels
+      }
     } // M
   } // B
 
@@ -58,9 +61,9 @@ void QLinearConvScalar<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv5x5<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv5x5(
-  int8_t (&w)[M*C*K*16],
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv5x5<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv5x5(
+  int8_t (&w)[M*C*KH*16],
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -75,7 +78,7 @@ QLinearConv5x5<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLin
 { 
   assert(w_zero == 0);
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  assert(scalebits <= 27); // K*K*int8*int8*scale <= acc48, for K=5
+  assert(scalebits <= 27); // KH*KW*int8*int8*scale <= acc48, for KH=KW=5
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
 
@@ -113,8 +116,8 @@ QLinearConv5x5<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLin
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv5x5<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv5x5<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
@@ -205,9 +208,9 @@ void QLinearConv5x5<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>:
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv5x5Scale32bit(
-  int8_t (&w)[M*C*K*16],
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv5x5Scale32bit(
+  int8_t (&w)[M*C*KH*16],
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -225,8 +228,8 @@ QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
@@ -326,8 +329,8 @@ void QLinearConv5x5Scale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B,
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv3x3(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv3x3(
   int8_t (&w)[M*C*16],
   int32_t (&b)[M],
   float x_scale,
@@ -344,7 +347,7 @@ QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLin
   assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  assert(scalebits <= 27); // K*K*int8*int8*scale <= acc48, for K=5
+  assert(scalebits <= 27); // KH*KW*int8*int8*scale <= acc48, for KH=5
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
 
@@ -362,8 +365,8 @@ QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLin
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   output_window<int8_t>* out
 ) {
@@ -449,8 +452,8 @@ void QLinearConv3x3<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>:
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -483,23 +486,23 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
           int res = bias[m];
           weightIdx = 0;
           
-          for (int c = 0; c < C; c++) {
-            for (int p = 0; p < K; p++) {
-              for (int q = 0; q < K; q++) {
+          for (int c = 0; c < C_PER_M; c++) {
+            for (int p = 0; p < KH; p++) {
+              for (int q = 0; q < KW; q++) {
                 int a = window_readincr(in);
                 res += a * ckk_row[weightIdx];
                 weightIdx++;
               }
-              window_incr(in, -K+INP_W); // go left K, down 1
+              window_incr(in, -KW+INP_W); // go left KW, down 1
             }
-            window_incr(in, -K*INP_W + INP_H*INP_W); // go up K, channel 1
-            weightIdx += 16 - K*K;
+            window_incr(in, -KH*INP_W + INP_H*INP_W); // go up KH, channel 1
+            weightIdx += 16 - KH*KW;
           }
           res = y_zero + round(scale * res);
           res = std::min(std::max(res, -128), 127);
 
           WRITE_OUT(res);
-          window_incr(in, -C*INP_H*INP_W + STEP_W); // go channel -C, right STEP_W
+          window_incr(in, -C_PER_M*INP_H*INP_W + STEP_W); // go channel -C_PER_M, right STEP_W
         } // W
 
         for (int w = 0; w < OUT_W_PAD - OUT_W; w++) {
@@ -509,6 +512,9 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
         window_incr(in, -OUT_W*STEP_W + INP_W*STEP_H); // go left OUT_W*STEP_W, go down STEP_H
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H*STEP_H
+      if (m % (M/GROUP) == M/GROUP - 1) {
+        window_incr(in, C_PER_M*INP_H*INP_W); // next C_PER_M channels
+      }
     } // M
   } // B
 #undef WRITE_OUT
@@ -517,8 +523,8 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv3x3Stream(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv3x3Stream(
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -534,7 +540,7 @@ QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>
   assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
-  assert(scalebits <= 28); // K*K*int8*int8*scale <= acc48, for K=3
+  assert(scalebits <= 28); // KH*KW*int8*int8*scale <= acc48, for KH=KW=3
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
 
@@ -552,8 +558,8 @@ QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -568,7 +574,7 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
   aie::accum<acc48,16> acc_bias;
   acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
 
-  v16int8 *ckk_row_ptr;
+  v16int8 *ckk_row_ptr = (v16int8 *) ckk_row;;
   int8_t *in_ptr = (int8_t *) in->ptr;
 
   int res_updi = 0;
@@ -586,10 +592,10 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
-      ckk_row_ptr = (v16int8 *) ckk_row;
       for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
         *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
       }
+      ckk_row_ptr -= CKK_ROW_SIZE/16;
       
       acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
@@ -597,9 +603,8 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
         for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
 
           acc1 = acc_bias;
-          ckk_row_ptr = (v16int8 *) ckk_row;
           
-          for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
             data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
             MAC_ROW(acc1, 0);
@@ -610,6 +615,8 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
             data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
             MAC_ROW(acc1, 8);
           }
+          ckk_row_ptr -= C_PER_M;
+          in_ptr += 16 - C_PER_M*INP_H*INP_W; // go channel -C_PER_M, right 16
           
           // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -627,13 +634,15 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
           } else {
             writeincr_v16(out, bsrs(acc1, scalebits));
           }
-          in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
         } // W
         
-        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
         in_ptr += INP_W*STEP_W - OUT_W_PAD*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      if (m % (M/GROUP) == M/GROUP - 1) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
     } // M
   } // B
 
@@ -643,8 +652,8 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv3x3StreamPad(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv3x3StreamPad(
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -660,12 +669,12 @@ QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
   assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
-  assert(scalebits <= 28); // K*K*int8*int8*scale <= acc48, for K=3
+  assert(scalebits <= 28); // KH*KW*int8*int8*scale <= acc48, for KH=KW=3
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -680,7 +689,7 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
   aie::accum<acc48,16> acc_bias;
   acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
 
-  v16int8 *ckk_row_ptr;
+  v16int8 *ckk_row_ptr = (v16int8 *) ckk_row;
   int8_t *in_ptr = (int8_t *) in->ptr;
 
   int res_updi = 0;
@@ -700,10 +709,10 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
-      ckk_row_ptr = (v16int8 *) ckk_row;
       for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
         *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
       }
+      ckk_row_ptr -= CKK_ROW_SIZE/16;
       
       acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
@@ -711,9 +720,8 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
         for (int w = 0; w < OUT_W_PAD-16/STEP_W; w+=16/STEP_W) {
 
           acc1 = acc_bias;
-          ckk_row_ptr = (v16int8 *) ckk_row;
           
-          for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
             data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
             MAC_ROW(acc1, 0);
@@ -724,6 +732,8 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
             data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
             MAC_ROW(acc1, 8);
           }
+          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+          ckk_row_ptr -= C_PER_M;
           
           // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -741,13 +751,12 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
           } else {
             writeincr_v16(out, bsrs(acc1, scalebits));
           }
-          in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
         } // W
 
+        // handle width boundary
         acc1 = acc_bias;
-        ckk_row_ptr = (v16int8 *) ckk_row;
         
-        for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+        for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
           wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
           data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
           MAC_ROW(acc1, 0);
@@ -758,6 +767,8 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
           data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
           MAC_ROW(acc1, 8);
         }
+        in_ptr += -C_PER_M*INP_H*INP_W + 16;
+        ckk_row_ptr -= C_PER_M;
         
         // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
         acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -781,12 +792,14 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
           fat_res = select32(select_mask, aie::broadcast<int16_t, 32>(y_zero), fat_res);
           writeincr_v16(out, pack(ext_w(fat_res, 0)));
         }
-        in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
         
+        in_ptr += -OUT_W_PAD*STEP_W + INP_W*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
-        in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
       } // H
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
     } // M
   } // B
 
@@ -796,8 +809,8 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv3x3StreamScale32bit(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv3x3StreamScale32bit(
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -815,8 +828,8 @@ QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -911,8 +924,8 @@ void QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP
 }
 
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::QLinearConv1x1Stream(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv1x1Stream(
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -928,12 +941,12 @@ QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>
   assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
-  assert(scalebits <= 28); // K*K*int8*int8*scale <= acc48, for K=3
+  assert(scalebits <= 30); // KH*KW*int8*int8*scale <= acc48, for KH=KW=1
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
 
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K>
-void QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>::filter(
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -952,6 +965,8 @@ void QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 
   int res_updi = 0;
   v16int16 res = null_v16int16(); // for STEP_W == 2
+  int width_r = OUT_W % 16 == 0 ? 16 : OUT_W % 16;
+  int select_mask = (1 << width_r) - 1; // (1 << 0) - 1 selects all zeros
   
   set_sat();
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
@@ -968,7 +983,7 @@ void QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
       acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
       for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD - 16/STEP_W; w+=16/STEP_W) {
 
           acc1 = acc_bias;
           ckk_row_ptr = (v16int8 *) ckk_row;
@@ -996,6 +1011,39 @@ void QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
           }
           in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
         } // W
+        
+        // handle width boundary
+        acc1 = acc_bias;
+        ckk_row_ptr = (v16int8 *) ckk_row;
+        
+        for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+          data = *(v16int8 *) in_ptr; in_ptr += INP_H*INP_W; // channel+1
+          acc1 = aie::mac((aie::accum<acc48,16>) acc1, (aie::vector<int8_t,16>) data, ckk_row[c]);
+        }
+        
+        // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
+        acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
+        v16int16 tmp = srs(acc1, scalebits);
+        if (STEP_W == 2) {
+          v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+          if (res_updi == 1) {
+            res = upd_v(res, 1, tmphalf);
+            v32int16 fat_res = null_v32int16();
+            fat_res = upd_w(fat_res, 0, res);
+            fat_res = select32(select_mask, aie::broadcast<int16_t, 32>(y_zero), fat_res);
+            writeincr_v16(out, pack(ext_w(fat_res, 0)));
+          } else {
+            res = upd_v(res, 0, tmphalf);
+          }
+          res_updi = (res_updi + 1) & 0x1;
+        
+        } else {
+          v32int16 fat_res = null_v32int16();
+          fat_res = upd_w(fat_res, 0, tmp);
+          fat_res = select32(select_mask, aie::broadcast<int16_t, 32>(y_zero), fat_res);
+          writeincr_v16(out, pack(ext_w(fat_res, 0)));
+        }
+        in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
         
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
         in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H

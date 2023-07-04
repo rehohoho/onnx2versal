@@ -9,23 +9,23 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+template <template<int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
-  int B, int C, int M, int K>
+  int B, int C, int M, int KH, int KW, int GROUP>
 void set_heap_size(adf::kernel k) {
   if (
     (std::is_same<
-    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
-    QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
+    QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
-    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
-    QLinearConv3x3Stream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
+    QLinearConv3x3Stream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
-    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
-    QLinearConv3x3StreamPad<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value) ||
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
+    QLinearConv3x3StreamPad<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
-    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>, 
-    QLinearConv3x3StreamScale32bit<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>>::value)
+    QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
+    QLinearConv3x3StreamScale32bit<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
   ) {
     adf::heap_size(k) = C*16 + 1024; // caches CKK weights
   }
@@ -51,8 +51,14 @@ void set_heap_size(adf::kernel k) {
  * @tparam B            batch size
  * @tparam C            input channels
  * @tparam M            output channels
- * @tparam K            kernel width
- * 
+ * @tparam KH           kernel height
+ * @tparam KW           kernel width
+ * @tparam GROUP        split input into groups, C%GROUP==0
+ * @tparam H0           Pixels added before height (default 0)
+ * @tparam H1           Pixels added after height (default 0)
+ * @tparam W0           Pixels added before width (default 0)
+ * @tparam W1           Pixels added after width (default 0)
+ *
  * @{
  */
 
@@ -67,9 +73,9 @@ void set_heap_size(adf::kernel k) {
  */
 template <
   template<typename, int, int, int, int, int, int, int> class PAD,
-  template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  template<int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
-  int B, int C, int M, int K,
+  int B, int C, int M, int KH, int KW, int GROUP,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvGraph : public adf::graph {
 
@@ -82,7 +88,7 @@ class QLinearConvGraph : public adf::graph {
   public:
     adf::port<input> pin[1];
     adf::port<output> pout[1];
-    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (PAD_H - KH) / STEP_H + 1;
 
     QLinearConvGraph(
       std::vector<int8_t> weights,
@@ -98,7 +104,7 @@ class QLinearConvGraph : public adf::graph {
       assert(weights.size() <= MAX_PARAM_BYTES);
       static_assert(B*M*OUT_H*OUT_W_PAD <= MAX_PARAM_BYTES);
       
-      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>>(
+      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
@@ -139,9 +145,9 @@ class QLinearConvGraph : public adf::graph {
  */
 template <
   template<typename, int, int, int, int, int, int, int> class PAD,
-  template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  template<int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
-  int B, int C, int M, int K, 
+  int B, int C, int M, int KH, int KW, int GROUP, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvStreamGraph : public adf::graph {
 
@@ -152,7 +158,7 @@ class QLinearConvStreamGraph : public adf::graph {
     static constexpr int PAD_W = INP_W + W0 + W1;
 
   public:
-    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
+    static constexpr int OUT_H = (PAD_H - KH) / STEP_H + 1;
 
     adf::port<input> pin[2];
     adf::port<output> pout[1];
@@ -167,15 +173,14 @@ class QLinearConvStreamGraph : public adf::graph {
       int8_t y_zero
     ) { 
       static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
-      static_assert(B*M*OUT_H*OUT_W_PAD <= MAX_PARAM_BYTES);
       
-      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>>(
+      k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>>(
         bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>(k[0]);
+      set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>(k[0]);
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
@@ -216,11 +221,11 @@ class QLinearConvStreamGraph : public adf::graph {
  */
 template <
   template<typename, int, int, int, int> class SPLIT,
-  template<int, int, int, int, int, int, int, int, int,int> class QLINEARCONV, 
+  template<int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
   int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
-  int B, int C, int M, int K, 
+  int B, int C, int M, int KH, int KW, int GROUP, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvChunkHGraph : public adf::graph {
 
@@ -230,15 +235,15 @@ class QLinearConvChunkHGraph : public adf::graph {
 
     std::vector<adf::kernel> pad;
 
-    static constexpr int OVERLAP = K-STEP_H;
+    static constexpr int OVERLAP = KH-STEP_H;
     typedef SplitGraph<SPLIT, int8_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W> mSplitGraph;
     mSplitGraph split_graph;
     static constexpr int LCNT = mSplitGraph::LCNT;
 
     adf::kernel k[LCNT];
 
-    static constexpr int HCHUNK_OUT = (HCHUNK - K) / STEP_H + 1;
-    static constexpr int OUT_H = (PAD_H - K) / STEP_H + 1;
+    static constexpr int HCHUNK_OUT = (HCHUNK - KH) / STEP_H + 1;
+    static constexpr int OUT_H = (PAD_H - KH) / STEP_H + 1;
     ConcatStreamGraph<CONCAT, int8_t, LCNT, B*M, HCHUNK_OUT*OUT_W_PAD, OUT_H*OUT_W_PAD> concat_graph;
 
     adf::relative_coordinate tileOffsets[8] = {
@@ -272,9 +277,9 @@ class QLinearConvChunkHGraph : public adf::graph {
       int8_t w_zero,
       int8_t y_zero
     ) {
-      static_assert((HCHUNK % STEP_H) == (K % STEP_H));
+      static_assert((HCHUNK % STEP_H) == (KH % STEP_H));
       static_assert(LCNT <= 8);
-      static_assert(B*C*PAD_H*PAD_W + B*C*(K-1)*7*PAD_W <= MAX_PARAM_BYTES*8);
+      static_assert(B*C*PAD_H*PAD_W + B*C*(KH-1)*7*PAD_W <= MAX_PARAM_BYTES*8);
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
@@ -294,13 +299,13 @@ class QLinearConvChunkHGraph : public adf::graph {
       }
 
       for (int i = 0; i < LCNT; i++) {
-        k[i] = adf::kernel::create_object<QLINEARCONV<HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K>>(
+        k[i] = adf::kernel::create_object<QLINEARCONV<HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>>(
           bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
         adf::source(k[i]) = "qlinearconv.cc";
         adf::headers(k[i]) = {"qlinearconv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
 
-        set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,K>(k[i]);
+        set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>(k[i]);
 
         adf::connect<adf::window<B*C*HCHUNK*PAD_W>> (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::stream>                   (pin[1], k[i].in[1]);
