@@ -305,16 +305,16 @@ class QLinearConvScalarStream {
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConv3x3Stream<28,48,28,32,1,1,1,1,8,3> total = 4689 (output_window slightly faster ~0.85x time), 
- * QLinearConv3x3Stream<26,32,13,16,2,2,1,1,8,3> total = 3376
+ * QLinearConvHx4Stream<28,48,28,32,1,1,1,1,8,3> total = 4689 (output_window slightly faster ~0.85x time), 
+ * QLinearConvHx4Stream<26,32,13,16,2,2,1,1,8,3> total = 3376
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-class QLinearConv3x3Stream {
+class QLinearConvHx4Stream {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP;
-    static constexpr int CKK_ROW_SIZE = C_PER_M*16;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+15)/16*16;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
@@ -330,7 +330,7 @@ class QLinearConv3x3Stream {
     int16_t scale;
 	
   public:
-    QLinearConv3x3Stream (
+    QLinearConvHx4Stream (
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -347,13 +347,12 @@ class QLinearConv3x3Stream {
 		);
 
 		static void registerKernelClass() {
-      static_assert(KH==3);
-      static_assert(KW==3);
+      static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
       static_assert(STEP_W == 1 || STEP_W == 2);
-			REGISTER_FUNCTION(QLinearConv3x3Stream::filter);
+			REGISTER_FUNCTION(QLinearConvHx4Stream::filter);
       REGISTER_PARAMETER(bias);
 		}
 };
@@ -361,18 +360,19 @@ class QLinearConv3x3Stream {
 
 /**
  * @brief Vector implementation for 3x3 QLinearConv, padding with y_zero, 
- * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
+ * requires data to be arranged in (M,C,KH,KW) -> (M,C,KH',4) where KH' = KH*4 padded to nearest 16, e.g. [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
- * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConv3x3StreamPad<28,48,28,32,1,1,1,1,8,3> total = 5373
+ * requires KW<=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * QLinearConvHx4StreamPad<28,48,28,32,1,1,1,1,8,3> total = 5373
+ * QLinearConv3x3StreamPad<58,32,5,16,2,2,1,1,64,10,4,1> total = 105984
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-class QLinearConv3x3StreamPad {
+class QLinearConvHx4StreamPad {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP;
-    static constexpr int CKK_ROW_SIZE = C_PER_M*16;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+15)/16*16;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
@@ -388,7 +388,7 @@ class QLinearConv3x3StreamPad {
     int16_t scale;
 	
   public:
-    QLinearConv3x3StreamPad (
+    QLinearConvHx4StreamPad (
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -405,13 +405,12 @@ class QLinearConv3x3StreamPad {
 		);
 
 		static void registerKernelClass() {
-      static_assert(KH==3);
-      static_assert(KW==3);
+      static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
       static_assert(STEP_W == 1 || STEP_W == 2);
-			REGISTER_FUNCTION(QLinearConv3x3StreamPad::filter);
+			REGISTER_FUNCTION(QLinearConvHx4StreamPad::filter);
       REGISTER_PARAMETER(bias);
 		}
 };
@@ -422,15 +421,16 @@ class QLinearConv3x3StreamPad {
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConv3x3StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 7408, 
- * QLinearConv3x3StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 9329
+ * QLinearConvHx4StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 7408, 
+ * QLinearConvHx4StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 9329
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-class QLinearConv3x3StreamScale32bit {
+class QLinearConvHx4StreamScale32bit {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*16;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+15)/16*16;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
@@ -446,7 +446,7 @@ class QLinearConv3x3StreamScale32bit {
     int32_t scale;
 	
   public:
-    QLinearConv3x3StreamScale32bit (
+    QLinearConvHx4StreamScale32bit (
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -463,14 +463,12 @@ class QLinearConv3x3StreamScale32bit {
 		);
 
 		static void registerKernelClass() {
-      static_assert(KH==3);
-      static_assert(KW==3);
-      static_assert(GROUP == 1);
+      static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
       static_assert(STEP_W == 1 || STEP_W == 2);
-			REGISTER_FUNCTION(QLinearConv3x3StreamScale32bit::filter);
+			REGISTER_FUNCTION(QLinearConvHx4StreamScale32bit::filter);
       REGISTER_PARAMETER(bias);
 		}
 };

@@ -159,23 +159,23 @@ QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvScalarStream,
   "qLinearConvScalarStream_3x3", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalarStream.txt");
 
-QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3Stream, 
+QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx4Stream, 
                            INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP,
                            PADH3x3, PADH3x3, PADW3x3, W1_3x3> qLinearConv3x3Stream(
   "qLinearConv3x3Stream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConv3x3Stream.txt");
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvHx4Stream.txt");
 
-QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3StreamPad, 
+QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx4StreamPad, 
                            INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP,
                            PADH3x3, PADH3x3, PADW3x3, W1_3x3> qLinearConv3x3StreamPad(
   "qLinearConv3x3StreamPad", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConv3x3StreamPad.txt");
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvHx4StreamPad.txt");
 
-QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3StreamScale32bit, 
+QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx4StreamScale32bit, 
                            INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP,
                            PADH3x3, PADH3x3, PADW3x3, W1_3x3> qLinearConv3x3StreamScale32bit(
   "qLinearConv3x3StreamScale32bit", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConv3x3StreamScale32bit.txt");
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvHx4StreamScale32bit.txt");
 
 // 3x3 stride 2
 QLinearConvGraphTest<Pad2DStreamInt8, QLinearConvScalar, 
@@ -184,17 +184,17 @@ QLinearConvGraphTest<Pad2DStreamInt8, QLinearConvScalar,
   "qLinearConvScalar_3x3_s2", int8weights_3x3, int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_stride2_shape1x8x12x13_QLinearConvScalar.txt");
 
-QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3Stream, 
+QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx4Stream, 
                            INP_H, INP_W_PAD16, OUT_W_STRIDE2_3x3, OUT_W_STRIDE2_PAD16_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP,
                            0, 0, 0, 0> qLinearConv3x3Stream_s2(
   "qLinearConv3x3Stream_s2", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_stride2_shape1x8x12x13_QLinearConv3x3Stream.txt");
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_stride2_shape1x8x12x13_QLinearConvHx4Stream.txt");
 
-QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConv3x3StreamScale32bit, 
+QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx4StreamScale32bit, 
                            INP_H, INP_W_PAD16, OUT_W_STRIDE2_3x3, OUT_W_STRIDE2_PAD16_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP,
                            0, 0, 0, 0> qLinearConv3x3StreamScale32bit_s2(
   "qLinearConv3x3StreamScale32bit_s2", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_stride2_shape1x8x12x13_QLinearConv3x3StreamScale32bit.txt");
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_stride2_shape1x8x12x13_QLinearConvHx4StreamScale32bit.txt");
 
 
 // 1x1 stride 1

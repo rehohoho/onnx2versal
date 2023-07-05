@@ -524,7 +524,7 @@ void QLinearConvScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
 
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv3x3Stream(
+QLinearConvHx4Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConvHx4Stream(
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -545,7 +545,7 @@ QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH
 }
 
 /**
- * QLinearConv3x3Stream<28,32,24,32,1,1,6,5>
+ * QLinearConvHx4Stream<28,32,24,32,1,1,6,5>
  * 
  * int16 * int8:
  * expands 9 weights into 16 long vector [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0]
@@ -559,7 +559,7 @@ QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+void QLinearConvHx4Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -605,18 +605,37 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
           acc1 = acc_bias;
           
           for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
+            
+            for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+              wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 12);
+            }
+            
             wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc1, 0);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc1, 4);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
-            MAC_ROW(acc1, 8);
+            if ((KH & 0x3) >= 1) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+            }
+            if ((KH & 0x3) >= 2) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+            }
+            if ((KH & 0x3) >= 3) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+            }
+            
+            in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
           }
-          ckk_row_ptr -= C_PER_M;
-          in_ptr += 16 - C_PER_M*INP_H*INP_W; // go channel -C_PER_M, right 16
+          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+          ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -648,12 +667,12 @@ void QLinearConv3x3Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 
 #undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("QLinearConv3x3Stream");
+  CONV_PROFILE_FOOTER("QLinearConvHx4Stream");
 }
 
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv3x3StreamPad(
+QLinearConvHx4StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConvHx4StreamPad(
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -674,7 +693,7 @@ QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
 }
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+void QLinearConvHx4StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -693,7 +712,7 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
   int8_t *in_ptr = (int8_t *) in->ptr;
 
   int res_updi = 0;
-  v16int16 res = null_v16int16(); // for STEP_W == 2
+  v16int16 res = aie::broadcast<int16, 16>(y_zero); // for STEP_W == 2
   int width_r = OUT_W % 16 == 0 ? 16 : OUT_W % 16;
   int select_mask = (1 << width_r) - 1; // (1 << 0) - 1 selects all zeros
   
@@ -722,18 +741,37 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
           acc1 = acc_bias;
           
           for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
+            
+            for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+              wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 12);
+            }
+            
             wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc1, 0);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc1, 4);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
-            MAC_ROW(acc1, 8);
+            if ((KH & 0x3) >= 1) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+            }
+            if ((KH & 0x3) >= 2) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+            }
+            if ((KH & 0x3) >= 3) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+            }
+            
+            in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
           }
           in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
-          ckk_row_ptr -= C_PER_M;
+          ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -757,18 +795,37 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
         acc1 = acc_bias;
         
         for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
+          
+          for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+            wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 0);
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 4);
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 8);
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 12);
+          }
+          
           wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
-          data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-          MAC_ROW(acc1, 0);
-
-          data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-          MAC_ROW(acc1, 4);
-
-          data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
-          MAC_ROW(acc1, 8);
+          if ((KH & 0x3) >= 1) {
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 0);
+          }
+          if ((KH & 0x3) >= 2) {
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 4);
+          }
+          if ((KH & 0x3) >= 3) {
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 8);
+          }
+          
+          in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
         }
-        in_ptr += -C_PER_M*INP_H*INP_W + 16;
-        ckk_row_ptr -= C_PER_M;
+        in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+        ckk_row_ptr -= CKK_ROW_SIZE/16;
         
         // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
         acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -805,12 +862,12 @@ void QLinearConv3x3StreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
 
 #undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("QLinearConv3x3StreamPad");
+  CONV_PROFILE_FOOTER("QLinearConvHx4StreamPad");
 }
 
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv3x3StreamScale32bit(
+QLinearConvHx4StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConvHx4StreamScale32bit(
   int32_t (&b)[M],
   float x_scale,
   float w_scale,
@@ -829,7 +886,7 @@ QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
 }
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-void QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+void QLinearConvHx4StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<int8_t>* in,
   input_stream<int8_t>* weights,
   output_stream<int8_t>* out
@@ -875,17 +932,38 @@ void QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP
           acc1 = acc_bias;
           ckk_row_ptr = (v16int8 *) ckk_row;
           
-          for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
+            
+            for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+              wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 12);
+            }
+            
             wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc1, 0);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
-            MAC_ROW(acc1, 4);
-
-            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_H*INP_W - 2*INP_W; // channel+1, up 2
-            MAC_ROW(acc1, 8);
+            if ((KH & 0x3) >= 1) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+            }
+            if ((KH & 0x3) >= 2) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+            }
+            if ((KH & 0x3) >= 3) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+            }
+            
+            in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
           }
+          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+          ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
           v8int32 accbuf1_1 = lsrs(ext_lo(acc1), 0);
@@ -908,19 +986,21 @@ void QLinearConv3x3StreamScale32bit<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP
           } else {
             writeincr_v16(out, fat_acc1.to_vector<int8_t>(scalebits));
           }
-          in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
         } // W
         
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
         in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
       } // H
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
     } // M
   } // B
 
 #undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("QLinearConv3x3StreamScale32bit");
+  CONV_PROFILE_FOOTER("QLinearConvHx4StreamScale32bit");
 }
 
 
