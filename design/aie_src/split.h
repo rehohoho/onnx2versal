@@ -274,7 +274,6 @@ class SplitFilterFloatStream {
 
 		static void registerKernelClass() {
 			static_assert(sizeof(TT) == 4);
-			static_assert((std::is_same<TT, float>::value));
 			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
 			REGISTER_FUNCTION(SplitFilterFloatStream::filter);
@@ -310,10 +309,84 @@ class SplitFilterFloatStreamTwice {
 
 		static void registerKernelClass() {
 			static_assert(sizeof(TT) == 4);
-			static_assert((std::is_same<TT, float>::value));
 			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
 			REGISTER_FUNCTION(SplitFilterFloatStreamTwice::filter);
+		}
+};
+
+
+/**
+ * @brief Scalar implementation for slicing out portion of int8 stream input, 
+ * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP > 0, 
+ * requires OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W, if OVERLAP <= 0, 
+ * SplitFilterInt8Stream<f,10,64,22,1>::filter1 total = 
+ */
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+class SplitFilterInt8Stream {
+	private:
+		static constexpr int FIRST_STRIDE = OUT_W - OVERLAP;
+		static constexpr int LCNT = (INP_W - OUT_W) / FIRST_STRIDE + 1;
+		static constexpr int STRIDE = OUT_W - OVERLAP - OVERLAP;
+
+		int lane_idx;
+	
+	public:
+		SplitFilterInt8Stream(
+			int lane_idx
+		): lane_idx(lane_idx) {};
+
+		void filter(
+			input_stream<TT>* in,
+  		output_stream<TT>* out0
+		);
+
+		static void registerKernelClass() {
+			static_assert((std::is_same<TT, int8_t>::value));
+			static_assert(OUT_W % 16 == 0);
+			static_assert((OVERLAP < 0) || (FIRST_STRIDE % 16 == 0));
+			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP > 0) || (OVERLAP % 16 == 0));
+			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
+			REGISTER_FUNCTION(SplitFilterInt8Stream::filter);
+		}
+};
+
+
+/**
+ * @brief Scalar implementation for slicing out portion of int8 stream input, 
+ * requires 2*OVERLAP <= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP > 0, 
+ * requires OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W, if OVERLAP <= 0, 
+ * SplitFilterInt8StreamTwice<f,10,64,22,1>::filter1 total = 
+ */
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+class SplitFilterInt8StreamTwice {
+	private:
+		static constexpr int FIRST_STRIDE = OUT_W - OVERLAP;
+		static constexpr int LCNT = (INP_W - OUT_W) / FIRST_STRIDE + 1;
+		static constexpr int STRIDE = OUT_W - OVERLAP - OVERLAP;
+
+		int lane_idx;
+	
+	public:
+		SplitFilterInt8StreamTwice(
+			int lane_idx
+		): lane_idx(lane_idx) {};
+
+		void filter(
+			input_stream<TT>* in,
+  		output_stream<TT>* out0,
+  		output_stream<TT>* out1
+		);
+
+		static void registerKernelClass() {
+			static_assert((std::is_same<TT, int8_t>::value));
+			static_assert(OUT_W % 16 == 0);
+			static_assert((OVERLAP < 0) || (FIRST_STRIDE % 16 == 0));
+			static_assert((OVERLAP < 0) || (2*OVERLAP <= OUT_W && (INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP > 0) || (OVERLAP % 16 == 0));
+			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
+			REGISTER_FUNCTION(SplitFilterInt8StreamTwice::filter);
 		}
 };
 /** @}*/

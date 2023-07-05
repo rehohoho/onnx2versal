@@ -4,6 +4,7 @@
 #include <adf.h>
 #include "qlinearconv.h"
 #include "pad.h"
+#include "split.h"
 #include "graph_concat.h"
 #include "graph_split.h"
 #include "graph_utils.h"
@@ -19,13 +20,13 @@ void set_heap_size(adf::kernel k) {
     QLinearConvScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
-    QLinearConv3x3Stream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
+    QLinearConvHx4Stream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
-    QLinearConv3x3StreamPad<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
+    QLinearConvHx4StreamPad<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
-    QLinearConv3x3StreamScale32bit<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
+    QLinearConvHx4StreamScale32bit<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
   ) {
     adf::heap_size(k) = C*16 + 1024; // caches CKK weights
   }
@@ -172,13 +173,14 @@ class QLinearConvStreamGraph : public adf::graph {
       int8_t w_zero,
       int8_t y_zero
     ) { 
-      static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
+      static_assert(B*C*PAD_H*PAD_W <= TILE_BYTES);
       
       k[0] = adf::kernel::create_object<QLINEARCONV<PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>>(
         bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qlinearconv.cc";
       adf::headers(k[0]) = {"qlinearconv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::single_buffer(k[0].in[0]);
       
       set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>(k[0]);
 
@@ -304,6 +306,7 @@ class QLinearConvChunkHGraph : public adf::graph {
         adf::source(k[i]) = "qlinearconv.cc";
         adf::headers(k[i]) = {"qlinearconv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
+        adf::single_buffer(k[i].in[0]);
 
         set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>(k[i]);
 
@@ -324,6 +327,143 @@ class QLinearConvChunkHGraph : public adf::graph {
           adf::location<adf::kernel>(split_graph.k[0]) + adf::relative_offset(concat_k1_offsets[i]);
       }
       
+    }
+
+};
+
+
+/**
+ * @brief Multiinstance graph that stores weights and biases, 
+ * chunks BCHW by H dimension, maximum 8 chunks
+ * 
+ * @connections
+ * @connect{pin[0], stream B*C*INP_W*INP_W}
+ * @connect{pout[0], B*M*OUT_H*OUT_W_PAD}
+ * @endconnections
+ */
+template <
+  template<typename, int, int, int, int> class SPLIT,
+  template<int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int HCHUNK,
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int B, int C, int M, int KH, int KW, int GROUP, 
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
+class QLinearConvChunkHStreamGraph : public adf::graph {
+
+  private:
+    static constexpr int PAD_H = INP_H + H0 + H1;
+    static constexpr int PAD_W = INP_W + W0 + W1;
+
+    std::vector<adf::kernel> pad;
+
+    static constexpr int OVERLAP = KH-STEP_H;
+    static constexpr int LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;
+    adf::kernel split[(LCNT+1)/2];
+    adf::kernel k[LCNT];
+
+    static constexpr int HCHUNK_OUT = (HCHUNK - KH) / STEP_H + 1;
+    static constexpr int OUT_H = (PAD_H - KH) / STEP_H + 1;
+    ConcatStreamGraph<CONCAT, int8_t, LCNT, B*M, HCHUNK_OUT*OUT_W_PAD, OUT_H*OUT_W_PAD> concat_graph;
+    
+  public:
+    adf::port<adf::input> pin[2];
+    adf::port<adf::output> pout[1];
+
+    QLinearConvChunkHStreamGraph(
+      std::vector<int32_t> bias,
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
+    ) {
+      static_assert((HCHUNK % STEP_H) == (KH % STEP_H));
+
+      for (int i = 0; i < LCNT/2; i++) {
+        split[i] = adf::kernel::create_object<SplitFilterInt8StreamTwice<int8_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W>>(i*2);
+        adf::source(split[i]) = "split.cc";
+        adf::headers(split[i]) = {"split.h"};
+        adf::runtime<ratio>(split[i]) = 0.6;
+
+        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;
+        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;
+        adf::samples_per_iteration(split[i].out[1]) = B*C*HCHUNK*PAD_W;
+      }
+      if ((LCNT & 0x1) == 1) {
+        int i = (LCNT+1)/2 - 1;
+        split[i] = adf::kernel::create_object<SplitFilterInt8Stream<int8_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W>>(LCNT-1);
+        adf::source(split[i]) = "split.cc";
+        adf::headers(split[i]) = {"split.h"};
+        adf::runtime<ratio>(split[i]) = 0.6;
+
+        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;
+        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;
+      }
+
+      for (int i = 0; i < LCNT; i++) {
+        k[i] = adf::kernel::create_object<QLINEARCONV<HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>>(
+          bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
+        adf::source(k[i]) = "qlinearconv.cc";
+        adf::headers(k[i]) = {"qlinearconv.h"};
+        adf::runtime<ratio>(k[i]) = 0.6;
+        adf::single_buffer(k[i].in[0]);
+
+        set_heap_size<QLINEARCONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>(k[i]);
+
+        adf::connect<adf::window<B*C*HCHUNK*PAD_W>> (split[i/2].out[i&0x1], k[i].in[0]);
+        adf::connect<adf::stream>                   (pin[1], k[i].in[1]);
+        adf::connect<adf::stream>                   (k[i].out[0], concat_graph.pin[i]);
+
+        if ((i & 0x1) != 0) {
+          adf::location<adf::kernel>(k[i]) =
+            adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=0});
+          adf::location<adf::kernel>(split[i/2]) = 
+            adf::location<adf::kernel>(k[i]) + adf::relative_offset({.col_offset=0, .row_offset=-1});
+          
+          adf::location_constraint sTilePos = adf::location<adf::kernel>(split[i/2]);
+          adf::location<adf::stack>(split[i/2]) = sTilePos;
+          adf::location<adf::stack>(k[i]) = sTilePos;
+          adf::location<adf::parameter>(k[i].param[0]) = sTilePos;
+          adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
+        }
+        
+        adf::location_constraint kTilePos = adf::location<adf::kernel>(k[i]);
+        adf::location<adf::buffer>(k[i].in[0]) = kTilePos; // may bust tiles adjacent to split
+        adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0)};
+      }
+      adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
+
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DStreamInt8<int8_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>(x_zero));
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.6;
+
+        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
+        for (int i = 0; i < (LCNT+1)/2; i++)
+          adf::connect<adf::stream> (pad[0].out[0], split[i].in[0]);
+        
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
+        // split and pad can't be placed on same tile due to stream co-placement constraints
+      } else {
+        for (int i = 0; i < (LCNT+1)/2; i++)
+          adf::connect<adf::stream> (pin[0], split[i].in[0]);
+      }
+
+      for (int i = 0; i < concat_graph.k1.size(); i++) {
+        adf::location<adf::kernel>(concat_graph.k1[i]) = 
+          adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        
+        adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
+        adf::location<adf::parameter>(k[i*2].param[0]) = cTilePos;
+        adf::location<adf::parameter>(k[i*2].param[0]) = adf::offset(0);
+        adf::location<adf::stack>(k[i*2]) = cTilePos;
+        adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
+      }
     }
 
 };

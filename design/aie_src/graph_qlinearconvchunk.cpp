@@ -46,6 +46,50 @@ class QLinearConvChunkHGraphTest : public adf::graph {
 };
 
 
+template <
+  template<typename, int, int, int, int> class SPLIT,
+  template<int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int HCHUNK,
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int B, int C, int M, int KH, int KW, int GROUP,
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
+class QLinearConvChunkHStreamGraphTest : public adf::graph {
+
+  private:
+    typedef QLinearConvChunkHStreamGraph<SPLIT, QLINEARCONV, CONCAT, HCHUNK, 
+                                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
+                                         B, C, M, KH, KW, GROUP, 
+                                         H0, H1, W0, W1> Graph;
+    Graph g;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[1];
+    adf::input_gmio gmio_w;
+
+    QLinearConvChunkHStreamGraphTest(
+      const std::string& id,
+      std::vector<int32_t> bias,
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT = "conv_out.txt"
+    ): g(bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
+      plin[0] = adf::input_plio::create("plin0_qlinearconv_"+id+"_input", PLIO64_ARG(INP_TXT));
+      plout[0] = adf::output_plio::create("plout0_qlinearconv_"+id+"_output", PLIO64_ARG(OUT_TXT));
+      gmio_w = adf::input_gmio::create("gmio0_gemm"+id+"_w", 64, 1000);
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream> (gmio_w.out[0], g.pin[1]);
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+    }
+};
+
+
 // instance to be compiled and used in host within xclbin
 const int INP_H = 26;
 const int INP_W = 28;
@@ -77,17 +121,32 @@ std::vector<int32_t> int8bias_3x3 {-900, -2759, -4617, -6475, -8334, -10192, -12
 
 // 3x3 stride 1
 /**
- * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 789,end = 2044,total = 1255
- * SplitInt8<a,1,1344,720,96>::filter2 start = 820,end = 2125,total = 1305
- * QLinearConvScalarStream<15,48,32,1,1,1,1,6,3> start = 2254,end = 389201,total = 386947
- * QLinearConvScalarStream<15,48,32,1,1,1,1,6,3> start = 2258,end = 389248,total = 386990
- * ConcatInt8Stream<a,6,416,416,832> start = 788,end = 390860,total = 390072
+ * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 769,end = 2033,total = 1264
+ * SplitInt8<a,1,1344,720,96>::filter2 start = 804,end = 2106,total = 1302
+ * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 2239,end = 520464,total = 518225
+ * ConcatInt8Stream<a,8,416,416,832> start = 772,end = 520546,total = 519774
+ * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 2243,end = 520574,total = 518331
+ * Total cycle 519805
  */
 QLinearConvChunkHGraphTest<SplitInt8, QLinearConvScalarStream, ConcatInt8Stream, HCHUNK, 
                            INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
                            PADH, PADH, PADW, W1> qLinearConvScalarStream(
   "qLinearConvScalarStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalar.txt");
+
+/**
+ * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 521665,end = 522929,total = 1264
+ * SplitFilterInt8StreamTwice<a,1,1344,720,96>::filter0 start = 521668,end = 522950,total = 1282
+ * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 522384,end = 1040609,total = 518225
+ * ConcatInt8Stream<a,8,416,416,832> start = 521668,end = 1041265,total = 519597
+ * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 522961,end = 1041291,total = 518330
+ * Total cycles 519626
+ */
+QLinearConvChunkHStreamGraphTest<SplitFilterInt8Stream, QLinearConvScalarStream, ConcatInt8Stream, HCHUNK, 
+                           INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
+                           PADH, PADH, PADW, W1> qLinearConvScalarStream_splitstream(
+  "qLinearConvScalarStream_splitstream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalarSplitStream.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
@@ -102,6 +161,11 @@ int main(int argc, char ** argv) {
   qLinearConvScalarStream.gmio_w.gm2aie_nb(int8weights_3x3_pad_buf, int8weights_3x3_pad_size);
   adfCheck(qLinearConvScalarStream.run(ITER_CNT), "run qLinearConvScalarStream");
 	adfCheck(qLinearConvScalarStream.end(), "end qLinearConvScalarStream");
+
+  adfCheck(qLinearConvScalarStream_splitstream.init(), "init qLinearConvScalarStream_splitstream");
+  qLinearConvScalarStream_splitstream.gmio_w.gm2aie_nb(int8weights_3x3_pad_buf, int8weights_3x3_pad_size);
+  adfCheck(qLinearConvScalarStream_splitstream.run(ITER_CNT), "run qLinearConvScalarStream_splitstream");
+	adfCheck(qLinearConvScalarStream_splitstream.end(), "end qLinearConvScalarStream_splitstream");
 
   // cleanup gmio
   adf::GMIO::free(int8weights_3x3_pad_buf);
