@@ -18,16 +18,16 @@ void set_heap_size(adf::kernel k) {
   if (
     (std::is_same<
       CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
-      ConvReluScalarStreamCacheCKK<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value) ||
+      ConvReluScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value) ||
     (std::is_same<
       CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
-      Conv3x3ReluStreamCacheCKK<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
+      ConvHx4ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
   ) {
     adf::heap_size(k) = C*12*4 + 1024; // caches CKK weights
   }
   else if ((std::is_same<
     CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
-    Conv3x3ReluStreamCacheCKKMultiRow<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
+    ConvHx4ReluStreamMultiRow<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
   ) {
     adf::heap_size(k) = C*12*4 + OUT_W_PAD*4 + 1024; // caches CKK weights and one OUT_ROW
   }

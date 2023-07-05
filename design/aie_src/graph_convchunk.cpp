@@ -160,19 +160,19 @@ ConvReluChunkMGraphTest<Conv5x5on8ReluBCHW, ConcatFloat, 1, MCHUNK,
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5on8ReluBCHW.txt");
 
-ConvReluChunkHGraphTest<SplitScalar, ConvReluScalarStreamCacheCKK, ConcatFloatStream, HCHUNK, 
+ConvReluChunkHGraphTest<SplitScalar, ConvReluScalarStream, ConcatFloatStream, HCHUNK, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                         B, C, M, KH, KW, GROUP, IS_RELU,
                         PADH, PADH, PADW, PADW> convReluScalarStreamCacheCKK(
   "convReluScalarStreamCacheCKK", fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarStreamCacheCKK.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarStream.txt");
 
-ConvReluChunkHStreamGraphTest<SplitFilterFloatStream,ConvReluScalarStreamCacheCKK,ConcatFloatStream, HCHUNK, 
+ConvReluChunkHStreamGraphTest<SplitFilterFloatStream,ConvReluScalarStream,ConcatFloatStream, HCHUNK, 
                               INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                               B, C, M, KH, KW, GROUP, IS_RELU,
                               PADH, PADH, PADW, PADW> convReluScalarStreamCacheCKK_splitstream(
   "convReluScalarStreamCacheCKK_splitstream", fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarStreamCacheCKKSplitstream.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarStreamSplitstream.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)

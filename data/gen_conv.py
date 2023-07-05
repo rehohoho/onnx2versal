@@ -43,8 +43,8 @@ save_tensor(f"convbchw_fpout_stride2_{get_shape_str(tout_bchw_stride2)}.txt", to
 # 3x3
 K = 3
 fpweights_3x3 = np.random.random(M*C*K*K).reshape(M,C,K,K).astype(np.float32) - 0.5
-fpweights_3x3_pad = pad_lastdim(fpweights_3x3.reshape(M,C,-1), "conv fpweights_3x3", 12)
-fpweights_3x3_groupC = pad_lastdim(fpweights_3x3.reshape(M,C,-1)[:,0:1,...], "conv fpweights_3x3", 12)
+fpweights_3x3_pad = pad_lastdim(fpweights_3x3, "conv fpweights_3x3", 4)
+fpweights_3x3_groupC = pad_lastdim(fpweights_3x3[:,0:1,...], "conv fpweights_3x3", 4)
 print("fpweights_3x3\n", fpweights_3x3.flatten().tolist(), "\n\n\n")
 print("fpweights_3x3_pad\n", fpweights_3x3_pad.flatten().tolist(), "\n\n\n")
 print("fpweights_3x3_groupC\n", fpweights_3x3_groupC.flatten().tolist(), "\n\n\n")

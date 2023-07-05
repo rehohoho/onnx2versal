@@ -150,22 +150,24 @@ class Conv5x5on8ReluBCHW {
 
 /**
  * @brief Vector implementation for 3x3 BCHW, stores weights and biases, 
- * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%8=0, STEP_H==1, STEP_W==1, GROUP==1, 
+ * requires KW<=4, INP_W%4==0, OUT_W_PAD%8=0, STEP_H==1, STEP_W==1, GROUP==1, 
  * assumes weights are padded to MxCx12,
- * Conv3x3on12ReluBCHW<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 8899
+ * ConvHx4ReluBCHW<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 8899
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-class Conv3x3on12ReluBCHW {
+class ConvHx4ReluBCHW {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    alignas(32) float (&weights)[M*C*12];
+    static constexpr int CKK_ROW_SIZE = C*(KH*KW+3)/4*4;
+
+    alignas(32) float (&weights)[M*CKK_ROW_SIZE];
     alignas(32) float (&bias)[M];
 
   public:
-    Conv3x3on12ReluBCHW(
-      float (&w)[M*C*12],
+    ConvHx4ReluBCHW(
+      float (&w)[M*CKK_ROW_SIZE],
       float (&b)[M]
     ): weights(w), bias(b) {}; 
 
@@ -176,12 +178,11 @@ class Conv3x3on12ReluBCHW {
     
     static void registerKernelClass() {
       static_assert(GROUP == 1);
-      static_assert(KH==3);
-      static_assert(KW==3);
+      static_assert(KW<=4);
       static_assert(INP_W%4==0);
       static_assert(OUT_W_PAD%8==0);
       static_assert(STEP_H == 1 && STEP_W == 1);
-      REGISTER_FUNCTION(Conv3x3on12ReluBCHW::filter);
+      REGISTER_FUNCTION(ConvHx4ReluBCHW::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
     }
@@ -192,12 +193,12 @@ class Conv3x3on12ReluBCHW {
 /**
  * @brief Scalar stream implementation for BCHW, stores biases,
  * requires GROUP==1, 
- * ConvReluScalarStreamCacheCKK<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 252185
- * ConvReluScalarStreamCacheCKK<24,24,11,12,2,2,1,2,4,3,3,1,1> total = 54420
+ * ConvReluScalarStream<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 252185
+ * ConvReluScalarStream<24,24,11,12,2,2,1,2,4,3,3,1,1> total = 54420
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-class ConvReluScalarStreamCacheCKK {
+class ConvReluScalarStream {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
@@ -206,7 +207,7 @@ class ConvReluScalarStreamCacheCKK {
     alignas(32) float ckk_row[C/GROUP*KH*KW];
 
   public:
-    ConvReluScalarStreamCacheCKK(
+    ConvReluScalarStream(
       float (&b)[M]
     ): bias(b) {}; 
 
@@ -218,7 +219,7 @@ class ConvReluScalarStreamCacheCKK {
     
     static void registerKernelClass() {
       static_assert(C % GROUP == 0);
-      REGISTER_FUNCTION(ConvReluScalarStreamCacheCKK::filter);
+      REGISTER_FUNCTION(ConvReluScalarStream::filter);
       REGISTER_PARAMETER(bias);
     }
 
@@ -228,22 +229,25 @@ class ConvReluScalarStreamCacheCKK {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
- * Conv3x3ReluStreamCacheCKK<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 16009
- * Conv3x3ReluStreamCacheCKK<26,28,24,24,1,1,1,2,4,3,3,2,1> total = 11088
- * Conv3x3ReluStreamCacheCKK<24,24,11,12,2,2,1,2,4,3,3,1,1> total = 7716
+ * ConvHx4ReluStream<58,16,5,8,2,2,1,1,64,10,4,1,1> total = 313712
+ * ConvHx4ReluStream<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 14847
+ * ConvHx4ReluStream<26,28,24,24,1,1,1,2,4,3,3,2,1> total = 8857
+ * ConvHx4ReluStream<24,24,11,12,2,2,1,2,4,3,3,1,1> total = 7012
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-class Conv3x3ReluStreamCacheCKK {
+class ConvHx4ReluStream {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
+    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;
+
     alignas(32) float (&bias)[M];
-    alignas(32) float ckk_row[C_PER_M*12];
+    alignas(32) float ckk_row[CKK_ROW_SIZE];
 
   public:
-    Conv3x3ReluStreamCacheCKK(
+    ConvHx4ReluStream(
       float (&b)[M]
     ): bias(b) {}; 
 
@@ -254,13 +258,12 @@ class Conv3x3ReluStreamCacheCKK {
     );
     
     static void registerKernelClass() {
-      static_assert(KH==3);
-      static_assert(KW==3);
+      static_assert(KW<=4);
       static_assert(INP_W%4==0);
       static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2);
       static_assert(STEP_H == 1 || STEP_H == 2);
       static_assert(STEP_W == 1 || STEP_W == 2);
-      REGISTER_FUNCTION(Conv3x3ReluStreamCacheCKK::filter);
+      REGISTER_FUNCTION(ConvHx4ReluStream::filter);
       REGISTER_PARAMETER(bias);
     }
 
@@ -270,20 +273,22 @@ class Conv3x3ReluStreamCacheCKK {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%8==0, STEP_H==1, STEP_W==1, GROUP==1, 
- * Conv3x3ReluStreamCacheCKKMultiRow<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 15137
+ * ConvHx4ReluStreamMultiRow<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 15137
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-class Conv3x3ReluStreamCacheCKKMultiRow {
+class ConvHx4ReluStreamMultiRow {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int CKK_ROW_SIZE = C*(KH*KW+3)/4*4;
+    
     alignas(32) float (&bias)[M];
-    alignas(32) float ckk_row[C*12];
+    alignas(32) float ckk_row[CKK_ROW_SIZE];
     alignas(32) float out_row[OUT_W_PAD];
 
   public:
-    Conv3x3ReluStreamCacheCKKMultiRow(
+    ConvHx4ReluStreamMultiRow(
       float (&b)[M]
     ): bias(b) {}; 
 
@@ -301,7 +306,7 @@ class Conv3x3ReluStreamCacheCKKMultiRow {
       static_assert(OUT_W_PAD%8==0);
       static_assert(STEP_H == 1);
       static_assert(STEP_W == 1);
-      REGISTER_FUNCTION(Conv3x3ReluStreamCacheCKKMultiRow::filter);
+      REGISTER_FUNCTION(ConvHx4ReluStreamMultiRow::filter);
       REGISTER_PARAMETER(bias);
     }
 

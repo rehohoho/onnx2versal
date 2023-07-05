@@ -268,7 +268,7 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+void ConvHx4ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
@@ -279,10 +279,15 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
   float *w_ptr = (float *) weights;
   float *b_ptr = (float *) bias;
 
-#define MAC_ROW(acc, w_i) \
-  acc = fpmac(acc, data, 0, 0x76543210, *(v8float *) w_ptr, w_i+0, 0); \
-  acc = fpmac(acc, data, 1, 0x76543210, *(v8float *) w_ptr, w_i+1, 0); \
-  acc = fpmac(acc, data, 2, 0x76543210, *(v8float *) w_ptr, w_i+2, 0);
+#define MAC_ROW(acc) \
+  for (int i = 0; i < KW; i++) { \
+    acc = fpmac(acc, data, i, 0x76543210, *(v8float *) w_ptr, i, 0); \
+  }
+
+#define UPD_DATA \
+  data = upd_w(data, 0, window_readincr_v8(in)); \
+  data = upd_v(data, 2, window_readincr_v4(in)); \
+  window_incr(in, INP_W - 12);
 
   // BHWM
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
@@ -294,32 +299,25 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
           v8float acc2 = aie::broadcast<float, 8>(*b_ptr);
 
           for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) { // computes 8 partial products over 5x5 kernel
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc1, 0);
-            
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc2, 0);
-            MAC_ROW(acc1, 3);
-            
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc2, 3);
+            UPD_DATA
+            MAC_ROW(acc1);
+            UPD_DATA
+            MAC_ROW(acc2);
             w_ptr += 4;
-            MAC_ROW(acc1, 2);
-            
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_H*INP_W - 3*INP_W - 12);
-            MAC_ROW(acc2, 2);
-            w_ptr += 8;
+
+            MAC_ROW(acc1);            
+            UPD_DATA
+            MAC_ROW(acc2);
+            w_ptr += 4;
+
+            MAC_ROW(acc1);
+            UPD_DATA;
+            MAC_ROW(acc2);
+            w_ptr += 4;
+            window_incr(in, INP_H*INP_W - (KH+1)*INP_W);
           }
           window_incr(in, -C*INP_H*INP_W + 8); // data go channel -C, right 8
-          w_ptr -= C*12;
+          w_ptr -= CKK_ROW_SIZE;
                     
           if (IS_RELU) {
             acc1 = fpmax(acc1, zeros, 0, 0x76543210);
@@ -336,20 +334,21 @@ void Conv3x3on12ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
-      w_ptr += C*12;
+      w_ptr += CKK_ROW_SIZE;
       b_ptr ++;
     } // M
   } // B
 
+#undef UPD_DATA
 #undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("Conv3x3on12ReluBCHW");
+  CONV_PROFILE_FOOTER("ConvHx4ReluBCHW");
 }
 
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+void ConvReluScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
@@ -403,14 +402,24 @@ void ConvReluScalarStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W
     } // M
   } // B
 
-  CONV_PROFILE_FOOTER("ConvReluScalarStreamCacheCKK");
+  CONV_PROFILE_FOOTER("ConvReluScalarStream");
 }
 
+
+#define MAC_ROW(acc) \
+  for (int i = 0; i < KW; i++) { \
+    acc = fpmac(acc, data, i, 0x76543210, *(v8float *) w_ptr, i, 0); \
+  }
+
+#define UPD_DATA \
+  data = upd_w(data, 0, window_readincr_v8(in)); \
+  data = upd_v(data, 2, window_readincr_v4(in)); \
+  window_incr(in, INP_W - 12);
 
 // double acc require store in cache and write where VLIW underutilized
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+void ConvHx4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
@@ -424,18 +433,13 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
   v16float data = null_v16float();
   v8float zeros = null_v8float();
 
-#define MAC_ROW(acc, w_i) \
-  acc = fpmac(acc, data, 0, 0x76543210, *(v8float *) w_ptr, w_i+0, 0); \
-  acc = fpmac(acc, data, 1, 0x76543210, *(v8float *) w_ptr, w_i+1, 0); \
-  acc = fpmac(acc, data, 2, 0x76543210, *(v8float *) w_ptr, w_i+2, 0);
-
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
 
-      for (int i = 0; i < C_PER_M*12; i+=4) {
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
         *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
       }
-      w_ptr -= C_PER_M*12;
+      w_ptr -= CKK_ROW_SIZE;
       
       for (int h = 0; h < OUT_H; h++) {
         for (int w = 0; w < OUT_W_PAD - 8/STEP_W; w+=8/STEP_W) {
@@ -443,25 +447,15 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           
           for (int c = 0; c < C_PER_M; c++) {
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc1, 0);
-
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc1, 3);
-            w_ptr += 4;
-
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_H*INP_W - 2*INP_W - 12);
-            MAC_ROW(acc1, 2);
-            w_ptr += 8;
+            for (int p = 0; p < KH; p++) chess_flatten_loop {
+              UPD_DATA;
+              MAC_ROW(acc1);
+              w_ptr += 4;
+            }
+            window_incr(in, INP_H*INP_W - KH*INP_W);
           } // C_PER_M
           window_incr(in, -C_PER_M*INP_H*INP_W + 8);
-          w_ptr -= C_PER_M*12;
+          w_ptr -= CKK_ROW_SIZE;
 
           if (IS_RELU) {
             acc1 = fpmax(acc1, zeros, 0, 0x76543210);
@@ -476,35 +470,27 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
           }
         } // W
 
-        v16float res = null_v16float();
-        res = upd_w(res, 1, aie::broadcast<float, 8>(bias[m]));
-        res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
-        v8float acc1 = ext_w(res, 0);
+        v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           
         for (int c = 0; c < C_PER_M; c++) {
-          data = upd_w(data, 0, window_readincr_v8(in));
-          data = upd_v(data, 2, window_readincr_v4(in));
-          window_incr(in, INP_W - 12);
-          MAC_ROW(acc1, 0);
-
-          data = upd_w(data, 0, window_readincr_v8(in));
-          data = upd_v(data, 2, window_readincr_v4(in));
-          window_incr(in, INP_W - 12);
-          MAC_ROW(acc1, 3);
-          w_ptr += 4;
-
-          data = upd_w(data, 0, window_readincr_v8(in));
-          data = upd_v(data, 2, window_readincr_v4(in));
-          window_incr(in, INP_H*INP_W - 2*INP_W - 12);
-          MAC_ROW(acc1, 2);
-          w_ptr += 8;
+          for (int p = 0; p < KH; p++) chess_flatten_loop {
+            UPD_DATA;
+            MAC_ROW(acc1);
+            w_ptr += 4;
+          }
+          window_incr(in, INP_H*INP_W - KH*INP_W);
         } // C_PER_M
         window_incr(in, -C_PER_M*INP_H*INP_W + 8);
-        w_ptr -= C_PER_M*12;
+        w_ptr -= CKK_ROW_SIZE;
 
         if (IS_RELU) {
           acc1 = fpmax(acc1, zeros, 0, 0x76543210);
         }
+
+        v16float res = null_v16float();
+        res = upd_w(res, 1, acc1);
+        res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
+        acc1 = ext_w(res, 0);
 
         if (STEP_W == 2) {
           acc1 = fpshuffle(acc1, 0, 0x00006420);
@@ -524,16 +510,14 @@ void Conv3x3ReluStreamCacheCKK<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
     } // M
   } // B
 
-#undef MAC_ROW
-
-  CONV_PROFILE_FOOTER("Conv3x3ReluStreamCacheCKK");
+  CONV_PROFILE_FOOTER("ConvHx4ReluStream");
 }
 
 
 // stride > 1 have no reuse of data down the row
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+void ConvHx4ReluStreamMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
   output_stream<float>* out     // BMHW
@@ -545,18 +529,13 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
   v16float data = null_v16float();
   v8float zeros = null_v8float();
 
-#define MAC_ROW(acc, w_i) \
-  acc = fpmac(acc, data, 0, 0x76543210, *(v8float *) w_ptr, w_i+0, 0); \
-  acc = fpmac(acc, data, 1, 0x76543210, *(v8float *) w_ptr, w_i+1, 0); \
-  acc = fpmac(acc, data, 2, 0x76543210, *(v8float *) w_ptr, w_i+2, 0);
-
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
 
-      for (int i = 0; i < C*12; i+=4) {
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
         *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
       }
-      w_ptr -= C*12;
+      w_ptr -= CKK_ROW_SIZE;
       
       for (int h = 0; h < OUT_H; h+=2) {
         
@@ -568,31 +547,26 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
           v8float acc2 = aie::broadcast<float, 8>(bias[m]);
           
           for (int c = 0; c < C; c++) {
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc1, 0);
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc2, 0);
-
-            MAC_ROW(acc1, 3);
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_W - 12);
-            MAC_ROW(acc2, 3);
+            UPD_DATA;
+            MAC_ROW(acc1);
+            UPD_DATA;
+            MAC_ROW(acc2);
             w_ptr += 4;
 
-            MAC_ROW(acc1, 2);
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_v(data, 2, window_readincr_v4(in));
-            window_incr(in, INP_H*INP_W - 3*INP_W - 12);
-            MAC_ROW(acc2, 2);
-            w_ptr += 8;
+            MAC_ROW(acc1);
+            UPD_DATA;
+            MAC_ROW(acc2);
+            w_ptr += 4;
+
+            MAC_ROW(acc1);
+            UPD_DATA;
+            MAC_ROW(acc2);
+            w_ptr += 4;
+            
+            window_incr(in, INP_H*INP_W - (KH+1)*INP_W);
           } // C
           window_incr(in, -C*INP_H*INP_W + 8);
-          w_ptr -= C*12;
+          w_ptr -= CKK_ROW_SIZE;
 
           if (IS_RELU) {
             acc1 = fpmax(acc1, zeros, 0, 0x76543210);
@@ -618,10 +592,11 @@ void Conv3x3ReluStreamCacheCKKMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
     } // M
   } // B
 
-#undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("Conv3x3ReluStreamCacheCKKMultiRow");
+  CONV_PROFILE_FOOTER("ConvHx4ReluStreamMultiRow");
 }
+#undef UPD_DATA
+#undef MAC_ROW
 
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
