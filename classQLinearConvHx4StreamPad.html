@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Member List</title>
+<title>onnx2versal: QLinearConvHx4StreamPad&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearConv3x3StreamScale32bit.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQLinearConvHx4StreamPad.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -89,20 +89,44 @@ $(document).ready(function(){initNavTree('classQLinearConv3x3StreamScale32bit.ht
 </div>
 
 <div class="header">
-  <div class="headertitle"><div class="title">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt; Member List</div></div>
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="classQLinearConvHx4StreamPad-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QLinearConvHx4StreamPad&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>This is the complete list of members for <a class="el" href="classQLinearConv3x3StreamScale32bit.html">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;</a>, including all inherited members.</p>
-<table class="directory">
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>filter</b>(input_window&lt; int8_t &gt; *in, input_stream&lt; int8_t &gt; *weights, output_stream&lt; int8_t &gt; *out) (defined in <a class="el" href="classQLinearConv3x3StreamScale32bit.html">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;</a>)</td><td class="entry"><a class="el" href="classQLinearConv3x3StreamScale32bit.html">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0" class="odd"><td class="entry"><b>QLinearConv3x3StreamScale32bit</b>(int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero) (defined in <a class="el" href="classQLinearConv3x3StreamScale32bit.html">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;</a>)</td><td class="entry"><a class="el" href="classQLinearConv3x3StreamScale32bit.html">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>registerKernelClass</b>() (defined in <a class="el" href="classQLinearConv3x3StreamScale32bit.html">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;</a>)</td><td class="entry"><a class="el" href="classQLinearConv3x3StreamScale32bit.html">QLinearConv3x3StreamScale32bit&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K &gt;</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">static</span></td></tr>
-</table></div><!-- contents -->
+<p>Vector implementation for 3x3 QLinearConv, padding with y_zero, requires data to be arranged in (M,C,KH,KW) -&gt; (M,C,KH',4) where KH' = KH*4 padded to nearest 16, e.g. [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires KW&lt;=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConvHx4StreamPad&lt;28,48,28,32,1,1,1,1,8,3&gt; total = 5373 QLinearConv3x3StreamPad&lt;58,32,5,16,2,2,1,1,64,10,4,1&gt; total = 105984.  
+</p>
+
+<p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a4026fba171f8ef5b9719f91c1fc80213"><td class="memItemLeft" align="right" valign="top"><a id="a4026fba171f8ef5b9719f91c1fc80213" name="a4026fba171f8ef5b9719f91c1fc80213"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvHx4StreamPad</b> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
+<tr class="separator:a4026fba171f8ef5b9719f91c1fc80213"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5ece27d72cfd08730451e4e6fc38069"><td class="memItemLeft" align="right" valign="top"><a id="aa5ece27d72cfd08730451e4e6fc38069" name="aa5ece27d72cfd08730451e4e6fc38069"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; int8_t &gt; *in, input_stream&lt; int8_t &gt; *weights, output_stream&lt; int8_t &gt; *out)</td></tr>
+<tr class="separator:aa5ece27d72cfd08730451e4e6fc38069"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a93485b2415d850884c6434b61400e7df"><td class="memItemLeft" align="right" valign="top"><a id="a93485b2415d850884c6434b61400e7df" name="a93485b2415d850884c6434b61400e7df"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
+<tr class="separator:a93485b2415d850884c6434b61400e7df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li>design/aie_src/<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a></li>
+<li>design/aie_src/qlinearconv.cc</li>
+</ul>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
+    <li class="navelem"><a class="el" href="classQLinearConvHx4StreamPad.html">QLinearConvHx4StreamPad</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

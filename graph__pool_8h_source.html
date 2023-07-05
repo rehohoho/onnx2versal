@@ -148,23 +148,24 @@ $(document).ready(function(){initNavTree('graph__pool_8h_source.html',''); initR
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    adf::port&lt;output&gt; pout[1];</div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    PoolChunkCGraph() { </div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>      adf::connect&lt;adf::stream&gt; (pin[0], split_graph.pin[0]);</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        k[i] = adf::kernel::create_object&lt;POOL&lt;TT, INP_H, INP_W, OUT_H, OUT_W, B, CCHUNK, KH, KW&gt;&gt;();</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        adf::source(k[i]) = <span class="stringliteral">&quot;pool.cc&quot;</span>;</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;pool.h&quot;</span>};</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        </div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        adf::connect&lt;adf::window&lt;B*CCHUNK*INP_H*INP_W*<span class="keyword">sizeof</span>(TT)&gt;&gt; (split_graph.pout[i], k[i].in[0]);</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        adf::connect&lt;adf::window&lt;B*CCHUNK*OUT_H*OUT_W*<span class="keyword">sizeof</span>(TT)&gt;&gt; (k[i].out[0], concat_graph.pin[i]);</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>      }</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    }</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>};</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="preprocessor">#endif </span><span class="comment">// __POOL_GRAPH_H__</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>      <span class="keyword">static_assert</span>(LCNT &lt;= 8);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>      adf::connect&lt;adf::stream&gt; (pin[0], split_graph.pin[0]);</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        k[i] = adf::kernel::create_object&lt;POOL&lt;TT, INP_H, INP_W, OUT_H, OUT_W, B, CCHUNK, KH, KW&gt;&gt;();</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        adf::source(k[i]) = <span class="stringliteral">&quot;pool.cc&quot;</span>;</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;pool.h&quot;</span>};</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        adf::connect&lt;adf::window&lt;B*CCHUNK*INP_H*INP_W*<span class="keyword">sizeof</span>(TT)&gt;&gt; (split_graph.pout[i], k[i].in[0]);</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>        adf::connect&lt;adf::window&lt;B*CCHUNK*OUT_H*OUT_W*<span class="keyword">sizeof</span>(TT)&gt;&gt; (k[i].out[0], concat_graph.pin[i]);</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>      }</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span> </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    }</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>};</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="preprocessor">#endif </span><span class="comment">// __POOL_GRAPH_H__</span></div>
 <div class="ttc" id="aclassPoolGraph_html"><div class="ttname"><a href="classPoolGraph.html">PoolGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_pool.h:40</div></div>
 <div class="ttc" id="aclassSplitGraph_html"><div class="ttname"><a href="classSplitGraph.html">SplitGraph</a></div><div class="ttdoc">Graph wrapper for arbitrary split kernel implementation and lanes.</div><div class="ttdef"><b>Definition</b> graph_split.h:37</div></div>
 </div><!-- fragment --></div><!-- contents -->

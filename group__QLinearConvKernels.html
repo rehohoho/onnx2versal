@@ -116,7 +116,8 @@ Collaboration diagram for QLinearConvKernels:</div>
 <li>only precompute -qx_zero*(qw_qw_zero), rounding is done before adding qy_zero</li>
 <li>int32 bias: -qx_zero*(qw_zero): k*int8*int8 &gt; 16bits</li>
 <li>int8 shifted qy_zero: shift added into acc</li>
-<li>int16 scale: saturated to 8 bits </li>
+<li>int16 scale: saturated to 8 bits</li>
+<li>each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W) for kernels that allow GROUP != 1 </li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

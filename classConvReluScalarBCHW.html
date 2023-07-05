@@ -97,8 +97,8 @@ $(document).ready(function(){initNavTree('classConvReluScalarBCHW.html',''); ini
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for BCHW, stores weights and biases, requires GROUP==1, ConvReluScalarBCHW&lt;28,28,24,1,1,1,1,4,5,5,1,1&gt; total = 140059 ConvReluScalarBCHW&lt;26,26,24,1,1,1,1,4,3,3,1,1&gt; total = 65443 ConvReluScalarBCHW&lt;24,24,10,2,2,1,1,4,5,5,1,1&gt; total = 24798.  
-</p>
+<p>Scalar implementation for BCHW, stores weights and biases, requires GROUP==1, ConvReluScalarBCHW&lt;28,28,24,24,1,1,1,2,4,5,5,1,1&gt; total = 369505 ConvReluScalarBCHW&lt;24,24,10,10,2,2,1,2,4,5,5,1,1&gt; total = 64413 ConvReluScalarBCHW&lt;26,26,24,24,1,1,1,2,4,3,3,1,1&gt; total = 148320.  
+ <a href="classConvReluScalarBCHW.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
 <table class="memberdecls">
@@ -117,7 +117,9 @@ Static Public Member Functions</h2></td></tr>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
 <tr class="separator:aef065851e3eb9eaaf4ceb9d105abecdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following files:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><div class="compoundTemplParams">template&lt;int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU&gt;<br />
+class ConvReluScalarBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</div></div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
 <li>design/aie_src/conv.cc</li>
 </ul>

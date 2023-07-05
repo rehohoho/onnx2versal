@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConvChunkHGraph&lt; SPLIT, QLINEARCONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearConvChunkHGraph&lt; SPLIT, QLINEARCONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQLinearConvChunkHGraph.html','');
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classQLinearConvChunkHGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConvChunkHGraph&lt; SPLIT, QLINEARCONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
+  <div class="headertitle"><div class="title">QLinearConvChunkHGraph&lt; SPLIT, QLINEARCONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -106,22 +106,22 @@ $(document).ready(function(){initNavTree('classQLinearConvChunkHGraph.html','');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7b461556d627bdc6f05235d513715937"><td class="memItemLeft" align="right" valign="top"><a id="a7b461556d627bdc6f05235d513715937" name="a7b461556d627bdc6f05235d513715937"></a>
+<tr class="memitem:a046f1d5dbeb735b1984b182625721c6e"><td class="memItemLeft" align="right" valign="top"><a id="a046f1d5dbeb735b1984b182625721c6e" name="a046f1d5dbeb735b1984b182625721c6e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvChunkHGraph</b> (std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
-<tr class="separator:a7b461556d627bdc6f05235d513715937"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a046f1d5dbeb735b1984b182625721c6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ac2b86c3250436aa2fdbb239fc911fecb"><td class="memItemLeft" align="right" valign="top"><a id="ac2b86c3250436aa2fdbb239fc911fecb" name="ac2b86c3250436aa2fdbb239fc911fecb"></a>
+<tr class="memitem:a631329e5db22b5f3a3d333a37b826c8a"><td class="memItemLeft" align="right" valign="top"><a id="a631329e5db22b5f3a3d333a37b826c8a" name="a631329e5db22b5f3a3d333a37b826c8a"></a>
 adf::port&lt; adf::input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [2]</td></tr>
-<tr class="separator:ac2b86c3250436aa2fdbb239fc911fecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50e4588bc873540675a70878949770f6"><td class="memItemLeft" align="right" valign="top"><a id="a50e4588bc873540675a70878949770f6" name="a50e4588bc873540675a70878949770f6"></a>
+<tr class="separator:a631329e5db22b5f3a3d333a37b826c8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a032375dd3146113b6c1904aab2a76023"><td class="memItemLeft" align="right" valign="top"><a id="a032375dd3146113b6c1904aab2a76023" name="a032375dd3146113b6c1904aab2a76023"></a>
 adf::port&lt; adf::output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a50e4588bc873540675a70878949770f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a032375dd3146113b6c1904aab2a76023"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int &gt; class SPLIT, template&lt; int, int, int, int, int, int, int, int, int, int &gt; class QLINEARCONV, template&lt; typename, int, int, int, int &gt; class CONCAT, int HCHUNK, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int K, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
-class QLinearConvChunkHGraph&lt; SPLIT, QLINEARCONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, K, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int &gt; class SPLIT, template&lt; int, int, int, int, int, int, int, int, int, int, int, int &gt; class QLINEARCONV, template&lt; typename, int, int, int, int &gt; class CONCAT, int HCHUNK, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
+class QLinearConvChunkHGraph&lt; SPLIT, QLINEARCONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
