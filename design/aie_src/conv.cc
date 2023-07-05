@@ -427,8 +427,13 @@ void ConvHx4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
   PROFILE_HEADER2;
   
   float* w_ptr = (float *) ckk_row;
-  int width_r = OUT_W % 8 == 0 ? 8 : OUT_W % 8;
-  int select_mask = (1 << (width_r * STEP_W)) - 1; // selects first width_r
+  int width_r;
+  if (STEP_W == 2) {
+    width_r = OUT_W % 4 == 0 ? 4 : OUT_W % 4;
+  } else {
+    width_r = OUT_W % 8 == 0 ? 8 : OUT_W % 8;
+  }
+  int select_mask = (1 << width_r) - 1; // selects first width_r
   
   v16float data = null_v16float();
   v8float zeros = null_v8float();
@@ -488,14 +493,16 @@ void ConvHx4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
         }
 
         v16float res = null_v16float();
-        res = upd_w(res, 1, acc1);
-        res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
-        acc1 = ext_w(res, 0);
-
         if (STEP_W == 2) {
           acc1 = fpshuffle(acc1, 0, 0x00006420);
+          res = upd_w(res, 1, acc1);
+          res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
+          acc1 = ext_w(res, 0);
           writeincr_v4(out, ext_v(acc1, 0));
         } else {
+          res = upd_w(res, 1, acc1);
+          res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
+          acc1 = ext_w(res, 0);
           writeincr_v4(out, ext_v(acc1, 0));
           writeincr_v4(out, ext_v(acc1, 1));
         }
@@ -609,7 +616,12 @@ void Conv1x1ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
   PROFILE_HEADER2;
   
   float* w_ptr;
-  int width_r = OUT_W % 8 == 0 ? 8 : OUT_W % 8;
+  int width_r;
+  if (STEP_W == 2) {
+    width_r = OUT_W % 4 == 0 ? 4 : OUT_W % 4;
+  } else {
+    width_r = OUT_W % 8 == 0 ? 8 : OUT_W % 8;
+  }
   int select_mask = (1 << width_r) - 1; // selects first width_r
   
   aie::vector<float, 8> data = null_v8float();
@@ -665,15 +677,17 @@ void Conv1x1ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
           acc1 = fpmax(acc1, zeros, 0, 0x76543210);
         }
 
-        res = null_v16float();
-        res = upd_w(res, 1, acc1);
-        res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
-        acc1 = ext_w(res, 0);
-        
-        if (STEP_W == 2) {  
+        v16float res = null_v16float();
+        if (STEP_W == 2) {
           acc1 = fpshuffle(acc1, 0, 0x00006420);
+          res = upd_w(res, 1, acc1);
+          res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
+          acc1 = ext_w(res, 0);
           writeincr_v4(out, ext_v(acc1, 0));
         } else {
+          res = upd_w(res, 1, acc1);
+          res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
+          acc1 = ext_w(res, 0);
           writeincr_v4(out, ext_v(acc1, 0));
           writeincr_v4(out, ext_v(acc1, 1));
         }
