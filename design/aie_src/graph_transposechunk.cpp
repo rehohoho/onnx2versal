@@ -2,18 +2,21 @@
 #include "graph_utils.h"
 
 
-template <template<typename, int, int, int, int> class TRANSPOSE, 
+template <
+  template<typename, int, int, int, int> class TRANSPOSE, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int HCHUNK,
   typename TT, int B, int H, int W, int C>
-class TransposeGraphTest : public adf::graph {
+class TransposeHChunkGraphTest : public adf::graph {
 
   private:
-    TransposeGraph<TRANSPOSE, TT, B, H, W, C> g;
+    TransposeHChunkGraph<TRANSPOSE, CONCAT, HCHUNK, TT, B, H, W, C> g;
 
   public:
     adf::input_plio plin[1];
     adf::output_plio plout[1];
 
-    TransposeGraphTest(
+    TransposeHChunkGraphTest(
       const std::string& id,
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "transpose_out.txt"
@@ -28,15 +31,15 @@ class TransposeGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-TransposeGraphTest<TransposeScalarBHWC2BCHW, float_t, 1, 4, 4, 16> fpscalar(
-  "fpscalar", "transpose_fpin.txt", "transpose_fpout_shape1x16x4x4_TransposeScalarBHWC2BCHW.txt");
+TransposeHChunkGraphTest<TransposeScalarBHWC2BCHW, ConcatFloatStream, 2, float_t, 1, 4, 4, 16> transposeScalarBHWC2BCHW(
+  "transposeScalarBHWC2BCHW", "transpose_fpin.txt", "transpose_fpout_shape1x16x4x4_TransposeScalarBHWC2BCHW.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
-  adfCheck(fpscalar.init(), "init fpscalar");
-  adfCheck(fpscalar.run(ITER_CNT), "run fpscalar");
-	adfCheck(fpscalar.end(), "end fpscalar");
+  adfCheck(transposeScalarBHWC2BCHW.init(), "init transposeScalarBHWC2BCHW");
+  adfCheck(transposeScalarBHWC2BCHW.run(ITER_CNT), "run transposeScalarBHWC2BCHW");
+	adfCheck(transposeScalarBHWC2BCHW.end(), "end transposeScalarBHWC2BCHW");
   return 0;
 }
 #endif
