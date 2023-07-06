@@ -700,6 +700,68 @@ void ConvHx4ReluStreamMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
 #undef MAC_ROW
 
 
+// half of mac lanes are wasted, use two lanes
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void ConvHx4Out4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+	input_window<float>* in,      // BCHW
+  input_stream<float>* weights, // MCKK
+  output_stream<float>* out     // BMHW
+) {
+  PROFILE_HEADER2;
+  
+  float* w_ptr = (float *) ckk_row;
+  
+  v16float data = null_v16float();
+  v8float zeros = null_v8float();
+
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) { 
+
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
+        *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
+      }
+      w_ptr -= CKK_ROW_SIZE;
+      
+      for (int h = 0; h < OUT_H; h++) {
+        
+        v8float acc1 = aie::broadcast<float, 8>(bias[m]);
+        
+        for (int c = 0; c < C_PER_M; c++) {
+          for (int p = 0; p < KH; p++) chess_flatten_loop {
+            data = upd_w(data, 0, window_read_v8(in));
+            window_incr(in, INP_W);
+            for (int i = 0; i < KW; i++)
+              acc1 = fpmac(acc1, data, i, 0x76543210, *(v8float *) w_ptr, i, 0); // half of macs are wasted
+            w_ptr += 4;
+          }
+          window_incr(in, INP_H*INP_W - KH*INP_W);
+        } // C_PER_M
+        window_incr(in, -C_PER_M*INP_H*INP_W);
+        w_ptr -= CKK_ROW_SIZE;
+
+        if (IS_RELU) {
+          acc1 = fpmax(acc1, zeros, 0, 0x76543210);
+        }
+
+        writeincr_v4(out, ext_v(acc1, 0));
+
+        window_incr(in, INP_W); // go down 1
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      window_incr(in, -INP_W*OUT_H); // go up OUT_H
+      if (m % (M/GROUP) == M/GROUP - 1) {
+        window_incr(in, C_PER_M*INP_H*INP_W);
+      }
+    } // M
+  } // B
+#undef UPD_DATA
+#undef MAC_ROW
+
+  CONV_PROFILE_FOOTER("ConvHx4Out4ReluStream");
+}
+
+
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
 void Conv1x1ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
@@ -796,4 +858,61 @@ void Conv1x1ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
 #undef MAC_ROW
 
   CONV_PROFILE_FOOTER("Conv1x1ReluStream");
+}
+
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void Conv1x1Out4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+	input_window<float>* in,      // BCHW
+  input_stream<float>* weights, // MCKK
+  output_stream<float>* out     // BMHW
+) {
+  PROFILE_HEADER2;
+  
+  float* w_ptr;
+  
+  aie::vector<float, 8> data = null_v8float();
+  v8float zeros = null_v8float();
+  v16float res = null_v16float();
+
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) { 
+
+      float* w_ptr = (float *) ckk_row;
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
+        *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
+      }
+      
+      for (int h = 0; h < OUT_H; h++) {
+        
+        aie::accum<accfloat, 8> acc1;
+        acc1.from_vector(aie::broadcast<float, 8>(bias[m]), 0);
+        
+        for (int c = 0; c < C_PER_M; c++) {
+          data = window_read_v8(in);
+          window_incr(in, INP_H*INP_W);
+          acc1 = aie::mac(acc1, data, ckk_row[c]);
+        } // C_PER_M
+        window_incr(in, -C_PER_M*INP_H*INP_W);
+
+        if (IS_RELU) {
+          acc1 = fpmax(acc1, zeros, 0, 0x76543210);
+        }
+
+        writeincr_v4(out, ext_v(acc1, 0));
+
+        window_incr(in, INP_W); // go down 1
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      window_incr(in, -INP_W*OUT_H); // go up OUT_H
+      if (m % (M/GROUP) == M/GROUP - 1) {
+        window_incr(in, C_PER_M*INP_H*INP_W);
+      }
+    } // M
+  } // B
+
+#undef MAC_ROW
+
+  CONV_PROFILE_FOOTER("Conv1x1Out4ReluStream");
 }
