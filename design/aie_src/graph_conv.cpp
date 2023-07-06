@@ -176,8 +176,14 @@ ConvReluStreamGraphTest<ConvHx4ReluStream,
   "conv_fpin.txt", "convbchw_fpout_3x3_stride2_shape1x4x11x11_ConvHx4ReluStream.txt");
 
 
-// 1x1 BCHW stream, stride = 1
+std::vector<float> fpweights_1x1 {0.0339779257774353, 0.444202721118927, -0.10338988900184631, -0.3933175504207611, -0.09122616052627563, -0.20387223362922668, -0.006593048572540283, 0.1570436954498291};
 std::vector<float> fpweights_1x1_pad{0.0339779257774353, 0.444202721118927, 0.0, 0.0, -0.10338988900184631, -0.3933175504207611, 0.0, 0.0, -0.09122616052627563, -0.20387223362922668, 0.0, 0.0, -0.006593048572540283, 0.1570436954498291, 0.0, 0.0};
+
+// 1x1 BCHW stream, stride = 1
+ConvReluGraphTest<Conv1x1Relu, INP_H, INP_W, OUT_W, OUT_W_PAD, 1, 1, 
+                  B, C, M, 1, 1, GROUP, IS_RELU, 0, 0, 0, 0> conv1x1Relu(
+  "conv1x1Relu", fpweights_1x1, fpbias, 
+  "conv_fpin.txt", "convbchw_fpout_1x1_shape1x4x24x24_Conv1x1Relu.txt");
 
 ConvReluStreamGraphTest<Conv1x1ReluStream, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, 1, 1, B, C, M, 1, 1, GROUP, IS_RELU,
@@ -264,6 +270,10 @@ int main(int argc, char ** argv) {
 	adfCheck(conv3x3ReluCacheCKK_s2.end(), "end conv3x3ReluCacheCKK_s2");
 
   // 1x1 BCHW stream, stride = 1 
+  adfCheck(conv1x1Relu.init(), "init conv1x1Relu");
+  adfCheck(conv1x1Relu.run(ITER_CNT), "run conv1x1Relu");
+	adfCheck(conv1x1Relu.end(), "end conv1x1Relu");
+
   adfCheck(conv1x1ReluStream.init(), "init conv1x1ReluStream");
   conv1x1ReluStream.gmio_w.gm2aie_nb(fpweights_1x1_pad_buf, fpweights_1x1_pad_size);
   adfCheck(conv1x1ReluStream.run(ITER_CNT), "run conv1x1ReluStream");

@@ -171,13 +171,14 @@ class ConvReluStreamGraph : public adf::graph {
       std::vector<float> bias,
       int repeat_cnt = 1
     ) { 
-      static_assert(B*C*PAD_H*PAD_W*4 <= MAX_PARAM_BYTES);
+      static_assert(B*C*PAD_H*PAD_W*4 <= TILE_BYTES);
       
       k[0] = adf::kernel::create_object<CONV<PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>(bias);
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::repetition_count(k[0]) = repeat_cnt;
+      adf::single_buffer(k[0].in[0]);
 
       set_heap_size<CONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>(k[0]);
 

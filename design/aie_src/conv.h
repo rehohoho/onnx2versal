@@ -191,6 +191,48 @@ class ConvHx4ReluBCHW {
 
 
 /**
+ * @brief Vector stream implementation for BCHW, stores weights and biases,
+ * requires KH==KW==1, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
+ * Conv1x1Relu<24,24,24,24,1,1,1,2,4,1,1,1,1> total = 
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+class Conv1x1Relu {
+
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+
+    alignas(32) float (&weights)[M*C];
+    alignas(32) float (&bias)[M];
+
+  public:
+    Conv1x1Relu(
+      float (&w)[M*C],
+      float (&b)[M]
+    ): weights(w), bias(b) {}; 
+
+    void filter(
+      input_window<float>* in,      // BCHW
+      output_window<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      static_assert(GROUP == 1);
+      static_assert(KH==1);
+      static_assert(KW==1);
+      static_assert(INP_W%4==0);
+      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+      REGISTER_FUNCTION(Conv1x1Relu::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
+
+
+/**
  * @brief Scalar stream implementation for BCHW, stores biases,
  * requires GROUP==1, 
  * ConvReluScalarStream<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 252185
@@ -315,7 +357,7 @@ class ConvHx4ReluStreamMultiRow {
 
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
- * requires KH==KW==3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
+ * requires KH==KW==1, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
  * Conv1x1ReluStream<24,24,24,24,1,1,1,2,4,1,1,1,1> total = 4867
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 

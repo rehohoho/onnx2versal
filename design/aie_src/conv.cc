@@ -348,6 +348,100 @@ void ConvHx4ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void Conv1x1Relu<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+	input_window<float>* in,      // BCHW
+  output_window<float>* out     // BMHW
+) {
+  PROFILE_HEADER2;
+  
+  int weightIdx = 0;
+  int width_r;
+  if (STEP_W == 2) {
+    width_r = OUT_W % 4 == 0 ? 4 : OUT_W % 4;
+  } else {
+    width_r = OUT_W % 8 == 0 ? 8 : OUT_W % 8;
+  }
+  int select_mask = (1 << width_r) - 1; // selects first width_r
+  
+  aie::vector<float, 8> data = null_v8float();
+  v8float zeros = null_v8float();
+  v16float res = null_v16float();
+
+  for (int b = 0; b < B; b++) {
+    for (int m = 0; m < M; m++) { 
+      
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W_PAD - 8/STEP_W; w+=8/STEP_W) {
+        
+          aie::accum<accfloat, 8> acc1;
+          acc1.from_vector(aie::broadcast<float, 8>(bias[m]), 0);
+          
+          for (int c = 0; c < C; c++) {
+            data = window_read_v8(in);
+            window_incr(in, INP_H*INP_W);
+            acc1 = aie::mac(acc1, data, weights[weightIdx]); weightIdx++;
+          } // C
+          window_incr(in, -C*INP_H*INP_W + 8);
+          weightIdx -= C;
+
+          if (IS_RELU) {
+            acc1 = fpmax(acc1, zeros, 0, 0x76543210);
+          }
+
+          if (STEP_W == 2) {
+            acc1 = fpshuffle(acc1, 0, 0x00006420);
+            window_writeincr(out, ext_v(acc1, 0));
+          } else {
+            window_writeincr(out, acc1);
+          }
+        } // W
+
+        // handle width boundary
+        aie::accum<accfloat, 8> acc1;
+        acc1.from_vector(aie::broadcast<float, 8>(bias[m]), 0);
+        
+        for (int c = 0; c < C; c++) {
+          data = window_read_v8(in);
+          window_incr(in, INP_H*INP_W);
+          acc1 = aie::mac(acc1, data, weights[weightIdx]); weightIdx++;
+        } // C
+        window_incr(in, -C*INP_H*INP_W + 8);
+        weightIdx -= C;
+
+        if (IS_RELU) {
+          acc1 = fpmax(acc1, zeros, 0, 0x76543210);
+        }
+
+        v16float res = null_v16float();
+        if (STEP_W == 2) {
+          acc1 = fpshuffle(acc1, 0, 0x00006420);
+          res = upd_w(res, 1, acc1);
+          res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
+          acc1 = ext_w(res, 0);
+          window_writeincr(out, ext_v(acc1, 0));
+        } else {
+          res = upd_w(res, 1, acc1);
+          res = fpselect16(select_mask, res, 0, 0x76543210, 0x76543210, 0, 0xfedcba98, 0xfedcba98);
+          acc1 = ext_w(res, 0);
+          window_writeincr(out, acc1);
+        }
+
+        window_incr(in, -OUT_W_PAD*STEP_W+INP_W*STEP_H); // go left OUT_W_PAD*STEP_W, go down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      window_incr(in, -INP_W*OUT_H*STEP_H); // go up OUT_H * STEP_H
+      weightIdx += C;
+    } // M
+  } // B
+
+#undef MAC_ROW
+
+  CONV_PROFILE_FOOTER("Conv1x1Relu");
+}
+
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
 void ConvReluScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   input_stream<float>* weights, // MCKK
