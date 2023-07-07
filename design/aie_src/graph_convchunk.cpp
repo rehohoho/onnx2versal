@@ -139,12 +139,12 @@ std::vector<float> fpweights_pad {-0.26942873001098633, -0.23129096627235413, 0.
 std::vector<float> fpbias {-0.14411085844039917, 0.31030207872390747, 0.07759010791778564, -0.42472273111343384};
 
 // BCHW
-ConvReluChunkMGraphTest<ConvReluScalarBCHW, ConcatFloat, 1, MCHUNK, 
+ConvReluChunkMGraphTest<ConvReluScalar, ConcatFloat, 1, MCHUNK, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                         B, C, M, KH, KW, GROUP, IS_RELU,
                         PADH, PADH, PADW, PADW> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarBCHW.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalar.txt");
 
 ConvReluChunkMGraphTest<Conv5x5ReluBCHW, ConcatFloat, 1, MCHUNK, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
@@ -153,12 +153,12 @@ ConvReluChunkMGraphTest<Conv5x5ReluBCHW, ConcatFloat, 1, MCHUNK,
   "conv5x5ReluBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5ReluBCHW.txt");
 
-ConvReluChunkMGraphTest<Conv5x5on8ReluBCHW, ConcatFloat, 1, MCHUNK, 
+ConvReluChunkMGraphTest<Conv5x5on8Relu, ConcatFloat, 1, MCHUNK, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                         B, C, M, KH, KW, GROUP, IS_RELU,
                         PADH, PADH, PADW, PADW> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5on8ReluBCHW.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5on8Relu.txt");
 
 ConvReluChunkHGraphTest<SplitScalar, ConvReluScalarStream, ConcatFloatStream, HCHUNK, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 

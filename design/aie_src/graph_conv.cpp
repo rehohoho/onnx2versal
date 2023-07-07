@@ -92,25 +92,20 @@ std::vector<float> fpbias {-0.14411085844039917, 0.31030207872390747, 0.07759010
 
 
 // 5x5 BCHW window
-ConvReluGraphTest<ConvReluScalarBCHW, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                   B, C, M, KH, KW, GROUP, IS_RELU, PADH, PADH, PADW, PADW> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalarBCHW.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalar.txt");
 
-ConvReluGraphTest<ConvReluScalarBCHW, INP_H, INP_W, OUT_W_STRIDE2, OUT_W_PAD_STRIDE2, 2, 2, 
+ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, OUT_W_STRIDE2, OUT_W_PAD_STRIDE2, 2, 2, 
                   B, C, M, KH, KW, GROUP, IS_RELU, 0, 0, 0, 0> convReluScalarBCHW_s2(
   "convReluScalarBCHW_s2", fpweights, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_stride2_shape1x4x10x10_ConvReluScalarBCHW.txt");
+  "conv_fpin.txt", "convbchw_fpout_stride2_shape1x4x10x10_ConvReluScalar.txt");
 
-ConvReluGraphTest<Conv5x5ReluBCHW, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
-                  B, C, M, KH, KW, GROUP, IS_RELU, PADH, PADH, PADW, PADW> conv5x5ReluBCHW(
-  "conv5x5ReluBCHW", fpweights, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5ReluBCHW.txt");
-
-ConvReluGraphTest<Conv5x5on8ReluBCHW, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+ConvReluGraphTest<Conv5x5on8Relu, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                   B, C, M, KH, KW, GROUP, IS_RELU, PADH, PADH, PADW, PADW> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5on8ReluBCHW.txt");
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5on8Relu.txt");
 
 
 const int KH3x3 = 3;
@@ -125,54 +120,54 @@ std::vector<float> fpweights_3x3_pad {-0.4217538833618164, -0.12871304154396057,
 std::vector<float> fpweights_3x3_groupC {-0.4217538833618164, -0.12871304154396057, 0.26659107208251953, 0.0, 0.18868345022201538, 0.2079823613166809, 0.26721006631851196, 0.0, -0.2128472924232483, 0.0482562780380249, 0.04335266351699829, 0.0, -0.3525999188423157, 0.25628721714019775, -0.4162086546421051, 0.0, 0.016123712062835693, -0.2801392078399658, -0.22570428252220154, 0.0, 0.20184046030044556, -0.4698072373867035, 0.37331944704055786, 0.0, -0.18197137117385864, 0.4580671787261963, 0.4657343029975891, 0.0, 0.12012588977813721, 0.1174972653388977, 0.48537856340408325, 0.0, 0.3872831463813782, 0.26506996154785156, -0.1864093840122223, 0.0, -0.29981011152267456, 0.173653244972229, 0.144223153591156, 0.0, -0.3779143989086151, -0.2403997778892517, -0.439922034740448, 0.0, -0.2901395261287689, -0.36769431829452515, -0.3067637085914612, 0.0};
 
 // 3x3 BCHW window, stride = 1
-ConvReluGraphTest<ConvReluScalarBCHW, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                   B, C, M, KH3x3, KW3x3, GROUP, IS_RELU, PADH3x3, PADH3x3, PADW3x3, PADW3x3> convReluScalarBCHW_3x3(
   "convReluScalarBCHW_3x3", fpweights_3x3, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvReluScalarBCHW.txt");
+  "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvReluScalar.txt");
 
-ConvReluGraphTest<ConvHx4ReluBCHW, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
-                  B, C, M, KH3x3, KW3x3, GROUP, IS_RELU, PADH3x3, PADH3x3, PADW3x3, W1_3x3> conv3x3on12ReluBCHW(
-  "conv3x3on12ReluBCHW", fpweights_3x3_pad, fpbias, 
-  "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvHx4ReluBCHW.txt");
+ConvReluGraphTest<ConvHx4Relu, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+                  B, C, M, KH3x3, KW3x3, GROUP, IS_RELU, PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4on12ReluBCHW(
+  "convHx4on12ReluBCHW", fpweights_3x3_pad, fpbias, 
+  "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvHx4Relu.txt");
 
 
 // 3x3 BCHW stream, stride = 1
 ConvReluStreamGraphTest<ConvReluScalarStream, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
-                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> convReluScalarStreamCacheCKK(
-  "convReluScalarStreamCacheCKK", fpbias, 
+                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> convReluScalarStream(
+  "convReluScalarStream", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvReluScalarStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStream, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
-                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> conv3x3ReluCacheCKK(
-  "conv3x3ReluCacheCKK", fpbias, 
+                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4ReluStream(
+  "convHx4ReluStream", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvHx4ReluStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStream, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, C, IS_RELU,
-                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> conv3x3ReluCacheCKK_groupC(
-  "conv3x3ReluCacheCKK_groupC", fpbias, 
+                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4ReluStream_groupC(
+  "convHx4ReluStream_groupC", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_group2_shape1x4x24x24_ConvHx4ReluStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStreamMultiRow, 
                         INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
-                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> conv3x3ReluStreamCacheCKK_3x3Row(
-  "conv3x3ReluStreamCacheCKK_3x3Row", fpbias, 
+                        PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4ReluStreamMultiRow(
+  "convHx4ReluStreamMultiRow", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvHx4ReluStreamMultiRow.txt");
 
 
 // 3x3 BCHW stream, stride = 2
 ConvReluStreamGraphTest<ConvReluScalarStream, 
                         INP_H, INP_W, OUT_W_STRIDE2_3x3, OUT_W_PAD_STRIDE2_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
-                        0, 0, 0, 0> convReluScalarStreamCacheCKK_s2(
-  "convReluScalarStreamCacheCKK_s2", fpbias, 
+                        0, 0, 0, 0> convReluScalarStream_s2(
+  "convReluScalarStream_s2", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_stride2_shape1x4x11x11_ConvReluScalarStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStream, 
                         INP_H, INP_W, OUT_W_STRIDE2_3x3, OUT_W_PAD_STRIDE2_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
-                        0, 0, 0, 0> conv3x3ReluCacheCKK_s2(
-  "conv3x3ReluCacheCKK_s2", fpbias, 
+                        0, 0, 0, 0> convHx4ReluStream_s2(
+  "convHx4ReluStream_s2", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_stride2_shape1x4x11x11_ConvHx4ReluStream.txt");
 
 
@@ -220,10 +215,6 @@ int main(int argc, char ** argv) {
   adfCheck(convReluScalarBCHW_s2.run(ITER_CNT), "run convReluScalarBCHW_s2");
 	adfCheck(convReluScalarBCHW_s2.end(), "end convReluScalarBCHW_s2");
 
-  adfCheck(conv5x5ReluBCHW.init(), "init conv5x5ReluBCHW");
-  adfCheck(conv5x5ReluBCHW.run(ITER_CNT), "run conv5x5ReluBCHW");
-	adfCheck(conv5x5ReluBCHW.end(), "end conv5x5ReluBCHW");
-
   adfCheck(conv5x5on8ReluBCHW.init(), "init conv5x5on8ReluBCHW");
   adfCheck(conv5x5on8ReluBCHW.run(ITER_CNT), "run conv5x5on8ReluBCHW");
 	adfCheck(conv5x5on8ReluBCHW.end(), "end conv5x5on8ReluBCHW");
@@ -233,41 +224,41 @@ int main(int argc, char ** argv) {
   adfCheck(convReluScalarBCHW_3x3.run(ITER_CNT), "run convReluScalarBCHW_3x3");
 	adfCheck(convReluScalarBCHW_3x3.end(), "end convReluScalarBCHW_3x3");
 
-  adfCheck(conv3x3on12ReluBCHW.init(), "init conv3x3on12ReluBCHW");
-  adfCheck(conv3x3on12ReluBCHW.run(ITER_CNT), "run conv3x3on12ReluBCHW");
-	adfCheck(conv3x3on12ReluBCHW.end(), "end conv3x3on12ReluBCHW");
+  adfCheck(convHx4on12ReluBCHW.init(), "init convHx4on12ReluBCHW");
+  adfCheck(convHx4on12ReluBCHW.run(ITER_CNT), "run convHx4on12ReluBCHW");
+	adfCheck(convHx4on12ReluBCHW.end(), "end convHx4on12ReluBCHW");
 
   // 3x3 BCHW stream, stride = 1
-  adfCheck(convReluScalarStreamCacheCKK.init(), "init convReluScalarStreamCacheCKK");
-  convReluScalarStreamCacheCKK.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
-  adfCheck(convReluScalarStreamCacheCKK.run(ITER_CNT), "run convReluScalarStreamCacheCKK");
-	adfCheck(convReluScalarStreamCacheCKK.end(), "end convReluScalarStreamCacheCKK");
+  adfCheck(convReluScalarStream.init(), "init convReluScalarStream");
+  convReluScalarStream.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
+  adfCheck(convReluScalarStream.run(ITER_CNT), "run convReluScalarStream");
+	adfCheck(convReluScalarStream.end(), "end convReluScalarStream");
 
-  adfCheck(conv3x3ReluCacheCKK.init(), "init conv3x3ReluCacheCKK");
-  conv3x3ReluCacheCKK.gmio_w.gm2aie_nb(fpweights_3x3_pad_buf, fpweights_3x3_pad_size);
-  adfCheck(conv3x3ReluCacheCKK.run(ITER_CNT), "run conv3x3ReluCacheCKK");
-	adfCheck(conv3x3ReluCacheCKK.end(), "end conv3x3ReluCacheCKK");
+  adfCheck(convHx4ReluStream.init(), "init convHx4ReluStream");
+  convHx4ReluStream.gmio_w.gm2aie_nb(fpweights_3x3_pad_buf, fpweights_3x3_pad_size);
+  adfCheck(convHx4ReluStream.run(ITER_CNT), "run convHx4ReluStream");
+	adfCheck(convHx4ReluStream.end(), "end convHx4ReluStream");
 
-  adfCheck(conv3x3ReluCacheCKK_groupC.init(), "init conv3x3ReluCacheCKK_groupC");
-  conv3x3ReluCacheCKK_groupC.gmio_w.gm2aie_nb(fpweights_3x3_groupC_buf, fpweights_3x3_groupC_size);
-  adfCheck(conv3x3ReluCacheCKK_groupC.run(ITER_CNT), "run conv3x3ReluCacheCKK_groupC");
-	adfCheck(conv3x3ReluCacheCKK_groupC.end(), "end conv3x3ReluCacheCKK_groupC");
+  adfCheck(convHx4ReluStream_groupC.init(), "init convHx4ReluStream_groupC");
+  convHx4ReluStream_groupC.gmio_w.gm2aie_nb(fpweights_3x3_groupC_buf, fpweights_3x3_groupC_size);
+  adfCheck(convHx4ReluStream_groupC.run(ITER_CNT), "run convHx4ReluStream_groupC");
+	adfCheck(convHx4ReluStream_groupC.end(), "end convHx4ReluStream_groupC");
 
-  adfCheck(conv3x3ReluStreamCacheCKK_3x3Row.init(), "init conv3x3ReluStreamCacheCKK_3x3Row");
-  conv3x3ReluStreamCacheCKK_3x3Row.gmio_w.gm2aie_nb(fpweights_3x3_pad_buf, fpweights_3x3_pad_size);
-  adfCheck(conv3x3ReluStreamCacheCKK_3x3Row.run(ITER_CNT), "run conv3x3ReluStreamCacheCKK_3x3Row");
-	adfCheck(conv3x3ReluStreamCacheCKK_3x3Row.end(), "end conv3x3ReluStreamCacheCKK_3x3Row");
+  adfCheck(convHx4ReluStreamMultiRow.init(), "init convHx4ReluStreamMultiRow");
+  convHx4ReluStreamMultiRow.gmio_w.gm2aie_nb(fpweights_3x3_pad_buf, fpweights_3x3_pad_size);
+  adfCheck(convHx4ReluStreamMultiRow.run(ITER_CNT), "run convHx4ReluStreamMultiRow");
+	adfCheck(convHx4ReluStreamMultiRow.end(), "end convHx4ReluStreamMultiRow");
 
   // 3x3 BCHW stream, stride = 2
-  adfCheck(convReluScalarStreamCacheCKK_s2.init(), "init convReluScalarStreamCacheCKK_s2");
-  convReluScalarStreamCacheCKK_s2.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
-  adfCheck(convReluScalarStreamCacheCKK_s2.run(ITER_CNT), "run convReluScalarStreamCacheCKK_s2");
-	adfCheck(convReluScalarStreamCacheCKK_s2.end(), "end convReluScalarStreamCacheCKK_s2");
+  adfCheck(convReluScalarStream_s2.init(), "init convReluScalarStream_s2");
+  convReluScalarStream_s2.gmio_w.gm2aie_nb(fpweights_3x3_buf, fpweights_3x3_size);
+  adfCheck(convReluScalarStream_s2.run(ITER_CNT), "run convReluScalarStream_s2");
+	adfCheck(convReluScalarStream_s2.end(), "end convReluScalarStream_s2");
 
-  adfCheck(conv3x3ReluCacheCKK_s2.init(), "init conv3x3ReluCacheCKK_s2");
-  conv3x3ReluCacheCKK_s2.gmio_w.gm2aie_nb(fpweights_3x3_pad_buf, fpweights_3x3_pad_size);
-  adfCheck(conv3x3ReluCacheCKK_s2.run(ITER_CNT), "run conv3x3ReluCacheCKK_s2");
-	adfCheck(conv3x3ReluCacheCKK_s2.end(), "end conv3x3ReluCacheCKK_s2");
+  adfCheck(convHx4ReluStream_s2.init(), "init convHx4ReluStream_s2");
+  convHx4ReluStream_s2.gmio_w.gm2aie_nb(fpweights_3x3_pad_buf, fpweights_3x3_pad_size);
+  adfCheck(convHx4ReluStream_s2.run(ITER_CNT), "run convHx4ReluStream_s2");
+	adfCheck(convHx4ReluStream_s2.end(), "end convHx4ReluStream_s2");
 
   // 1x1 BCHW stream, stride = 1 
   adfCheck(conv1x1Relu.init(), "init conv1x1Relu");

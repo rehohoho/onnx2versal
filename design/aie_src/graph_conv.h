@@ -515,22 +515,25 @@ class ConvReluChunkHStreamGraph : public adf::graph {
 
         adf::samples_per_iteration(k[i].out[0]) = B*M*HCHUNK_OUT*OUT_W_PAD;
 
-        if ((i & 0x1) != 0) {
-          adf::location<adf::kernel>(k[i]) =
-            adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=0});
-          adf::location<adf::kernel>(split[i/2]) = 
-            adf::location<adf::kernel>(k[i]) + adf::relative_offset({.col_offset=0, .row_offset=-1});
-          
-          adf::location_constraint sTilePos = adf::location<adf::kernel>(split[i/2]);
-          adf::location<adf::stack>(split[i/2]) = sTilePos;
-          adf::location<adf::stack>(k[i]) = sTilePos;
-          adf::location<adf::parameter>(k[i].param[0]) = sTilePos;
-          adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
-        }
-        
-        adf::location_constraint kTilePos = adf::location<adf::kernel>(k[i]);
-        adf::location<adf::buffer>(k[i].in[0]) = kTilePos; // may bust tiles adjacent to split
+        adf::location<adf::buffer>(k[i].in[0]) = adf::location<adf::kernel>(k[i]);
         adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0)};
+      }
+
+      for (int i = 0; i < (LCNT+1)/2; i++) {
+        adf::location<adf::kernel>(split[i]) = 
+          adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=1, .row_offset=0});
+        
+        adf::location_constraint sTilePos = adf::location<adf::kernel>(split[i]);
+        adf::location<adf::stack>(split[i]) = sTilePos;
+        adf::location<adf::stack>(k[i*2]) = sTilePos;
+        adf::location<adf::parameter>(k[i*2].param[0]) = sTilePos;
+        
+        if (i*2+1 < LCNT) {
+          adf::location<adf::kernel>(k[i*2+1]) = sTilePos + adf::relative_offset({.col_offset=0, .row_offset=1});
+        }
+        if (i*2+2 < LCNT) {
+          adf::location<adf::kernel>(k[i*2+2]) = sTilePos + adf::relative_offset({.col_offset=2, .row_offset=0});
+        }
       }
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
 
@@ -558,9 +561,8 @@ class ConvReluChunkHStreamGraph : public adf::graph {
           adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
         
         adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
-        adf::location<adf::parameter>(k[i*2].param[0]) = cTilePos;
-        adf::location<adf::parameter>(k[i*2].param[0]) = adf::offset(0);
-        adf::location<adf::stack>(k[i*2]) = cTilePos;
+        adf::location<adf::parameter>(k[i*2+1].param[0]) = cTilePos;
+        adf::location<adf::stack>(k[i*2+1]) = cTilePos;
         adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
       }
     }

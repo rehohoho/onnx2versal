@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "conv.h"
 #include "kernel_utils.h"
 #include "aie_api/aie.hpp"
@@ -10,7 +12,7 @@
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+void ConvReluScalar<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW (1x1x28x28)
   output_window<float>* out     // BMHW (1x6x24x24)
 ) {
@@ -22,7 +24,7 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
   for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
     for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
       
-      for (int h = 0; h < OUT_H; h++) {
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
         for (int w = 0; w < OUT_W; w++) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD,) {
         
           float res = bias[m];
@@ -58,122 +60,13 @@ void ConvReluScalarBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
     } // M
   } // B
 
-  CONV_PROFILE_FOOTER("ConvReluScalarBCHW");
-}
-
-
-#ifdef __X86SIM__
-#define GET_WVEC(wp, zstart) \
-  wvec = fpshuffle(*(v8float*) wp, 0, 0x00043210);
-#else
-#define GET_WVEC(wp, zstart) \
-  wvec = fpshuffle(*(v8float*) wp, zstart, 0x00043210);
-#endif
-
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
-          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void Conv5x5ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
-	input_window<float>* in,      // BCHW
-  output_window<float>* out     // BMHW
-) {
-  PROFILE_HEADER2;
-
-  v16float data = null_v16float();
-  v8float zeros = null_v8float();
-  v8float wvec;
-
-  float* wp;
-  int zstart;
-
-#define MAC_ROW(acc) \
-  acc = fpmac(acc, data, 0, 0x76543210, wvec, 0, 0x00000000); \
-  acc = fpmac(acc, data, 1, 0x76543210, wvec, 1, 0x00000000); \
-  acc = fpmac(acc, data, 2, 0x76543210, wvec, 2, 0x00000000); \
-  acc = fpmac(acc, data, 3, 0x76543210, wvec, 3, 0x00000000); \
-  acc = fpmac(acc, data, 4, 0x76543210, wvec, 4, 0x00000000);
-
-  // BHWM
-  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
-    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) {// computes one output channel
-      for (int h = 0; h < OUT_W_PAD; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
-        for (int w = 0; w < OUT_W_PAD; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD/8,) { // computes 8 output channel pixels
-          
-          v8float acc1 = aie::broadcast<float, 8>(bias[m]);
-          v8float acc2 = aie::broadcast<float, 8>(bias[m]);
-          wp = weights + m*C*5*5;
-          zstart = m*C*5*5 & 0x3;
-
-          for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) { // computes 8 partial products over 5x5 kernel
-            GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_W-16);
-            MAC_ROW(acc1);
-            
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_W-16);
-            MAC_ROW(acc2);
-            
-            GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            MAC_ROW(acc1);
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_W-16);
-            MAC_ROW(acc2);
-            
-            GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            MAC_ROW(acc1);
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_W-16);
-            MAC_ROW(acc2);
-            
-            GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            MAC_ROW(acc1);
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_W-16);
-            MAC_ROW(acc2);
-            
-            GET_WVEC(wp, zstart); wp += 5; zstart = (zstart + 1) & 0x3;
-            MAC_ROW(acc1);
-            data = upd_w(data, 0, window_readincr_v8(in));
-            data = upd_w(data, 1, window_readincr_v8(in));
-            window_incr(in, INP_H*INP_W - 5*INP_W - 16);
-            MAC_ROW(acc2);
-          }
-          window_incr(in, -C*INP_H*INP_W + 8); // data go channel -C, right 8
-                    
-          if (IS_RELU) {
-            acc1 = fpmax(acc1, zeros, 0, 0x76543210);
-            acc2 = fpmax(acc2, zeros, 0, 0x76543210);
-          }
-          window_write(out, acc1);
-          window_incr(out, OUT_W_PAD);
-          window_write(out, acc2);
-          window_incr(out, -OUT_W_PAD+8);
-          chess_separator_scheduler();
-
-        } // W
-        window_incr(in, 2*INP_W-OUT_W_PAD); // go left OUT_W_PAD, go down 1
-        window_incr(out, OUT_W_PAD);
-        chess_separator_scheduler();
-      } // H
-      window_incr(in, -OUT_H*INP_W); // go up OUT_H
-      chess_separator_scheduler();
-    } // M
-  } // B
-
-#undef MAC_ROW
-
-  CONV_PROFILE_FOOTER("Conv5x5ReluBCHW");
+  CONV_PROFILE_FOOTER("ConvReluScalar");
 }
 
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+void Conv5x5on8Relu<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
@@ -262,13 +155,13 @@ void Conv5x5on8ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
 
 #undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("Conv5x5on8ReluBCHW");
+  CONV_PROFILE_FOOTER("Conv5x5on8Relu");
 }
 
 
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
-void ConvHx4ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+void ConvHx4Relu<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
 	input_window<float>* in,      // BCHW
   output_window<float>* out     // BMHW
 ) {
@@ -342,7 +235,7 @@ void ConvHx4ReluBCHW<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH
 #undef UPD_DATA
 #undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("ConvHx4ReluBCHW");
+  CONV_PROFILE_FOOTER("ConvHx4Relu");
 }
 
 
@@ -367,16 +260,16 @@ void Conv1x1Relu<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW
   v8float zeros = null_v8float();
   v16float res = null_v16float();
 
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
       
-      for (int h = 0; h < OUT_H; h++) {
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
         for (int w = 0; w < OUT_W_PAD - 8/STEP_W; w+=8/STEP_W) {
         
           aie::accum<accfloat, 8> acc1;
           acc1.from_vector(aie::broadcast<float, 8>(bias[m]), 0);
           
-          for (int c = 0; c < C; c++) {
+          for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) {
             data = window_read_v8(in);
             window_incr(in, INP_H*INP_W);
             acc1 = aie::mac(acc1, data, weights[weightIdx]); weightIdx++;
@@ -451,22 +344,22 @@ void ConvReluScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
   
   int weightIdx;
 
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
-      for (int i = 0; i < C_PER_M*KH*KW; i++) {
+      for (int i = 0; i < CKK_ROW_SIZE; i++) chess_prepare_for_pipelining chess_loop_range(CKK_ROW_SIZE,) {
         ckk_row[i] = readincr(weights);
       }
       
-      for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_W; w++) {
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
+        for (int w = 0; w < OUT_W; w++) chess_prepare_for_pipelining chess_loop_range(OUT_W,) {
         
           float res = bias[m];
           weightIdx = 0;
           
-          for (int c = 0; c < C_PER_M; c++) {
-            for (int p = 0; p < KH; p++) {
-              for (int q = 0; q < KW; q++) {
+          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) {
+            for (int p = 0; p < KH; p++) chess_flatten_loop {
+              for (int q = 0; q < KW; q++) chess_flatten_loop {
                 float a = window_readincr(in);
                 res += a * ckk_row[weightIdx];
                 weightIdx++;
@@ -532,20 +425,20 @@ void ConvHx4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
   v16float data = null_v16float();
   v8float zeros = null_v8float();
 
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
-      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) chess_prepare_for_pipelining chess_loop_range(CKK_ROW_SIZE/4,) {
         *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
       }
       w_ptr -= CKK_ROW_SIZE;
       
-      for (int h = 0; h < OUT_H; h++) {
-        for (int w = 0; w < OUT_W_PAD - 8/STEP_W; w+=8/STEP_W) {
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
+        for (int w = 0; w < OUT_W_PAD - 8/STEP_W; w+=8/STEP_W) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD*STEP_W/8-1,) {
         
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           
-          for (int c = 0; c < C_PER_M; c++) {
+          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) {
             for (int p = 0; p < KH; p++) chess_flatten_loop {
               UPD_DATA;
               MAC_ROW(acc1);
@@ -571,7 +464,7 @@ void ConvHx4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
 
         v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           
-        for (int c = 0; c < C_PER_M; c++) {
+        for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) {
           for (int p = 0; p < KH; p++) chess_flatten_loop {
             UPD_DATA;
             MAC_ROW(acc1);
@@ -630,24 +523,24 @@ void ConvHx4ReluStreamMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
   v16float data = null_v16float();
   v8float zeros = null_v8float();
 
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
-      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) chess_prepare_for_pipelining chess_loop_range(CKK_ROW_SIZE/4,) {
         *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
       }
       w_ptr -= CKK_ROW_SIZE;
       
-      for (int h = 0; h < OUT_H; h+=2) {
+      for (int h = 0; h < OUT_H; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
         
         v8float *out_row_ptr = (v8float *) out_row;
         
-        for (int w = 0; w < OUT_W_PAD; w+=8/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=8/STEP_W) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD*STEP_W/8,) {
         
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           v8float acc2 = aie::broadcast<float, 8>(bias[m]);
           
-          for (int c = 0; c < C; c++) {
+          for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) {
             UPD_DATA;
             MAC_ROW(acc1);
             UPD_DATA;
@@ -682,7 +575,7 @@ void ConvHx4ReluStreamMultiRow<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B
         window_incr(in, -OUT_W_PAD*STEP_W+2*INP_W*STEP_H); // go left OUT_W_PAD*STEP_W, go down 2*STEP_H
         
         v4float *_out_row_ptr = (v4float *) out_row;
-        for (int i = 0; i < OUT_W_PAD; i+=4) {
+        for (int i = 0; i < OUT_W_PAD; i+=4) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD/4,) {
           writeincr_v4(out, *_out_row_ptr); _out_row_ptr++;
         }
 
@@ -715,19 +608,19 @@ void ConvHx4Out4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C,
   v16float data = null_v16float();
   v8float zeros = null_v8float();
 
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
-      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) chess_prepare_for_pipelining chess_loop_range(CKK_ROW_SIZE/4,) {
         *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
       }
       w_ptr -= CKK_ROW_SIZE;
       
-      for (int h = 0; h < OUT_H; h++) {
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
         
         v8float acc1 = aie::broadcast<float, 8>(bias[m]);
         
-        for (int c = 0; c < C_PER_M; c++) {
+        for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) {
           for (int p = 0; p < KH; p++) chess_flatten_loop {
             data = upd_w(data, 0, window_read_v8(in));
             window_incr(in, INP_W);
@@ -784,21 +677,21 @@ void Conv1x1ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
   v8float zeros = null_v8float();
   v16float res = null_v16float();
 
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
       float* w_ptr = (float *) ckk_row;
-      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) chess_prepare_for_pipelining chess_loop_range(CKK_ROW_SIZE/4,) {
         *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
       }
       
-      for (int h = 0; h < OUT_H; h++) {
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
         for (int w = 0; w < OUT_W_PAD - 8/STEP_W; w+=8/STEP_W) {
         
           aie::accum<accfloat, 8> acc1;
           acc1.from_vector(aie::broadcast<float, 8>(bias[m]), 0);
           
-          for (int c = 0; c < C; c++) {
+          for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) {
             data = window_read_v8(in);
             window_incr(in, INP_H*INP_W);
             acc1 = aie::mac(acc1, data, ckk_row[c]);
@@ -822,7 +715,7 @@ void Conv1x1ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
         aie::accum<accfloat, 8> acc1;
           acc1.from_vector(aie::broadcast<float, 8>(bias[m]), 0);
         
-        for (int c = 0; c < C; c++) {
+        for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) {
           data = window_read_v8(in);
           window_incr(in, INP_H*INP_W);
           acc1 = aie::mac(acc1, data, ckk_row[c]);
@@ -876,20 +769,20 @@ void Conv1x1Out4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C,
   v8float zeros = null_v8float();
   v16float res = null_v16float();
 
-  for (int b = 0; b < B; b++) {
-    for (int m = 0; m < M; m++) { 
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
 
       float* w_ptr = (float *) ckk_row;
-      for (int i = 0; i < CKK_ROW_SIZE; i+=4) {
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) chess_prepare_for_pipelining chess_loop_range(CKK_ROW_SIZE/4,) {
         *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
       }
       
-      for (int h = 0; h < OUT_H; h++) {
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
         
         aie::accum<accfloat, 8> acc1;
         acc1.from_vector(aie::broadcast<float, 8>(bias[m]), 0);
         
-        for (int c = 0; c < C_PER_M; c++) {
+        for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) {
           data = window_read_v8(in);
           window_incr(in, INP_H*INP_W);
           acc1 = aie::mac(acc1, data, ckk_row[c]);
