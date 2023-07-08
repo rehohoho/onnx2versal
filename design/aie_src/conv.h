@@ -437,6 +437,91 @@ class Conv1x1Out4ReluStream {
     }
 
 };
+
+
+/**
+ * @brief Vector stream implementation for BCHW, stores biases,
+ * requires KW<=3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+class ConvHx4ReluPktStream {
+
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
+    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+
+    alignas(32) float (&bias)[M];
+    alignas(32) float ckk_row[CKK_ROW_SIZE];
+    alignas(32) float in[INP_SIZE];
+
+  public:
+    ConvHx4ReluPktStream(
+      float (&b)[M]
+    ): bias(b) {}; 
+
+    void filter(
+      input_pktstream* in_s,      // BCHW
+      input_stream<float>* weights, // MCKK
+      output_stream<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      static_assert(KW<=4);
+      static_assert(INP_W%4==0);
+      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+      REGISTER_FUNCTION(ConvHx4ReluPktStream::filter);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
+
+
+/**
+ * @brief Vector stream implementation for BCHW, stores biases,
+ * requires KH==KW==1, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+class Conv1x1ReluPktStream {
+
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int CKK_ROW_SIZE = (C+3)/4*4;
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+
+    alignas(32) float (&bias)[M];
+    alignas(32) float ckk_row[CKK_ROW_SIZE];
+    alignas(32) float in[INP_SIZE];
+
+  public:
+    Conv1x1ReluPktStream(
+      float (&b)[M]
+    ): bias(b) {}; 
+
+    void filter(
+      input_pktstream* in_s,      // BCHW
+      input_stream<float>* weights, // MCKK
+      output_stream<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      static_assert(GROUP == 1);
+      static_assert(KH==1);
+      static_assert(KW==1);
+      static_assert(INP_W%4==0);
+      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+      REGISTER_FUNCTION(Conv1x1ReluPktStream::filter);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
 /** @}*/
 
 
