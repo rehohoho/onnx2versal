@@ -807,6 +807,84 @@ void SplitFilterFloatStreamTwice<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
+void SplitFilterFloatPktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
+	input_stream<TT>* in,
+  output_pktstream* out0,
+  output_pktstream* out1
+) {
+  PROFILE_HEADER2;
+
+  uint32 ID[LCNT];
+  output_pktstream *out[2] = {out0, out1};
+
+  for (int i = 0; i < (LCNT+1)/2; i++)
+    ID[2*i] = getPacketid(out0, i);
+  for (int i = 0; i < LCNT/2; i++)
+    ID[2*i+1] = getPacketid(out1, i);
+
+// 32-bit read / cycle or 128-bit read / 4 cycle
+#define WRITE_OUT(outidx, count, tlast) \
+  for (int w = 0; w < count - 1; w++) { \
+    float a = getf_ss(0); \
+    writeincr(out[outidx], a); \
+  } \
+  writeincr(out[outidx], getf_ss(0), tlast);
+
+#define WRITE_OUT_TWICE(outidx0, outidx1, count) \
+  for (int w = 0; w < count - 1; w++) { \
+    auto a = getf_ss(0); \
+    writeincr(out[outidx0], a); \
+    writeincr(out[outidx1], a); \
+  } \
+  auto a = getf_ss(0); \
+  writeincr(out[outidx0], a, true); \
+  writeincr(out[outidx1], a);
+
+#define READ_IN(count) \
+  for (int w = 0; w < count; w++) \
+    get_ss(0);
+
+  if (OVERLAP > 0) {
+    for (int h = 0; h < H; h++) chess_prepare_for_pipelining chess_loop_range(H,) {
+
+      writeHeader(out[0], 0, ID[0]);
+      WRITE_OUT(0, FIRST_STRIDE, false);
+
+      for (int i = 1; i < LCNT; i++) chess_flatten_loop {
+        writeHeader(out[i&0x1], 0, ID[i]);
+        WRITE_OUT_TWICE(1 - (i&0x1), i&0x1, OVERLAP);
+        WRITE_OUT(i&0x1, STRIDE, false);
+      } // LCNT
+
+      int i = LCNT - 1;
+      WRITE_OUT(i&0x1, OVERLAP, true);
+    } // H
+
+  } else {
+    for (int h = 0; h < H; h++) chess_prepare_for_pipelining chess_loop_range(H,) {
+
+      for (int i = 0; i < LCNT-1; i++) chess_flatten_loop {
+        writeHeader(out[i&0x1], 0, ID[i]);
+        WRITE_OUT(i&0x1, OUT_W, true);
+        READ_IN(-OVERLAP);
+      } // LCNT
+
+      int i = LCNT - 1;
+      writeHeader(out[i&0x1], 0, ID[i]);
+      WRITE_OUT(i&0x1, OUT_W, true);
+      READ_IN(INP_W - OUT_W*LCNT + OVERLAP*(LCNT-1));
+    } // H 
+  }
+
+#undef WRITE_OUT
+#undef WRITE_OUT_TWICE
+#undef READ_IN
+
+  SPLIT_PROFILE_FOOTER("SplitFilterFloatPktStream", LCNT);
+}
+
+
+template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
 void SplitFilterInt8Stream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 	input_stream<TT>* in,
   output_stream<TT>* out0

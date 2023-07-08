@@ -170,6 +170,54 @@ class SplitFilterStreamTwiceGraph : public adf::graph {
     }
 
 };
+
+
+/**
+ * @brief Graph wrapper for two stream split
+ * 
+ * @connections
+ * @connect{pin[0], stream H*INP_W*sizeof(TT)}
+ * @connect{pout[0], stream H*OUT_W*sizeof(TT)}
+ * @endconnections
+ */
+template <template<typename, int, int, int, int> class SPLIT,
+  typename TT, int H, int INP_W, int OUT_W, int OVERLAP = 0>
+class SplitFilterPktStreamGraph : public adf::graph {
+
+  public:
+		static constexpr int LCNT = (INP_W - OUT_W) / (OUT_W - OVERLAP) + 1;
+    adf::kernel k[1];
+    adf::port<input> pin[1];
+    adf::port<output> pout[LCNT];
+
+    adf::pktsplit<(LCNT+1)/2> sp0;
+    adf::pktsplit<LCNT/2> sp1;
+
+    SplitFilterPktStreamGraph() { 
+      k[0] = adf::kernel::create_object<SPLIT<TT, H, INP_W, OUT_W, OVERLAP>>();
+      adf::source(k[0]) = "split.cc";
+      adf::headers(k[0]) = {"split.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
+
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::samples_per_iteration(k[0].in[0]) = H*INP_W;
+
+      sp0 = adf::pktsplit<(LCNT+1)/2>::create();
+      for (int i = 0; i < (LCNT+1)/2; i++) {
+        adf::connect<adf::pktstream, adf::stream> (sp0.out[i], pout[2*i]);
+        adf::samples_per_iteration(sp0.out[i]) = H*OUT_W;
+      }
+      adf::connect<adf::pktstream> (k[0].out[0], sp0.in[0]);
+
+      sp1 = adf::pktsplit<LCNT/2>::create();
+      for (int i = 0; i < LCNT/2; i++) {
+        adf::connect<adf::pktstream, adf::stream> (sp1.out[i], pout[2*i+1]);
+        adf::samples_per_iteration(sp1.out[i]) = H*OUT_W;
+      }
+      adf::connect<adf::pktstream> (k[0].out[1], sp1.in[0]);
+    }
+
+};
 /** @} */
 
 
