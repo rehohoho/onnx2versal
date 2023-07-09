@@ -3,8 +3,8 @@ import math
 
 import numpy as np
 
-TILE_SIZE = 32768
-MAX_PARAM_SIZE = TILE_SIZE // 2 # ping-pong buffer, fit input and output ping pongs
+TILE_SIZE = 31712
+MAX_PARAM_SIZE = 32768 // 2 # ping-pong buffer, fit input and output ping pongs
 PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
 
@@ -110,6 +110,7 @@ class OpParser:
 
     self.tout = None             # reference copy to compare with
     self.gmio_repeats = 0
+    self.disable_last_file_output = False # stream is broadcasted to different number of buffers not supported
   
   def get_include_line(self) -> str:
     return f'#include "{self.include_file}"'
@@ -258,84 +259,66 @@ class ConvOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
     self.dtype = tout.dtype
 
-    tin = pad_lastdim(tin, "ConvOp tin", get_vector_boundary(tin))
+    io_pad = 8 if self.OUT_W > 4 else 4
+    tin = pad_lastdim(tin, "ConvOp tin", io_pad)
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
 
-    tout = pad_lastdim(tout, "ConvOp tout", get_vector_boundary(tout))    
+    tout = pad_lastdim(tout, "ConvOp tout", io_pad)
     
     self.INP_W, self.OUT_W_PAD = tin.shape[-1], tout.shape[-1]
     self.out_size = tout.size # host buffer sizes
 
     PAD_H = self.INP_H + self.H0 + self.H1
     PAD_W = self.INP_W + self.W0 + self.W1
+    PAD_W = (PAD_W + 3)//4*4
+    self.W1 = PAD_W - self.INP_W - self.W0
     conv_in_bytes = self.B*self.C*PAD_H*PAD_W*tin.dtype.itemsize
     
-    if conv_in_bytes + self.B*self.C*(self.KH-1)*7*PAD_W*tin.dtype.itemsize > TILE_SIZE * 8:
-      raise NotImplementedError(f"No Conv implementation for padded input size {conv_in_bytes}")
-
-    PAD_W_VEC = (PAD_W + (tin.dtype.itemsize-1))//tin.dtype.itemsize*tin.dtype.itemsize
-
-
-    if conv_in_bytes <= MAX_PARAM_SIZE and tw.nbytes <= MAX_PARAM_SIZE * 8 and tout.nbytes <= MAX_PARAM_SIZE * 2:
-      
-      kernel = "ConvReluScalarBCHW"
-      if self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 5 and self.STEP_H == self.STEP_W == 1 and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-        kernel = "Conv5x5on8ReluBCHW"
-        tw = pad_lastdim(tw, "Conv weights", 8)
-        self.W1 = PAD_W_VEC - self.INP_W - self.W0
-      elif self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 3 and self.STEP_H == self.STEP_W == 1 and self.GROUP == 1 and conv_in_bytes//PAD_W*PAD_W_VEC <= MAX_PARAM_SIZE:
-        kernel = "Conv3x3on12ReluBCHW"
-        tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
-        self.W1 = PAD_W_VEC - self.INP_W - self.W0
-      
-      self.argname_2_tensor[f"{self.name}_w"] = tw
-      self.argname_2_tensor[f"{self.name}_b"] = tbias
-      
-      if tw.nbytes <= MAX_PARAM_SIZE and tout.nbytes <= MAX_PARAM_SIZE:
-        self.kernel_type = f"ConvReluGraph<{kernel},{self.get_conv_targs()}"
-
-      else:
-        chunkSize = min(
-          MAX_PARAM_SIZE//(tw.nbytes//self.M), 
-          MAX_PARAM_SIZE//( tout.nbytes//self.M), 
-          self.M)
-        if chunkSize > 8:
-          chunkSize = chunkSize //8*8
-        concat_w = chunkSize * self.OUT_H * self.OUT_W_PAD
-        concat_block = self.M * self.OUT_H * self.OUT_W_PAD
-        concat = "ConcatFloat" if concat_w % 4 == 0 and concat_block % 4 == 0 else "ConcatScalar"
-        self.kernel_type = f"ConvReluChunkMGraph<{kernel},{concat},{1},{chunkSize},{self.get_conv_targs()}"
-    
-    elif conv_in_bytes <= MAX_PARAM_SIZE:
-      kernel = "ConvReluScalarStreamCacheCKK"
-      if self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC + self.B*self.C*(self.KH-1)*7*PAD_W_VEC*tin.dtype.itemsize <= TILE_SIZE * 8:
-        if self.KH == self.KW == 3:
-          kernel = "Conv3x3ReluStreamCacheCKK"
-          tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
-          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
-        elif self.KH == self.KW == 1 and self.GROUP == 1:
+    if conv_in_bytes <= TILE_SIZE:
+      kernel = "ConvReluScalarStream"
+      if self.STEP_H in [1,2] and self.STEP_W in [1,2]:
+        if self.KH == self.KW == 1 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
+          kernel = "Conv1x1Out4ReluStream"
+          tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
+        elif self.KH == self.KW == 1 and self.GROUP == 1 and self.INP_W % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
           kernel = "Conv1x1ReluStream"
           tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
-          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
+        elif self.KW <= 4 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
+          kernel = "ConvHx4Out4ReluStream"
+          tw = pad_lastdim(tw, "Conv weights", 4)
+        elif self.KW <= 4 and self.INP_W % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
+          kernel = "ConvHx4ReluStream"
+          tw = pad_lastdim(tw, "Conv weights", 4)
       
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
       self.gmio_repeats = 1
       self.argname_2_tensor[f"{self.name}_b"] = tbias
       
       self.kernel_type = f"ConvReluStreamGraph<{kernel},{self.get_conv_targs()}"
+      self.disable_last_file_output = True
     
     else:
-      kernel = "ConvReluScalarStreamCacheCKK"
-      if self.STEP_H in [1,2] and self.STEP_W in [1,2] and conv_in_bytes//PAD_W*PAD_W_VEC + self.B*self.C*(self.KH-1)*7*PAD_W_VEC*tin.dtype.itemsize <= TILE_SIZE * 8:
-        if self.KH == self.KW == 3:
-          kernel = "Conv3x3ReluStreamCacheCKK"
-          tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, 9), "Conv weights", 12)
-          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
-        elif self.KH == self.KW == 1 and self.GROUP == 1:
-          kernel = "Conv1x1ReluStream"
+      graph = "ConvReluChunkHStreamGraph"
+      kernel = "ConvReluScalarStream"
+      split_kernel = "SplitFilterFloatStream"
+      if self.STEP_H in [1,2] and self.STEP_W in [1,2]:
+        if self.KH == self.KW == 1 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
+          kernel = "Conv1x1Out4ReluStream"
           tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
-          self.W1 = (PAD_W +3)//4*4 - self.INP_W - self.W0
+        elif self.KH == self.KW == 1 and self.GROUP == 1 and self.INP_W % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
+          graph = "ConvReluChunkHPktStreamGraph"
+          kernel = "Conv1x1ReluPktStream"
+          split_kernel = "SplitFilterFloatPktStream"
+          tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
+        elif self.KW <= 4 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
+          kernel = "ConvHx4Out4ReluStream"
+          tw = pad_lastdim(tw, "Conv weights", 4)
+        elif self.KW <= 4 and self.INP_W % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
+          graph = "ConvReluChunkHPktStreamGraph"
+          kernel = "ConvHx4ReluPktStream"
+          split_kernel = "SplitFilterFloatPktStream"
+          tw = pad_lastdim(tw, "Conv weights", 4)
       
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
       self.gmio_repeats = 1
@@ -361,8 +344,7 @@ class ConvOp(OpParser):
       concat_w = HCHUNK_OUT * self.OUT_W_PAD
       concat_block = self.OUT_H * self.OUT_W_PAD
       concat_kernel = "ConcatFloatStream"
-      split_kernel = "SplitFilterFloatStream"
-      self.kernel_type = f"ConvReluChunkHStreamGraph<{split_kernel},{kernel},{concat_kernel},{HCHUNK},{self.get_conv_targs()}"
+      self.kernel_type = f"{graph}<{split_kernel},{kernel},{concat_kernel},{HCHUNK},{self.get_conv_targs()}"
   
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
@@ -452,10 +434,14 @@ class GemmOp(OpParser):
       self.argname_2_tensor[f"{self.name}_w"] = tw
       self.argname_2_tensor[f"{self.name}_b"] = tbias
 
-      chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.N) //8*8, self.N)
-      kernel = "GemmReluMKKN" if self.K % 2 == 0 and chunkSize % 4 == 0 else "GemmReluScalarMKKN"
-      concat_kernel = "ConcatFloat" if chunkSize % 4 == 0 and self.N % 4 == 0 else "ConcatScalar"
-      self.kernel_type = f"GemmReluMkknChunkGraph<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+      if tw.nbytes <= MAX_PARAM_SIZE:
+        kernel = "GemmReluMKKN" if self.K % 4 == 0 and self.N % 4 == 0 else "GemmReluScalarMKKN"
+        self.kernel_type = f"GemmReluGraph<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+      else:
+        kernel = "GemmReluMKKN" if self.K % 4 == 0 and chunkSize % 4 == 0 else "GemmReluScalarMKKN"
+        chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.N) //8*8, self.N)
+        concat_kernel = "ConcatFloat" if chunkSize % 4 == 0 and self.N % 4 == 0 else "ConcatScalar"
+        self.kernel_type = f"GemmReluMkknChunkGraph<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       
     else:
       
@@ -1056,6 +1042,12 @@ class TransposeOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    graph = "TransposeGraph"
     kernel = "TransposeScalarBHWC2BCHW"
-    return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
+    if self.B*self.H*self.W*self.C*self.dtype.itemsize > TILE_SIZE:
+      concat_kernel = "ConcatFloatStream"
+      split_kernel = "SplitFilterFloatPktStream"
+      HCHUNK, _ = factor_int(self.H, self.B*self.W*self.C*self.dtype.itemsize, TILE_SIZE)
+      return f"TransposeChunkHPktStreamGraph<{split_kernel},{kernel},{concat_kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
+    else:
+      return f"TransposeGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
+

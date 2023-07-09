@@ -74,7 +74,7 @@ class CppGenerator:
     for op in self.p.op_list:
       for gmio_name in op.gmioname_2_tensor:
         plins.append(
-          f'gmio_{gmio_name} = adf::input_gmio::create("gmio_"+id+"_{gmio_name}", 64, 1000);'
+          f'gmio_{gmio_name} = adf::input_gmio::create("gmio_"+id+"_{gmio_name}", 64, 500);'
         )
     return "      " + "\n".join(plins).replace("\n", "\n      ")
   
@@ -105,11 +105,13 @@ class CppGenerator:
     args = [f'"{self.p.op_list[0].get_input_filename()}"']
     args += [f'"{op.get_output_filename()}"' for op in self.p.modelout_2_op.values()]
     args += [op.get_callarg_line() for op in self.p.op_list]
+    
     if is_dout:
-      optargs = [f'"{op.get_output_filename()}"' for op in self.p.op_list 
-                 if op not in self.p.modelout_2_op.values()]
-      if len(optargs) >= 8:
-        optargs = ['""' for _ in range(len(optargs) - 8)] + optargs[-8:]
+      optargs = []
+      for i, op in enumerate(self.p.op_list):
+        if op not in self.p.modelout_2_op.values():
+          fn = f'"{op.get_output_filename()}"' if not self.p.op_list[i+1].disable_last_file_output else "std::string()"
+          optargs.append(fn)
       args += optargs
     args = [i for i in args if i != ""]
     return "  " + ",\n".join(args).replace("\n", "\n  ")
