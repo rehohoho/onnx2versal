@@ -702,6 +702,29 @@ void ConcatFloatStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
 }
 
 
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+void ConcatFloatPktStream<TT, LCNT, H, INP_W, OUT_W>::filter(
+	input_pktstream* in,
+  output_stream<TT>* out
+) {
+  PROFILE_HEADER2;
+
+  for (int h = 0; h < H; h++) {
+    for (int i = 0; i < LCNT; i++) {
+      getf_ss(0);
+      for (int w = 0; w < OUT_W; w++) {
+        writeincr(out, getf_ss(0));
+      }
+      for (int w = 0; w < INP_W - OUT_W; w++) {
+        getf_ss(0);
+      }
+    }
+  }
+
+  CONCAT_PROFILE_FOOTER("ConcatFloatPktStream", LCNT);
+}
+
+
 template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
 void ConcatInt8Stream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
 	input_stream<TT>* in0,

@@ -307,6 +307,25 @@ class ConcatFloatStream {
 
 
 /**
+ * @brief Scalar implementation for stream concat, 
+ * ConcatFloatPktStream<f,4,32,32,64> takes cycles
+ */
+template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
+class ConcatFloatPktStream {
+	public:
+		void filter(
+			input_pktstream* in,
+  		output_stream<TT>* out
+		);
+		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4); // 32-bit stream
+			// also expects INP_W1 < OUT_W, not included due to conditional instances in graph
+			REGISTER_FUNCTION(ConcatFloatPktStream::filter);
+		}
+};
+
+
+/**
  * @brief Vector implementation for stream concat with int8, 
  * ConcatInt8Stream<f,4,32,32,64> takes  cycles
  */
