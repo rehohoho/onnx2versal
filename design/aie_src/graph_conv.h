@@ -18,23 +18,44 @@ template <template<int, int, int, int, int, int, int, int, int, int, int, int, i
 void set_heap_size(adf::kernel k) {
   if (
     (std::is_same<
-      CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
-      ConvReluScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value) ||
-    (std::is_same<
-      CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
-      ConvHx4ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
+     CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
+     ConvReluScalarStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
   ) {
-    adf::heap_size(k) = C*((KH*KW+3)/4*4)*4 + 1024; // caches CKK weights
+    adf::heap_size(k) = C/GROUP*KH*KW *4 + 1024; // caches CKK weights
   }
-  else if ((std::is_same<
+  else if (
+    (std::is_same<
+    CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
+    ConvHx4ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value) ||
+    (std::is_same<
+    CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
+    ConvHx4Out4ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
+  ) {
+    adf::heap_size(k) = C/GROUP*((KH*KW+3)/4*4) *4 + 1024; // caches CKK weights
+  }
+  else if (
+    (std::is_same<
     CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
     ConvHx4ReluStreamMultiRow<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
   ) {
-    adf::heap_size(k) = C*((KH*KW+3)/4*4)*4 + OUT_W_PAD*4 + 1024; // caches CKK weights and one OUT_ROW
+    adf::heap_size(k) = C/GROUP*((KH*KW+3)/4*4) *4 + OUT_W_PAD*4 + 1024; // caches CKK weights and one OUT_ROW
+  }
+  else if (
+    (std::is_same<
+    CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
+    Conv1x1ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value) ||
+    (std::is_same<
+    CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
+    Conv1x1Out4ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
+  ) {
+    adf::heap_size(k) = (C/GROUP+3)/4*4 *4 + 1024; // caches CKK weights
   }
   else if ((std::is_same<
     CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
-    ConvHx4ReluPktStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
+    ConvHx4ReluPktStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value) ||
+    (std::is_same<
+    CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
+    Conv1x1ReluPktStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
   ) {
     adf::heap_size(k) = 31712; // caches CKK weights, input window
   }
@@ -175,8 +196,7 @@ class ConvReluStreamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     ConvReluStreamGraph(
-      std::vector<float> bias,
-      int repeat_cnt = 1
+      std::vector<float> bias
     ) { 
       static_assert(B*C*PAD_H*PAD_W*4 <= TILE_BYTES);
       
@@ -184,7 +204,6 @@ class ConvReluStreamGraph : public adf::graph {
       adf::source(k[0]) = "conv.cc";
       adf::headers(k[0]) = {"conv.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
-      adf::repetition_count(k[0]) = repeat_cnt;
       adf::single_buffer(k[0].in[0]);
 
       set_heap_size<CONV,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>(k[0]);
@@ -195,16 +214,15 @@ class ConvReluStreamGraph : public adf::graph {
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
-        adf::repetition_count(pad[0]) = repeat_cnt;
 
-        adf::connect<adf::window<B*C*INP_H*INP_W*4>, adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
 
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
       
       } else {
-        adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
+        adf::connect<adf::stream, adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
       }
       
       adf::connect<adf::stream> (pin[1], k[0].in[1]); // variable samples per iteration based on kernel
@@ -213,6 +231,7 @@ class ConvReluStreamGraph : public adf::graph {
       adf::samples_per_iteration(k[0].out[0]) = B*M*OUT_H*OUT_W_PAD;
       
       adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
+      adf::location<adf::buffer>(k[0].in[0]) = adf::offset(0);
     }
 
 };
@@ -638,8 +657,8 @@ class ConvReluChunkHPktStreamGraph : public adf::graph {
         if ((i&0x1) == 1) {
           adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
         }
-        if ((i&0x1) == 0 && i >= 1) {
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-2]) + adf::relative_offset({.col_offset=2, .row_offset=0});
+        if (i == 2) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});
         }
         adf::location<adf::stack>(k[i]) = adf::location<adf::kernel>(k[i]);
         

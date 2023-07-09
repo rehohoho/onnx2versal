@@ -152,7 +152,7 @@ class ConvHx4Relu {
 /**
  * @brief Vector stream implementation for BCHW, stores weights and biases,
  * requires KH==KW==1, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
- * Conv1x1Relu<24,24,24,24,1,1,1,2,4,1,1,1,1> total = 3353
+ * Conv1x1Relu<24,24,24,24,1,1,1,2,4,1,1,1,1> total = 3353 (4129)
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
@@ -359,7 +359,7 @@ class ConvHx4Out4ReluStream {
 /**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires KH==KW==1, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
- * Conv1x1ReluStream<24,24,24,24,1,1,1,2,4,1,1,1,1> total = 4867 (5360)
+ * Conv1x1ReluStream<24,24,24,24,1,1,1,2,4,1,1,1,1> total = 4867 (5368)
  */
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
           int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
