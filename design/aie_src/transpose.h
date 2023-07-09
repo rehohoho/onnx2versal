@@ -13,7 +13,7 @@
 
 /**
  * @brief Scalar implementation for BHWC to BCHW,
- * TransposeScalarBHWC2BCHW::filter<f,1,4,4,16>, total = 373
+ * TransposeScalarBHWC2BCHW::filter<f,1,4,4,16>, total = 371 (input_stream 3847)
  */
 template <typename TT, int B, int H, int W, int C>
 class TransposeScalarBHWC2BCHW {
