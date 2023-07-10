@@ -5,5 +5,6 @@ var group__Conv2D =
     [ "ConvReluStreamGraph< CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 >", "classConvReluStreamGraph.html", null ],
     [ "ConvReluChunkMGraph< CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 >", "classConvReluChunkMGraph.html", null ],
     [ "ConvReluChunkHGraph< SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 >", "classConvReluChunkHGraph.html", null ],
-    [ "ConvReluChunkHStreamGraph< SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 >", "classConvReluChunkHStreamGraph.html", null ]
+    [ "ConvReluChunkHStreamGraph< SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 >", "classConvReluChunkHStreamGraph.html", null ],
+    [ "ConvReluChunkHPktStreamGraph< SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 >", "classConvReluChunkHPktStreamGraph.html", null ]
 ];

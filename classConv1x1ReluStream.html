@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classConv1x1ReluStream.html',''); init
 </div><!--header-->
 <div class="contents">
 
-<p>Vector stream implementation for BCHW, stores biases, requires KH==KW==3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, Conv1x1ReluStream&lt;24,24,24,24,1,1,1,2,4,1,1,1,1&gt; total = 4867.  
+<p>Vector stream implementation for BCHW, stores biases, requires KH==KW==1, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, Conv1x1ReluStream&lt;24,24,24,24,1,1,1,2,4,1,1,1,1&gt; total = 4867 (5368)  
 </p>
 
 <p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>

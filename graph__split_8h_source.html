@@ -212,7 +212,48 @@ $(document).ready(function(){initNavTree('graph__split_8h_source.html',''); init
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    }</div>
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span> </div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>};</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="preprocessor">#endif </span><span class="comment">// __SPLIT_GRAPH_H__</span></div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>SPLIT,</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>  <span class="keyword">typename</span> TT, <span class="keywordtype">int</span> H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OVERLAP = 0&gt;</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno"><a class="line" href="classSplitFilterPktStreamGraph.html">  185</a></span><span class="keyword">class </span><a class="code hl_class" href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = (INP_W - OUT_W) / (OUT_W - OVERLAP) + 1;</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>    adf::kernel k[1];</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    adf::port&lt;input&gt; pin[1];</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    adf::port&lt;output&gt; pout[LCNT];</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span> </div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    adf::pktsplit&lt;(LCNT+1)/2&gt; sp0;</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    adf::pktsplit&lt;LCNT/2&gt; sp1;</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph</a>() { </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>      k[0] = adf::kernel::create_object&lt;SPLIT&lt;TT, H, INP_W, OUT_W, OVERLAP&gt;&gt;();</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>      adf::source(k[0]) = <span class="stringliteral">&quot;split.cc&quot;</span>;</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;split.h&quot;</span>};</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span> </div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>      adf::connect&lt;adf::stream&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>      adf::samples_per_iteration(k[0].in[0]) = H*INP_W;</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>      sp0 = adf::pktsplit&lt;(LCNT+1)/2&gt;::create();</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (LCNT+1)/2; i++) {</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        adf::connect&lt;adf::pktstream, adf::stream&gt; (sp0.out[i], pout[2*i]);</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>        adf::samples_per_iteration(sp0.out[i]) = H*OUT_W;</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>      }</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>      adf::connect&lt;adf::pktstream&gt; (k[0].out[0], sp0.in[0]);</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span> </div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>      sp1 = adf::pktsplit&lt;LCNT/2&gt;::create();</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT/2; i++) {</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>        adf::connect&lt;adf::pktstream, adf::stream&gt; (sp1.out[i], pout[2*i+1]);</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>        adf::samples_per_iteration(sp1.out[i]) = H*OUT_W;</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>      }</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>      adf::connect&lt;adf::pktstream&gt; (k[0].out[1], sp1.in[0]);</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    }</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span> </div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>};</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="preprocessor">#endif </span><span class="comment">// __SPLIT_GRAPH_H__</span></div>
+<div class="ttc" id="aclassSplitFilterPktStreamGraph_html"><div class="ttname"><a href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph</a></div><div class="ttdoc">Graph wrapper for two stream split.</div><div class="ttdef"><b>Definition</b> graph_split.h:185</div></div>
 <div class="ttc" id="aclassSplitFilterStreamGraph_html"><div class="ttname"><a href="classSplitFilterStreamGraph.html">SplitFilterStreamGraph</a></div><div class="ttdoc">Graph wrapper for two stream split.</div><div class="ttdef"><b>Definition</b> graph_split.h:111</div></div>
 <div class="ttc" id="aclassSplitFilterStreamTwiceGraph_html"><div class="ttname"><a href="classSplitFilterStreamTwiceGraph.html">SplitFilterStreamTwiceGraph</a></div><div class="ttdoc">Graph wrapper for two stream split.</div><div class="ttdef"><b>Definition</b> graph_split.h:147</div></div>
 <div class="ttc" id="aclassSplitGraph_html"><div class="ttname"><a href="classSplitGraph.html">SplitGraph</a></div><div class="ttdoc">Graph wrapper for arbitrary split kernel implementation and lanes.</div><div class="ttdef"><b>Definition</b> graph_split.h:37</div></div>

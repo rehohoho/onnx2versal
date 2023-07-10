@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQLinearConvHx4StreamPad.html','')
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 3x3 QLinearConv, padding with y_zero, requires data to be arranged in (M,C,KH,KW) -&gt; (M,C,KH',4) where KH' = KH*4 padded to nearest 16, e.g. [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires KW&lt;=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConvHx4StreamPad&lt;28,48,28,32,1,1,1,1,8,3&gt; total = 5373 QLinearConv3x3StreamPad&lt;58,32,5,16,2,2,1,1,64,10,4,1&gt; total = 105984.  
+<p>Vector implementation for Hx4 QLinearConv, padding with y_zero, requires data to be arranged in (M,C,KH,KW) -&gt; (M,C,KH',4) where KH' = KH*4 padded to nearest 16, e.g. [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires KW&lt;=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConvHx4StreamPad&lt;28,48,28,32,1,1,1,1,8,3&gt; total = 5373 QLinearConv3x3StreamPad&lt;58,32,5,16,2,2,1,1,64,10,4,1&gt; total = 105984.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>

@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="autotoc_md25"></a> (on aiesim)</p>
-<p>GRAPH=tiny_ad</p>
+<p>GRAPH=tiny_vww</p>
 <p>For float32 model run </p><div class="fragment"><div class="line">python generate.py ../models/${GRAPH}.onnx ../data/$GRAPH/X_test.npy -ndata 10</div>
 <div class="line">TARGET=hw_emu GRAPH=${GRAPH} make graph aiesim_profile</div>
 </div><!-- fragment --><p> For int8 model run </p><div class="fragment"><div class="line">python -m onnxruntime.quantization.preprocess --input ../models/${GRAPH}.onnx --output ../models/${GRAPH}_infer.onnx</div>
@@ -117,21 +117,14 @@ hls4ml_jettag</h2>
 </div><!-- fragment --><p> total 1466 cycles</p>
 <h2><a class="anchor" id="autotoc_md27"></a>
 hls4ml_jettag_int8</h2>
-<div class="fragment"><div class="line">Running QuantizeLinearVector&lt;1,16,16&gt;</div>
-<div class="line">start = 1799,end = 1869,total = 70</div>
-<div class="line">Running QgemmVector&lt;1,16,64&gt;</div>
-<div class="line">start = 2045,end = 2215,total = 170</div>
-<div class="line">Running QgemmVector&lt;1,64,32&gt;</div>
-<div class="line">start = 2399,end = 2596,total = 197</div>
-<div class="line">Running QgemmVector&lt;1,32,32&gt;</div>
-<div class="line">start = 2768,end = 2901,total = 133</div>
-<div class="line">Running QgemmVector&lt;1,32,16&gt;</div>
-<div class="line">start = 3069,end = 3142,total = 73</div>
-<div class="line">Running QlinearsoftmaxSingleaxis&lt;1,5,16&gt;</div>
-<div class="line">start = 3310,end = 3480,total = 170</div>
-<div class="line">Running DequantizeLinearScalar&lt;16,5&gt;</div>
-<div class="line">start = 3660,end = 3724,total = 64</div>
-</div><!-- fragment --><p> total 877 cycles</p>
+<div class="fragment"><div class="line">QuantizeLinearFmulStream&lt;1,16,16&gt; start = 920,end = 989,total = 69</div>
+<div class="line">QgemmStream&lt;1,16,64&gt; start = 1001,end = 1182,total = 181</div>
+<div class="line">QgemmStream&lt;1,64,32&gt; start = 1196,end = 1398,total = 202</div>
+<div class="line">QgemmStream&lt;1,32,32&gt; start = 1412,end = 1553,total = 141</div>
+<div class="line">QgemmStream&lt;1,32,16&gt; start = 1567,end = 1650,total = 83</div>
+<div class="line">QlinearsoftmaxSingleaxis&lt;1,5,16&gt; start = 1664,end = 1835,total = 171</div>
+<div class="line">Running DequantizeLinear&lt;1,16,8&gt; start = 1910,end = 1960,total = 50</div>
+</div><!-- fragment --><p> start to end 1040 cycles</p>
 <h2><a class="anchor" id="autotoc_md28"></a>
 lenet_mnist</h2>
 <div class="fragment"><div class="line"># Truncated outoput</div>
@@ -179,19 +172,19 @@ lenet_mnist_int8</h2>
 <div class="fragment"><div class="line"># Truncated output</div>
 <div class="line">Running QuantizeLinearVector&lt;28,28,32&gt;</div>
 <div class="line">start = 3035,end = 4980,total = 1945</div>
-<div class="line">Running QLinearConvVector&lt;28,32,24,32,1,1,6,5&gt;</div>
+<div class="line">Running QLinearConv5x5&lt;28,32,24,32,1,1,6,5&gt;</div>
 <div class="line">start = 5372,end = 8609,total = 3237</div>
 <div class="line">Running Maxpool2x2Int8BCHW::filter&lt;24,32,12,16,1,6&gt;</div>
 <div class="line">start = 10137,end = 10461,total = 324</div>
-<div class="line">Running QLinearConvVector&lt;12,16,8,16,1,6,16,5&gt;</div>
+<div class="line">Running QLinearConv5x5&lt;12,16,8,16,1,6,16,5&gt;</div>
 <div class="line">start = 10929,end = 15814,total = 4885</div>
 <div class="line">Running MaxpoolScalarBCHW::filter&lt;8,16,4,4,1,16&gt;</div>
 <div class="line">start = 16547,end = 20141,total = 3594</div>
-<div class="line">Running QgemmVector&lt;1,256,128&gt;</div>
+<div class="line">Running QgemmStream&lt;1,256,128&gt;</div>
 <div class="line">start = 20377,end = 22554,total = 2177</div>
-<div class="line">Running QgemmVector&lt;1,128,96&gt;</div>
+<div class="line">Running QgemmStream&lt;1,128,96&gt;</div>
 <div class="line">start = 22750,end = 23627,total = 877</div>
-<div class="line">Running QgemmVector&lt;1,96,16&gt;</div>
+<div class="line">Running QgemmStream&lt;1,96,16&gt;</div>
 <div class="line">start = 23827,end = 23976,total = 149</div>
 <div class="line">Running DequantizeLinearScalar&lt;16,10&gt;</div>
 <div class="line">start = 24140,end = 24222,total = 82</div>
@@ -353,14 +346,14 @@ tiny_ad_int8</h2>
 <div class="line">start = 17607,end = 20048,total = 2441</div>
 <div class="line">Running QuantizeLinearFmul&lt;2,640,640&gt;</div>
 <div class="line">start = 20211,end = 22652,total = 2441</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
-<div class="line">Running QgemmVector&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,640,16&gt;</div>
 <div class="line">start = 23148,end = 32514,total = 9366</div>
 <div class="line">start = 23152,end = 32518,total = 9366</div>
 <div class="line">start = 23160,end = 32535,total = 9375</div>
@@ -373,43 +366,43 @@ tiny_ad_int8</h2>
 <div class="line">start = 32821,end = 45833,total = 13012</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 46001,end = 47253,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
 <div class="line">start = 47397,end = 63119,total = 15722</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 63263,end = 64515,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
 <div class="line">start = 64659,end = 80381,total = 15722</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 80525,end = 81777,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
 <div class="line">start = 81921,end = 97643,total = 15722</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 97787,end = 99039,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,16&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,16&gt;</div>
 <div class="line">start = 99183,end = 101379,total = 2196</div>
 <div class="line">Running QlinearMac&lt;14,16,0&gt;</div>
 <div class="line">start = 101523,end = 101722,total = 199</div>
-<div class="line">Running QgemmVector&lt;14,16,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,16,128&gt;</div>
 <div class="line">start = 101866,end = 105984,total = 4118</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 106128,end = 107380,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
 <div class="line">start = 108073,end = 123795,total = 15722</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 124471,end = 125723,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
 <div class="line">start = 126398,end = 142310,total = 15912</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 142966,end = 144218,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
 <div class="line">start = 144883,end = 160605,total = 15722</div>
 <div class="line">Running QlinearMac&lt;14,128,0&gt;</div>
 <div class="line">start = 161234,end = 162486,total = 1252</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
-<div class="line">Running QgemmVector&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
+<div class="line">Running QgemmStream&lt;14,128,128&gt;</div>
 <div class="line">start = 163121,end = 178843,total = 15722</div>
 <div class="line">start = 163125,end = 178847,total = 15722</div>
 <div class="line">start = 163129,end = 178851,total = 15722</div>
@@ -460,18 +453,424 @@ tiny_ad_int8</h2>
 <div class="line">Checking 9/9: k26qlinearmac_goldenout_shape14x128.txt                                          against k26qlinearmac_goldenout_shape14x128.txt          TEST: FAILED! Only 1721/1792 passed.</div>
 <div class="line">Max absolute difference: 13.0</div>
 <div class="line">Max relative difference: 0.15853658536585366</div>
-</div><!-- fragment --><p>convchunk test </p><div class="fragment"><div class="line">Running Pad2DScalar::filter&lt;f,1,24,24,2,2,2,2&gt;</div>
-<div class="line">Running SplitScalar&lt;f,2,1,784,448&gt;::filter2</div>
-<div class="line">start = 824,end = 13480,total = 12656</div>
-<div class="line">start = 857,end = 13868,total = 13011</div>
-<div class="line">Running ConvReluScalarStreamCacheCKK&lt;16,28,24,1,1,1,1,5,5,1&gt;</div>
-<div class="line">Running ConvReluScalarStreamCacheCKK&lt;16,28,24,1,1,1,1,5,5,1&gt;</div>
-<div class="line">start = 14018,end = 149269,total = 135251</div>
-<div class="line">start = 14022,end = 149273,total = 135251</div>
-<div class="line">Running ConcatScalar&lt;f,2,5,288,576&gt;::filter2</div>
-<div class="line">if tout.nbytes &gt; MAX_PARAM_SIZE:</div>
-<div class="line">start = 149338,end = 181050,total = 31712</div>
-</div><!-- fragment --> </div></div><!-- contents -->
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md32"></a>
+tiny_ic</h2>
+<div class="fragment"></div><!-- fragment --><h2><a class="anchor" id="autotoc_md33"></a>
+tiny_ic_int8</h2>
+<div class="fragment"><div class="line">TransposeScalarBHWC2BCHW&lt;f,1,32,32,3&gt; start = 6835,end = 13230,total = 6395</div>
+<div class="line">QuantizeLinearFmulStream&lt;96,32,32&gt; start = 6804,end = 19522,total = 12718</div>
+<div class="line">Pad2DStreamInt8&lt;a,3,32,32,1,1,1,15&gt; start = 6802,end = 19605,total = 12803</div>
+<div class="line">QLinearConvHx4Stream&lt;34,48,32,32,1,1,1,3,16,3&gt; start = 19626,end = 37963,total = 18337</div>
+<div class="line">Pad2DStreamInt8&lt;a,16,32,32,1,1,1,15&gt; start = 6805,end = 44724,total = 37919</div>
+<div class="line">SplitInt8&lt;a,16,1632,864,96&gt;::filter2 start = 6840,end = 44760,total = 37920</div>
+<div class="line">QLinearConvHx4Stream&lt;18,48,32,32,1,1,1,16,16,3&gt; start = 44892,end = 82869,total = 37977</div>
+<div class="line">QLinearConvHx4Stream&lt;18,48,32,32,1,1,1,16,16,3&gt; start = 44896,end = 82873,total = 37977</div>
+<div class="line">ConcatInt8Stream&lt;a,16,512,512,1024&gt; start = 6808,end = 83007,total = 76199</div>
+<div class="line">Pad2DStreamInt8&lt;a,16,32,32,1,1,1,15&gt; start = 6813,end = 83719,total = 76906</div>
+<div class="line">SplitInt8&lt;a,16,1632,864,96&gt;::filter2 start = 6858,end = 83760,total = 76902</div>
+<div class="line">QLinearConvHx4Stream&lt;18,48,32,32,1,1,1,16,16,3&gt; start = 83892,end = 121869,total = 37977</div>
+<div class="line">QLinearConvHx4Stream&lt;18,48,32,32,1,1,1,16,16,3&gt; start = 83896,end = 121873,total = 37977</div>
+<div class="line">ConcatInt8Stream&lt;a,16,512,512,1024&gt; start = 6826,end = 122007,total = 115181</div>
+<div class="line">QLinearAddInt8&lt;a,16384,0&gt; start = 6888,end = 122164,total = 115276</div>
+<div class="line">Pad2DStreamInt8&lt;a,16,32,32,0,1,0,16&gt; start = 6827,end = 122800,total = 115973</div>
+<div class="line">SplitInt8&lt;a,16,1584,816,48&gt;::filter2 start = 6872,end = 122838,total = 115966</div>
+<div class="line">QLinearConvHx4Stream&lt;17,48,16,16,2,2,1,16,32,3&gt; start = 122970,end = 169200,total = 46230</div>
+<div class="line">QLinearConvHx4Stream&lt;17,48,16,16,2,2,1,16,32,3&gt; start = 122974,end = 169204,total = 46230</div>
+<div class="line">ConcatInt8Stream&lt;a,32,128,128,256&gt; start = 6840,end = 169240,total = 162400</div>
+<div class="line">Pad2DStreamInt8&lt;a,32,16,16,1,1,1,15&gt; start = 6840,end = 169448,total = 162608</div>
+<div class="line">SplitInt8&lt;a,32,576,320,64&gt;::filter2 start = 6876,end = 169584,total = 162708</div>
+<div class="line">QLinearConvHx4Stream&lt;10,32,16,16,1,1,1,32,32,3&gt; start = 169717,end = 214142,total = 44425</div>
+<div class="line">QLinearConvHx4Stream&lt;10,32,16,16,1,1,1,32,32,3&gt; start = 169721,end = 214146,total = 44425</div>
+<div class="line">ConcatInt8Stream&lt;a,32,128,128,256&gt; start = 6844,end = 214181,total = 207337</div>
+<div class="line">QLinearConv1x1Stream&lt;32,32,16,16,2,2,1,16,32,1&gt; start = 122185,end = 217149,total = 94964</div>
+<div class="line">QLinearAddInt8&lt;a,8192,0&gt; start = 6916,end = 217192,total = 210276</div>
+<div class="line">Pad2DStreamInt8&lt;a,32,16,16,0,1,0,16&gt; start = 6849,end = 217272,total = 210423</div>
+<div class="line">SplitInt8&lt;a,32,544,288,32&gt;::filter2 start = 6888,end = 217331,total = 210443</div>
+<div class="line">QLinearConv1x1Stream&lt;16,16,8,16,2,2,1,32,64,1&gt; start = 217217,end = 287778,total = 70561</div>
+<div class="line">QLinearConvHx4StreamPad&lt;9,32,8,16,2,2,1,32,64,3&gt; start = 217461,end = 309743,total = 92282</div>
+<div class="line">QLinearConvHx4StreamPad&lt;9,32,8,16,2,2,1,32,64,3&gt; start = 217465,end = 309747,total = 92282</div>
+<div class="line">ConcatInt8Stream&lt;a,64,64,64,128&gt; start = 6856,end = 309764,total = 302908</div>
+<div class="line">Pad2DStreamInt8&lt;a,64,8,16,1,1,1,15&gt; start = 6865,end = 309902,total = 303037</div>
+<div class="line">SplitInt8&lt;a,64,320,192,64&gt;::filter2 start = 6904,end = 310016,total = 303112</div>
+<div class="line">QLinearAddInt8&lt;a,4096,0&gt; start = 6933,end = 365368,total = 358435</div>
+<div class="line">QLinearConvHx4StreamPad&lt;6,32,8,16,1,1,1,64,64,3&gt; start = 310146,end = 420406,total = 110260</div>
+<div class="line">QLinearConvHx4StreamPad&lt;6,32,8,16,1,1,1,64,64,3&gt; start = 310150,end = 420410,total = 110260</div>
+<div class="line">ConcatInt8Stream&lt;a,64,64,64,128&gt; start = 6872,end = 420427,total = 413555</div>
+<div class="line">QLinearAddInt8&lt;a,4096,0&gt; start = 365484,end = 420472,total = 54988</div>
+<div class="line">QLinearAvgpoolScalarBCHW&lt;8,16,1,1,1,64&gt; start = 420487,end = 437980,total = 17493</div>
+<div class="line">QgemmStream&lt;1,64,16&gt; start = 437981,end = 438104,total = 123</div>
+<div class="line">Running DequantizeLinear&lt;1,16,12&gt;</div>
+<div class="line">QlinearsoftmaxSingleaxis&lt;1,10,16&gt; start = 438117,end = 438288,total = 171</div>
+<div class="line">start = 438362,end = 438420,total = 58</div>
+<div class="line"> </div>
+<div class="line">Checking directories out: /home/ruien/workspace/onnx2versal/reports_dir/tiny_ic_int8/hw_emu/aiesimulator_output and data: /home/ruien/workspace/onnx2versal/data at tolerance @ rtol=1e-03, atol=1e-05</div>
+<div class="line">Checking 1/18: k0transpose_goldenout_shape1x3x32x32.txt                                         against k0transpose_goldenout_shape1x3x32x32.txt                TEST: OK!</div>
+<div class="line">Checking 2/18: k10qlinearconv_goldenout_shape1x64x8x8.txt                                       against k10qlinearconv_goldenout_shape1x64x8x8.txt              TEST: FAILED! Only 3959/4096 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.047619047619047616</div>
+<div class="line">Checking 3/18: k11qlinearconv_goldenout_shape1x64x8x8.txt                                       against k11qlinearconv_goldenout_shape1x64x8x8.txt              TEST: FAILED! Only 3997/4096 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 1.0</div>
+<div class="line">Checking 4/18: k12qlinearconv_goldenout_shape1x64x8x8.txt                                       against k12qlinearconv_goldenout_shape1x64x8x8.txt              TEST: FAILED! Only 3676/4096 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 1.0</div>
+<div class="line">Checking 5/18: k13qlinearadd_goldenout_shape1x64x8x8.txt                                        against k13qlinearadd_goldenout_shape1x64x8x8.txt               TEST: FAILED! Only 3943/4096 passed.</div>
+<div class="line">Max absolute difference: 3.0</div>
+<div class="line">Max relative difference: 0.23076923076923078</div>
+<div class="line">Checking 6/18: k14qlinearpool_goldenout_shape1x64x1x1.txt                                       against k14qlinearpool_goldenout_shape1x64x1x1.txt              TEST: FAILED! Only 49/64 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.041666666666666664</div>
+<div class="line">Checking 7/18: k16qgemm_goldenout_shape1x10.txt                                                 against k16qgemm_goldenout_shape1x10.txt                        TEST: FAILED! Only 7/10 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.06666666666666667</div>
+<div class="line">Checking 8/18: k17qlinearsoftmax_goldenout_shape1x10.txt                                        against k17qlinearsoftmax_goldenout_shape1x10.txt               TEST: OK!</div>
+<div class="line">Checking 9/18: k18dequantizeLinear_goldenout_shape1x10.txt                                      against k18dequantizeLinear_goldenout_shape1x10.txt             TEST: OK!</div>
+<div class="line">Checking 10/18: k1quantizelinear_goldenout_shape1x3x32x32.txt                                    against k1quantizelinear_goldenout_shape1x3x32x32.txt          TEST: OK!</div>
+<div class="line">Checking 11/18: k2qlinearconv_goldenout_shape1x16x32x32.txt                                      against k2qlinearconv_goldenout_shape1x16x32x32.txt            TEST: OK!</div>
+<div class="line">Checking 12/18: k3qlinearconv_goldenout_shape1x16x32x32.txt                                      against k3qlinearconv_goldenout_shape1x16x32x32.txt            TEST: OK!</div>
+<div class="line">Checking 13/18: k4qlinearconv_goldenout_shape1x16x32x32.txt                                      against k4qlinearconv_goldenout_shape1x16x32x32.txt            TEST: FAILED! Only 16381/16384 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.2</div>
+<div class="line">Checking 14/18: k5qlinearadd_goldenout_shape1x16x32x32.txt                                       against k5qlinearadd_goldenout_shape1x16x32x32.txt             TEST: FAILED! Only 16382/16384 passed.</div>
+<div class="line">Max absolute difference: 2.0</div>
+<div class="line">Max relative difference: 0.02702702702702703</div>
+<div class="line">Checking 15/18: k6qlinearconv_goldenout_shape1x32x16x16.txt                                      against k6qlinearconv_goldenout_shape1x32x16x16.txt            TEST: FAILED! Only 8178/8192 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.011494252873563218</div>
+<div class="line">Checking 16/18: k7qlinearconv_goldenout_shape1x32x16x16.txt                                      against k7qlinearconv_goldenout_shape1x32x16x16.txt            TEST: FAILED! Only 8183/8192 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.16666666666666666</div>
+<div class="line">Checking 17/18: k8qlinearconv_goldenout_shape1x32x16x16.txt                                      against k8qlinearconv_goldenout_shape1x32x16x16.txt            TEST: FAILED! Only 8105/8192 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 1.0</div>
+<div class="line">Checking 18/18: k9qlinearadd_goldenout_shape1x32x16x16.txt                                       against k9qlinearadd_goldenout_shape1x32x16x16.txt             TEST: FAILED! Only 8145/8192 passed.</div>
+<div class="line">Max absolute difference: 3.0</div>
+<div class="line">Max relative difference: 0.045454545454545456</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md34"></a>
+tiny_kws</h2>
+<p>Note need ~26gb ram and ~2h for aiesimulator. </p><div class="fragment"><div class="line">Waiting for core(s) of graph tiny_kws to finish execution ...</div>
+<div class="line">Pad2DStreamScalar&lt;f,1,49,12,4,5,1,3&gt; start = 8132,end = 9089,total = 957</div>
+<div class="line">ConvHx4ReluStream&lt;58,16,5,8,2,2,1,1,64,10,4,1,1&gt; start = 9106,end = 329160,total = 320054</div>
+<div class="line">Pad2DStreamScalar&lt;f,64,25,8,1,1,1,3&gt; start = 8137,end = 329177,total = 321040</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter0 start = 8143,end = 329190,total = 321047</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,324,84,24&gt;::filter4 start = 8136,end = 329195,total = 321059</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter2 start = 8141,end = 329192,total = 321051</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 325579,end = 342740,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 326554,end = 343718,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8143,end = 343728,total = 335585</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 327531,end = 344692,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 328506,end = 345670,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8141,end = 345680,total = 337539</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8139,end = 345688,total = 337549</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 329203,end = 346364,total = 17161</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8134,end = 346373,total = 338239</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter0 start = 8131,end = 346382,total = 338251</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter2 start = 8129,end = 346384,total = 338255</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,200,40,0&gt;::filter4 start = 8127,end = 346389,total = 338262</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 346188,end = 410608,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8131,end = 410656,total = 402525</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 346235,end = 410655,total = 64420</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 346278,end = 410698,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8129,end = 410746,total = 402617</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 346325,end = 410745,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8127,end = 410755,total = 402628</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8125,end = 410818,total = 402693</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 346398,end = 410818,total = 64420</div>
+<div class="line">Pad2DStreamScalar&lt;f,64,25,8,1,1,1,3&gt; start = 8120,end = 410890,total = 402770</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,324,84,24&gt;::filter4 start = 8121,end = 410914,total = 402793</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter0 start = 8119,end = 410918,total = 402799</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter2 start = 8124,end = 410926,total = 402802</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 410677,end = 427838,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 410737,end = 427901,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8119,end = 427911,total = 419792</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 410805,end = 427966,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 410865,end = 428029,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8124,end = 428039,total = 419915</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8120,end = 428048,total = 419928</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 410923,end = 428084,total = 17161</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8115,end = 428106,total = 419991</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter0 start = 8109,end = 428116,total = 420007</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter2 start = 8113,end = 428120,total = 420007</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,200,40,0&gt;::filter4 start = 8106,end = 428127,total = 420021</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 427922,end = 492342,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8109,end = 492390,total = 484281</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 427969,end = 492389,total = 64420</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 428022,end = 492442,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8113,end = 492502,total = 484389</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 428081,end = 492501,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8114,end = 492510,total = 484396</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 428138,end = 492558,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8112,end = 492565,total = 484453</div>
+<div class="line">Pad2DStreamScalar&lt;f,64,25,8,1,1,1,3&gt; start = 8109,end = 492623,total = 484514</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,324,84,24&gt;::filter4 start = 8092,end = 492659,total = 484567</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter0 start = 8084,end = 492663,total = 484579</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter2 start = 8082,end = 492672,total = 484590</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 492422,end = 509583,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 492482,end = 509646,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8084,end = 509656,total = 501572</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 492551,end = 509712,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 492611,end = 509775,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8082,end = 509785,total = 501703</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8080,end = 509794,total = 501714</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 492668,end = 509829,total = 17161</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8079,end = 509849,total = 501770</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter0 start = 8073,end = 509859,total = 501786</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter2 start = 8079,end = 509865,total = 501786</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,200,40,0&gt;::filter4 start = 8077,end = 509868,total = 501791</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 509665,end = 574085,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8073,end = 574133,total = 566060</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 509712,end = 574132,total = 64420</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 509767,end = 574187,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8079,end = 574247,total = 566168</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 509826,end = 574246,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8077,end = 574256,total = 566179</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 509877,end = 574297,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8075,end = 574312,total = 566237</div>
+<div class="line">Pad2DStreamScalar&lt;f,64,25,8,1,1,1,3&gt; start = 8080,end = 574368,total = 566288</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,324,84,24&gt;::filter4 start = 8088,end = 574395,total = 566307</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter0 start = 8093,end = 574401,total = 566308</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,324,84,24&gt;::filter2 start = 8087,end = 574405,total = 566318</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 574160,end = 591321,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 574220,end = 591384,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8093,end = 591394,total = 583301</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 574284,end = 591445,total = 17161</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 574344,end = 591508,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8087,end = 591518,total = 583431</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8091,end = 591527,total = 583436</div>
+<div class="line">ConvHx4ReluStream&lt;7,12,5,8,1,1,1,64,64,3,3,64,1&gt; start = 574407,end = 591571,total = 17164</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8095,end = 591583,total = 583488</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter0 start = 8097,end = 591594,total = 583497</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,64,200,40,0&gt;::filter2 start = 8099,end = 591598,total = 583499</div>
+<div class="line">SplitFilterFloatStream&lt;f,64,200,40,0&gt;::filter4 start = 8103,end = 591605,total = 583502</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 591400,end = 655820,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8097,end = 655868,total = 647771</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 591447,end = 655867,total = 64420</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 591500,end = 655920,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,40,40,80&gt; start = 8099,end = 655980,total = 647881</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 591559,end = 655979,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,80,80,160&gt; start = 8101,end = 655991,total = 647890</div>
+<div class="line">Conv1x1ReluStream&lt;5,8,5,8,1,1,1,64,64,1,1,1,1&gt; start = 591614,end = 656034,total = 64420</div>
+<div class="line">ConcatFloatStream&lt;f,64,160,40,200&gt; start = 8107,end = 656048,total = 647941</div>
+<div class="line">SplitScalar&lt;f,1,12800,3200,0&gt;::filter4 start = 8178,end = 780863,total = 772685</div>
+<div class="line">AvgpoolScalarBCHW&lt;25,8,1,1,1,16,25,5&gt; start = 780997,end = 785378,total = 4381</div>
+<div class="line">AvgpoolScalarBCHW&lt;25,8,1,1,1,16,25,5&gt; start = 781001,end = 785382,total = 4381</div>
+<div class="line">AvgpoolScalarBCHW&lt;25,8,1,1,1,16,25,5&gt; start = 781005,end = 785386,total = 4381</div>
+<div class="line">AvgpoolScalarBCHW&lt;25,8,1,1,1,16,25,5&gt; start = 781009,end = 785390,total = 4381</div>
+<div class="line">ConcatFloatStream&lt;f,1,16,16,32&gt; start = 8105,end = 785548,total = 777443</div>
+<div class="line">ConcatFloatStream&lt;f,1,16,16,32&gt; start = 8106,end = 785556,total = 777450</div>
+<div class="line">ConcatFloatStream&lt;f,1,32,32,64&gt; start = 8101,end = 785598,total = 777497</div>
+<div class="line">GemmReluMKKN&lt;1,64,12,0&gt; start = 785613,end = 785880,total = 267</div>
+<div class="line">ConcatFloat&lt;f,1,1,12,12&gt;::filter1 start = 786004,end = 786044,total = 40</div>
+<div class="line">SoftmaxScalar&lt;1,12,12&gt; start = 786063,end = 823206,total = 37143</div>
+<div class="line">core(s) are done executing</div>
+<div class="line">[INFO]: Fifo Guidance report generated ./AIESim_FIFO_Guidance.json</div>
+<div class="line">Exiting!</div>
+<div class="line">generate profile data for all cores</div>
+<div class="line">generate profile data for all cores</div>
+<div class="line">Stopping Simulator.</div>
+<div class="line"> </div>
+<div class="line">Info: /OSCI/SystemC: Simulation stopped by user.</div>
+<div class="line">IP-INFO: deleting ip PSIP_ps_i135 </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">[INFO] : Simulation Finished, Sim result: 0</div>
+<div class="line">Checking directories out: /home/ruien/workspace/onnx2versal/reports_dir/tiny_kws/hw_emu/aiesimulator_output and data: /home/ruien/workspace/onnx2versal/data at tolerance @ rtol=1e-03, atol=1e-05</div>
+<div class="line">Checking 1/12: k11conv_goldenout_shape1x64x25x5.txt                                             against k11conv_goldenout_shape1x64x25x5.txt                    TEST: OK!</div>
+<div class="line">Checking 2/12: k13conv_goldenout_shape1x64x25x5.txt                                             against k13conv_goldenout_shape1x64x25x5.txt                    TEST: OK!</div>
+<div class="line">Checking 3/12: k15conv_goldenout_shape1x64x25x5.txt                                             against k15conv_goldenout_shape1x64x25x5.txt                    TEST: OK!</div>
+<div class="line">Checking 4/12: k17conv_goldenout_shape1x64x25x5.txt                                             against k17conv_goldenout_shape1x64x25x5.txt                    TEST: FAILED! Only 7994/8000 passed.</div>
+<div class="line">Max absolute difference: 6.198900000065066e-05</div>
+<div class="line">Max relative difference: 0.17475247609781588</div>
+<div class="line">Checking 5/12: k19pool_goldenout_shape1x64x1x1.txt                                              against k19pool_goldenout_shape1x64x1x1.txt                     TEST: OK!</div>
+<div class="line">Checking 6/12: k1conv_goldenout_shape1x64x25x5.txt                                              against k1conv_goldenout_shape1x64x25x5.txt                     TEST: OK!</div>
+<div class="line">Checking 7/12: k21gemm_goldenout_shape1x12.txt                                                  against k21gemm_goldenout_shape1x12.txt                         TEST: OK!</div>
+<div class="line">Checking 8/12: k23softmax_goldenout_shape1x12.txt                                               against k23softmax_goldenout_shape1x12.txt                      TEST: OK!</div>
+<div class="line">Checking 9/12: k3conv_goldenout_shape1x64x25x5.txt                                              against k3conv_goldenout_shape1x64x25x5.txt                     TEST: OK!</div>
+<div class="line">Checking 10/12: k5conv_goldenout_shape1x64x25x5.txt                                              against k5conv_goldenout_shape1x64x25x5.txt                    TEST: OK!</div>
+<div class="line">Checking 11/12: k7conv_goldenout_shape1x64x25x5.txt                                              against k7conv_goldenout_shape1x64x25x5.txt                    TEST: OK!</div>
+<div class="line">Checking 12/12: k9conv_goldenout_shape1x64x25x5.txt                                              against k9conv_goldenout_shape1x64x25x5.txt                    TEST: OK!</div>
+<div class="line">Traceback (most recent call last):</div>
+<div class="line">  File &quot;/home/ruien/workspace/onnx2versal/check.py&quot;, line 98, in &lt;module&gt;</div>
+<div class="line">    assert(pass_count == len(filepairs)), f&quot;{pass_count} / {len(filepairs)} tests passed.&quot;</div>
+<div class="line">AssertionError: 11 / 12 tests passed.</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md35"></a>
+tiny_kws_int8</h2>
+<p>Note need ~26gb ram and ~1h for aiesimulator. </p><div class="fragment"><div class="line">QuantizeLinearFmulStream&lt;49,12,16&gt; start = 5725,end = 7290,total = 1565</div>
+<div class="line">Pad2DStreamInt8&lt;a,1,49,16,4,5,1,15&gt; start = 5726,end = 7381,total = 1655</div>
+<div class="line">QLinearConvHx4StreamPad&lt;58,32,5,16,2,2,1,1,64,10,4,1&gt; start = 7403,end = 111787,total = 104384</div>
+<div class="line">Pad2DStreamInt8&lt;a,64,25,16,1,1,1,15&gt; start = 5729,end = 111851,total = 106122</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter2 start = 5732,end = 111867,total = 106135</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,864,224,64&gt;::filter4 start = 5735,end = 111868,total = 106133</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter0 start = 5738,end = 111870,total = 106132</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 110756,end = 119075,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 111070,end = 119389,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5738,end = 119400,total = 113662</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 111383,end = 119702,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 111697,end = 120016,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5732,end = 120027,total = 114295</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5736,end = 120038,total = 114302</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 111886,end = 120205,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5735,end = 120217,total = 114482</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,400,80,0&gt;::filter4 start = 5722,end = 120237,total = 114515</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter2 start = 5725,end = 120237,total = 114512</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter0 start = 5721,end = 120239,total = 114518</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 120160,end = 159560,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 120179,end = 159579,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5721,end = 159588,total = 153867</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 120203,end = 159603,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 120222,end = 159622,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5725,end = 159631,total = 153906</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5723,end = 159641,total = 153918</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 120253,end = 159653,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5720,end = 159673,total = 153953</div>
+<div class="line">Pad2DStreamInt8&lt;a,64,25,16,1,1,1,15&gt; start = 5711,end = 160108,total = 154397</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,864,224,64&gt;::filter4 start = 5709,end = 160123,total = 154414</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter0 start = 5714,end = 160124,total = 154410</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter2 start = 5711,end = 160125,total = 154414</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 159690,end = 168009,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 159804,end = 168123,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5714,end = 168134,total = 162420</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 159921,end = 168240,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 160035,end = 168354,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5711,end = 168365,total = 162654</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5709,end = 168376,total = 162667</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 160139,end = 168458,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5706,end = 168468,total = 162762</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter2 start = 5704,end = 168484,total = 162780</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter0 start = 5700,end = 168486,total = 162786</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,400,80,0&gt;::filter4 start = 5695,end = 168487,total = 162792</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 168407,end = 207807,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 168426,end = 207826,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5700,end = 207835,total = 202135</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 168450,end = 207850,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 168469,end = 207869,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5704,end = 207878,total = 202174</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5702,end = 207888,total = 202186</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 168503,end = 207903,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5698,end = 207919,total = 202221</div>
+<div class="line">Pad2DStreamInt8&lt;a,64,25,16,1,1,1,15&gt; start = 5694,end = 208352,total = 202658</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,864,224,64&gt;::filter4 start = 5693,end = 208367,total = 202674</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter2 start = 5693,end = 208368,total = 202675</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter0 start = 5696,end = 208368,total = 202672</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 207934,end = 216253,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 208048,end = 216367,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5696,end = 216378,total = 210682</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 208164,end = 216483,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 208278,end = 216597,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5693,end = 216608,total = 210915</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5694,end = 216618,total = 210924</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 208383,end = 216702,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5686,end = 216714,total = 211028</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,400,80,0&gt;::filter4 start = 5683,end = 216729,total = 211046</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter2 start = 5688,end = 216730,total = 211042</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter0 start = 5686,end = 216732,total = 211046</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 216653,end = 256053,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 216672,end = 256072,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5686,end = 256081,total = 250395</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 216696,end = 256096,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 216715,end = 256115,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5688,end = 256124,total = 250436</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5684,end = 256135,total = 250451</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 216745,end = 256145,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5683,end = 256165,total = 250482</div>
+<div class="line">Pad2DStreamInt8&lt;a,64,25,16,1,1,1,15&gt; start = 5681,end = 256597,total = 250916</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter0 start = 5680,end = 256613,total = 250933</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,864,224,64&gt;::filter4 start = 5673,end = 256615,total = 250942</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,864,224,64&gt;::filter2 start = 5677,end = 256616,total = 250939</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 256179,end = 264498,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 256293,end = 264612,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5680,end = 264623,total = 258943</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 256412,end = 264731,total = 8319</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 256526,end = 264845,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5677,end = 264856,total = 259179</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5681,end = 264867,total = 259186</div>
+<div class="line">QLinearConvHx4StreamPad&lt;7,32,5,16,1,1,1,64,64,3,3,64&gt; start = 256631,end = 264950,total = 8319</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5675,end = 264961,total = 259286</div>
+<div class="line">SplitFilterInt8Stream&lt;a,64,400,80,0&gt;::filter4 start = 5668,end = 264978,total = 259310</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter2 start = 5671,end = 264978,total = 259307</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;a,64,400,80,0&gt;::filter0 start = 5673,end = 264980,total = 259307</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 264901,end = 304301,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 264920,end = 304320,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5673,end = 304329,total = 298656</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 264944,end = 304344,total = 39400</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 264963,end = 304363,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,80,80,160&gt; start = 5671,end = 304372,total = 298701</div>
+<div class="line">ConcatInt8Stream&lt;a,64,160,160,320&gt; start = 5675,end = 304384,total = 298709</div>
+<div class="line">QLinearConv1x1Stream&lt;5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 264994,end = 304394,total = 39400</div>
+<div class="line">ConcatInt8Stream&lt;a,64,320,80,400&gt; start = 5670,end = 304418,total = 298748</div>
+<div class="line">SplitInt8&lt;a,1,25600,12800,0&gt;::filter2 start = 5708,end = 304652,total = 298944</div>
+<div class="line">ConcatInt8Stream&lt;a,1,32,32,64&gt; start = 5675,end = 317462,total = 311787</div>
+<div class="line">QgemmStream&lt;1,64,16&gt; start = 317474,end = 317590,total = 116</div>
+<div class="line">QlinearsoftmaxSingleaxis&lt;1,12,16&gt; start = 317602,end = 317773,total = 171</div>
+<div class="line">DequantizeLinear&lt;1,16,12&gt; start = 317792,end = 317858,total = 66</div>
+<div class="line">QLinearAvgpoolScalarBCHW&lt;25,16,1,1,1,64,25,5&gt; start = 304782,end = 330083,total = 25301</div>
+<div class="line">QLinearAvgpoolScalarBCHW&lt;25,16,1,1,1,64,25,5&gt; start = 304786,end = 330087,total = 25301</div>
+<div class="line">core(s) are done executing</div>
+<div class="line">[INFO]: Fifo Guidance report generated ./AIESim_FIFO_Guidance.json</div>
+<div class="line">Exiting!</div>
+<div class="line">generate profile data for all cores</div>
+<div class="line">generate profile data for all cores</div>
+<div class="line">Stopping Simulator.</div>
+<div class="line"> </div>
+<div class="line">Info: /OSCI/SystemC: Simulation stopped by user.</div>
+<div class="line">IP-INFO: deleting ip PSIP_ps_i134 </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">IP-INFO: deleting packet ip </div>
+<div class="line">[INFO] : Simulation Finished, Sim result: 0</div>
+<div class="line">Checking directories out: /home/ruien/workspace/onnx2versal/reports_dir/tiny_kws_int8/hw_emu/aiesimulator_output and data: /home/ruien/workspace/onnx2versal/data at tolerance @ rtol=1e-03, atol=1e-05</div>
+<div class="line">Checking 1/14: k10qlinearconv_goldenout_shape1x64x25x5.txt                                      against k10qlinearconv_goldenout_shape1x64x25x5.txt             TEST: FAILED! Only 7972/8000 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.017857142857142856</div>
+<div class="line">Checking 2/14: k11qlinearpool_goldenout_shape1x64x1x1.txt                                       against k11qlinearpool_goldenout_shape1x64x1x1.txt              TEST: FAILED! Only 63/64 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.017241379310344827</div>
+<div class="line">Checking 3/14: k13qgemm_goldenout_shape1x12.txt                                                 against k13qgemm_goldenout_shape1x12.txt                        TEST: OK!</div>
+<div class="line">Checking 4/14: k14qlinearsoftmax_goldenout_shape1x12.txt                                        against k14qlinearsoftmax_goldenout_shape1x12.txt               TEST: OK!</div>
+<div class="line">Checking 5/14: k15dequantizeLinear_goldenout_shape1x12.txt                                      against k15dequantizeLinear_goldenout_shape1x12.txt             TEST: OK!</div>
+<div class="line">Checking 6/14: k1quantizelinear_goldenout_shape1x1x49x10.txt                                    against k1quantizelinear_goldenout_shape1x1x49x10.txt           TEST: OK!</div>
+<div class="line">Checking 7/14: k2qlinearconv_goldenout_shape1x64x25x5.txt                                       against k2qlinearconv_goldenout_shape1x64x25x5.txt              TEST: OK!</div>
+<div class="line">Checking 8/14: k3qlinearconv_goldenout_shape1x64x25x5.txt                                       against k3qlinearconv_goldenout_shape1x64x25x5.txt              TEST: OK!</div>
+<div class="line">Checking 9/14: k4qlinearconv_goldenout_shape1x64x25x5.txt                                       against k4qlinearconv_goldenout_shape1x64x25x5.txt              TEST: OK!</div>
+<div class="line">Checking 10/14: k5qlinearconv_goldenout_shape1x64x25x5.txt                                       against k5qlinearconv_goldenout_shape1x64x25x5.txt             TEST: OK!</div>
+<div class="line">Checking 11/14: k6qlinearconv_goldenout_shape1x64x25x5.txt                                       against k6qlinearconv_goldenout_shape1x64x25x5.txt             TEST: OK!</div>
+<div class="line">Checking 12/14: k7qlinearconv_goldenout_shape1x64x25x5.txt                                       against k7qlinearconv_goldenout_shape1x64x25x5.txt             TEST: FAILED! Only 7999/8000 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.010309278350515464</div>
+<div class="line">Checking 13/14: k8qlinearconv_goldenout_shape1x64x25x5.txt                                       against k8qlinearconv_goldenout_shape1x64x25x5.txt             TEST: FAILED! Only 7991/8000 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.024390243902439025</div>
+<div class="line">Checking 14/14: k9qlinearconv_goldenout_shape1x64x25x5.txt                                       against k9qlinearconv_goldenout_shape1x64x25x5.txt             TEST: FAILED! Only 7996/8000 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.019230769230769232</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md36"></a>
+tiny_vww</h2>
+<div class="fragment"></div><!-- fragment --><h2><a class="anchor" id="autotoc_md37"></a>
+tiny_vww_int8</h2>
+<div class="fragment"></div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Conv3x3ReluStreamCacheCKKMultiRow&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: SplitFilterInt8PktStream&lt; TT, H, INP_W, OUT_W, OVERLAP &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classConv3x3ReluStreamCacheCKKMultiRow.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classSplitFilterInt8PktStream.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,41 +92,38 @@ $(document).ready(function(){initNavTree('classConv3x3ReluStreamCacheCKKMultiRow
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classConv3x3ReluStreamCacheCKKMultiRow-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Conv3x3ReluStreamCacheCKKMultiRow&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
+<a href="classSplitFilterInt8PktStream-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">SplitFilterInt8PktStream&lt; TT, H, INP_W, OUT_W, OVERLAP &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Split.html">Split</a> &raquo; <a class="el" href="group__SplitKernels.html">SplitKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector stream implementation for BCHW, stores biases, requires KH==KW==3, INP_W%4==0, OUT_W_PAD%8==0, STEP_H==1, STEP_W==1, GROUP==1, Conv3x3ReluStreamCacheCKKMultiRow&lt;26,28,24,24,1,1,1,2,4,3,3,1,1&gt; total = 15137.  
+<p>Scalar implementation for slicing out portions of 32-bit stream input into pktstream, requires 2*OVERLAP &lt;= OUT_W, (INP_W-OUT_W) % FIRST_STRIDE == 0 if OVERLAP &gt; 0, requires OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W, if OVERLAP &lt;= 0,.  
 </p>
 
-<p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="split_8h_source.html">split.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a98c1e05d0865763b04cf08df578d8f92"><td class="memItemLeft" align="right" valign="top"><a id="a98c1e05d0865763b04cf08df578d8f92" name="a98c1e05d0865763b04cf08df578d8f92"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Conv3x3ReluStreamCacheCKKMultiRow</b> (float(&amp;b)[M])</td></tr>
-<tr class="separator:a98c1e05d0865763b04cf08df578d8f92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9915600c16861abd29fd612b19d5e5d0"><td class="memItemLeft" align="right" valign="top"><a id="a9915600c16861abd29fd612b19d5e5d0" name="a9915600c16861abd29fd612b19d5e5d0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, input_stream&lt; float &gt; *weights, output_stream&lt; float &gt; *out)</td></tr>
-<tr class="separator:a9915600c16861abd29fd612b19d5e5d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22897baac7c7c3fb748acb5d56c9ed26"><td class="memItemLeft" align="right" valign="top"><a id="a22897baac7c7c3fb748acb5d56c9ed26" name="a22897baac7c7c3fb748acb5d56c9ed26"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *in, output_pktstream *out0, output_pktstream *out1)</td></tr>
+<tr class="separator:a22897baac7c7c3fb748acb5d56c9ed26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a8742cfce063defcd76968d46286d6a6a"><td class="memItemLeft" align="right" valign="top"><a id="a8742cfce063defcd76968d46286d6a6a" name="a8742cfce063defcd76968d46286d6a6a"></a>
+<tr class="memitem:a7b2dbeb027cb3660e318ded2a0fa829f"><td class="memItemLeft" align="right" valign="top"><a id="a7b2dbeb027cb3660e318ded2a0fa829f" name="a7b2dbeb027cb3660e318ded2a0fa829f"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a8742cfce063defcd76968d46286d6a6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a7b2dbeb027cb3660e318ded2a0fa829f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
-<li>design/aie_src/conv.cc</li>
+<li>design/aie_src/<a class="el" href="split_8h_source.html">split.h</a></li>
+<li>design/aie_src/split.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classConv3x3ReluStreamCacheCKKMultiRow.html">Conv3x3ReluStreamCacheCKKMultiRow</a></li>
+    <li class="navelem"><a class="el" href="classSplitFilterInt8PktStream.html">SplitFilterInt8PktStream</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

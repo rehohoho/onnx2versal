@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQLinearConv3x3.html',''); initRes
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 3x3 QLinearConv, requires data to be arranged in [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires INP_W%16=0, OUT_W_PAD%16=0, QLinearConv3x3&lt;28,32,28,32,1,1,1,1,6,3&gt; total = 2906.  
+<p>Vector implementation for Hx4 QLinearConv, requires data to be arranged in [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires INP_W%16=0, OUT_W_PAD%16=0, QLinearConv3x3&lt;28,32,28,32,1,1,1,1,6,3&gt; total = 2906.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>

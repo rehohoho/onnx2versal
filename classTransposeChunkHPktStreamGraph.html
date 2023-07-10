@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: ConvReluScalarBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: TransposeChunkHPktStreamGraph&lt; SPLIT, TRANSPOSE, CONCAT, HCHUNK, TT, B, H, W, C &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classConvReluScalarBCHW.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classTransposeChunkHPktStreamGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -90,45 +90,42 @@ $(document).ready(function(){initNavTree('classConvReluScalarBCHW.html',''); ini
 
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classConvReluScalarBCHW-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">ConvReluScalarBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="classTransposeChunkHPktStreamGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">TransposeChunkHPktStreamGraph&lt; SPLIT, TRANSPOSE, CONCAT, HCHUNK, TT, B, H, W, C &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Transpose.html">Transpose</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for BCHW, stores weights and biases, requires GROUP==1, ConvReluScalarBCHW&lt;28,28,24,24,1,1,1,2,4,5,5,1,1&gt; total = 369505 ConvReluScalarBCHW&lt;24,24,10,10,2,2,1,2,4,5,5,1,1&gt; total = 64413 ConvReluScalarBCHW&lt;26,26,24,24,1,1,1,2,4,3,3,1,1&gt; total = 148320.  
- <a href="classConvReluScalarBCHW.html#details">More...</a></p>
+<p>Multi instance graph.  
+ <a href="classTransposeChunkHPktStreamGraph.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="graph__transpose_8h_source.html">graph_transpose.h</a>&gt;</code></p>
+
+<p>Inherits adf::graph.</p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:ab5a1b211228ca4a4fc4fa9d519d210d2"><td class="memItemLeft" align="right" valign="top"><a id="ab5a1b211228ca4a4fc4fa9d519d210d2" name="ab5a1b211228ca4a4fc4fa9d519d210d2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ConvReluScalarBCHW</b> (float(&amp;w)[M *KH *KW *C], float(&amp;b)[M])</td></tr>
-<tr class="separator:ab5a1b211228ca4a4fc4fa9d519d210d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2d589c91a7f535806401414913ea997"><td class="memItemLeft" align="right" valign="top"><a id="ab2d589c91a7f535806401414913ea997" name="ab2d589c91a7f535806401414913ea997"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:ab2d589c91a7f535806401414913ea997"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aef065851e3eb9eaaf4ceb9d105abecdb"><td class="memItemLeft" align="right" valign="top"><a id="aef065851e3eb9eaaf4ceb9d105abecdb" name="aef065851e3eb9eaaf4ceb9d105abecdb"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:aef065851e3eb9eaaf4ceb9d105abecdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:afc052b987cbb91e78dc0a84e7b27f2d4"><td class="memItemLeft" align="right" valign="top"><a id="afc052b987cbb91e78dc0a84e7b27f2d4" name="afc052b987cbb91e78dc0a84e7b27f2d4"></a>
+adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
+<tr class="separator:afc052b987cbb91e78dc0a84e7b27f2d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54ab95e4936d40be018315740b6a9676"><td class="memItemLeft" align="right" valign="top"><a id="a54ab95e4936d40be018315740b6a9676" name="a54ab95e4936d40be018315740b6a9676"></a>
+adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
+<tr class="separator:a54ab95e4936d40be018315740b6a9676"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU&gt;<br />
-class ConvReluScalarBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</div></div><hr/>The documentation for this class was generated from the following files:<ul>
-<li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
-<li>design/aie_src/conv.cc</li>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int &gt; class SPLIT, template&lt; typename, int, int, int, int &gt; class TRANSPOSE, template&lt; typename, int, int, int, int &gt; class CONCAT, int HCHUNK, typename TT, int B, int H, int W, int C&gt;<br />
+class TransposeChunkHPktStreamGraph&lt; SPLIT, TRANSPOSE, CONCAT, HCHUNK, TT, B, H, W, C &gt;</div><p>&lt;dl class= </p>
+<p>&lt;td class= </p>
+<p>&lt;td class= </p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
+<li>design/aie_src/<a class="el" href="graph__transpose_8h_source.html">graph_transpose.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classConvReluScalarBCHW.html">ConvReluScalarBCHW</a></li>
+    <li class="navelem"><a class="el" href="classTransposeChunkHPktStreamGraph.html">TransposeChunkHPktStreamGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

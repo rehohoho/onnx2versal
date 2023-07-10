@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Conv3x3on12ReluBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classConv3x3on12ReluBCHW.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classConvHx4ReluPktStream.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -89,44 +89,20 @@ $(document).ready(function(){initNavTree('classConv3x3on12ReluBCHW.html',''); in
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classConv3x3on12ReluBCHW-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Conv3x3on12ReluBCHW&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Member List</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 3x3 BCHW, stores weights and biases, requires KH==KW==3, INP_W%4==0, OUT_W_PAD%8=0, STEP_H==1, STEP_W==1, GROUP==1, assumes weights are padded to MxCx12, Conv3x3on12ReluBCHW&lt;26,28,24,24,1,1,1,2,4,3,3,1,1&gt; total = 8899.  
-</p>
-
-<p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:afabcdc595b55967dfdc44b18ce3855f4"><td class="memItemLeft" align="right" valign="top"><a id="afabcdc595b55967dfdc44b18ce3855f4" name="afabcdc595b55967dfdc44b18ce3855f4"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Conv3x3on12ReluBCHW</b> (float(&amp;w)[M *C *12], float(&amp;b)[M])</td></tr>
-<tr class="separator:afabcdc595b55967dfdc44b18ce3855f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af98d1d150f504e807a790dc59259eb90"><td class="memItemLeft" align="right" valign="top"><a id="af98d1d150f504e807a790dc59259eb90" name="af98d1d150f504e807a790dc59259eb90"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:af98d1d150f504e807a790dc59259eb90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a4573a21e37e8d8b64c2cdd94f4154702"><td class="memItemLeft" align="right" valign="top"><a id="a4573a21e37e8d8b64c2cdd94f4154702" name="a4573a21e37e8d8b64c2cdd94f4154702"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a4573a21e37e8d8b64c2cdd94f4154702"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<hr/>The documentation for this class was generated from the following files:<ul>
-<li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
-<li>design/aie_src/conv.cc</li>
-</ul>
-</div><!-- contents -->
+<p>This is the complete list of members for <a class="el" href="classConvHx4ReluPktStream.html">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</a>, including all inherited members.</p>
+<table class="directory">
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>ConvHx4ReluPktStream</b>(float(&amp;b)[M]) (defined in <a class="el" href="classConvHx4ReluPktStream.html">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</a>)</td><td class="entry"><a class="el" href="classConvHx4ReluPktStream.html">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr bgcolor="#f0f0f0" class="odd"><td class="entry"><b>filter</b>(input_pktstream *in_s, input_stream&lt; float &gt; *weights, output_stream&lt; float &gt; *out) (defined in <a class="el" href="classConvHx4ReluPktStream.html">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</a>)</td><td class="entry"><a class="el" href="classConvHx4ReluPktStream.html">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>registerKernelClass</b>() (defined in <a class="el" href="classConvHx4ReluPktStream.html">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</a>)</td><td class="entry"><a class="el" href="classConvHx4ReluPktStream.html">ConvHx4ReluPktStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">static</span></td></tr>
+</table></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classConv3x3on12ReluBCHW.html">Conv3x3on12ReluBCHW</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Conv3x3ReluStreamCacheCKK&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: Conv1x1Out4ReluStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classConv3x3ReluStreamCacheCKK.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classConv1x1Out4ReluStream.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,32 +92,34 @@ $(document).ready(function(){initNavTree('classConv3x3ReluStreamCacheCKK.html','
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classConv3x3ReluStreamCacheCKK-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Conv3x3ReluStreamCacheCKK&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
+<a href="classConv1x1Out4ReluStream-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">Conv1x1Out4ReluStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Conv2D.html">Conv2D</a> &raquo; <a class="el" href="group__Conv2DKernels.html">Conv2DKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector stream implementation for BCHW, stores biases, requires KH==KW==3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, Conv3x3ReluStreamCacheCKK&lt;26,28,24,24,1,1,1,2,4,3,3,1,1&gt; total = 16009 Conv3x3ReluStreamCacheCKK&lt;26,28,24,24,1,1,1,2,4,3,3,2,1&gt; total = 11088 Conv3x3ReluStreamCacheCKK&lt;24,24,11,12,2,2,1,2,4,3,3,1,1&gt; total = 7716.  
-</p>
+<p>Vector stream implementation for OUT_W == 4 &lt; 8, stores biases, requires KH==KW==1, INP_W%4==0, OUT_W_PAD==4, STEP_H==1, STEP_W==1,.  
+ <a href="classConv1x1Out4ReluStream.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="conv_8h_source.html">conv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a437815d988bb8d5928f46a0134890ab9"><td class="memItemLeft" align="right" valign="top"><a id="a437815d988bb8d5928f46a0134890ab9" name="a437815d988bb8d5928f46a0134890ab9"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Conv3x3ReluStreamCacheCKK</b> (float(&amp;b)[M])</td></tr>
-<tr class="separator:a437815d988bb8d5928f46a0134890ab9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35e30454900aaee727359bbf8492a467"><td class="memItemLeft" align="right" valign="top"><a id="a35e30454900aaee727359bbf8492a467" name="a35e30454900aaee727359bbf8492a467"></a>
+<tr class="memitem:a6561fcfc4e641a4da9d33b2f4e4933cf"><td class="memItemLeft" align="right" valign="top"><a id="a6561fcfc4e641a4da9d33b2f4e4933cf" name="a6561fcfc4e641a4da9d33b2f4e4933cf"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Conv1x1Out4ReluStream</b> (float(&amp;b)[M])</td></tr>
+<tr class="separator:a6561fcfc4e641a4da9d33b2f4e4933cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1e561cdb6baf2d54b9072354b4575bc"><td class="memItemLeft" align="right" valign="top"><a id="af1e561cdb6baf2d54b9072354b4575bc" name="af1e561cdb6baf2d54b9072354b4575bc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; float &gt; *in, input_stream&lt; float &gt; *weights, output_stream&lt; float &gt; *out)</td></tr>
-<tr class="separator:a35e30454900aaee727359bbf8492a467"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:af1e561cdb6baf2d54b9072354b4575bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:afd8b9b824f27dbb543412acc55640712"><td class="memItemLeft" align="right" valign="top"><a id="afd8b9b824f27dbb543412acc55640712" name="afd8b9b824f27dbb543412acc55640712"></a>
+<tr class="memitem:aa1308c3baee81036e4b1c2fbb327e0da"><td class="memItemLeft" align="right" valign="top"><a id="aa1308c3baee81036e4b1c2fbb327e0da" name="aa1308c3baee81036e4b1c2fbb327e0da"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:afd8b9b824f27dbb543412acc55640712"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aa1308c3baee81036e4b1c2fbb327e0da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following files:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><div class="compoundTemplParams">template&lt;int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU&gt;<br />
+class Conv1x1Out4ReluStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU &gt;</div></div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="conv_8h_source.html">conv.h</a></li>
 <li>design/aie_src/conv.cc</li>
 </ul>
@@ -126,7 +128,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernel
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classConv3x3ReluStreamCacheCKK.html">Conv3x3ReluStreamCacheCKK</a></li>
+    <li class="navelem"><a class="el" href="classConv1x1Out4ReluStream.html">Conv1x1Out4ReluStream</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>

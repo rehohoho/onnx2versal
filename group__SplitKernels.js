@@ -5,6 +5,8 @@ var group__SplitKernels =
     [ "SplitTwo32bitStreams< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitTwo32bitStreams.html", null ],
     [ "SplitFilterFloatStream< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitFilterFloatStream.html", null ],
     [ "SplitFilterFloatStreamTwice< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitFilterFloatStreamTwice.html", null ],
+    [ "SplitFilterFloatPktStream< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitFilterFloatPktStream.html", null ],
     [ "SplitFilterInt8Stream< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitFilterInt8Stream.html", null ],
-    [ "SplitFilterInt8StreamTwice< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitFilterInt8StreamTwice.html", null ]
+    [ "SplitFilterInt8StreamTwice< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitFilterInt8StreamTwice.html", null ],
+    [ "SplitFilterInt8PktStream< TT, H, INP_W, OUT_W, OVERLAP >", "classSplitFilterInt8PktStream.html", null ]
 ];
