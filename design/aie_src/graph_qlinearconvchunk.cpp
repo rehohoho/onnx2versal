@@ -90,6 +90,50 @@ class QLinearConvChunkHStreamGraphTest : public adf::graph {
 };
 
 
+template <
+  template<typename, int, int, int, int> class SPLIT,
+  template<int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int HCHUNK,
+  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int B, int C, int M, int KH, int KW, int GROUP,
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
+class QLinearConvChunkHPktStreamGraphTest : public adf::graph {
+
+  private:
+    typedef QLinearConvChunkHPktStreamGraph<SPLIT, QLINEARCONV, CONCAT, HCHUNK, 
+                                            INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
+                                            B, C, M, KH, KW, GROUP, 
+                                            H0, H1, W0, W1> Graph;
+    Graph g;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[1];
+    adf::input_gmio gmio_w;
+
+    QLinearConvChunkHPktStreamGraphTest(
+      const std::string& id,
+      std::vector<int32_t> bias,
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT = "conv_out.txt"
+    ): g(bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
+      plin[0] = adf::input_plio::create("plin0_qlinearconv_"+id+"_input", PLIO64_ARG(INP_TXT));
+      plout[0] = adf::output_plio::create("plout0_qlinearconv_"+id+"_output", PLIO64_ARG(OUT_TXT));
+      gmio_w = adf::input_gmio::create("gmio0_gemm"+id+"_w", 64, 1000);
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream> (gmio_w.out[0], g.pin[1]);
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+    }
+};
+
+
 // instance to be compiled and used in host within xclbin
 const int INP_H = 26;
 const int INP_W = 28;
@@ -115,60 +159,79 @@ const int W1_STRIDE2 = (INP_W_PAD16+KW-1 +15)/16*16 - INP_W_PAD16;
 
 const int HCHUNK = 15; // OUT_H' * strides + overlap, overlap = K - strides
 
-std::vector<int8_t> int8weights_3x3_pad {0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 0, 0, 0, 0, 0, 0, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 0, 0, 0, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, 0, 0, 0, 0, 0, 0, 36, 37, 38, 39, 40, 41, 42, 43, 44, 0, 0, 0, 0, 0, 0, 0, 45, 46, 47, 48, 49, 50, 51, 52, 53, 0, 0, 0, 0, 0, 0, 0, 54, 55, 56, 57, 58, 59, 60, 61, 62, 0, 0, 0, 0, 0, 0, 0, 63, 64, 65, 66, 67, 68, 69, 70, 71, 0, 0, 0, 0, 0, 0, 0};
+std::vector<int8_t> int8weights_3x3_int16int8mac {0, 1, 2, 0, 3, 4, 5, 0, 6, 7, 8, 0, 0, 0, 0, 0, 9, 10, 11, 0, 12, 13, 14, 0, 15, 16, 17, 0, 0, 0, 0, 0, 18, 19, 20, 0, 21, 22, 23, 0, 24, 25, 26, 0, 0, 0, 0, 0, 27, 28, 29, 0, 30, 31, 32, 0, 33, 34, 35, 0, 0, 0, 0, 0, 36, 37, 38, 0, 39, 40, 41, 0, 42, 43, 44, 0, 0, 0, 0, 0, 45, 46, 47, 0, 48, 49, 50, 0, 51, 52, 53, 0, 0, 0, 0, 0, 54, 55, 56, 0, 57, 58, 59, 0, 60, 61, 62, 0, 0, 0, 0, 0, 63, 64, 65, 0, 66, 67, 68, 0, 69, 70, 71, 0, 0, 0, 0, 0};
 std::vector<int32_t> int8bias_3x3 {-900, -2759, -4617, -6475, -8334, -10192, -12050, -13909};
 
 
 // 3x3 stride 1
 /**
- * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 769,end = 2033,total = 1264
- * SplitInt8<a,1,1344,720,96>::filter2 start = 804,end = 2106,total = 1302
- * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 2239,end = 520464,total = 518225
- * ConcatInt8Stream<a,8,416,416,832> start = 772,end = 520546,total = 519774
- * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 2243,end = 520574,total = 518331
- * Total cycle 519805
+ * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 876,end = 2140,total = 1264
+ * SplitInt8<a,1,1344,720,96>::filter2 start = 921,end = 2223,total = 1302
+ * QLinearConvHx4StreamPad<15,48,28,32,1,1,1,1,8,3,3,1> start = 2355,end = 5128,total = 2773
+ * QLinearConvHx4StreamPad<15,48,28,32,1,1,1,1,8,3,3,1> start = 2359,end = 5132,total = 2773
+ * ConcatInt8Stream<a,8,416,416,832> start = 889,end = 5242,total = 4353
+ * Total cycles 4366
  */
-QLinearConvChunkHGraphTest<SplitInt8, QLinearConvScalarStream, ConcatInt8Stream, HCHUNK, 
+QLinearConvChunkHGraphTest<SplitInt8, QLinearConvHx4StreamPad, ConcatInt8Stream, HCHUNK, 
                            INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
                            PADH, PADH, PADW, W1> qLinearConvScalarStream(
   "qLinearConvScalarStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalar.txt");
 
 /**
- * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 521665,end = 522929,total = 1264
- * SplitFilterInt8StreamTwice<a,1,1344,720,96>::filter0 start = 521668,end = 522950,total = 1282
- * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 522384,end = 1040609,total = 518225
- * ConcatInt8Stream<a,8,416,416,832> start = 521668,end = 1041265,total = 519597
- * QLinearConvScalarStream<15,48,28,32,1,1,1,1,8,3,3,1> start = 522961,end = 1041291,total = 518330
- * Total cycles 519626
+ * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 6319,end = 7583,total = 1264
+ * SplitFilterInt8StreamTwice<a,1,1344,720,96>::filter0 start = 6322,end = 7604,total = 1282
+ * QLinearConvHx4StreamPad<15,48,28,32,1,1,1,1,8,3,3,1> start = 7037,end = 9810,total = 2773
+ * QLinearConvHx4StreamPad<15,48,28,32,1,1,1,1,8,3,3,1> start = 7614,end = 10387,total = 2773
+ * ConcatInt8Stream<a,8,416,416,832> start = 6322,end = 10398,total = 4076
+ * Total cycles 4079
  */
-QLinearConvChunkHStreamGraphTest<SplitFilterInt8Stream, QLinearConvScalarStream, ConcatInt8Stream, HCHUNK, 
+QLinearConvChunkHStreamGraphTest<SplitFilterInt8Stream, QLinearConvHx4StreamPad, ConcatInt8Stream, HCHUNK, 
                            INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
-                           PADH, PADH, PADW, W1> qLinearConvScalarStream_splitstream(
-  "qLinearConvScalarStream_splitstream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
-  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalarSplitStream.txt");
+                           PADH, PADH, PADW, W1> qLinearConvScalarStreamHStream(
+  "qLinearConvScalarStreamHStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalarStreamHStream.txt");
+
+/**
+ * Pad2DStreamInt8<a,1,26,32,1,1,1,15> start = 11452,end = 12716,total = 1264
+ * SplitFilterInt8PktStream<a,1,1344,720,96>::filter2 start = 11455,end = 12739,total = 1284
+ * QLinearConvHx4PktStreamPad<15,48,28,32,1,1,1,1,8,3,3,1> start = 11508,end = 14982,total = 3474
+ * QLinearConvHx4PktStreamPad<15,48,28,32,1,1,1,1,8,3,3,1> start = 11509,end = 15530,total = 4021
+ * ConcatInt8Stream<a,8,416,416,832> start = 11451,end = 15540,total = 4089
+ * Total cycles 4088
+ */
+QLinearConvChunkHPktStreamGraphTest<SplitFilterInt8PktStream, QLinearConvHx4PktStreamPad, ConcatInt8Stream, HCHUNK, 
+                                    INP_H, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
+                                    PADH, PADH, PADW, W1> qLinearConvScalarStreamHPktStream(
+  "qLinearConvScalarStreamHPktStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalarStreamHPktStream.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
   // init gmio
-  int int8weights_3x3_pad_size = M*C*16 * sizeof(float_t);
-  float_t* int8weights_3x3_pad_buf = (float_t *) adf::GMIO::malloc(int8weights_3x3_pad_size);
-  memcpy(int8weights_3x3_pad_buf, int8weights_3x3_pad.data(), int8weights_3x3_pad_size);
+  int int8weights_3x3_int16int8mac_size = M*C*16 * sizeof(int8_t);
+  int8_t* int8weights_3x3_int16int8mac_buf = (int8_t *) adf::GMIO::malloc(int8weights_3x3_int16int8mac_size);
+  memcpy(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac.data(), int8weights_3x3_int16int8mac_size);
 
   // 3x3 stride 1
   adfCheck(qLinearConvScalarStream.init(), "init qLinearConvScalarStream");
-  qLinearConvScalarStream.gmio_w.gm2aie_nb(int8weights_3x3_pad_buf, int8weights_3x3_pad_size);
+  qLinearConvScalarStream.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
   adfCheck(qLinearConvScalarStream.run(ITER_CNT), "run qLinearConvScalarStream");
 	adfCheck(qLinearConvScalarStream.end(), "end qLinearConvScalarStream");
 
-  adfCheck(qLinearConvScalarStream_splitstream.init(), "init qLinearConvScalarStream_splitstream");
-  qLinearConvScalarStream_splitstream.gmio_w.gm2aie_nb(int8weights_3x3_pad_buf, int8weights_3x3_pad_size);
-  adfCheck(qLinearConvScalarStream_splitstream.run(ITER_CNT), "run qLinearConvScalarStream_splitstream");
-	adfCheck(qLinearConvScalarStream_splitstream.end(), "end qLinearConvScalarStream_splitstream");
+  adfCheck(qLinearConvScalarStreamHStream.init(), "init qLinearConvScalarStreamHStream");
+  qLinearConvScalarStreamHStream.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
+  adfCheck(qLinearConvScalarStreamHStream.run(ITER_CNT), "run qLinearConvScalarStreamHStream");
+	adfCheck(qLinearConvScalarStreamHStream.end(), "end qLinearConvScalarStreamHStream");
+
+  adfCheck(qLinearConvScalarStreamHPktStream.init(), "init qLinearConvScalarStreamHPktStream");
+  qLinearConvScalarStreamHPktStream.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
+  adfCheck(qLinearConvScalarStreamHPktStream.run(ITER_CNT), "run qLinearConvScalarStreamHPktStream");
+	adfCheck(qLinearConvScalarStreamHPktStream.end(), "end qLinearConvScalarStreamHPktStream");
 
   // cleanup gmio
-  adf::GMIO::free(int8weights_3x3_pad_buf);
+  adf::GMIO::free(int8weights_3x3_int16int8mac_buf);
   return 0;
 }
 #endif
