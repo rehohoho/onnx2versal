@@ -4,44 +4,13 @@
 
 
 #define PAD_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%s,%d,%d,%d,%d,%d,%d,%d>", \
-    filter_name, typeid(TT).name(), B, INP_H, INP_W, H0, H1, W0, W1);
-
-template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
-void Pad2DStreamScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
-	input_stream<TT>* restrict in,
-  output_stream<TT>* restrict out
-) {
-  PROFILE_HEADER2;
-
-#define WRITE_PAD(out, len) \
-  for (int i = 0; i < len; i++) writeincr(out, pad_value);
-
-  for (int b = 0; b < B; b++) {
-    WRITE_PAD(out, H0*OUT_W);
-    
-    for (int h = 0; h < INP_H; h++) {
-      WRITE_PAD(out, W0);
-
-      for (int w = 0; w < INP_W; w++) {
-        writeincr(out, readincr(in));
-      }
-
-      WRITE_PAD(out, W1);
-    }
-
-    WRITE_PAD(out, H1*OUT_W);
-  }
-
-#undef WRITE_PAD
-
-  PAD_PROFILE_FOOTER("Pad2DStreamScalar");
-}
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1);
 
 
 // bandwidth limited, not much speedup
-template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
-void Pad2DStreamFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
+template <typename TT, int B, int INP_H, int INP_W, int INP_W_PAD, int H0, int H1, int W0, int W1>
+void Pad2DStreamFloat<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
 	input_stream<TT>* restrict in,
   output_stream<TT>* restrict out
 ) {
@@ -60,10 +29,14 @@ void Pad2DStreamFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
     for (int h = 0; h < INP_H; h++) {
       WRITE_PAD(out, W0);
 
-      for (int w = 0; w < INP_W; w+=4) {
+      for (int w = 0; w <= INP_W-4; w+=4) {
         a = getf_wss(0);
         put_wms(0, a);
       }
+      for (int w = 0; w < INP_W % 4; w++)
+        put_ms(0, get_ss(0));
+      for (int w = 0; w < INP_W_PAD - INP_W; w++)
+        get_ss(0);
 
       WRITE_PAD(out, W1);
     }
@@ -77,8 +50,8 @@ void Pad2DStreamFloat<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 }
 
 
-template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
-void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
+template <typename TT, int B, int INP_H, int INP_W, int INP_W_PAD, int H0, int H1, int W0, int W1>
+void Pad2DStreamInt8<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
 	input_stream<TT>* restrict in,
   output_stream<TT>* restrict out
 ) {
@@ -107,13 +80,25 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
     WRITE_PAD(out, H0*OUT_W+W0);
     
     for (int h = 0; h < INP_H; h++) chess_prepare_for_pipelining chess_loop_range(INP_W,) {
-      for (int w = 0; w < INP_W; w+=16) chess_prepare_for_pipelining chess_loop_range(INP_W/16,) {
+      for (int w = 0; w < INP_W-16; w+=16) chess_prepare_for_pipelining chess_loop_range(INP_W/16-1,) {
         // shuffle remaining data to end, update front, shuffle rotate so data starts with remaining data
         data = aie::shuffle_up((aie::vector<int16_t,32>) data, 16 - data_offset);
         data = upd_w(data, 0, unpack(getb_wss(0)));
         data = aie::shuffle_up((aie::vector<int16_t,32>) data, data_offset);
         put_wms(0, pack(ext_w(data, 0))); 
       }
+      
+      data = aie::shuffle_down((aie::vector<int16_t,32>) data, data_offset);
+      data = upd_w(data, 1, unpack(getb_wss(0)));
+      if (data_offset + INP_W % 16 >= 16) {
+        data = aie::shuffle_down_replicate((aie::vector<int16_t,32>) data, 16-data_offset);
+        put_wms(0, pack(ext_w(data, 0))); 
+        data_offset -= 16;
+      } else {
+        data = aie::shuffle_up((aie::vector<int16_t,32>) data, data_offset);
+      }
+      data_offset += INP_W % 16;
+      
       WRITE_PAD(out, W0+W1);
     }
     WRITE_PAD(out, H1*OUT_W-W0);
@@ -129,8 +114,8 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
 
 
 // stream int8 requires shuffle since bitwidth=32 or 128
-template <typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
-void Pad2DWindowScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
+template <typename TT, int B, int INP_H, int INP_W, int INP_W_PAD, int H0, int H1, int W0, int W1>
+void Pad2DWindowScalar<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
 	input_window<TT>* restrict in,
   output_window<TT>* restrict out
 ) {
@@ -152,6 +137,7 @@ void Pad2DWindowScalar<TT, B, INP_H, INP_W, H0, H1, W0, W1>::filter(
       TT a = window_readincr(in);
       window_writeincr(out, a);
     }
+    window_incr(in, INP_W_PAD - INP_W);
 
     WRITE_PAD(out, W0+W1);
   }

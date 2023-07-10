@@ -28,12 +28,12 @@
  * @brief Single instance graph for Pad2D
  * 
  * @connections
- * @connect{pin[0], stream B*INP_H*INP_W*sizeof(TT)}
+ * @connect{pin[0], stream B*INP_H*INP_W_PAD*sizeof(TT)}
  * @connect{pout[0], stream B*OUT_H*OUT_W*sizeof(TT)}
  * @endconnections
  */
-template <template<typename, int, int, int, int, int, int, int> class PAD, 
-  typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+template <template<typename, int, int, int, int, int, int, int, int> class PAD, 
+  typename TT, int B, int INP_H, int INP_W, int INP_W_PAD,int H0, int H1, int W0, int W1>
 class Pad2DStreamGraph : public adf::graph {
 
   private:
@@ -47,7 +47,7 @@ class Pad2DStreamGraph : public adf::graph {
 
     Pad2DStreamGraph() { 
       static_assert(H0 >= 0 && H1 >= 0 && W0 >= 0 && W1 >= 0);
-      k[0] = adf::kernel::create_object<PAD<TT, B, INP_H, INP_W, H0, H1, W0, W1>>();
+      k[0] = adf::kernel::create_object<PAD<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>();
       adf::source(k[0]) = "pad.cc";
       adf::headers(k[0]) = {"pad.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -55,7 +55,7 @@ class Pad2DStreamGraph : public adf::graph {
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (k[0].out[0], pout[0]);
 
-      adf::samples_per_iteration(k[0].in[0]) = B*INP_H*INP_W;
+      adf::samples_per_iteration(k[0].in[0]) = B*INP_H*INP_W_PAD;
       adf::samples_per_iteration(k[0].out[0]) = B*OUT_H*OUT_W;
     }
 
@@ -66,12 +66,12 @@ class Pad2DStreamGraph : public adf::graph {
  * @brief Single instance graph for Pad2D
  * 
  * @connections
- * @connect{pin[0], B*INP_H*INP_W*sizeof(TT)}
+ * @connect{pin[0], B*INP_H*INP_W_PAD*sizeof(TT)}
  * @connect{pout[0], B*OUT_H*OUT_W*sizeof(TT)}
  * @endconnections
  */
-template <template<typename, int, int, int, int, int, int, int> class PAD, 
-  typename TT, int B, int INP_H, int INP_W, int H0, int H1, int W0, int W1>
+template <template<typename, int, int, int, int, int, int, int, int> class PAD, 
+  typename TT, int B, int INP_H, int INP_W, int INP_W_PAD,int H0, int H1, int W0, int W1>
 class Pad2DWindowScalarGraph : public adf::graph {
 
   private:
@@ -84,16 +84,16 @@ class Pad2DWindowScalarGraph : public adf::graph {
     adf::port<output> pout[1];
 
     Pad2DWindowScalarGraph() { 
-      static_assert(INP_H*INP_W*sizeof(TT) <= MAX_PARAM_BYTES);
+      static_assert(INP_H*INP_W_PAD*sizeof(TT) <= MAX_PARAM_BYTES);
       static_assert(H0 >= 0 && H1 >= 0 && W0 >= 0 && W1 >= 0);
       
-      k[0] = adf::kernel::create_object<PAD<TT, B, INP_H, INP_W, H0, H1, W0, W1>>();
+      k[0] = adf::kernel::create_object<PAD<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>();
       adf::source(k[0]) = "pad.cc";
       adf::headers(k[0]) = {"pad.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       adf::repetition_count(k[0]) = B;
       
-      adf::connect<adf::window<INP_H*INP_W*sizeof(TT)>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<INP_H*INP_W_PAD*sizeof(TT)>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<OUT_H*OUT_W*sizeof(TT)>> (k[0].out[0], pout[0]);
     }
 
