@@ -1136,3 +1136,352 @@ void QLinearConv1x1Stream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 
   CONV_PROFILE_FOOTER("QLinearConv1x1Stream");
 }
+
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConvHx4PktStreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConvHx4PktStreamPad(
+  int32_t (&b)[M],
+  float x_scale,
+  float w_scale,
+  float y_scale,
+  int8_t x_zero,
+  int8_t w_zero,
+  int8_t y_zero
+):
+  bias(b), 
+  x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
+  x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
+{ 
+  assert(w_zero == 0);
+  // -1 due to rounding, -1 to fit in 16b
+  scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
+  assert(scalebits <= 28); // KH*KW*int8*int8*scale <= acc48, for KH=KW=3
+  scale = float2fix(x_scale*w_scale/y_scale, scalebits);
+}
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConvHx4PktStreamPad<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+	input_pktstream* in_s,
+  input_stream<int8_t>* weights,
+  output_stream<int8_t>* out
+) {
+  PROFILE_HEADER2;
+  
+  v32int16 data = null_v32int16();
+  v32int8 wvec = null_v32int8();
+
+  v16acc48 acc1 = undef_v16acc48();
+  aie::accum<acc48,16> acc_shift;
+  aie::accum<acc48,16> acc_bias;
+  acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
+
+  v16int8 *ckk_row_ptr = (v16int8 *) ckk_row;
+  int8_t *in_ptr = (int8_t *) in;
+
+  int res_updi = 0;
+  v16int16 res = aie::broadcast<int16, 16>(y_zero); // for STEP_W == 2
+  int width_r = OUT_W % 16 == 0 ? 16 : OUT_W % 16;
+  int select_mask = (1 << width_r) - 1; // (1 << 0) - 1 selects all zeros
+
+  // fill window
+  for (int bc = 0; bc < B*C; bc++) {
+    get_ss(0); // discard header
+    for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
+      *(v16int8 *) in_ptr = getb_wss(0); in_ptr+=16;
+    }
+    get_ss(0); // discard tlast packet added in split
+  }
+  in_ptr = (int8_t *) in;
+  
+// xoffsets: 4b offset for lane 0,2,4,6, for 04, off0=2*4, off2=(0+4 +1)*2 => 8,9, 10,11
+// xoffsetshi: 4b offset for lane 8,10,12,14, same selection scheme
+#define MAC_ROW(acc, widx) \
+  acc = mac16(acc, data, 0, 0x03020100, 0x07060504, 2, 0x2110, wvec, widx, 0x0, 0x0, 2, 0x1010);
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  // BHWM
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
+
+      for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
+        *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
+      }
+      ckk_row_ptr -= CKK_ROW_SIZE/16;
+      
+      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
+      
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W_PAD-16/STEP_W; w+=16/STEP_W) {
+
+          acc1 = acc_bias;
+          
+          for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
+            
+            for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+              wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 12);
+            }
+            
+            wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+            if ((KH & 0x3) >= 1) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+            }
+            if ((KH & 0x3) >= 2) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+            }
+            if ((KH & 0x3) >= 3) {
+              data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+            }
+            
+            in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
+          }
+          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+          ckk_row_ptr -= CKK_ROW_SIZE/16;
+          
+          // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
+          acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
+          if (STEP_W == 2) {
+            v16int16 tmp = srs(acc1, scalebits);
+            v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+            if (res_updi == 1) {
+              res = upd_v(res, 1, tmphalf);
+              writeincr_v16(out, pack(res));
+            } else {
+              res = upd_v(res, 0, tmphalf);
+            }
+            res_updi = (res_updi + 1) & 0x1;
+          
+          } else {
+            writeincr_v16(out, bsrs(acc1, scalebits));
+          }
+        } // W
+
+        // handle width boundary
+        acc1 = acc_bias;
+        
+        for (int c = 0; c < C_PER_M; c++) { // computes 2x16 partial products over 3x3 kernel
+          
+          for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+            wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 0);
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 4);
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 8);
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 12);
+          }
+          
+          wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
+          if ((KH & 0x3) >= 1) {
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 0);
+          }
+          if ((KH & 0x3) >= 2) {
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 4);
+          }
+          if ((KH & 0x3) >= 3) {
+            data = unpack(*(v32int8 *) in_ptr); in_ptr += INP_W;
+            MAC_ROW(acc1, 8);
+          }
+          
+          in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
+        }
+        in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+        ckk_row_ptr -= CKK_ROW_SIZE/16;
+        
+        // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
+        acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
+        v16int16 tmp = srs(acc1, scalebits);
+        if (STEP_W == 2) {
+          v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+          if (res_updi == 1) {
+            res = upd_v(res, 1, tmphalf);
+            v32int16 fat_res = null_v32int16();
+            fat_res = upd_w(fat_res, 0, res);
+            fat_res = select32(select_mask, aie::broadcast<int16_t, 32>(y_zero), fat_res);
+            writeincr_v16(out, pack(ext_w(fat_res, 0)));
+          } else {
+            res = upd_v(res, 0, tmphalf);
+          }
+          res_updi = (res_updi + 1) & 0x1;
+        
+        } else {
+          v32int16 fat_res = null_v32int16();
+          fat_res = upd_w(fat_res, 0, tmp);
+          fat_res = select32(select_mask, aie::broadcast<int16_t, 32>(y_zero), fat_res);
+          writeincr_v16(out, pack(ext_w(fat_res, 0)));
+        }
+        
+        in_ptr += -OUT_W_PAD*STEP_W + INP_W*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
+    } // M
+  } // B
+
+#undef MAC_ROW
+
+  CONV_PROFILE_FOOTER("QLinearConvHx4PktStreamPad");
+}
+
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConv1x1PktStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv1x1PktStream(
+  int32_t (&b)[M],
+  float x_scale,
+  float w_scale,
+  float y_scale,
+  int8_t x_zero,
+  int8_t w_zero,
+  int8_t y_zero
+):
+  bias(b), 
+  x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
+  x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
+{ 
+  assert(w_zero == 0);
+  // -1 due to rounding, -1 to fit in 16b
+  scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
+  assert(scalebits <= 30); // KH*KW*int8*int8*scale <= acc48, for KH=KW=1
+  scale = float2fix(x_scale*w_scale/y_scale, scalebits);
+}
+
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConv1x1PktStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+	input_pktstream* in_s,
+  input_stream<int8_t>* weights,
+  output_stream<int8_t>* out
+) {
+  PROFILE_HEADER2;
+  
+  v16int8 data = undef_v16int8();
+
+  v16acc48 acc1 = undef_v16acc48();
+  aie::accum<acc48,16> acc_shift;
+  aie::accum<acc48,16> acc_bias;
+  acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
+
+  v16int8 *ckk_row_ptr;
+  int8_t *in_ptr = (int8_t *) in;
+
+  int res_updi = 0;
+  v16int16 res = null_v16int16(); // for STEP_W == 2
+  int width_r = OUT_W % 16 == 0 ? 16 : OUT_W % 16;
+  int select_mask = (1 << width_r) - 1; // (1 << 0) - 1 selects all zeros
+
+  // fill window
+  for (int bc = 0; bc < B*C; bc++) {
+    get_ss(0); // discard header
+    for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
+      *(v16int8 *) in_ptr = getb_wss(0); in_ptr+=16;
+    }
+    get_ss(0); // discard tlast packet added in split
+  }
+  in_ptr = (int8_t *) in;
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  // BHWM
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
+
+      ckk_row_ptr = (v16int8 *) ckk_row;
+      for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
+        *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
+      }
+      
+      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
+      
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W_PAD - 16/STEP_W; w+=16/STEP_W) {
+
+          acc1 = acc_bias;
+          ckk_row_ptr = (v16int8 *) ckk_row;
+          
+          for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+            data = *(v16int8 *) in_ptr; in_ptr += INP_H*INP_W; // channel+1
+            acc1 = aie::mac((aie::accum<acc48,16>) acc1, (aie::vector<int8_t,16>) data, ckk_row[c]);
+          }
+          
+          // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
+          acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
+          if (STEP_W == 2) {
+            v16int16 tmp = srs(acc1, scalebits);
+            v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+            if (res_updi == 1) {
+              res = upd_v(res, 1, tmphalf);
+              writeincr_v16(out, pack(res));
+            } else {
+              res = upd_v(res, 0, tmphalf);
+            }
+            res_updi = (res_updi + 1) & 0x1;
+          
+          } else {
+            writeincr_v16(out, bsrs(acc1, scalebits));
+          }
+          in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
+        } // W
+        
+        // handle width boundary
+        acc1 = acc_bias;
+        ckk_row_ptr = (v16int8 *) ckk_row;
+        
+        for (int c = 0; c < C; c++) { // computes 2x16 partial products over 3x3 kernel
+          data = *(v16int8 *) in_ptr; in_ptr += INP_H*INP_W; // channel+1
+          acc1 = aie::mac((aie::accum<acc48,16>) acc1, (aie::vector<int8_t,16>) data, ckk_row[c]);
+        }
+        
+        // use aieapi to reduce vector register usage, no add/mul with scalar for intrinsics
+        acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
+        v16int16 tmp = srs(acc1, scalebits);
+        if (STEP_W == 2) {
+          v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+          if (res_updi == 1) {
+            res = upd_v(res, 1, tmphalf);
+            v32int16 fat_res = null_v32int16();
+            fat_res = upd_w(fat_res, 0, res);
+            fat_res = select32(select_mask, aie::broadcast<int16_t, 32>(y_zero), fat_res);
+            writeincr_v16(out, pack(ext_w(fat_res, 0)));
+          } else {
+            res = upd_v(res, 0, tmphalf);
+          }
+          res_updi = (res_updi + 1) & 0x1;
+        
+        } else {
+          v32int16 fat_res = null_v32int16();
+          fat_res = upd_w(fat_res, 0, tmp);
+          fat_res = select32(select_mask, aie::broadcast<int16_t, 32>(y_zero), fat_res);
+          writeincr_v16(out, pack(ext_w(fat_res, 0)));
+        }
+        in_ptr += 16 - C*INP_H*INP_W; // go channel-C, right 16
+        
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+        in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
+      } // H
+      in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+    } // M
+  } // B
+
+#undef MAC_ROW
+
+  CONV_PROFILE_FOOTER("QLinearConv1x1PktStream");
+}
