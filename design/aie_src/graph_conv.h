@@ -71,27 +71,28 @@ void set_heap_size(adf::kernel k) {
  * @details
  * - std::conditional for kernel/graph typedef results in error in graph hierarchy algorithm
  * 
- * @tparam CONV     Conv2D Kernel
- * @tparam CONCAT   Concat Kernel (if multiinstance)
- * @tparam IS_BCHW  if BCHW or BHWC, affects concatenation (if multiinstance)
- * @tparam MCHUNK   M chunk size (if multiinstance)
- * @tparam HCHUNK   H chunk size (if multiinstance)
- * @tparam INP_H    input height
- * @tparam INP_W    input width
- * @tparam OUT_W    output width
- * @tparam OUT_W_PADoutput width padded to vector boundary
- * @tparam STEP_H   stride H
- * @tparam STEP_W   stride W
- * @tparam B        batch size
- * @tparam C        input channels
- * @tparam M        output channels
- * @tparam KH       kernel height
- * @tparam KW       kernel width
- * @tparam GROUP    split input into groups, C%GROUP==0
- * @tparam H0       Pixels added before height (default 0)
- * @tparam H1       Pixels added after height (default 0)
- * @tparam W0       Pixels added before width (default 0)
- * @tparam W1       Pixels added after width (default 0)
+ * @tparam CONV       Conv2D Kernel
+ * @tparam CONCAT     Concat Kernel (if multiinstance)
+ * @tparam IS_BCHW    if BCHW or BHWC, affects concatenation (if multiinstance)
+ * @tparam MCHUNK     M chunk size (if multiinstance)
+ * @tparam HCHUNK     H chunk size (if multiinstance)
+ * @tparam INP_H      input height
+ * @tparam INP_W      input width
+ * @tparam INP_W_PAD  input width
+ * @tparam OUT_W      output width
+ * @tparam OUT_W_PAD  output width padded to vector boundary
+ * @tparam STEP_H     stride H
+ * @tparam STEP_W     stride W
+ * @tparam B          batch size
+ * @tparam C          input channels
+ * @tparam M          output channels
+ * @tparam KH         kernel height
+ * @tparam KW         kernel width
+ * @tparam GROUP      split input into groups, C%GROUP==0
+ * @tparam H0         Pixels added before height (default 0)
+ * @tparam H1         Pixels added after height (default 0)
+ * @tparam W0         Pixels added before width (default 0)
+ * @tparam W1         Pixels added after width (default 0)
  * 
  * @{
  */
@@ -100,12 +101,12 @@ void set_heap_size(adf::kernel k) {
  * @brief Single instance graph that stores weights and biases
  * 
  * @connections
- * @connect{pin[0], B*C*INP_H*INP_W*4}
+ * @connect{pin[0], B*C*INP_H*INP_W_PAD*4}
  * @connect{pout[0], B*M*OUT_H*OUT_W_PAD*4}
  * @endconnections
  */
 template <template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluGraph : public adf::graph {
@@ -139,19 +140,19 @@ class ConvReluGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
         adf::repetition_count(pad[0]) = repeat_cnt;
 
-        adf::connect<adf::window<B*C*INP_H*INP_W*4>, adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<B*C*INP_H*INP_W_PAD*4>, adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
         
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
       } else {
-        adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
+        adf::connect<adf::window<B*C*INP_H*INP_W_PAD*4>> (pin[0], k[0].in[0]);
       }
       
       adf::connect<adf::window<B*M*OUT_H*OUT_W_PAD*4>> (k[0].out[0], pout[0]);
@@ -172,13 +173,13 @@ class ConvReluGraph : public adf::graph {
  * @brief Single instance graph that streams weights and biases, significantly slower.
  * 
  * @connections
- * @connect{pin[0], B*C*INP_H*INP_W*4}
+ * @connect{pin[0], B*C*INP_H*INP_W_PAD*4}
  * @connect{pin[1], stream}
  * @connect{pout[0], stream B*M*OUT_H*OUT_W_PAD*4}
  * @endconnections
  */
 template <template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluStreamGraph : public adf::graph {
@@ -210,7 +211,7 @@ class ConvReluStreamGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
@@ -218,11 +219,11 @@ class ConvReluStreamGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[0].in[0]);
 
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
       
       } else {
-        adf::connect<adf::stream, adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[0].in[0]);
+        adf::connect<adf::stream, adf::window<B*C*INP_H*INP_W_PAD*4>> (pin[0], k[0].in[0]);
       }
       
       adf::connect<adf::stream> (pin[1], k[0].in[1]); // variable samples per iteration based on kernel
@@ -244,15 +245,15 @@ class ConvReluStreamGraph : public adf::graph {
  * If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W_PAD*OUT_W_PAD%8=0 and M*OUT_W_PAD*OUT_W_PAD%4=0. 
  * 
  * @connections
- * @connect{pin[0], B*C*INP_W*INP_W*4}
- * @connect{pout[0], stream B*M*OUT_W_PAD*OUT_W_PAD*4}
+ * @connect{pin[0], B*C*INP_H*INP_W_PAD*4}
+ * @connect{pout[0], stream B*M*OUT_H*OUT_W_PAD*4}
  * @endconnections
  */
 template <
   template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int IS_BCHW, int MCHUNK, 
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluChunkMGraph : public adf::graph {
@@ -326,20 +327,20 @@ class ConvReluChunkMGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
 
-        adf::connect<adf::window<B*C*INP_H*INP_W*4>, adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::window<B*C*INP_H*INP_W_PAD*4>, adf::stream> (pin[0], pad[0].in[0]);
         for (int i = 0; i < CHUNK_COUNT; i++)
           adf::connect<adf::stream, adf::window<B*C*PAD_H*PAD_W*4>> (pad[0].out[0], k[i].in[0]);
         
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
       } else {
         for (int i = 0; i < CHUNK_COUNT; i++)
-          adf::connect<adf::window<B*C*INP_H*INP_W*4>> (pin[0], k[i].in[0]);
+          adf::connect<adf::window<B*C*INP_H*INP_W_PAD*4>> (pin[0], k[i].in[0]);
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++)
@@ -354,8 +355,8 @@ class ConvReluChunkMGraph : public adf::graph {
  * chunks BCHW by H dimension, maximum 8 chunks
  * 
  * @connections
- * @connect{pin[0], stream B*C*INP_W*INP_W*4}
- * @connect{pout[0], stream B*M*OUT_W_PAD*OUT_W_PAD*4}
+ * @connect{pin[0], stream B*C*INP_H*INP_W_PAD*4}
+ * @connect{pout[0], stream B*M*OUT_H*OUT_W_PAD*4}
  * @endconnections
  */
 template <
@@ -363,7 +364,7 @@ template <
   template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluChunkHGraph : public adf::graph {
@@ -416,7 +417,7 @@ class ConvReluChunkHGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.1;
@@ -424,7 +425,7 @@ class ConvReluChunkHGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
         
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
         // split and pad can't be placed on same tile due to stream co-placement constraints
       } else {
@@ -467,8 +468,8 @@ class ConvReluChunkHGraph : public adf::graph {
  * chunks BCHW by H dimension
  * 
  * @connections
- * @connect{pin[0], stream B*C*INP_W*INP_W*4}
- * @connect{pout[0], stream B*M*OUT_W_PAD*OUT_W_PAD*4}
+ * @connect{pin[0], stream B*C*INP_H*INP_W_PAD*4}
+ * @connect{pout[0], stream B*M*OUT_H*OUT_W_PAD*4}
  * @endconnections
  */
 template <
@@ -476,7 +477,7 @@ template <
   template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluChunkHStreamGraph : public adf::graph {
@@ -565,7 +566,7 @@ class ConvReluChunkHStreamGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.1;
@@ -574,7 +575,7 @@ class ConvReluChunkHStreamGraph : public adf::graph {
         for (int i = 0; i < (LCNT+1)/2; i++)
           adf::connect<adf::stream> (pad[0].out[0], split[i].in[0]);
         
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
         // split and pad can't be placed on same tile due to stream co-placement constraints
       } else {
@@ -600,8 +601,8 @@ class ConvReluChunkHStreamGraph : public adf::graph {
  * chunks BCHW by H dimension
  * 
  * @connections
- * @connect{pin[0], stream B*C*INP_W*INP_W*4}
- * @connect{pout[0], stream B*M*OUT_W_PAD*OUT_W_PAD*4}
+ * @connect{pin[0], stream B*C*INP_H*INP_W_PAD*4}
+ * @connect{pout[0], stream B*M*OUT_H*OUT_W_PAD*4}
  * @endconnections
  */
 template <
@@ -609,7 +610,7 @@ template <
   template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluChunkHPktStreamGraph : public adf::graph {
@@ -668,7 +669,7 @@ class ConvReluChunkHPktStreamGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<Pad2DStreamScalar<float_t, B*C, INP_H, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.1;
@@ -676,7 +677,7 @@ class ConvReluChunkHPktStreamGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
         
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
         // split and pad can't be placed on same tile due to stream co-placement constraints
       } else {

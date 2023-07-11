@@ -4,13 +4,13 @@
 
 template <
   template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluGraphTest : public adf::graph {
 
   private:
-    typedef ConvReluGraph<CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1> Graph;
+    typedef ConvReluGraph<CONV, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
 
@@ -35,13 +35,13 @@ class ConvReluGraphTest : public adf::graph {
 
 template <
   template<int, int, int, int, int, int, int, int, int, int, int, int, int> class CONV, 
-  int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+  int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
   int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class ConvReluStreamGraphTest : public adf::graph {
 
   private:
-    typedef ConvReluStreamGraph<CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1> Graph;
+    typedef ConvReluStreamGraph<CONV, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1> Graph;
     Graph g;
     static constexpr int OUT_H = Graph::OUT_H;
 
@@ -70,6 +70,7 @@ class ConvReluStreamGraphTest : public adf::graph {
 // instance to be compiled and used in host within xclbin
 const int INP_H = 24;
 const int INP_W = 24;
+const int INP_W_PAD = 24;
 const int OUT_W = INP_W;
 const int OUT_W_PAD = (INP_W+3)/4*4;
 const int STEP_H = 1;
@@ -92,17 +93,17 @@ std::vector<float> fpbias {-0.14411085844039917, 0.31030207872390747, 0.07759010
 
 
 // 5x5 BCHW window
-ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                   B, C, M, KH, KW, GROUP, IS_RELU, PADH, PADH, PADW, PADW> convReluScalarBCHW(
   "convReluScalarBCHW", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvReluScalar.txt");
 
-ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, OUT_W_STRIDE2, OUT_W_PAD_STRIDE2, 2, 2, 
+ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, INP_W_PAD, OUT_W_STRIDE2, OUT_W_PAD_STRIDE2, 2, 2, 
                   B, C, M, KH, KW, GROUP, IS_RELU, 0, 0, 0, 0> convReluScalarBCHW_s2(
   "convReluScalarBCHW_s2", fpweights, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_stride2_shape1x4x10x10_ConvReluScalar.txt");
 
-ConvReluGraphTest<Conv5x5on8Relu, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+ConvReluGraphTest<Conv5x5on8Relu, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                   B, C, M, KH, KW, GROUP, IS_RELU, PADH, PADH, PADW, PADW> conv5x5on8ReluBCHW(
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5on8Relu.txt");
@@ -120,38 +121,38 @@ std::vector<float> fpweights_3x3_pad {-0.4217538833618164, -0.12871304154396057,
 std::vector<float> fpweights_3x3_groupC {-0.4217538833618164, -0.12871304154396057, 0.26659107208251953, 0.0, 0.18868345022201538, 0.2079823613166809, 0.26721006631851196, 0.0, -0.2128472924232483, 0.0482562780380249, 0.04335266351699829, 0.0, -0.3525999188423157, 0.25628721714019775, -0.4162086546421051, 0.0, 0.016123712062835693, -0.2801392078399658, -0.22570428252220154, 0.0, 0.20184046030044556, -0.4698072373867035, 0.37331944704055786, 0.0, -0.18197137117385864, 0.4580671787261963, 0.4657343029975891, 0.0, 0.12012588977813721, 0.1174972653388977, 0.48537856340408325, 0.0, 0.3872831463813782, 0.26506996154785156, -0.1864093840122223, 0.0, -0.29981011152267456, 0.173653244972229, 0.144223153591156, 0.0, -0.3779143989086151, -0.2403997778892517, -0.439922034740448, 0.0, -0.2901395261287689, -0.36769431829452515, -0.3067637085914612, 0.0};
 
 // 3x3 BCHW window, stride = 1
-ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+ConvReluGraphTest<ConvReluScalar, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
                   B, C, M, KH3x3, KW3x3, GROUP, IS_RELU, PADH3x3, PADH3x3, PADW3x3, PADW3x3> convReluScalarBCHW_3x3(
   "convReluScalarBCHW_3x3", fpweights_3x3, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvReluScalar.txt");
 
-ConvReluGraphTest<ConvHx4Relu, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
-                  B, C, M, KH3x3, KW3x3, GROUP, IS_RELU, PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4on12ReluBCHW(
-  "convHx4on12ReluBCHW", fpweights_3x3_pad, fpbias, 
+ConvReluGraphTest<ConvHx4Relu, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+                  B, C, M, KH3x3, KW3x3, GROUP, IS_RELU, PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4Relu(
+  "convHx4Relu", fpweights_3x3_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvHx4Relu.txt");
 
 
 // 3x3 BCHW stream, stride = 1
 ConvReluStreamGraphTest<ConvReluScalarStream, 
-                        INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
+                        INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
                         PADH3x3, PADH3x3, PADW3x3, W1_3x3> convReluScalarStream(
   "convReluScalarStream", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvReluScalarStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStream, 
-                        INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
+                        INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
                         PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4ReluStream(
   "convHx4ReluStream", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvHx4ReluStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStream, 
-                        INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, C, IS_RELU,
+                        INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, C, IS_RELU,
                         PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4ReluStream_groupC(
   "convHx4ReluStream_groupC", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_group2_shape1x4x24x24_ConvHx4ReluStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStreamMultiRow, 
-                        INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
+                        INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
                         PADH3x3, PADH3x3, PADW3x3, W1_3x3> convHx4ReluStreamMultiRow(
   "convHx4ReluStreamMultiRow", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_shape1x4x24x24_ConvHx4ReluStreamMultiRow.txt");
@@ -159,13 +160,13 @@ ConvReluStreamGraphTest<ConvHx4ReluStreamMultiRow,
 
 // 3x3 BCHW stream, stride = 2
 ConvReluStreamGraphTest<ConvReluScalarStream, 
-                        INP_H, INP_W, OUT_W_STRIDE2_3x3, OUT_W_PAD_STRIDE2_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
+                        INP_H, INP_W, INP_W_PAD, OUT_W_STRIDE2_3x3, OUT_W_PAD_STRIDE2_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
                         0, 0, 0, 0> convReluScalarStream_s2(
   "convReluScalarStream_s2", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_stride2_shape1x4x11x11_ConvReluScalarStream.txt");
 
 ConvReluStreamGraphTest<ConvHx4ReluStream, 
-                        INP_H, INP_W, OUT_W_STRIDE2_3x3, OUT_W_PAD_STRIDE2_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
+                        INP_H, INP_W, INP_W_PAD, OUT_W_STRIDE2_3x3, OUT_W_PAD_STRIDE2_3x3, 2, 2, B, C, M, KH3x3, KW3x3, GROUP, IS_RELU,
                         0, 0, 0, 0> convHx4ReluStream_s2(
   "convHx4ReluStream_s2", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_3x3_stride2_shape1x4x11x11_ConvHx4ReluStream.txt");
@@ -175,13 +176,13 @@ std::vector<float> fpweights_1x1 {0.0339779257774353, 0.444202721118927, -0.1033
 std::vector<float> fpweights_1x1_pad{0.0339779257774353, 0.444202721118927, 0.0, 0.0, -0.10338988900184631, -0.3933175504207611, 0.0, 0.0, -0.09122616052627563, -0.20387223362922668, 0.0, 0.0, -0.006593048572540283, 0.1570436954498291, 0.0, 0.0};
 
 // 1x1 BCHW stream, stride = 1
-ConvReluGraphTest<Conv1x1Relu, INP_H, INP_W, OUT_W, OUT_W_PAD, 1, 1, 
+ConvReluGraphTest<Conv1x1Relu, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, 1, 1, 
                   B, C, M, 1, 1, GROUP, IS_RELU, 0, 0, 0, 0> conv1x1Relu(
   "conv1x1Relu", fpweights_1x1, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_1x1_shape1x4x24x24_Conv1x1Relu.txt");
 
 ConvReluStreamGraphTest<Conv1x1ReluStream, 
-                        INP_H, INP_W, OUT_W, OUT_W_PAD, 1, 1, B, C, M, 1, 1, GROUP, IS_RELU,
+                        INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, 1, 1, B, C, M, 1, 1, GROUP, IS_RELU,
                         0, 0, 0, 0> conv1x1ReluStream(
   "conv1x1ReluStream", fpbias, 
   "conv_fpin.txt", "convbchw_fpout_1x1_shape1x4x24x24_Conv1x1ReluStream.txt");
@@ -224,9 +225,9 @@ int main(int argc, char ** argv) {
   adfCheck(convReluScalarBCHW_3x3.run(ITER_CNT), "run convReluScalarBCHW_3x3");
 	adfCheck(convReluScalarBCHW_3x3.end(), "end convReluScalarBCHW_3x3");
 
-  adfCheck(convHx4on12ReluBCHW.init(), "init convHx4on12ReluBCHW");
-  adfCheck(convHx4on12ReluBCHW.run(ITER_CNT), "run convHx4on12ReluBCHW");
-	adfCheck(convHx4on12ReluBCHW.end(), "end convHx4on12ReluBCHW");
+  adfCheck(convHx4Relu.init(), "init convHx4Relu");
+  adfCheck(convHx4Relu.run(ITER_CNT), "run convHx4Relu");
+	adfCheck(convHx4Relu.end(), "end convHx4Relu");
 
   // 3x3 BCHW stream, stride = 1
   adfCheck(convReluScalarStream.init(), "init convReluScalarStream");
