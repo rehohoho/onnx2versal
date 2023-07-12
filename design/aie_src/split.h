@@ -90,7 +90,7 @@ class SplitScalar {
 			output_window<TT>* out0
 		);
 		static void registerKernelClass() {
-			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 && STRIDE >= 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
 			static_assert(sizeof(TT) == 4); // 32-bit width stream
 			if (LCNT == 8) {
@@ -191,11 +191,11 @@ class SplitInt8 {
 		);
 		static void registerKernelClass() {
 			static_assert((std::is_same<TT, int8_t>::value));
-			static_assert((OVERLAP < 0) || (FIRST_STRIDE%16==0 && OVERLAP%16==0 && STRIDE%16==0));
+			static_assert(OVERLAP % 16 == 0);
+			static_assert((OVERLAP < 0) || (STRIDE % 16 == 0 && STRIDE >= 0));
 			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
-
+			static_assert((OVERLAP > 0) || (OUT_W % 16 == 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
-			static_assert((OVERLAP > 0) || (OUT_W%16==0 && OVERLAP%16==0));
 
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(SplitInt8::filter8);
@@ -240,7 +240,7 @@ class SplitTwo32bitStreams {
 		);
 		static void registerKernelClass() {
 			static_assert(sizeof(TT) == 4);
-			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 && STRIDE >= 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
 			REGISTER_FUNCTION(SplitTwo32bitStreams::filter);
 		}
@@ -337,7 +337,7 @@ class SplitFilterFloatPktStream {
 
 		static void registerKernelClass() {
 			static_assert((std::is_same<TT, float>::value));
-			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 && STRIDE >= 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
 			REGISTER_FUNCTION(SplitFilterFloatPktStream::filter);
 		}
@@ -439,7 +439,7 @@ class SplitFilterInt8PktStream {
 		static void registerKernelClass() {
 			static_assert((std::is_same<TT, int8_t>::value));
 			static_assert(OVERLAP % 16 == 0);
-			static_assert((OVERLAP < 0) || (STRIDE % 16 == 0));
+			static_assert((OVERLAP < 0) || (STRIDE % 16 == 0 && STRIDE >= 0));
 			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
 			static_assert((OVERLAP > 0) || (OUT_W % 16 == 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
