@@ -4,7 +4,7 @@ import os
 import numpy as np
 import onnx
 from onnx import numpy_helper
-# from google.protobuf.json_format import MessageToJson, MessageToDict
+from google.protobuf.json_format import MessageToJson, MessageToDict
 
 from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
   AddOp, ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, MacOp, PoolOp, QGemmOp, \
@@ -102,7 +102,7 @@ class Parser:
 
       if node.op_type == "Add":
         is_relu = self.get_optype(i+1) == "Relu"
-        op = AddOp(f"k{i}add", is_relu)
+        op = AddOp(f"k{i:03d}add", is_relu)
         
         if is_relu: # lookahead
           print(f"WARNING: fusing Add+Relu")
@@ -115,7 +115,7 @@ class Parser:
         self.register_port(node.input, [onnx_out_name], op)
       
       elif node.op_type == "AveragePool":
-        op = PoolOp(f"k{i}pool", reduction_mode="avg")
+        op = PoolOp(f"k{i:03d}pool", reduction_mode="avg")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
@@ -123,7 +123,7 @@ class Parser:
       
       elif node.op_type == "Conv":
         is_relu = self.get_optype(i+1) == "Relu"
-        op = ConvOp(f"k{i}conv", is_relu)
+        op = ConvOp(f"k{i:03d}conv", is_relu)
         
         if is_relu: # lookahead
           print(f"WARNING: fusing Conv+Relu")
@@ -136,7 +136,7 @@ class Parser:
         self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "MaxPool":
-        op = PoolOp(f"k{i}pool", reduction_mode="max")
+        op = PoolOp(f"k{i:03d}pool", reduction_mode="max")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
@@ -148,7 +148,7 @@ class Parser:
         bias_name = self.nodes[i+1].input[1]
         
         is_relu = self.get_optype(i+2) == "Relu"
-        op = MacOp(f"k{i}mac", is_relu=is_relu)
+        op = MacOp(f"k{i:03d}mac", is_relu=is_relu)
 
         i += 1 # add
         if is_relu:
@@ -165,7 +165,7 @@ class Parser:
 
       elif node.op_type == "Gemm":
         is_relu = self.get_optype(i+1) == "Relu" # lookahead
-        op = GemmOp(f"k{i}gemm", is_relu=is_relu)
+        op = GemmOp(f"k{i:03d}gemm", is_relu=is_relu)
         
         if self.get_optype(i+1) == "Relu":
           print(f"WARNING: fusing Gemm+Relu")
@@ -179,7 +179,7 @@ class Parser:
         self.register_port([node.input[0]], [onnx_out_name], op)
         
       elif node.op_type == "QuantizeLinear":
-        op = QuantizeLinearOp(f"k{i}quantizelinear")
+        op = QuantizeLinearOp(f"k{i:03d}quantizelinear")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
@@ -187,7 +187,7 @@ class Parser:
 
       elif node.op_type == "QLinearAdd":
         is_relu = self.get_optype(i+1) == "Relu"
-        op = QLinearAddOp(f"k{i}qlinearadd", is_relu)
+        op = QLinearAddOp(f"k{i:03d}qlinearadd", is_relu)
         
         if is_relu: # lookahead
           print(f"WARNING: fusing Add+Relu")
@@ -200,21 +200,21 @@ class Parser:
         self.register_port([node.input[0], node.input[3]], [onnx_out_name], op)
 
       elif node.op_type == "QLinearConv":
-        op = QLinearConvOp(f"k{i}qlinearconv")
+        op = QLinearConvOp(f"k{i:03d}qlinearconv")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "QLinearAveragePool":
-        op = QLinearPoolOp(f"k{i}qlinearpool", reduction_mode="avg")
+        op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
         
       elif node.op_type == "QGemm":
-        op = QGemmOp(f"k{i}qgemm")
+        op = QGemmOp(f"k{i:03d}qgemm")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)],
                            node.attribute)
         op.save_txt(self.data_path)
@@ -227,7 +227,7 @@ class Parser:
         add_node_inputs = self.nodes[i+1].input
         
         is_relu = self.get_optype(i+2) == "Relu"
-        op = QLinearMacOp(f"k{i}qlinearmac", is_relu=is_relu)
+        op = QLinearMacOp(f"k{i:03d}qlinearmac", is_relu=is_relu)
 
         i += 1 # add
         if is_relu:
@@ -243,7 +243,7 @@ class Parser:
         self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "DequantizeLinear":
-        op = DequantizeLinearOp(f"k{i}dequantizeLinear")
+        op = DequantizeLinearOp(f"k{i:03d}dequantizeLinear")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
@@ -266,7 +266,7 @@ class Parser:
         bias_name = self.nodes[i+1].input[1]
         
         is_relu = self.get_optype(i+2) == "Relu"
-        op = GemmOp(f"k{i}gemm", is_relu=is_relu)
+        op = GemmOp(f"k{i:03d}gemm", is_relu=is_relu)
         i += 1
         if is_relu:
           print(f"WARNING: fusing MatMul+Add+Relu")
@@ -282,21 +282,21 @@ class Parser:
         self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "Softmax":
-        op = SoftmaxOp(f"k{i}softmax")
+        op = SoftmaxOp(f"k{i:03d}softmax")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "QLinearSoftmax":
-        op = QLinearSoftmaxOp(f"k{i}qlinearsoftmax")
+        op = QLinearSoftmaxOp(f"k{i:03d}qlinearsoftmax")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "Transpose":
-        op = TransposeOp(f"k{i}transpose")
+        op = TransposeOp(f"k{i:03d}transpose")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
@@ -309,7 +309,7 @@ class Parser:
         for ioname in [*node.input, *node.output]:
           tensor = self.get_tensor(ioname)
           tensor_shapestr = "x".join(str(dim) for dim in tensor.shape)
-          out_path = f"{i}__{node.name}__{ioname}__{tensor_shapestr}.txt".replace("/", "_")
+          out_path = f"{i:03d}__{node.name}__{ioname}__{tensor_shapestr}.txt".replace("/", "_")
           out_path = f"{self.data_path}/{out_path}"
           if "weight" in ioname or "bias" in ioname:
             out_name = ioname.replace("/", "_").replace(".", "_")
