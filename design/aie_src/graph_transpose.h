@@ -99,6 +99,11 @@ class TransposeChunkHPktStreamGraph : public adf::graph {
         
         adf::connect<adf::pktstream, adf::window<B*HCHUNK*W*C*sizeof(TT)>> (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::window<B*C*HCHUNK*W*sizeof(TT)>> (k[i].out[0], concat_graph.pin[i]);
+
+        if ((i&0x1) == 1) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        }
+        adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
       }
       
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
