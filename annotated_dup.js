@@ -79,6 +79,7 @@ var annotated_dup =
     [ "QLinearConvHx4PktStream", "classQLinearConvHx4PktStream.html", null ],
     [ "QLinearConvHx4Stream", "classQLinearConvHx4Stream.html", null ],
     [ "QLinearConvHx4StreamScale32bit", "classQLinearConvHx4StreamScale32bit.html", null ],
+    [ "QLinearConvHx6x8bitStream", "classQLinearConvHx6x8bitStream.html", "classQLinearConvHx6x8bitStream" ],
     [ "QLinearConvScalar", "classQLinearConvScalar.html", null ],
     [ "QLinearConvScalarStream", "classQLinearConvScalarStream.html", null ],
     [ "QLinearConvStreamGraph", "classQLinearConvStreamGraph.html", null ],
