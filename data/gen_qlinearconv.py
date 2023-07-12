@@ -67,10 +67,13 @@ tw_3x3 = np.arange(M*C*K*K).astype(np.int8).reshape(M,C,K,K)
 print("int8weights_3x3\n", tw_3x3.flatten().tolist(), "\n\n\n")
 tb_3x3 = tbias - tw_3x3.reshape(M,-1).sum(1) * X_zero_point
 print("int8bias_3x3\n", tb_3x3.flatten().tolist(), "\n\n\n")
-tw_3x3_pad = pad_lastdim(tw_3x3.reshape(M,C,-1), "qlinearconv tw_3x3", get_vector_boundary(tw_3x3))
+tw_3x3_pad = pad_lastdim(tw_3x3.reshape(M,C,-1), "qlinearconv tw_3x3 int16int8", get_vector_boundary(tw_3x3))
 print("int8weights_3x3_pad\n", tw_3x3_pad.flatten().tolist(), "\n\n\n")
-tw_3x3_pad = tw_3x3_pad[..., [0,1,2,9, 3,4,5,9, 6,7,8,9, 9,9,9,9]]
-print("int8weights_3x3_int16int8mac\n", tw_3x3_pad.flatten().tolist(), "\n\n\n")
+tw_3x3_int16int8 = tw_3x3_pad[..., [0,1,2,9, 3,4,5,9, 6,7,8,9, 9,9,9,9]]
+print("int8weights_3x3_int16int8mac\n", tw_3x3_int16int8.flatten().tolist(), "\n\n\n")
+tw_3x3_int8int8 = pad_lastdim(tw_3x3, "qlinearconv tw_3x3 int8int8", get_vector_boundary(tw_3x3))
+tw_3x3_int8int8 = tw_3x3_int8int8[..., [15,15,15,15, 0,0,1,1, 2,2,15,15, 15,15,15,15]]
+print("int8weights_3x3_int8int8mac\n", tw_3x3_int8int8.flatten().tolist(), "\n\n\n")
 
 Y_3x3 = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),

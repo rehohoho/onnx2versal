@@ -141,6 +141,7 @@ std::vector<int8_t> int8weights_3x3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1
 std::vector<int32_t> int8bias_3x3 {-900, -2759, -4617, -6475, -8334, -10192, -12050, -13909};
 std::vector<int8_t> int8weights_3x3_pad {0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 0, 0, 0, 0, 0, 0, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 0, 0, 0, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, 0, 0, 0, 0, 0, 0, 36, 37, 38, 39, 40, 41, 42, 43, 44, 0, 0, 0, 0, 0, 0, 0, 45, 46, 47, 48, 49, 50, 51, 52, 53, 0, 0, 0, 0, 0, 0, 0, 54, 55, 56, 57, 58, 59, 60, 61, 62, 0, 0, 0, 0, 0, 0, 0, 63, 64, 65, 66, 67, 68, 69, 70, 71, 0, 0, 0, 0, 0, 0, 0};
 std::vector<int8_t> int8weights_3x3_int16int8mac {0, 1, 2, 0, 3, 4, 5, 0, 6, 7, 8, 0, 0, 0, 0, 0, 9, 10, 11, 0, 12, 13, 14, 0, 15, 16, 17, 0, 0, 0, 0, 0, 18, 19, 20, 0, 21, 22, 23, 0, 24, 25, 26, 0, 0, 0, 0, 0, 27, 28, 29, 0, 30, 31, 32, 0, 33, 34, 35, 0, 0, 0, 0, 0, 36, 37, 38, 0, 39, 40, 41, 0, 42, 43, 44, 0, 0, 0, 0, 0, 45, 46, 47, 0, 48, 49, 50, 0, 51, 52, 53, 0, 0, 0, 0, 0, 54, 55, 56, 0, 57, 58, 59, 0, 60, 61, 62, 0, 0, 0, 0, 0, 63, 64, 65, 0, 66, 67, 68, 0, 69, 70, 71, 0, 0, 0, 0, 0};
+std::vector<int8_t> int8weights_3x3_int8int8mac {0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 4, 4, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 7, 7, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 10, 10, 11, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 12, 13, 13, 14, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 15, 16, 16, 17, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 18, 19, 19, 20, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 21, 22, 22, 23, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 24, 25, 25, 26, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 27, 28, 28, 29, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 31, 31, 32, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 33, 34, 34, 35, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 36, 37, 37, 38, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 39, 39, 40, 40, 41, 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 42, 43, 43, 44, 44, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 45, 46, 46, 47, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 48, 48, 49, 49, 50, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 51, 52, 52, 53, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 54, 55, 55, 56, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 57, 57, 58, 58, 59, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 60, 61, 61, 62, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 63, 64, 64, 65, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66, 66, 67, 67, 68, 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 69, 69, 70, 70, 71, 71, 0, 0, 0, 0, 0, 0};
 
 QLinearConvGraphTest<Pad2DStreamInt8, QLinearConvScalar, 
                      INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP,
@@ -165,6 +166,12 @@ QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx4Stream,
                            PADH3x3, PADH3x3, PADW3x3, W1_3x3> qLinearConvHx4Stream(
   "qLinearConvHx4Stream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvHx4Stream.txt");
+
+QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx6x8bitStream, 
+                           INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP,
+                           PADH3x3, PADH3x3, PADW3x3, W1_3x3> qLinearConvHx4x8bitStream(
+  "qLinearConvHx4x8bitStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+  "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvHx4x8bitStream.txt");
 
 QLinearConvStreamGraphTest<Pad2DStreamInt8, QLinearConvHx4StreamScale32bit, 
                            INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH3x3, KW3x3, GROUP,
@@ -233,6 +240,10 @@ int main(int argc, char ** argv) {
   int8_t* int8weights_3x3_int16int8mac_buf = (int8_t *) adf::GMIO::malloc(int8weights_3x3_int16int8mac_size);
   memcpy(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac.data(), int8weights_3x3_int16int8mac_size);
 
+  int int8weights_3x3_int8int8mac_size = M*C*KH3x3*16 * sizeof(int8_t);
+  int8_t* int8weights_3x3_int8int8mac_buf = (int8_t *) adf::GMIO::malloc(int8weights_3x3_int8int8mac_size);
+  memcpy(int8weights_3x3_int8int8mac_buf, int8weights_3x3_int8int8mac.data(), int8weights_3x3_int8int8mac_size);
+
   int int8weights_1x1_pad_size = M*((C+15)/16*16) * sizeof(int8_t);
   int8_t* int8weights_1x1_pad_buf = (int8_t *) adf::GMIO::malloc(int8weights_1x1_pad_size);
   memcpy(int8weights_1x1_pad_buf, int8weights_1x1_pad.data(), int8weights_1x1_pad_size);
@@ -273,6 +284,11 @@ int main(int argc, char ** argv) {
   qLinearConvHx4StreamScale32bit.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
   adfCheck(qLinearConvHx4StreamScale32bit.run(ITER_CNT), "run qLinearConvHx4StreamScale32bit");
 	adfCheck(qLinearConvHx4StreamScale32bit.end(), "end qLinearConvHx4StreamScale32bit");
+
+  adfCheck(qLinearConvHx4x8bitStream.init(), "init qLinearConvHx4x8bitStream");
+  qLinearConvHx4x8bitStream.gmio_w.gm2aie_nb(int8weights_3x3_int8int8mac_buf, int8weights_3x3_int8int8mac_size);
+  adfCheck(qLinearConvHx4x8bitStream.run(ITER_CNT), "run qLinearConvHx4x8bitStream");
+	adfCheck(qLinearConvHx4x8bitStream.end(), "end qLinearConvHx4x8bitStream");
 
   // 3x3 stride 2
   adfCheck(qLinearConvScalar_3x3_s2.init(), "init qLinearConvScalar_3x3_s2");

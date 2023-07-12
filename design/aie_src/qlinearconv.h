@@ -307,7 +307,7 @@ class QLinearConvScalarStream {
  * @brief Vector implementation for Hx4 QLinearConv, 
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
- * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * requires KW<=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  * QLinearConvHx4Stream<28,32,28,32,1,1,1,1,8,3,3,1> total = 4690 (output_window slightly faster ~0.85x time), 
  * QLinearConvHx4Stream<26,32,13,16,2,2,1,1,8,3,3,1> total = 2321
  */
@@ -368,7 +368,7 @@ class QLinearConvHx4Stream {
  * @brief Vector implementation for Hx4 QLinearConv using 32bit scale for precision, 
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
- * requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ * requires KW<=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  * QLinearConvHx4StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 7393, 
  * QLinearConvHx4StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 5383
  */
@@ -420,6 +420,66 @@ class QLinearConvHx4StreamScale32bit {
       static_assert(STEP_H == 1 || STEP_H == 2);
       static_assert(STEP_W == 1 || STEP_W == 2);
 			REGISTER_FUNCTION(QLinearConvHx4StreamScale32bit::filter);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
+ * @brief Vector implementation for Hx4 QLinearConv using int8xint8 MACs, 
+ * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
+ * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
+ * requires KW<=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1, STEP_W==1, 
+ * QLinearConvHx6x8bitStream<28,32,28,32,1,1,1,1,8,3,3,1> total = 3106
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConvHx6x8bitStream {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*KH*16;
+
+    static constexpr unsigned int MAC_XOFFSET = (STEP_W == 1) ? 0x03020100 : 0x06040200;
+    static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+
+    alignas(32) int32_t (&bias)[M];
+    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    int8_t x_zero;
+    int8_t w_zero;
+    int8_t y_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConvHx6x8bitStream (
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      int8_t x_zero,
+      int8_t w_zero,
+      int8_t y_zero
+    );
+
+		void filter(
+			input_window<int8_t>* in,
+      input_stream<int8_t>* weights,
+			output_stream<int8_t>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert(KW<=6);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1);
+      static_assert(STEP_W == 1);
+			REGISTER_FUNCTION(QLinearConvHx6x8bitStream::filter);
       REGISTER_PARAMETER(bias);
 		}
 };
