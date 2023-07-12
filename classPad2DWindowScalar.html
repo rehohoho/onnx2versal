@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Pad2DWindowScalar&lt; TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: Pad2DWindowScalar&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classPad2DWindowScalar.html',''); init
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classPad2DWindowScalar-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Pad2DWindowScalar&lt; TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">Pad2DWindowScalar&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for Pad2D using windows Pad2DWindowScalar&lt;f,2,32,32,1,1,1,1&gt; takes 2*1713 cycles Pad2DWindowScalar&lt;a,2,32,32,1,1,1,1&gt; takes 2*7831 cycles.  
+<p>Vector implementation for Pad2D using windows Pad2DWindowScalar&lt;f,2,30,30,32,1,1,1,1&gt; total = 1549 * 2 Pad2DWindowScalar&lt;a,2,30,30,32,1,1,1,1&gt; total = 6924 * 2.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="pad_8h_source.html">pad.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aa966e88f5d09e46ba041673df13193be"><td class="memItemLeft" align="right" valign="top"><a id="aa966e88f5d09e46ba041673df13193be" name="aa966e88f5d09e46ba041673df13193be"></a>
+<tr class="memitem:a8b0a7b4ba229d3cdd4937244911f9a64"><td class="memItemLeft" align="right" valign="top"><a id="a8b0a7b4ba229d3cdd4937244911f9a64" name="a8b0a7b4ba229d3cdd4937244911f9a64"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Pad2DWindowScalar</b> (int pad_value=0)</td></tr>
-<tr class="separator:aa966e88f5d09e46ba041673df13193be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6aa1dc78eb9ac6c6d6046b1d879ea905"><td class="memItemLeft" align="right" valign="top"><a id="a6aa1dc78eb9ac6c6d6046b1d879ea905" name="a6aa1dc78eb9ac6c6d6046b1d879ea905"></a>
+<tr class="separator:a8b0a7b4ba229d3cdd4937244911f9a64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addb9a1df8b07e7d9cfbdac2a492e726d"><td class="memItemLeft" align="right" valign="top"><a id="addb9a1df8b07e7d9cfbdac2a492e726d" name="addb9a1df8b07e7d9cfbdac2a492e726d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_window&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a6aa1dc78eb9ac6c6d6046b1d879ea905"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:addb9a1df8b07e7d9cfbdac2a492e726d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aa6715cc731e588d5ce665b9193ae9c19"><td class="memItemLeft" align="right" valign="top"><a id="aa6715cc731e588d5ce665b9193ae9c19" name="aa6715cc731e588d5ce665b9193ae9c19"></a>
+<tr class="memitem:a9684d5a083c094c093cb1f8b17e15a5a"><td class="memItemLeft" align="right" valign="top"><a id="a9684d5a083c094c093cb1f8b17e15a5a" name="a9684d5a083c094c093cb1f8b17e15a5a"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:aa6715cc731e588d5ce665b9193ae9c19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a9684d5a083c094c093cb1f8b17e15a5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="pad_8h_source.html">pad.h</a></li>

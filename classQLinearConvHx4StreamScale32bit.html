@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQLinearConvHx4StreamScale32bit.ht
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for Hx4 QLinearConv using 32bit scale for precision, requires data to be arranged in [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConvHx4StreamScale32bit&lt;28,48,28,32,1,1,1,1,8,3&gt; total = 7408, QLinearConvHx4StreamScale32bit&lt;26,32,13,16,2,2,1,1,8,3&gt; total = 9329.  
+<p>Vector implementation for Hx4 QLinearConv using 32bit scale for precision, requires data to be arranged in [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires KH==KW==3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConvHx4StreamScale32bit&lt;28,48,28,32,1,1,1,1,8,3&gt; total = 7393, QLinearConvHx4StreamScale32bit&lt;26,32,13,16,2,2,1,1,8,3&gt; total = 5383.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>

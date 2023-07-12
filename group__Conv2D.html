@@ -115,22 +115,22 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluGraph.html">ConvReluGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluGraph.html">ConvReluGraph&lt; CONV, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases.  <a href="classConvReluGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluStreamGraph.html">ConvReluStreamGraph&lt; CONV, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluStreamGraph.html">ConvReluStreamGraph&lt; CONV, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that streams weights and biases, significantly slower.  <a href="classConvReluStreamGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkMGraph.html">ConvReluChunkMGraph&lt; CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkMGraph.html">ConvReluChunkMGraph&lt; CONV, CONCAT, IS_BCHW, MCHUNK, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks MCKK weights by M dimension, maximum 8 chunks If IS_BCHW=0 (using BHWC kernel): MCHUNK%8=0 and M%4=0. If IS_BCHW=1 (using BCHW kernel): MCHUNK*OUT_W_PAD*OUT_W_PAD%8=0 and M*OUT_W_PAD*OUT_W_PAD%4=0.  <a href="classConvReluChunkMGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHGraph.html">ConvReluChunkHGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHGraph.html">ConvReluChunkHGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.  <a href="classConvReluChunkHGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHStreamGraph.html">ConvReluChunkHStreamGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHStreamGraph.html">ConvReluChunkHStreamGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores biases, chunks BCHW by H dimension.  <a href="classConvReluChunkHStreamGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHPktStreamGraph.html">ConvReluChunkHPktStreamGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConvReluChunkHPktStreamGraph.html">ConvReluChunkHPktStreamGraph&lt; SPLIT, CONV, CONCAT, HCHUNK, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU, H0, H1, W0, W1 &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph that stores biases, chunks BCHW by H dimension.  <a href="classConvReluChunkHPktStreamGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -147,8 +147,9 @@ Classes</h2></td></tr>
     <tr><td class="paramname">HCHUNK</td><td>H chunk size (if multiinstance) </td></tr>
     <tr><td class="paramname">INP_H</td><td>input height </td></tr>
     <tr><td class="paramname">INP_W</td><td>input width </td></tr>
+    <tr><td class="paramname">INP_W_PAD</td><td>input width </td></tr>
     <tr><td class="paramname">OUT_W</td><td>output width </td></tr>
-    <tr><td class="paramname">OUT_W_PADoutput</td><td>width padded to vector boundary </td></tr>
+    <tr><td class="paramname">OUT_W_PAD</td><td>output width padded to vector boundary </td></tr>
     <tr><td class="paramname">STEP_H</td><td>stride H </td></tr>
     <tr><td class="paramname">STEP_W</td><td>stride W </td></tr>
     <tr><td class="paramname">B</td><td>batch size </td></tr>

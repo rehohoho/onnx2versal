@@ -163,14 +163,19 @@ $(document).ready(function(){initNavTree('graph__transpose_8h_source.html',''); 
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        </div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        adf::connect&lt;adf::pktstream, adf::window&lt;B*HCHUNK*W*C*<span class="keyword">sizeof</span>(TT)&gt;&gt; (split_graph.pout[i], k[i].in[0]);</div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        adf::connect&lt;adf::window&lt;B*C*HCHUNK*W*<span class="keyword">sizeof</span>(TT)&gt;&gt; (k[i].out[0], concat_graph.pin[i]);</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>      }</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>      </div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      </div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    }</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>};</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="preprocessor">#endif </span><span class="comment">// __TRANSPOSE_GRAPH_H__</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>        <span class="keywordflow">if</span> ((i&amp;0x1) == 1) {</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        }</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        adf::location&lt;adf::buffer&gt;(k[0].in[0]) = adf::location&lt;adf::kernel&gt;(k[0]);</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      }</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>      </div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    }</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>};</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="preprocessor">#endif </span><span class="comment">// __TRANSPOSE_GRAPH_H__</span></div>
 <div class="ttc" id="aclassSplitFilterPktStreamGraph_html"><div class="ttname"><a href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph</a></div><div class="ttdoc">Graph wrapper for two stream split.</div><div class="ttdef"><b>Definition</b> graph_split.h:185</div></div>
 <div class="ttc" id="aclassTransposeChunkHPktStreamGraph_html"><div class="ttname"><a href="classTransposeChunkHPktStreamGraph.html">TransposeChunkHPktStreamGraph</a></div><div class="ttdoc">Multi instance graph.</div><div class="ttdef"><b>Definition</b> graph_transpose.h:71</div></div>
 <div class="ttc" id="aclassTransposeGraph_html"><div class="ttname"><a href="classTransposeGraph.html">TransposeGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_transpose.h:35</div></div>

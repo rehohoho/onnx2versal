@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classPad2DStreamInt8.html',''); initRe
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classPad2DStreamInt8-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for Int8 Pad2D Pad2DStreamInt8&lt;a,2,32,32,1,1,1,1&gt; takes 5313 cycles.  
+<p>Vector implementation for Int8 Pad2D Pad2DStreamInt8&lt;a,2,30,30,32,1,1,1,1&gt; total = 1933.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="pad_8h_source.html">pad.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a48a29cc845e396b19f371df4310cfdb9"><td class="memItemLeft" align="right" valign="top"><a id="a48a29cc845e396b19f371df4310cfdb9" name="a48a29cc845e396b19f371df4310cfdb9"></a>
+<tr class="memitem:a67cf981925ee56d28618cc00895037dc"><td class="memItemLeft" align="right" valign="top"><a id="a67cf981925ee56d28618cc00895037dc" name="a67cf981925ee56d28618cc00895037dc"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Pad2DStreamInt8</b> (int pad_value=0)</td></tr>
-<tr class="separator:a48a29cc845e396b19f371df4310cfdb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97e24d6894c6d39639a01f1d9e04b390"><td class="memItemLeft" align="right" valign="top"><a id="a97e24d6894c6d39639a01f1d9e04b390" name="a97e24d6894c6d39639a01f1d9e04b390"></a>
+<tr class="separator:a67cf981925ee56d28618cc00895037dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53f0fdd8bf41a3e097a618d317270da5"><td class="memItemLeft" align="right" valign="top"><a id="a53f0fdd8bf41a3e097a618d317270da5" name="a53f0fdd8bf41a3e097a618d317270da5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a97e24d6894c6d39639a01f1d9e04b390"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a53f0fdd8bf41a3e097a618d317270da5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ac86b2afdc16cb24cfb58ec63a5364631"><td class="memItemLeft" align="right" valign="top"><a id="ac86b2afdc16cb24cfb58ec63a5364631" name="ac86b2afdc16cb24cfb58ec63a5364631"></a>
+<tr class="memitem:a9ac14c0b6b8b883b6bf904788c3a054d"><td class="memItemLeft" align="right" valign="top"><a id="a9ac14c0b6b8b883b6bf904788c3a054d" name="a9ac14c0b6b8b883b6bf904788c3a054d"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:ac86b2afdc16cb24cfb58ec63a5364631"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a9ac14c0b6b8b883b6bf904788c3a054d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="pad_8h_source.html">pad.h</a></li>
