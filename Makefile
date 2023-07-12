@@ -220,9 +220,10 @@ AIE_FLAGS := -include=$(AIE_SRC_REPO) \
 						 --log-level=5 \
 						 --pl-freq=500 \
 						 --dataflow \
-						 --stacksize=2048 \
-						 --heapsize=2048 \
-						 --workdir=$(WORK_DIR)
+						 --stacksize=1024 \
+						 --heapsize=1024 \
+						 --workdir=$(WORK_DIR) \
+						 --evaluate-fifo-depth
 ifeq ($(TARGET), sw_emu)
 	AIE_FLAGS += --target=x86sim --Xpreproc=-O0
 endif
@@ -316,7 +317,7 @@ BLD_XPE_DIR      := $(XPE_REPO)/$(GRAPH)
 BLD_TGT_VCD_FILE := $(BUILD_TARGET_DIR)/$(GRAPH).vcd
 XPE_FILE         := $(BLD_XPE_DIR)/$(GRAPH).xpe
 
-vcd: graph $(XPE_FILE)
+vcd: graph $(BLD_TGT_VCD_FILE)
 
 # xpe file generation...
 $(XPE_FILE): $(BLD_TGT_VCD_FILE)
@@ -329,7 +330,8 @@ $(XPE_FILE): $(BLD_TGT_VCD_FILE)
 # vcd file generation...
 $(BLD_TGT_VCD_FILE):
 	cd $(BUILD_TARGET_DIR); \
-	aiesimulator $(AIE_SIM_FLAGS) --dump-vcd $(GRAPH) 2>&1 | tee -a vcd.log
+	aiesimulator $(AIE_SIM_FLAGS) --profile --dump-vcd $(GRAPH) 2>&1 | tee -a vcd.log; \
+	vcdanalyze --vcd $(GRAPH).vcd
 
 # =========================================================
 # Step 3. XSA File Generation
