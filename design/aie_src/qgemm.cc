@@ -4,14 +4,14 @@
 
 
 #define QGEMM_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%d,%d,%d>", \
-    filter_name, M, K, N);
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), M, K, N);
 
-template <int M, int K, int N>
-void QgemmScalarStream<M, K, N>::filter(
-	input_window<int8_t>* in,      // MxK
+template <typename TT, int M, int K, int N>
+void QgemmScalarStream<TT, M, K, N>::filter(
+	input_window<TT>* in,      // MxK
                                  // KxN
-  output_stream<int8_t>* out     // MxN
+  output_stream<TT>* out     // MxN
 ) {
   PROFILE_HEADER2;
 
@@ -21,7 +21,7 @@ void QgemmScalarStream<M, K, N>::filter(
 
 #define WRITE_OUT(res) \
   resv = upd_elem(resv, resvi, res); \
-  if (resvi == 15) writeincr_v16(out, pack(resv)); \
+  if (resvi == 15) writeincr_v16(out, ((aie::vector<int16,16>) resv).pack<TT>()); \
   resvi = (resvi + 1) & 0xf;
 
   for (int i = 0; i < M; i++) {
@@ -35,7 +35,11 @@ void QgemmScalarStream<M, K, N>::filter(
         res += a * (b-w_zero);
       }
       res = y_zero + round(scale * res);
-      res = std::min(std::max(res, -128), 127);
+      if ((std::is_same<TT, int8_t>::value)) {
+        res = std::min(std::max(res, -128), 127);
+      } else {
+        res = std::min(std::max(res, 0), 255);
+      }
       WRITE_OUT(res);
       window_incr(in, -K); // repeat same in row for next j
     }
@@ -47,16 +51,16 @@ void QgemmScalarStream<M, K, N>::filter(
 }
 
 
-template <int M, int K, int N>
-QgemmStream<M, K, N>::QgemmStream (
-  int8_t (&w)[K*N],
+template <typename TT, int M, int K, int N>
+QgemmStream<TT, M, K, N>::QgemmStream (
+  TT (&w)[K*N],
   int32_t (&b)[N],
   float x_scale,
   float w_scale,
   float y_scale,
-  int8_t x_zero,
-  int8_t w_zero,
-  int8_t y_zero
+  TT x_zero,
+  TT w_zero,
+  TT y_zero
 ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
   // -1 due to rounding, -1 to fit in 16b
   scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
@@ -95,20 +99,24 @@ QgemmStream<M, K, N>::QgemmStream (
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
-template <int M, int K, int N>
-void QgemmStream<M, K, N>::filter(
-	input_window<int8_t>* in,      // MxK
+template <typename TT, int M, int K, int N>
+void QgemmStream<TT, M, K, N>::filter(
+	input_window<TT>* in,      // MxK
                                  // KxN
-  output_stream<int8_t>* out     // MxN
+  output_stream<TT>* out     // MxN
 ) {
   PROFILE_HEADER2;
 
-  int8_t *in_ptr = (int8_t *) in->ptr;
-  int8_t *w_ptr = (int8_t *) weights;
+  using v128 = typename std::conditional<(std::is_same<TT, int8_t>::value), v128int8, v128uint8>::type;
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+
+  TT *in_ptr = (TT *) in->ptr;
+  TT *w_ptr = (TT *) weights;
   int32_t *b_ptr = (int32_t *) bias;
 
-  v128int8 wmat = null_v128int8();
-  v32int8 inmat = null_v32int8();
+  v128 wmat = aie::zeros<TT,128>();
+  v32 inmat = aie::zeros<TT,32>();
   aie::accum<acc48,16> aieacc1;
   aie::accum<acc48,16> acc_shift1;
   acc_shift1.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
@@ -119,14 +127,14 @@ void QgemmStream<M, K, N>::filter(
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
 
 #define LOAD_W \
-  wmat = upd_v(wmat, 0, *(v16int8 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 1, *(v16int8 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 2, *(v16int8 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 3, *(v16int8 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 4, *(v16int8 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 5, *(v16int8 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 6, *(v16int8 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 7, *(v16int8 *) w_ptr); w_ptr += N;
+  wmat = upd_v(wmat, 0, *(v16 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 1, *(v16 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 2, *(v16 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 3, *(v16 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 4, *(v16 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 5, *(v16 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 6, *(v16 *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 7, *(v16 *) w_ptr); w_ptr += N;
 
   for (int i = 0; i < M; i++) chess_prepare_for_pipelining chess_loop_range(M,) {
     for (int j = 0; j < N; j+=16) chess_prepare_for_pipelining chess_loop_range(N/16,) {
@@ -134,29 +142,29 @@ void QgemmStream<M, K, N>::filter(
       acc1 = null_v16acc48();
 
       for (int k = 0; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
-        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 16; // load input[k:k+8]
+        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += 16; // load input[k:k+8]
         LOAD_W; // load weight[k:k+8,n:n+16]
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
         LOAD_W; // load weight[k+8:k+16,n:n+16]
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 8, 0x00000000, 2, 0x1010);
       } // K-16
       if (RUN_8CHUNK) {
-        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += 8;
+        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += 8;
         LOAD_W;
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
       } // K-8
       if (RUN_LASTCHUNK) {
-        inmat = upd_v(inmat, 0, *(v16int8 *) in_ptr); in_ptr += K_REM16;
-        wmat = null_v128int8();
+        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += K_REM16;
+        wmat = aie::zeros<TT,128>();
         for (int p = 0; p < K_REM16; p++) {
-          wmat = upd_v(wmat, p, *(v16int8 *) w_ptr); w_ptr += N;
+          wmat = upd_v(wmat, p, *(v16 *) w_ptr); w_ptr += N;
         }
         acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
       } // K
 
       aieacc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
       aieacc1 = aie::mac(acc_shift1, aieacc1.to_vector<int32_t>(0), scale);
-      writeincr_v16(out, aieacc1.to_vector<int8_t>(scalebits));
+      writeincr_v16(out, aieacc1.to_vector<TT>(scalebits));
 
       in_ptr -= K;        // reset
       w_ptr += -K*N + 16; // next

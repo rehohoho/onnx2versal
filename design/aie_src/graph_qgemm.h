@@ -16,6 +16,7 @@
  * Applies general matrix multiply: output(MxN) = input(MxK) * weights(KxN) + bias(N)
  * 
  * @tparam QGEMM    QGemm Kernel
+ * @tparam TT       int8_t or uint8_t
  * @tparam M        number of rows of input matrix
  * @tparam K        number of cols / number of rows of weight matrix
  * @tparam N        number of cols of weight matrix / size of bias vector
@@ -31,7 +32,7 @@
  * @connect{pout[0], stream M*N}
  * @endconnections
  */
-template <template<int, int, int> class QGEMM, int M, int K, int N>
+template <template<typename, int, int, int> class QGEMM, typename TT, int M, int K, int N>
 class QgemmStreamGraph : public adf::graph {
 
   private:
@@ -42,17 +43,17 @@ class QgemmStreamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     QgemmStreamGraph(
-      std::vector<int8_t> weights,
+      std::vector<TT> weights,
       std::vector<int32_t> bias,
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero,
+      TT x_zero,
+      TT w_zero,
+      TT y_zero,
       int repeat_cnt = 1
     ) { 
-      k[0] = adf::kernel::create_object<QGEMM<M, K, N>>(
+      k[0] = adf::kernel::create_object<QGEMM<TT, M, K, N>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qgemm.cc";
       adf::headers(k[0]) = {"qgemm.h"};
@@ -82,9 +83,9 @@ class QgemmStreamGraph : public adf::graph {
  * Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)
  */
 template <
-  template<int, int, int> class QGEMM, 
+  template<typename, int, int, int> class QGEMM, 
   template<typename, int, int, int, int> class CONCAT, 
-  int NCHUNK, int M, int K, int N>
+  int NCHUNK, typename TT, int M, int K, int N>
 class QgemmChunkNStreamGraph : public adf::graph {
 
   private:
@@ -102,20 +103,20 @@ class QgemmChunkNStreamGraph : public adf::graph {
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel k[CHUNK_COUNT];
-    ConcatGraph<CONCAT, int8_t, CHUNK_COUNT, M, NCHUNK, N> concat_g;
+    ConcatGraph<CONCAT, TT, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
     QgemmChunkNStreamGraph(
-      std::vector<int8_t> weights,  // KxN
+      std::vector<TT> weights,  // KxN
       std::vector<int32_t> bias,    // N
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero,
+      TT x_zero,
+      TT w_zero,
+      TT y_zero,
       int repeat_cnt = 1
     ) { 
       static_assert(CHUNK_COUNT <= 8);
@@ -128,7 +129,7 @@ class QgemmChunkNStreamGraph : public adf::graph {
       for (int i = 0; i < CHUNK_COUNT; i++) {
         
         // build wchunk
-        std::vector<int8_t> wChunk;
+        std::vector<TT> wChunk;
         wChunk.reserve(NCHUNK*K);
         for (int j = 0; j < K*N; j+=N) {
           wChunk.insert(wChunk.end(), weights.begin()+j+i*NCHUNK, weights.begin()+j+i*NCHUNK+NCHUNK);
@@ -138,7 +139,7 @@ class QgemmChunkNStreamGraph : public adf::graph {
         bChunk = std::vector<int32_t>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);
         bChunk.resize(NCHUNK, 0);
         
-        k[i] = adf::kernel::create_object<QGEMM<M, K, NCHUNK>>(
+        k[i] = adf::kernel::create_object<QGEMM<TT, M, K, NCHUNK>>(
           wChunk, bChunk, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
         adf::source(k[i]) = "qgemm.cc";
         adf::headers(k[i]) = {"qgemm.h"};

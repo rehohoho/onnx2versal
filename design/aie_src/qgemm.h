@@ -27,41 +27,42 @@
  * @brief Scalar implementation for MK*KN, stores weights and biases,
  * QgemmScalarStream<1,84,16> takes 34262 cycles
  */
-template <int M, int K, int N>
+template <typename TT, int M, int K, int N>
 class QgemmScalarStream {
   
   private:
-    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
+    alignas(32) TT (&weights)[N*K]; // KxN (256x120)
     alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     float scale;
   
   public:
     QgemmScalarStream (
-      int8_t (&w)[K*N],
+      TT (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
       scale = x_scale*w_scale/y_scale;
     };
 
     void filter(
-      input_window<int8_t>* in,   // MxK  (1x256)
-      output_stream<int8_t>* out  // MxN  (1x120)
+      input_window<TT>* in,   // MxK  (1x256)
+      output_stream<TT>* out  // MxN  (1x120)
     );
     
     static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
       REGISTER_FUNCTION(QgemmScalarStream::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -71,20 +72,20 @@ class QgemmScalarStream {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0
- * QgemmStream<1,84,16> takes 273 cycles (output window same cycles)
+ * QgemmStream<1,84,16> takes 267 cycles (output window same cycles)
  */
-template <int M, int K, int N>
+template <typename TT, int M, int K, int N>
 class QgemmStream {
   
   private:
-    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
+    alignas(32) TT (&weights)[N*K]; // KxN (256x120)
     alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -98,22 +99,23 @@ class QgemmStream {
   
   public:
     QgemmStream (
-      int8_t (&w)[K*N],
+      TT (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
     void filter(
-      input_window<int8_t>* in,   // MxK  (1x256)
-      output_stream<int8_t>* out  // MxN  (1x120)
+      input_window<TT>* in,   // MxK  (1x256)
+      output_stream<TT>* out  // MxN  (1x120)
     );
     
     static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
       static_assert(N % 16 == 0);
       REGISTER_FUNCTION(QgemmStream::filter);
       REGISTER_PARAMETER(weights);
