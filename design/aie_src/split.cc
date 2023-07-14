@@ -338,7 +338,7 @@ void SplitScalar<TT, H, INP_W, OUT_W, OVERLAP>::filter1(
 
 #define WRITE_TWO_OUTS(prevout, nextout, count) \
   for (int w = 0; w < count; w+=16) { \
-    v16int8 a = readincr_v16(in); \
+    auto a = readincr_v16(in); \
     window_writeincr(prevout, a); \
     window_writeincr(nextout, a); \
   }
@@ -898,11 +898,11 @@ void SplitFilterInt8Stream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 // 32-bit read / cycle or 128-bit read / 4 cycle
 #define WRITE_OUT(count) \
   for (int w = 0; w < count; w+=16) \
-    put_wms(0, getb_wss(0));
+    writeincr_v16(out0, readincr_v16(in));
 
 #define READ_IN(count) \
   for (int w = 0; w < count; w+=16) \
-    getb_wss(0);
+    readincr_v16(in);
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -933,6 +933,8 @@ void SplitFilterInt8StreamTwice<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 ) {
   PROFILE_HEADER2;
 
+  output_stream<TT> *out[2] = {out0, out1};
+
   v4float vec;
   int pre_read_lanes = lane_idx;
   int post_read_lanes = LCNT - lane_idx - 2;
@@ -940,18 +942,18 @@ void SplitFilterInt8StreamTwice<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 // 32-bit read / cycle or 128-bit read / 4 cycle
 #define WRITE_OUT(outidx, count) \
   for (int w = 0; w < count; w+=16) \
-    put_wms(outidx, getb_wss(0));
+    writeincr_v16(out[outidx], readincr_v16(in));
 
 #define WRITE_OUT_TWICE(count) \
   for (int w = 0; w < count; w+=16) { \
-    auto a = getb_wss(0); \
-    put_wms(0, a); \
-    put_wms(1, a); \
+    auto a = readincr_v16(in); \
+    writeincr_v16(out0, a); \
+    writeincr_v16(out1, a); \
   }
 
 #define READ_IN(count) \
   for (int w = 0; w < count; w+=16) \
-    getb_wss(0);
+    readincr_v16(in);
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) {
@@ -998,22 +1000,22 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 // 32-bit read / cycle or 128-bit read / 4 cycle
 #define WRITE_OUT(outidx, count, tlast) \
   for (int w = 0; w < count; w+=16) { \
-    auto a = getb_wss(0); \
-    put_wms(outidx, a); \
+    auto a = readincr_v16(in); \
+    writeincr_v16(out[outidx], a); \
   } \
   if (tlast) writeincr(out[outidx], 0, tlast);
 
 #define WRITE_OUT_TWICE(outidx0, outidx1, count) \
   for (int w = 0; w < count; w+=16) { \
-    auto a = getb_wss(0); \
-    put_wms(outidx0, a); \
-    put_wms(outidx1, a); \
+    auto a = readincr_v16(in); \
+    writeincr_v16(out0, a); \
+    writeincr_v16(out1, a); \
   } \
   writeincr(out[outidx0], 0, true);
 
 #define READ_IN(count) \
   for (int w = 0; w < count; w+=16) \
-    getb_wss(0);
+    readincr_v16(in);
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) chess_prepare_for_pipelining chess_loop_range(H,) {

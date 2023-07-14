@@ -264,7 +264,9 @@ class ConcatInt8 {
 			output_stream<TT>* out
 		);
 		static void registerKernelClass() {
-			static_assert(INP_W%16==0 && OUT_W%16==0 && (std::is_same<TT, int8_t>::value));
+			static_assert(INP_W%16==0);
+			static_assert(OUT_W%16==0);
+			static_assert(std::is_same<TT, int8_t>::value);
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(ConcatInt8::filter8);
 			} else if (LCNT == 7) {
@@ -339,7 +341,7 @@ class ConcatInt8Stream {
 		);
 		static void registerKernelClass() {
 			static_assert(INP_W1 % 16 == 0 && INP_W2 % 16 == 0 && OUT_W % 16 == 0);
-			static_assert((std::is_same<TT, int8_t>::value));
+			static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			// also expects INP_W1 < OUT_W, not included due to conditional instances in graph
 			REGISTER_FUNCTION(ConcatInt8Stream::filter);
 		}

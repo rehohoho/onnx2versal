@@ -741,7 +741,7 @@ void ConcatInt8Stream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
       for (int i = 0; i < INP_W2; i+=16)
         writeincr_v16(out, readincr_v16(in1));
       for (int i = 0; i < OUT_W - INP_W1 - INP_W2; i+=16)
-        writeincr_v16(out, null_v16int8());
+        writeincr_v16(out, aie::zeros<TT, 16>());
     } else {
       for (int i = 0; i < OUT_W - INP_W1; i+=16)
         writeincr_v16(out, readincr_v16(in1));  

@@ -190,7 +190,7 @@ class SplitInt8 {
 			output_window<TT>* out0
 		);
 		static void registerKernelClass() {
-			static_assert((std::is_same<TT, int8_t>::value));
+			static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(OVERLAP % 16 == 0);
 			static_assert((OVERLAP < 0) || (STRIDE % 16 == 0 && STRIDE >= 0));
 			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
@@ -369,7 +369,7 @@ class SplitFilterInt8Stream {
 		);
 
 		static void registerKernelClass() {
-			static_assert((std::is_same<TT, int8_t>::value));
+			static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(OVERLAP % 16 == 0);
 			static_assert((OVERLAP < 0) || (STRIDE % 16 == 0));
 			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
@@ -406,7 +406,7 @@ class SplitFilterInt8StreamTwice {
 		);
 
 		static void registerKernelClass() {
-			static_assert((std::is_same<TT, int8_t>::value));
+			static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(OVERLAP % 16 == 0);
 			static_assert((OVERLAP < 0) || (STRIDE % 16 == 0));
 			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));

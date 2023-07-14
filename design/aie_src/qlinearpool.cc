@@ -21,7 +21,7 @@ void QLinearAvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::fil
 
 #define WRITE_OUT(res) \
   resv = upd_elem(resv, resvi, res); \
-  if (resvi == 15) writeincr_v16(out, pack(resv)); \
+  if (resvi == 15) writeincr_v16(out, ((aie::vector<int16,16>) resv).pack<TT>()); \
   resvi = (resvi + 1) & 0xf;
 
   float scale = in_scale * inv(KH*KW * out_scale);
@@ -41,7 +41,11 @@ void QLinearAvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::fil
           window_incr(in, -KH*INP_W + KW); // up KH, right KW
           
           sum = round(sum * scale) + out_zero;
-          sum = std::min(std::max(sum, -128), 127);
+          if ((std::is_same<TT, int8_t>::value)) {
+            sum = std::min(std::max(sum, -128), 127);
+          } else {
+            sum = std::min(std::max(sum, 0), 255);
+          }
 
           WRITE_OUT(sum);
         } // W
