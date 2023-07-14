@@ -91,8 +91,11 @@ if __name__ == "__main__":
       
     for i, (res_fn, data_fn) in enumerate(filepairs):
       print(f"Checking {i+1}/{len(filepairs)}: {res_fn:<80} against {data_fn:<48}", end="\t")
-      pass_count += is_file_match(os.path.join(OUT_DIR, res_fn), 
-                                  os.path.join(DATA_DIR, data_fn), 
-                                  args.err)
+      try:
+        pass_count += is_file_match(os.path.join(OUT_DIR, res_fn), 
+                                    os.path.join(DATA_DIR, data_fn), 
+                                    args.err)
+      except Exception as e:
+        print(e)
   
   assert(pass_count == len(filepairs)), f"{pass_count} / {len(filepairs)} tests passed."
