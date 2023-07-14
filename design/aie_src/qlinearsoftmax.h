@@ -24,14 +24,14 @@
  * @brief Scalar implementation.
  * QlinearsoftmaxScalar<10,20,32> takes 517922 cycles for expf, cycles 164026 for fastexp2.
  */
-template <int INP_H, int INP_W, int INP_W_PAD>
+template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
 class QlinearsoftmaxScalar {
   
   private:
     float x_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT y_zero;
 
     float scale;
   
@@ -39,16 +39,17 @@ class QlinearsoftmaxScalar {
     QlinearsoftmaxScalar (
       float x_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT y_zero
     ): x_scale(x_scale), y_scale(y_scale), x_zero(x_zero), y_zero(y_zero) {};
 
     void filter(
-      input_window<int8_t>* in,
-      output_stream<int8_t>* out
+      input_window<TT>* in,
+      output_stream<TT>* out
     );
     
     static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
       REGISTER_FUNCTION(QlinearsoftmaxScalar::filter);
     };
 };
@@ -59,14 +60,14 @@ class QlinearsoftmaxScalar {
  * QlinearsoftmaxFloatmul<10,10,16> takes 3886 cycles
  * requires INP_W_PAD%16=0.
  */
-template <int INP_H, int INP_W, int INP_W_PAD>
+template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
 class QlinearsoftmaxFloatmul {
 	
   private:
     float x_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT y_zero;
 
     int EXP_BITSHIFT = 18;
     int OUT_BITSHIFT = 10;
@@ -79,16 +80,17 @@ class QlinearsoftmaxFloatmul {
     QlinearsoftmaxFloatmul (
       float x_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-			output_stream<int8_t>* out
+			input_window<TT>* in,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(INP_W_PAD % 16 == 0);
 			REGISTER_FUNCTION(QlinearsoftmaxFloatmul::filter);
 		}
@@ -100,14 +102,14 @@ class QlinearsoftmaxFloatmul {
  * QlinearsoftmaxSingleaxis<10,10,16> takes 2239 cycles
  * requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.
  */
-template <int INP_H, int INP_W, int INP_W_PAD>
+template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
 class QlinearsoftmaxSingleaxis {
 	
   private:
     float x_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT y_zero;
 
     int EXP_BITSHIFT = 24;
     int OUT_BITSHIFT = 8;
@@ -121,16 +123,17 @@ class QlinearsoftmaxSingleaxis {
     QlinearsoftmaxSingleaxis (
       float x_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-			output_stream<int8_t>* out
+			input_window<TT>* in,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(INP_W_PAD % 16 == 0);
 			REGISTER_FUNCTION(QlinearsoftmaxSingleaxis::filter);
 		}

@@ -13,6 +13,7 @@
  * Softmax(input, axis) = Exp(input) / ReduceSum(Exp(input), axis=axis, keepdims=1)
  * 
  * @tparam QLINEARSOFTMAX Qlinearsoftmax Kernel
+ * @tparam TT	            int8_t or uint8_t
  * @tparam INP_H	        input height
  * @tparam INP_W	        input width
  * @tparam INP_W_PAD	    input width padded
@@ -28,8 +29,8 @@
  * @connect{pout[0], INP_H*INP_W_PAD}
  * @endconnections
  */
-template <template<int, int, int> class QLINEARSOFTMAX, 
-  int INP_H, int INP_W, int INP_W_PAD>
+template <template<typename, int, int, int> class QLINEARSOFTMAX, 
+  typename TT, int INP_H, int INP_W, int INP_W_PAD>
 class QlinearsoftmaxStreamGraph : public adf::graph {
 
   private:
@@ -43,10 +44,10 @@ class QlinearsoftmaxStreamGraph : public adf::graph {
     QlinearsoftmaxStreamGraph(
       float x_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT y_zero
     ) { 
-      k[0] = adf::kernel::create_object<QLINEARSOFTMAX<INP_H, INP_W, INP_W_PAD>>(
+      k[0] = adf::kernel::create_object<QLINEARSOFTMAX<TT, INP_H, INP_W, INP_W_PAD>>(
         x_scale, y_scale, x_zero, y_zero);
       adf::source(k[0]) = "qlinearsoftmax.cc";
       adf::headers(k[0]) = {"qlinearsoftmax.h"};
