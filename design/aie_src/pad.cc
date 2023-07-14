@@ -57,8 +57,10 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
 ) {
   PROFILE_HEADER2;
   
+  using TTVEC = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  
   v32int16 data = aie::broadcast<int16_t,32>(pad_value);
-  v16int8 pad_value_v = aie::broadcast<int8_t,16>(pad_value);
+  TTVEC pad_value_v = aie::broadcast<TT,16>(pad_value);
   v16int16 pad_value_vint16 = aie::broadcast<int16_t,16>(pad_value);
   int data_offset = 0;
 
@@ -68,9 +70,10 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
   data = upd_w(data, 1, pad_value_vint16); \
   if (data_offset + len >= 16) { \
     data = aie::shuffle_down_replicate((aie::vector<int16_t,32>) data, 16-data_offset); \
-    put_wms(0, pack(ext_w(data, 0))); \
+    aie::vector<int16,16> datahalf = ext_w(data, 0); \
+    writeincr_v16(out, datahalf.pack<TT>()); \
     for (int i = 0; i <= (len - (16 - data_offset)) - 16; i+=16) \
-      put_wms(0, pad_value_v); \
+      writeincr_v16(out, pad_value_v); \
   } else { \
     data = aie::shuffle_up((aie::vector<int16_t,32>) data, data_offset); \
   } \
@@ -85,7 +88,8 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
         data = aie::shuffle_up((aie::vector<int16_t,32>) data, 16 - data_offset);
         data = upd_w(data, 0, unpack(getb_wss(0)));
         data = aie::shuffle_up((aie::vector<int16_t,32>) data, data_offset);
-        put_wms(0, pack(ext_w(data, 0))); 
+        aie::vector<int16,16> datahalf = ext_w(data, 0);
+        writeincr_v16(out, datahalf.pack<TT>());
       }
       
       if (INP_W % 16 != 0) {
@@ -93,7 +97,8 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
         data = upd_w(data, 1, unpack(getb_wss(0)));
         if (data_offset + INP_W % 16 >= 16) {
           data = aie::shuffle_down_replicate((aie::vector<int16_t,32>) data, 16-data_offset);
-          put_wms(0, pack(ext_w(data, 0))); 
+          aie::vector<int16,16> datahalf = ext_w(data, 0);
+          writeincr_v16(out, datahalf.pack<TT>());
           data_offset -= 16;
         } else {
           data = aie::shuffle_up((aie::vector<int16_t,32>) data, data_offset);
@@ -104,6 +109,7 @@ void Pad2DStreamInt8<TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>::filter(
       WRITE_PAD(out, W0+W1);
     }
     WRITE_PAD(out, H1*OUT_W-W0);
+    chess_separator_scheduler();
   }
 
   for (int i = 0; i < data_offset; i+=4)

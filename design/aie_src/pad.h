@@ -65,7 +65,7 @@ class Pad2DStreamInt8 {
     );
 
     static void registerKernelClass() {
-      static_assert((std::is_same<TT, int8_t>::value));
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
       static_assert((B*OUT_H*OUT_W) % 4 == 0);
       REGISTER_FUNCTION(Pad2DStreamInt8::filter);
     }
