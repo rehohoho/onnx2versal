@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: DequantizeLinear&lt; B, INP_W, OUT_W &gt; Class Template Reference</title>
+<title>onnx2versal: DequantizeLinear&lt; TT, B, INP_W, OUT_W &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classDequantizeLinear.html',''); initR
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classDequantizeLinear-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">DequantizeLinear&lt; B, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__DequantizeLinear.html">DequantizeLinear</a> &raquo; <a class="el" href="group__DequantizeLinearKernels.html">DequantizeLinearKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">DequantizeLinear&lt; TT, B, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__DequantizeLinear.html">DequantizeLinear</a> &raquo; <a class="el" href="group__DequantizeLinearKernels.html">DequantizeLinearKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation, DequantizeLinear&lt;96,84&gt; takes 163 cycles.  
+<p>Vector implementation, DequantizeLinear&lt;96,84&gt; takes 154 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="dequantize__linear_8h_source.html">dequantize_linear.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3a1af0047c3dd15271e62dd1b177bb61"><td class="memItemLeft" align="right" valign="top"><a id="a3a1af0047c3dd15271e62dd1b177bb61" name="a3a1af0047c3dd15271e62dd1b177bb61"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>DequantizeLinear</b> (float scale, int8_t zero)</td></tr>
-<tr class="separator:a3a1af0047c3dd15271e62dd1b177bb61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84e95ad43999178fb2f65eb2be597054"><td class="memItemLeft" align="right" valign="top"><a id="a84e95ad43999178fb2f65eb2be597054" name="a84e95ad43999178fb2f65eb2be597054"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; int8_t &gt; *in, output_window&lt; float &gt; *out)</td></tr>
-<tr class="separator:a84e95ad43999178fb2f65eb2be597054"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34daac094ef748b13ec982c0c4f155b0"><td class="memItemLeft" align="right" valign="top"><a id="a34daac094ef748b13ec982c0c4f155b0" name="a34daac094ef748b13ec982c0c4f155b0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>DequantizeLinear</b> (float scale, TT zero)</td></tr>
+<tr class="separator:a34daac094ef748b13ec982c0c4f155b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80098a3a6e3d85974777d52a0ac062cd"><td class="memItemLeft" align="right" valign="top"><a id="a80098a3a6e3d85974777d52a0ac062cd" name="a80098a3a6e3d85974777d52a0ac062cd"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_window&lt; float &gt; *out)</td></tr>
+<tr class="separator:a80098a3a6e3d85974777d52a0ac062cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a3897016304e8850cae29441f2914cdc5"><td class="memItemLeft" align="right" valign="top"><a id="a3897016304e8850cae29441f2914cdc5" name="a3897016304e8850cae29441f2914cdc5"></a>
+<tr class="memitem:a58405cb74749277830609b8395ca4935"><td class="memItemLeft" align="right" valign="top"><a id="a58405cb74749277830609b8395ca4935" name="a58405cb74749277830609b8395ca4935"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a3897016304e8850cae29441f2914cdc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a58405cb74749277830609b8395ca4935"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="dequantize__linear_8h_source.html">dequantize_linear.h</a></li>

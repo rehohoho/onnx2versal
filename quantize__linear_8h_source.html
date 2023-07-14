@@ -99,22 +99,22 @@ $(document).ready(function(){initNavTree('quantize__linear_8h_source.html',''); 
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;assert.h&gt;</span></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="classQuantizeLinearScalar.html">   25</a></span><span class="keyword">class </span><a class="code hl_class" href="classQuantizeLinearScalar.html">QuantizeLinearScalar</a> {</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>  </div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keywordtype">float</span> y_scale;</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <span class="keywordtype">int</span> y_zero; <span class="comment">// same type as output</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    TT y_zero; <span class="comment">// same type as output</span></div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    </div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>  <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <a class="code hl_class" href="classQuantizeLinearScalar.html">QuantizeLinearScalar</a> (</div>
 <div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>      <span class="keywordtype">int</span> y_zero</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>      TT y_zero</div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    ): y_scale(y_scale), y_zero(y_zero) {};</div>
 <div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        <span class="keywordtype">void</span> filter(</div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>            input_window&lt;float&gt;* in,</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>            output_window&lt;int8_t&gt;* out</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>            output_window&lt;TT&gt;* out</div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        );</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
@@ -124,7 +124,7 @@ $(document).ready(function(){initNavTree('quantize__linear_8h_source.html',''); 
 <div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>};</div>
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="classQuantizeLinear.html">   55</a></span><span class="keyword">class </span><a class="code hl_class" href="classQuantizeLinear.html">QuantizeLinear</a> {</div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  </div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  <span class="keyword">private</span>:</div>
@@ -155,22 +155,22 @@ $(document).ready(function(){initNavTree('quantize__linear_8h_source.html',''); 
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>};</div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="classQuantizeLinearFmul.html">   91</a></span><span class="keyword">class </span><a class="code hl_class" href="classQuantizeLinearFmul.html">QuantizeLinearFmul</a> {</div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  </div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="keywordtype">float</span> y_scale;</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    int8_t y_zero; <span class="comment">// same type as output</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    TT y_zero; <span class="comment">// same type as output</span></div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>  <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <a class="code hl_class" href="classQuantizeLinearFmul.html">QuantizeLinearFmul</a> (</div>
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>      int8_t y_zero</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>      TT y_zero</div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    ): y_scale(y_scale), y_zero(y_zero) {};</div>
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
 <div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>        <span class="keywordtype">void</span> filter(</div>
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>            input_window&lt;float&gt;* in,</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>            output_window&lt;int8_t&gt;* out</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>            output_window&lt;TT&gt;* out</div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        );</div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
@@ -181,22 +181,22 @@ $(document).ready(function(){initNavTree('quantize__linear_8h_source.html',''); 
 <div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>};</div>
 <div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keyword">template</span> &lt;<span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno"><a class="line" href="classQuantizeLinearFmulStream.html">  122</a></span><span class="keyword">class </span><a class="code hl_class" href="classQuantizeLinearFmulStream.html">QuantizeLinearFmulStream</a> {</div>
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>  </div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keywordtype">float</span> y_scale;</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    int8_t y_zero; <span class="comment">// same type as output</span></div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    TT y_zero; <span class="comment">// same type as output</span></div>
 <div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span> </div>
 <div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>  <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <a class="code hl_class" href="classQuantizeLinearFmulStream.html">QuantizeLinearFmulStream</a> (</div>
 <div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>      int8_t y_zero</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>      TT y_zero</div>
 <div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    ): y_scale(y_scale), y_zero(y_zero) {};</div>
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
 <div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        <span class="keywordtype">void</span> filter(</div>
 <div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>            input_stream&lt;float&gt;* in,</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>            output_stream&lt;int8_t&gt;* out</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>            output_stream&lt;TT&gt;* out</div>
 <div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>        );</div>
 <div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span> </div>
 <div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
@@ -206,9 +206,9 @@ $(document).ready(function(){initNavTree('quantize__linear_8h_source.html',''); 
 <div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>        }</div>
 <div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>};</div>
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span><span class="preprocessor">#endif </span><span class="comment">// QUANTIZE_LINEAR_H</span></div>
-<div class="ttc" id="aclassQuantizeLinearFmulStream_html"><div class="ttname"><a href="classQuantizeLinearFmulStream.html">QuantizeLinearFmulStream</a></div><div class="ttdoc">Vector stream implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinearFmul&lt;1*...</div><div class="ttdef"><b>Definition</b> quantize_linear.h:122</div></div>
+<div class="ttc" id="aclassQuantizeLinearFmulStream_html"><div class="ttname"><a href="classQuantizeLinearFmulStream.html">QuantizeLinearFmulStream</a></div><div class="ttdoc">Vector stream implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinearFmulStr...</div><div class="ttdef"><b>Definition</b> quantize_linear.h:122</div></div>
 <div class="ttc" id="aclassQuantizeLinearFmul_html"><div class="ttname"><a href="classQuantizeLinearFmul.html">QuantizeLinearFmul</a></div><div class="ttdoc">Vector implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinearFmul&lt;1*1*28*28...</div><div class="ttdef"><b>Definition</b> quantize_linear.h:91</div></div>
-<div class="ttc" id="aclassQuantizeLinearScalar_html"><div class="ttname"><a href="classQuantizeLinearScalar.html">QuantizeLinearScalar</a></div><div class="ttdoc">Scalar implementation, requires INP_W &lt;= OUT_W, QuantizeLinearScalar&lt;1*1*28*28&gt; takes 92401 cycles.</div><div class="ttdef"><b>Definition</b> quantize_linear.h:25</div></div>
+<div class="ttc" id="aclassQuantizeLinearScalar_html"><div class="ttname"><a href="classQuantizeLinearScalar.html">QuantizeLinearScalar</a></div><div class="ttdoc">Scalar implementation, requires INP_W &lt;= OUT_W, QuantizeLinearScalar&lt;1*1*28*28&gt; takes 92121 cycles.</div><div class="ttdef"><b>Definition</b> quantize_linear.h:25</div></div>
 <div class="ttc" id="aclassQuantizeLinear_html"><div class="ttname"><a href="classQuantizeLinear.html">QuantizeLinear</a></div><div class="ttdoc">Vector implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinear&lt;1*1*28*28&gt; ta...</div><div class="ttdef"><b>Definition</b> quantize_linear.h:55</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

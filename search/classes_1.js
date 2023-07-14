@@ -7,7 +7,7 @@ var searchData=
   ['concatgraph_3c_20concat_2c_20float_5ft_2c_20chunk_5fcount_2c_201_2c_20nchunk_2c_20n_20_3e_4',['ConcatGraph&lt; CONCAT, float_t, CHUNK_COUNT, 1, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
   ['concatgraph_3c_20concat_2c_20float_5ft_2c_20chunk_5fcount_2c_20concat_5fh_2c_20concat_5fw_2c_20concat_5fblock_20_3e_5',['ConcatGraph&lt; CONCAT, float_t, CHUNK_COUNT, CONCAT_H, CONCAT_W, CONCAT_BLOCK &gt;',['../classConcatGraph.html',1,'']]],
   ['concatgraph_3c_20concat_2c_20float_5ft_2c_20chunk_5fcount_2c_20m_2c_20nchunk_2c_20n_20_3e_6',['ConcatGraph&lt; CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
-  ['concatgraph_3c_20concat_2c_20int8_5ft_2c_20chunk_5fcount_2c_20m_2c_20nchunk_2c_20n_20_3e_7',['ConcatGraph&lt; CONCAT, int8_t, CHUNK_COUNT, M, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
+  ['concatgraph_3c_20concat_2c_20tt_2c_20chunk_5fcount_2c_20m_2c_20nchunk_2c_20n_20_3e_7',['ConcatGraph&lt; CONCAT, TT, CHUNK_COUNT, M, NCHUNK, N &gt;',['../classConcatGraph.html',1,'']]],
   ['concatint8_8',['ConcatInt8',['../classConcatInt8.html',1,'']]],
   ['concatint8stream_9',['ConcatInt8Stream',['../classConcatInt8Stream.html',1,'']]],
   ['concatscalar_10',['ConcatScalar',['../classConcatScalar.html',1,'']]],

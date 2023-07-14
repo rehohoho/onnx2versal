@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QgemmStreamGraph&lt; QGEMM, M, K, N &gt; Class Template Reference</title>
+<title>onnx2versal: QgemmStreamGraph&lt; QGEMM, TT, M, K, N &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQgemmStreamGraph.html',''); initR
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classQgemmStreamGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QgemmStreamGraph&lt; QGEMM, M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a></div></div></div>
+  <div class="headertitle"><div class="title">QgemmStreamGraph&lt; QGEMM, TT, M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -106,22 +106,22 @@ $(document).ready(function(){initNavTree('classQgemmStreamGraph.html',''); initR
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab2565f2304a69a46ffd19f3e0d992424"><td class="memItemLeft" align="right" valign="top"><a id="ab2565f2304a69a46ffd19f3e0d992424" name="ab2565f2304a69a46ffd19f3e0d992424"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmStreamGraph</b> (std::vector&lt; int8_t &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero, int repeat_cnt=1)</td></tr>
-<tr class="separator:ab2565f2304a69a46ffd19f3e0d992424"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c112594ee1d748cbe0047dc78f16252"><td class="memItemLeft" align="right" valign="top"><a id="a2c112594ee1d748cbe0047dc78f16252" name="a2c112594ee1d748cbe0047dc78f16252"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmStreamGraph</b> (std::vector&lt; TT &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, TT x_zero, TT w_zero, TT y_zero, int repeat_cnt=1)</td></tr>
+<tr class="separator:a2c112594ee1d748cbe0047dc78f16252"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:acffbf0d86e224fea495f1621fee7e19f"><td class="memItemLeft" align="right" valign="top"><a id="acffbf0d86e224fea495f1621fee7e19f" name="acffbf0d86e224fea495f1621fee7e19f"></a>
+<tr class="memitem:a57f541cad5e08670b6cb48f4c34bfda7"><td class="memItemLeft" align="right" valign="top"><a id="a57f541cad5e08670b6cb48f4c34bfda7" name="a57f541cad5e08670b6cb48f4c34bfda7"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:acffbf0d86e224fea495f1621fee7e19f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23a6f079c2350630fbe94140fca3977d"><td class="memItemLeft" align="right" valign="top"><a id="a23a6f079c2350630fbe94140fca3977d" name="a23a6f079c2350630fbe94140fca3977d"></a>
+<tr class="separator:a57f541cad5e08670b6cb48f4c34bfda7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e36cff385dd8c4a2356fe659ac40773"><td class="memItemLeft" align="right" valign="top"><a id="a8e36cff385dd8c4a2356fe659ac40773" name="a8e36cff385dd8c4a2356fe659ac40773"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a23a6f079c2350630fbe94140fca3977d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a8e36cff385dd8c4a2356fe659ac40773"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int &gt; class QGEMM, int M, int K, int N&gt;<br />
-class QgemmStreamGraph&lt; QGEMM, M, K, N &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int &gt; class QGEMM, typename TT, int M, int K, int N&gt;<br />
+class QgemmStreamGraph&lt; QGEMM, TT, M, K, N &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>

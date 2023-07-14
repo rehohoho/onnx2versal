@@ -115,10 +115,10 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmStreamGraph.html">QgemmStreamGraph&lt; QGEMM, M, K, N &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmStreamGraph.html">QgemmStreamGraph&lt; QGEMM, TT, M, K, N &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph that stores weights and biases.  <a href="classQgemmStreamGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmChunkNStreamGraph.html">QgemmChunkNStreamGraph&lt; QGEMM, CONCAT, NCHUNK, M, K, N &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmChunkNStreamGraph.html">QgemmChunkNStreamGraph&lt; QGEMM, CONCAT, NCHUNK, TT, M, K, N &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight, NCHUNK%8=0, N%4=0 Chunks KxN weights by N dimension into NCHUNK chunks. Each instance has max size = 16384 and 4096 bytes respectively. Places maximum of 3x3 tiles, 8 conv tiles surrounding concat tile (max AIE DMA input=8)  <a href="classQgemmChunkNStreamGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -126,6 +126,7 @@ Classes</h2></td></tr>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">QGEMM</td><td>QGemm Kernel </td></tr>
+    <tr><td class="paramname">TT</td><td>int8_t or uint8_t </td></tr>
     <tr><td class="paramname">M</td><td>number of rows of input matrix </td></tr>
     <tr><td class="paramname">K</td><td>number of cols / number of rows of weight matrix </td></tr>
     <tr><td class="paramname">N</td><td>number of cols of weight matrix / size of bias vector </td></tr>

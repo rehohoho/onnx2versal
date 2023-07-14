@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QuantizeLinearStreamGraph&lt; QUANTIZE_LINEAR, INP_H, INP_W, OUT_W &gt; Class Template Reference</title>
+<title>onnx2versal: QuantizeLinearStreamGraph&lt; QUANTIZE_LINEAR, TT, INP_H, INP_W, OUT_W &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQuantizeLinearStreamGraph.html','
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classQuantizeLinearStreamGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QuantizeLinearStreamGraph&lt; QUANTIZE_LINEAR, INP_H, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QuantizeLinear.html">QuantizeLinear</a></div></div></div>
+  <div class="headertitle"><div class="title">QuantizeLinearStreamGraph&lt; QUANTIZE_LINEAR, TT, INP_H, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QuantizeLinear.html">QuantizeLinear</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -106,22 +106,22 @@ $(document).ready(function(){initNavTree('classQuantizeLinearStreamGraph.html','
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:afe6432a3a0be4b3cf9b68c0e21e28fdd"><td class="memItemLeft" align="right" valign="top"><a id="afe6432a3a0be4b3cf9b68c0e21e28fdd" name="afe6432a3a0be4b3cf9b68c0e21e28fdd"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QuantizeLinearStreamGraph</b> (float y_scale, int8_t y_zero)</td></tr>
-<tr class="separator:afe6432a3a0be4b3cf9b68c0e21e28fdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a444d54681f32d90c67dff56c4d59187a"><td class="memItemLeft" align="right" valign="top"><a id="a444d54681f32d90c67dff56c4d59187a" name="a444d54681f32d90c67dff56c4d59187a"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QuantizeLinearStreamGraph</b> (float y_scale, TT y_zero)</td></tr>
+<tr class="separator:a444d54681f32d90c67dff56c4d59187a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a886c54da55d0a8336e5035a63c7a5622"><td class="memItemLeft" align="right" valign="top"><a id="a886c54da55d0a8336e5035a63c7a5622" name="a886c54da55d0a8336e5035a63c7a5622"></a>
+<tr class="memitem:acf0852ea315e7e830ccd146bc7847543"><td class="memItemLeft" align="right" valign="top"><a id="acf0852ea315e7e830ccd146bc7847543" name="acf0852ea315e7e830ccd146bc7847543"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:a886c54da55d0a8336e5035a63c7a5622"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5aafc35999156f501f935ddf3fe26728"><td class="memItemLeft" align="right" valign="top"><a id="a5aafc35999156f501f935ddf3fe26728" name="a5aafc35999156f501f935ddf3fe26728"></a>
+<tr class="separator:acf0852ea315e7e830ccd146bc7847543"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a308969b15a6da5801c72fbcd031b26ab"><td class="memItemLeft" align="right" valign="top"><a id="a308969b15a6da5801c72fbcd031b26ab" name="a308969b15a6da5801c72fbcd031b26ab"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a5aafc35999156f501f935ddf3fe26728"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a308969b15a6da5801c72fbcd031b26ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int &gt; class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W&gt;<br />
-class QuantizeLinearStreamGraph&lt; QUANTIZE_LINEAR, INP_H, INP_W, OUT_W &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int &gt; class QUANTIZE_LINEAR, typename TT, int INP_H, int INP_W, int OUT_W&gt;<br />
+class QuantizeLinearStreamGraph&lt; QUANTIZE_LINEAR, TT, INP_H, INP_W, OUT_W &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>

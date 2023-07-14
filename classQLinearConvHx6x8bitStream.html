@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConvHx6x8bitStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearConvHx6x8bitStream&lt; TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQLinearConvHx6x8bitStream.html','
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classQLinearConvHx6x8bitStream-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConvHx6x8bitStream&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</div></div>
+  <div class="headertitle"><div class="title">QLinearConvHx6x8bitStream&lt; TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -104,29 +104,29 @@ $(document).ready(function(){initNavTree('classQLinearConvHx6x8bitStream.html','
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3bef4c2c7b9e9521e486110042832631"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvHx6x8bitStream.html#a3bef4c2c7b9e9521e486110042832631">QLinearConvHx6x8bitStream</a> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t y_zero)</td></tr>
-<tr class="separator:a3bef4c2c7b9e9521e486110042832631"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78c74345c0bf87887937ed1a5a26b9e6"><td class="memItemLeft" align="right" valign="top"><a id="a78c74345c0bf87887937ed1a5a26b9e6" name="a78c74345c0bf87887937ed1a5a26b9e6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; int8_t &gt; *in, input_stream&lt; int8_t &gt; *weights, output_stream&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a78c74345c0bf87887937ed1a5a26b9e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61efe1a8f0cd45a5ef141c39d4f273c7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvHx6x8bitStream.html#a61efe1a8f0cd45a5ef141c39d4f273c7">QLinearConvHx6x8bitStream</a> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, TT w_zero, TT y_zero)</td></tr>
+<tr class="separator:a61efe1a8f0cd45a5ef141c39d4f273c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accc4c4ed687e2cd07056dbc2aff0d58d"><td class="memItemLeft" align="right" valign="top"><a id="accc4c4ed687e2cd07056dbc2aff0d58d" name="accc4c4ed687e2cd07056dbc2aff0d58d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, input_stream&lt; TT &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:accc4c4ed687e2cd07056dbc2aff0d58d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a48e3df269fafda9e3322a18702c5b4c2"><td class="memItemLeft" align="right" valign="top"><a id="a48e3df269fafda9e3322a18702c5b4c2" name="a48e3df269fafda9e3322a18702c5b4c2"></a>
+<tr class="memitem:aba995a332aef5d9ade9a03e0d37857f5"><td class="memItemLeft" align="right" valign="top"><a id="aba995a332aef5d9ade9a03e0d37857f5" name="aba995a332aef5d9ade9a03e0d37857f5"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a48e3df269fafda9e3322a18702c5b4c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aba995a332aef5d9ade9a03e0d37857f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a3bef4c2c7b9e9521e486110042832631" name="a3bef4c2c7b9e9521e486110042832631"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3bef4c2c7b9e9521e486110042832631">&#9670;&#160;</a></span>QLinearConvHx6x8bitStream()</h2>
+<a id="a61efe1a8f0cd45a5ef141c39d4f273c7" name="a61efe1a8f0cd45a5ef141c39d4f273c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61efe1a8f0cd45a5ef141c39d4f273c7">&#9670;&#160;</a></span>QLinearConvHx6x8bitStream()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP&gt; </div>
+template&lt;typename TT , int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classQLinearConvHx6x8bitStream.html">QLinearConvHx6x8bitStream</a>&lt; INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt;<a class="el" href="classQLinearConvHx6x8bitStream.html">::QLinearConvHx6x8bitStream</a> </td>
+          <td class="memname"><a class="el" href="classQLinearConvHx6x8bitStream.html">QLinearConvHx6x8bitStream</a>&lt; TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt;<a class="el" href="classQLinearConvHx6x8bitStream.html">::QLinearConvHx6x8bitStream</a> </td>
           <td>(</td>
           <td class="paramtype">int32_t(&amp;)&#160;</td>
           <td class="paramname"><em>b</em>[M], </td>
@@ -152,19 +152,19 @@ template&lt;int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramtype">TT&#160;</td>
           <td class="paramname"><em>x_zero</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramtype">TT&#160;</td>
           <td class="paramname"><em>w_zero</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramtype">TT&#160;</td>
           <td class="paramname"><em>y_zero</em>&#160;</td>
         </tr>
         <tr>

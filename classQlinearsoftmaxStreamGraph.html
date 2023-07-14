@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QlinearsoftmaxStreamGraph&lt; QLINEARSOFTMAX, INP_H, INP_W, INP_W_PAD &gt; Class Template Reference</title>
+<title>onnx2versal: QlinearsoftmaxStreamGraph&lt; QLINEARSOFTMAX, TT, INP_H, INP_W, INP_W_PAD &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQlinearsoftmaxStreamGraph.html','
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classQlinearsoftmaxStreamGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QlinearsoftmaxStreamGraph&lt; QLINEARSOFTMAX, INP_H, INP_W, INP_W_PAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qlinearsoftmax.html">Qlinearsoftmax</a></div></div></div>
+  <div class="headertitle"><div class="title">QlinearsoftmaxStreamGraph&lt; QLINEARSOFTMAX, TT, INP_H, INP_W, INP_W_PAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qlinearsoftmax.html">Qlinearsoftmax</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -106,22 +106,22 @@ $(document).ready(function(){initNavTree('classQlinearsoftmaxStreamGraph.html','
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aab2229e8b58728f9151b421fe026e21a"><td class="memItemLeft" align="right" valign="top"><a id="aab2229e8b58728f9151b421fe026e21a" name="aab2229e8b58728f9151b421fe026e21a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QlinearsoftmaxStreamGraph</b> (float x_scale, float y_scale, int8_t x_zero, int8_t y_zero)</td></tr>
-<tr class="separator:aab2229e8b58728f9151b421fe026e21a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d418ee551ac9978588dc40705cb49c2"><td class="memItemLeft" align="right" valign="top"><a id="a6d418ee551ac9978588dc40705cb49c2" name="a6d418ee551ac9978588dc40705cb49c2"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QlinearsoftmaxStreamGraph</b> (float x_scale, float y_scale, TT x_zero, TT y_zero)</td></tr>
+<tr class="separator:a6d418ee551ac9978588dc40705cb49c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a2af1c2e334d305652b0743b10ce3a4b5"><td class="memItemLeft" align="right" valign="top"><a id="a2af1c2e334d305652b0743b10ce3a4b5" name="a2af1c2e334d305652b0743b10ce3a4b5"></a>
+<tr class="memitem:a1b31b71dc5c348092296bd757bc20450"><td class="memItemLeft" align="right" valign="top"><a id="a1b31b71dc5c348092296bd757bc20450" name="a1b31b71dc5c348092296bd757bc20450"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
-<tr class="separator:a2af1c2e334d305652b0743b10ce3a4b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8abfb7ad4ac3415a940466942ac6bdff"><td class="memItemLeft" align="right" valign="top"><a id="a8abfb7ad4ac3415a940466942ac6bdff" name="a8abfb7ad4ac3415a940466942ac6bdff"></a>
+<tr class="separator:a1b31b71dc5c348092296bd757bc20450"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdb7f2069b8daf3438e0b27133bcffba"><td class="memItemLeft" align="right" valign="top"><a id="afdb7f2069b8daf3438e0b27133bcffba" name="afdb7f2069b8daf3438e0b27133bcffba"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a8abfb7ad4ac3415a940466942ac6bdff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:afdb7f2069b8daf3438e0b27133bcffba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int &gt; class QLINEARSOFTMAX, int INP_H, int INP_W, int INP_W_PAD&gt;<br />
-class QlinearsoftmaxStreamGraph&lt; QLINEARSOFTMAX, INP_H, INP_W, INP_W_PAD &gt;</div><p>&lt;dl class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int &gt; class QLINEARSOFTMAX, typename TT, int INP_H, int INP_W, int INP_W_PAD&gt;<br />
+class QlinearsoftmaxStreamGraph&lt; QLINEARSOFTMAX, TT, INP_H, INP_W, INP_W_PAD &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>

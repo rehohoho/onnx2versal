@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QlinearsoftmaxSingleaxis&lt; INP_H, INP_W, INP_W_PAD &gt; Class Template Reference</title>
+<title>onnx2versal: QlinearsoftmaxSingleaxis&lt; TT, INP_H, INP_W, INP_W_PAD &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQlinearsoftmaxSingleaxis.html',''
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classQlinearsoftmaxSingleaxis-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QlinearsoftmaxSingleaxis&lt; INP_H, INP_W, INP_W_PAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qlinearsoftmax.html">Qlinearsoftmax</a> &raquo; <a class="el" href="group__QlinearsoftmaxKernels.html">QlinearsoftmaxKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">QlinearsoftmaxSingleaxis&lt; TT, INP_H, INP_W, INP_W_PAD &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qlinearsoftmax.html">Qlinearsoftmax</a> &raquo; <a class="el" href="group__QlinearsoftmaxKernels.html">QlinearsoftmaxKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -104,18 +104,18 @@ $(document).ready(function(){initNavTree('classQlinearsoftmaxSingleaxis.html',''
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad9d8f7a9a5a57a32558e85322f38bda9"><td class="memItemLeft" align="right" valign="top"><a id="ad9d8f7a9a5a57a32558e85322f38bda9" name="ad9d8f7a9a5a57a32558e85322f38bda9"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QlinearsoftmaxSingleaxis</b> (float x_scale, float y_scale, int8_t x_zero, int8_t y_zero)</td></tr>
-<tr class="separator:ad9d8f7a9a5a57a32558e85322f38bda9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a998182690525e4d85382470dce4b8ca2"><td class="memItemLeft" align="right" valign="top"><a id="a998182690525e4d85382470dce4b8ca2" name="a998182690525e4d85382470dce4b8ca2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; int8_t &gt; *in, output_stream&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a998182690525e4d85382470dce4b8ca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae19c190739aec2c45a7a07f871515a0d"><td class="memItemLeft" align="right" valign="top"><a id="ae19c190739aec2c45a7a07f871515a0d" name="ae19c190739aec2c45a7a07f871515a0d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QlinearsoftmaxSingleaxis</b> (float x_scale, float y_scale, TT x_zero, TT y_zero)</td></tr>
+<tr class="separator:ae19c190739aec2c45a7a07f871515a0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad8e964cd9d06d53f02d70395b41f867"><td class="memItemLeft" align="right" valign="top"><a id="aad8e964cd9d06d53f02d70395b41f867" name="aad8e964cd9d06d53f02d70395b41f867"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:aad8e964cd9d06d53f02d70395b41f867"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a12066eb8b8fac9b0b604233ae414128e"><td class="memItemLeft" align="right" valign="top"><a id="a12066eb8b8fac9b0b604233ae414128e" name="a12066eb8b8fac9b0b604233ae414128e"></a>
+<tr class="memitem:a92894c5e358452b2be239f13b6ec80b6"><td class="memItemLeft" align="right" valign="top"><a id="a92894c5e358452b2be239f13b6ec80b6" name="a92894c5e358452b2be239f13b6ec80b6"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a12066eb8b8fac9b0b604233ae414128e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a92894c5e358452b2be239f13b6ec80b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="qlinearsoftmax_8h_source.html">qlinearsoftmax.h</a></li>

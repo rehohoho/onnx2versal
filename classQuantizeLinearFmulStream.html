@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QuantizeLinearFmulStream&lt; INP_H, INP_W, OUT_W &gt; Class Template Reference</title>
+<title>onnx2versal: QuantizeLinearFmulStream&lt; TT, INP_H, INP_W, OUT_W &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classQuantizeLinearFmulStream.html',''
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classQuantizeLinearFmulStream-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QuantizeLinearFmulStream&lt; INP_H, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QuantizeLinear.html">QuantizeLinear</a> &raquo; <a class="el" href="group__QuantizeLinearKernels.html">QuantizeLinearKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">QuantizeLinearFmulStream&lt; TT, INP_H, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QuantizeLinear.html">QuantizeLinear</a> &raquo; <a class="el" href="group__QuantizeLinearKernels.html">QuantizeLinearKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector stream implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinearFmul&lt;1*1*28*28&gt; takes 1718 cycles,.  
+<p>Vector stream implementation, requires INP_W%4==0, OUT_W%16==0, INP_W &lt;= OUT_W, QuantizeLinearFmulStream&lt;1*1*28*28&gt; takes 1750 cycles,.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="quantize__linear_8h_source.html">quantize_linear.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4bd679466974f6352a9d99bee9ec0f4c"><td class="memItemLeft" align="right" valign="top"><a id="a4bd679466974f6352a9d99bee9ec0f4c" name="a4bd679466974f6352a9d99bee9ec0f4c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QuantizeLinearFmulStream</b> (float y_scale, int8_t y_zero)</td></tr>
-<tr class="separator:a4bd679466974f6352a9d99bee9ec0f4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74be0edee581ed2f8896d18171a65e47"><td class="memItemLeft" align="right" valign="top"><a id="a74be0edee581ed2f8896d18171a65e47" name="a74be0edee581ed2f8896d18171a65e47"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; float &gt; *in, output_stream&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a74be0edee581ed2f8896d18171a65e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f319fcbef3a175cebe3f777243cf978"><td class="memItemLeft" align="right" valign="top"><a id="a6f319fcbef3a175cebe3f777243cf978" name="a6f319fcbef3a175cebe3f777243cf978"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QuantizeLinearFmulStream</b> (float y_scale, TT y_zero)</td></tr>
+<tr class="separator:a6f319fcbef3a175cebe3f777243cf978"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66593498c70259f9788115ecf521ebd9"><td class="memItemLeft" align="right" valign="top"><a id="a66593498c70259f9788115ecf521ebd9" name="a66593498c70259f9788115ecf521ebd9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; float &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a66593498c70259f9788115ecf521ebd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a6398082758fe3636f2bdfa721df374df"><td class="memItemLeft" align="right" valign="top"><a id="a6398082758fe3636f2bdfa721df374df" name="a6398082758fe3636f2bdfa721df374df"></a>
+<tr class="memitem:a5e2f6c28556b3c2d90fcae3f23cdc7e5"><td class="memItemLeft" align="right" valign="top"><a id="a5e2f6c28556b3c2d90fcae3f23cdc7e5" name="a5e2f6c28556b3c2d90fcae3f23cdc7e5"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a6398082758fe3636f2bdfa721df374df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5e2f6c28556b3c2d90fcae3f23cdc7e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="quantize__linear_8h_source.html">quantize_linear.h</a></li>

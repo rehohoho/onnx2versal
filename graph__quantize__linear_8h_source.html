@@ -99,7 +99,7 @@ $(document).ready(function(){initNavTree('graph__quantize__linear_8h_source.html
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;quantize_linear.h&quot;</span></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QUANTIZE_LINEAR, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QUANTIZE_LINEAR, <span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="classQuantizeLinearGraph.html">   34</a></span><span class="keyword">class </span><a class="code hl_class" href="classQuantizeLinearGraph.html">QuantizeLinearGraph</a> : <span class="keyword">public</span> adf::graph {</div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
 <div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  <span class="keyword">private</span>:</div>
@@ -112,53 +112,51 @@ $(document).ready(function(){initNavTree('graph__quantize__linear_8h_source.html
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <a class="code hl_class" href="classQuantizeLinearGraph.html">QuantizeLinearGraph</a>(</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>      int8_t y_zero,</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>      <span class="keywordtype">int</span> repeat_cnt = 1</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    ) { </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>      k[0] = adf::kernel::create_object&lt;QUANTIZE_LINEAR&lt;INP_H, INP_W, OUT_W&gt;&gt;(y_scale, y_zero);</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>      adf::source(k[0]) = <span class="stringliteral">&quot;quantize_linear.cc&quot;</span>;</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;quantize_linear.h&quot;</span>};</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>      adf::repetition_count(k[0]) = repeat_cnt;</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>      </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>      adf::connect&lt;adf::window&lt;INP_H*INP_W*4&gt;&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      adf::connect&lt;adf::window&lt;INP_H*OUT_W&gt;&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    }</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>      TT y_zero</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    ) { </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>      k[0] = adf::kernel::create_object&lt;QUANTIZE_LINEAR&lt;TT, INP_H, INP_W, OUT_W&gt;&gt;(y_scale, y_zero);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>      adf::source(k[0]) = <span class="stringliteral">&quot;quantize_linear.cc&quot;</span>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;quantize_linear.h&quot;</span>};</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>      adf::connect&lt;adf::window&lt;INP_H*INP_W*4&gt;&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>      adf::connect&lt;adf::window&lt;INP_H*OUT_W&gt;&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    }</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>};</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>};</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QUANTIZE_LINEAR, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="classQuantizeLinearStreamGraph.html">   71</a></span><span class="keyword">class </span><a class="code hl_class" href="classQuantizeLinearStreamGraph.html">QuantizeLinearStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    adf::kernel k[1];</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    std::string id;</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    adf::port&lt;input&gt; pin[1];</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    adf::port&lt;output&gt; pout[1];</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <a class="code hl_class" href="classQuantizeLinearStreamGraph.html">QuantizeLinearStreamGraph</a>(</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>      int8_t y_zero</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    ) { </div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>      k[0] = adf::kernel::create_object&lt;QUANTIZE_LINEAR&lt;INP_H, INP_W, OUT_W&gt;&gt;(y_scale, y_zero);</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>      adf::source(k[0]) = <span class="stringliteral">&quot;quantize_linear.cc&quot;</span>;</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;quantize_linear.h&quot;</span>};</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>      </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>      adf::connect&lt;adf::stream&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>      adf::connect&lt;adf::stream&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>      adf::samples_per_iteration(k[0].in[0]) = INP_H*INP_W;</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>      adf::samples_per_iteration(k[0].out[0]) = INP_H*OUT_W;</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    }</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>};</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="preprocessor">#endif </span><span class="comment">// __QUANTIZE_LINEAR_GRAPH_H__</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QUANTIZE_LINEAR, <span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_W&gt;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno"><a class="line" href="classQuantizeLinearStreamGraph.html">   69</a></span><span class="keyword">class </span><a class="code hl_class" href="classQuantizeLinearStreamGraph.html">QuantizeLinearStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    adf::kernel k[1];</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    std::string id;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    adf::port&lt;input&gt; pin[1];</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <a class="code hl_class" href="classQuantizeLinearStreamGraph.html">QuantizeLinearStreamGraph</a>(</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>      <span class="keywordtype">float</span> y_scale,</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>      TT y_zero</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    ) { </div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>      k[0] = adf::kernel::create_object&lt;QUANTIZE_LINEAR&lt;TT, INP_H, INP_W, OUT_W&gt;&gt;(y_scale, y_zero);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>      adf::source(k[0]) = <span class="stringliteral">&quot;quantize_linear.cc&quot;</span>;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;quantize_linear.h&quot;</span>};</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>      </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>      adf::connect&lt;adf::stream&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>      adf::connect&lt;adf::stream&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>      adf::samples_per_iteration(k[0].in[0]) = INP_H*INP_W;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>      adf::samples_per_iteration(k[0].out[0]) = INP_H*OUT_W;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    }</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>};</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="preprocessor">#endif </span><span class="comment">// __QUANTIZE_LINEAR_GRAPH_H__</span></div>
 <div class="ttc" id="aclassQuantizeLinearGraph_html"><div class="ttname"><a href="classQuantizeLinearGraph.html">QuantizeLinearGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_quantize_linear.h:34</div></div>
-<div class="ttc" id="aclassQuantizeLinearStreamGraph_html"><div class="ttname"><a href="classQuantizeLinearStreamGraph.html">QuantizeLinearStreamGraph</a></div><div class="ttdoc">Single instance stream graph.</div><div class="ttdef"><b>Definition</b> graph_quantize_linear.h:71</div></div>
+<div class="ttc" id="aclassQuantizeLinearStreamGraph_html"><div class="ttname"><a href="classQuantizeLinearStreamGraph.html">QuantizeLinearStreamGraph</a></div><div class="ttdoc">Single instance stream graph.</div><div class="ttdef"><b>Definition</b> graph_quantize_linear.h:69</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
