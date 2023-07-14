@@ -2,11 +2,11 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
+template <template<typename, int, int, int> class QUANTIZE_LINEAR, typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizerLinearGraphTest : public adf::graph {
 
   private:
-    QuantizeLinearGraph<QUANTIZE_LINEAR, INP_H, INP_W, OUT_W> g;
+    QuantizeLinearGraph<QUANTIZE_LINEAR, TT, INP_H, INP_W, OUT_W> g;
 
   public:
     adf::input_plio plin[1];
@@ -17,7 +17,7 @@ class QuantizerLinearGraphTest : public adf::graph {
       const std::string& INP_TXT, 
       const std::string& OUT_TXT,
       float y_scale,
-      int8_t y_zero
+      TT y_zero
     ): g(y_scale, y_zero) { 
       plin[0] = adf::input_plio::create("plin0_quantize_linear"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_quantize_linear"+id+"_output", PLIO64_ARG(OUT_TXT));
@@ -27,22 +27,22 @@ class QuantizerLinearGraphTest : public adf::graph {
 };
 
 
-template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
-class QuantizerLinearStreamGraphTest : public adf::graph {
+template <template<typename, int, int, int> class QUANTIZE_LINEAR, typename TT, int INP_H, int INP_W, int OUT_W>
+class QuantizeLinearStreamGraphTest : public adf::graph {
 
   private:
-    QuantizeLinearStreamGraph<QUANTIZE_LINEAR, INP_H, INP_W, OUT_W> g;
+    QuantizeLinearStreamGraph<QUANTIZE_LINEAR, TT, INP_H, INP_W, OUT_W> g;
 
   public:
     adf::input_plio plin[1];
     adf::output_plio plout[1];
 
-    QuantizerLinearStreamGraphTest(
+    QuantizeLinearStreamGraphTest(
       const std::string& id,
       const std::string& INP_TXT, 
       const std::string& OUT_TXT,
       float y_scale,
-      int8_t y_zero
+      TT y_zero
     ): g(y_scale, y_zero) { 
       plin[0] = adf::input_plio::create("plin0_quantize_linear"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_quantize_linear"+id+"_output", PLIO64_ARG(OUT_TXT));
@@ -52,25 +52,25 @@ class QuantizerLinearStreamGraphTest : public adf::graph {
 };
 
 // instance to be compiled and used in host within xclbin
-QuantizerLinearGraphTest<QuantizeLinearScalar, 28, 28, 32> quantizeLinearScalar(
+QuantizerLinearGraphTest<QuantizeLinearScalar, int8_t, 28, 28, 32> quantizeLinearScalar(
   "quantizeLinearScalar", 
   "quantizelinear_int8in.txt", 
   "quantizelinear_int8out_shape28x28_QuantizeLinearScalar.txt",
   0.00392156889, -128);
 
-QuantizerLinearGraphTest<QuantizeLinear, 28, 28, 32> quantizeLinearVector(
+QuantizerLinearGraphTest<QuantizeLinear, int8_t, 28, 28, 32> quantizeLinearVector(
   "quantizeLinearVector", 
   "quantizelinear_int8in.txt", 
   "quantizelinear_int8out_shape28x28_QuantizeLinear.txt",
   0.00392156889, -128);
 
-QuantizerLinearGraphTest<QuantizeLinearFmul, 28, 28, 32> quantizeLinearFmul(
+QuantizerLinearGraphTest<QuantizeLinearFmul, int8_t, 28, 28, 32> quantizeLinearFmul(
   "quantizeLinearFmul", 
   "quantizelinear_int8in.txt", 
   "quantizelinear_int8out_shape28x28_QuantizeLinearFmul.txt",
   0.00392156889, -128);
 
-QuantizerLinearStreamGraphTest<QuantizeLinearFmulStream, 28, 28, 32> quantizeLinearFmulStream(
+QuantizeLinearStreamGraphTest<QuantizeLinearFmulStream, int8_t, 28, 28, 32> quantizeLinearFmulStream(
   "quantizeLinearFmulStream", 
   "quantizelinear_int8in.txt", 
   "quantizelinear_int8out_shape28x28_QuantizeLinearFmulStream.txt",
@@ -79,7 +79,7 @@ QuantizerLinearStreamGraphTest<QuantizeLinearFmulStream, 28, 28, 32> quantizeLin
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
-	adfCheck(quantizeLinearScalar.init(), "init quantizeLinearScalar");
+  adfCheck(quantizeLinearScalar.init(), "init quantizeLinearScalar");
   adfCheck(quantizeLinearScalar.run(ITER_CNT), "run quantizeLinearScalar");
 	adfCheck(quantizeLinearScalar.end(), "end quantizeLinearScalar");
 

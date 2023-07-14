@@ -19,24 +19,24 @@
 /**
  * @brief Scalar implementation, 
  * requires INP_W <= OUT_W, 
- * QuantizeLinearScalar<1*1*28*28> takes 92401 cycles
+ * QuantizeLinearScalar<1*1*28*28> takes 92121 cycles
  */
-template <int INP_H, int INP_W, int OUT_W>
+template <typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearScalar {
   
   private:
     float y_scale;
-    int y_zero; // same type as output
+    TT y_zero; // same type as output
 	
   public:
     QuantizeLinearScalar (
       float y_scale,
-      int y_zero
+      TT y_zero
     ): y_scale(y_scale), y_zero(y_zero) {};
 
 		void filter(
 			input_window<float>* in,
-			output_window<int8_t>* out
+			output_window<TT>* out
 		);
 
 		static void registerKernelClass() {
@@ -49,9 +49,9 @@ class QuantizeLinearScalar {
 /**
  * @brief Vector implementation, 
  * requires INP_W%4==0, OUT_W%16==0, INP_W <= OUT_W, 
- * QuantizeLinear<1*1*28*28> takes 1945 cycles
+ * QuantizeLinear<1*1*28*28> takes 1977 cycles
  */
-template <int INP_H, int INP_W, int OUT_W>
+template <typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinear {
   
   private:
@@ -85,24 +85,24 @@ class QuantizeLinear {
 /**
  * @brief Vector implementation,
  * requires INP_W%4==0, OUT_W%16==0, INP_W <= OUT_W, 
- * QuantizeLinearFmul<1*1*28*28> takes 1526 cycles,
+ * QuantizeLinearFmul<1*1*28*28> takes 1534 cycles,
  */
-template <int INP_H, int INP_W, int OUT_W>
+template <typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearFmul {
   
   private:
     float y_scale;
-    int8_t y_zero; // same type as output
+    TT y_zero; // same type as output
 
   public:
     QuantizeLinearFmul (
       float y_scale,
-      int8_t y_zero
+      TT y_zero
     ): y_scale(y_scale), y_zero(y_zero) {};
 
 		void filter(
 			input_window<float>* in,
-			output_window<int8_t>* out
+			output_window<TT>* out
 		);
 
 		static void registerKernelClass() {
@@ -116,24 +116,24 @@ class QuantizeLinearFmul {
 /**
  * @brief Vector stream implementation,
  * requires INP_W%4==0, OUT_W%16==0, INP_W <= OUT_W, 
- * QuantizeLinearFmul<1*1*28*28> takes 1718 cycles,
+ * QuantizeLinearFmulStream<1*1*28*28> takes 1750 cycles,
  */
-template <int INP_H, int INP_W, int OUT_W>
+template <typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearFmulStream {
   
   private:
     float y_scale;
-    int8_t y_zero; // same type as output
+    TT y_zero; // same type as output
 
   public:
     QuantizeLinearFmulStream (
       float y_scale,
-      int8_t y_zero
+      TT y_zero
     ): y_scale(y_scale), y_zero(y_zero) {};
 
 		void filter(
 			input_stream<float>* in,
-			output_stream<int8_t>* out
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {

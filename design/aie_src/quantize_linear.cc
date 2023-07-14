@@ -2,14 +2,16 @@
 #include "kernel_utils.h"
 #include "aie_api/aie.hpp"
 
-#define QUANTIZE_LINEAR_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%d,%d,%d>", \
-    filter_name, INP_H, INP_W, OUT_W);
 
-template <int INP_H, int INP_W, int OUT_W>
-void QuantizeLinearScalar<INP_H, INP_W, OUT_W>::filter(
+#define QUANTIZE_LINEAR_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), INP_H, INP_W, OUT_W);
+
+
+template <typename TT, int INP_H, int INP_W, int OUT_W>
+void QuantizeLinearScalar<TT, INP_H, INP_W, OUT_W>::filter(
 	input_window<float>* in,
-  output_window<int8_t>* out
+  output_window<TT>* out
 ) {
   PROFILE_HEADER2;
 
@@ -19,7 +21,12 @@ void QuantizeLinearScalar<INP_H, INP_W, OUT_W>::filter(
     for (int j = 0; j < INP_W; j++) {
       float x = window_readincr(in);
       int y = round(x * y_scale_inv) + y_zero;
-      y = std::min(std::max(y, -128), 128);
+      if ((std::is_same<TT, int8_t>::value)) {
+        y = std::min(std::max(y, -128), 127);
+      } else {
+        y = std::min(std::max(y, 0), 255);
+      }
+      
       window_writeincr(out, y);
     }
     window_incr(out, OUT_W-INP_W);
@@ -29,20 +36,19 @@ void QuantizeLinearScalar<INP_H, INP_W, OUT_W>::filter(
 }
 
 
-template <int INP_H, int INP_W, int OUT_W>
-QuantizeLinear<INP_H, INP_W, OUT_W>::QuantizeLinear(
+template <typename TT, int INP_H, int INP_W, int OUT_W>
+QuantizeLinear<TT, INP_H, INP_W, OUT_W>::QuantizeLinear(
   float y_scale,
   int8_t y_zero
 ): y_scale(y_scale), y_zero(y_zero) {
-  ybitshift = 15 - log(inv(y_scale)) * inv(log(2)); // int16_t y_scale_inv_int
+  ybitshift = 15 - log(1/y_scale) / log(2); // int16_t y_scale_inv_int
   assert(ybitshift < 32); // float2fix shift in [-32:31]
-  printf("xshift %d, yshift %d\n", xbitshift, ybitshift);
   y_scale_inv_int = float2fix(inv(y_scale), ybitshift);
 };
 
 
-template <int INP_H, int INP_W, int OUT_W>
-void QuantizeLinear<INP_H, INP_W, OUT_W>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_W>
+void QuantizeLinear<TT, INP_H, INP_W, OUT_W>::filter(
 	input_window<float>* in,
   output_window<int8_t>* out
 ) {
@@ -72,10 +78,10 @@ void QuantizeLinear<INP_H, INP_W, OUT_W>::filter(
 }
 
 
-template <int INP_H, int INP_W, int OUT_W>
-void QuantizeLinearFmul<INP_H, INP_W, OUT_W>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_W>
+void QuantizeLinearFmul<TT, INP_H, INP_W, OUT_W>::filter(
 	input_window<float>* in,
-  output_window<int8_t>* out
+  output_window<TT>* out
 ) {
   PROFILE_HEADER2;
   
@@ -101,7 +107,7 @@ void QuantizeLinearFmul<INP_H, INP_W, OUT_W>::filter(
       acc2 = acc2 + shift;
       acc = upd_hi(acc, acc2);
 
-      window_writeincr(out, bsrs(acc, 0));
+      window_writeincr(out, ((aie::accum<acc48,16>) acc).to_vector<TT>(0));
     }
     window_incr(in, -(INP_W+15)/16*16 + INP_W);
   }
@@ -110,10 +116,10 @@ void QuantizeLinearFmul<INP_H, INP_W, OUT_W>::filter(
 }
 
 
-template <int INP_H, int INP_W, int OUT_W>
-void QuantizeLinearFmulStream<INP_H, INP_W, OUT_W>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_W>
+void QuantizeLinearFmulStream<TT, INP_H, INP_W, OUT_W>::filter(
 	input_stream<float>* in,
-  output_stream<int8_t>* out
+  output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
   
@@ -144,7 +150,7 @@ void QuantizeLinearFmulStream<INP_H, INP_W, OUT_W>::filter(
       acc2 = acc2 + shift;
       acc = upd_hi(acc, acc2);
 
-      writeincr(out, bsrs(acc, 0));
+      writeincr_v16(out, ((aie::accum<acc48,16>) acc).to_vector<TT>(0));
     }
 
     // handle for INP_W%16 = 4,8,12 since INP_W%4
@@ -164,7 +170,7 @@ void QuantizeLinearFmulStream<INP_H, INP_W, OUT_W>::filter(
       acc = upd_hi(acc, acc2);
     }
     if (INP_W % 16 >= 4) {
-      writeincr(out, bsrs(acc, 0));
+      writeincr_v16(out, ((aie::accum<acc48,16>) acc).to_vector<TT>(0));
     }
   }
 

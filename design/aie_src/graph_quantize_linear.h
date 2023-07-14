@@ -30,7 +30,7 @@
  * @connect{pout[0], INP_H*OUT_W}
  * @endconnections
  */
-template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
+template <template<typename, int, int, int> class QUANTIZE_LINEAR, typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearGraph : public adf::graph {
 
   private:
@@ -43,14 +43,12 @@ class QuantizeLinearGraph : public adf::graph {
 
     QuantizeLinearGraph(
       float y_scale,
-      int8_t y_zero,
-      int repeat_cnt = 1
+      TT y_zero
     ) { 
-      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<INP_H, INP_W, OUT_W>>(y_scale, y_zero);
+      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<TT, INP_H, INP_W, OUT_W>>(y_scale, y_zero);
       adf::source(k[0]) = "quantize_linear.cc";
       adf::headers(k[0]) = {"quantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
-      adf::repetition_count(k[0]) = repeat_cnt;
       
       adf::connect<adf::window<INP_H*INP_W*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<INP_H*OUT_W>> (k[0].out[0], pout[0]);
@@ -67,7 +65,7 @@ class QuantizeLinearGraph : public adf::graph {
  * @connect{pout[0], stream INP_H*OUT_W}
  * @endconnections
  */
-template <template<int, int, int> class QUANTIZE_LINEAR, int INP_H, int INP_W, int OUT_W>
+template <template<typename, int, int, int> class QUANTIZE_LINEAR, typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearStreamGraph : public adf::graph {
 
   private:
@@ -80,9 +78,9 @@ class QuantizeLinearStreamGraph : public adf::graph {
 
     QuantizeLinearStreamGraph(
       float y_scale,
-      int8_t y_zero
+      TT y_zero
     ) { 
-      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<INP_H, INP_W, OUT_W>>(y_scale, y_zero);
+      k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<TT, INP_H, INP_W, OUT_W>>(y_scale, y_zero);
       adf::source(k[0]) = "quantize_linear.cc";
       adf::headers(k[0]) = {"quantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
