@@ -39,44 +39,45 @@
  * QLinearConvScalar<26,32,28,32,1,1,1,1,6,1> total = 625226, 
  * QLinearConvScalar<26,28,13,16,2,2,1,1,6,3> total = 189225
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvScalar {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP;
 
-    alignas(32) int8_t (&weights)[M*C_PER_M*KH*KW];
+    alignas(32) TT (&weights)[M*C_PER_M*KH*KW];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     float scale;
 	
   public:
     QLinearConvScalar (
-      int8_t (&w)[M*C*KH*KW],
+      TT (&w)[M*C*KH*KW],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
       scale = x_scale*w_scale/y_scale;
     };
 
 		void filter(
-			input_window<int8_t>* in,
-			output_window<int8_t>* out
+			input_window<TT>* in,
+			output_window<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
 			REGISTER_FUNCTION(QLinearConvScalar::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);
@@ -91,20 +92,20 @@ class QLinearConvScalar {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv5x5<30,32,28,32,1,1,1,1,6,5> total = 3513
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv5x5 {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
-    alignas(32) int8_t (&weights)[M*C*KH*16];
+    alignas(32) TT (&weights)[M*C*KH*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -112,22 +113,23 @@ class QLinearConv5x5 {
 	
   public:
     QLinearConv5x5 (
-      int8_t (&w)[M*C*KH*16],
+      TT (&w)[M*C*KH*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-			output_window<int8_t>* out
+			input_window<TT>* in,
+			output_window<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KH==5);
       static_assert(KW==5);
       static_assert(GROUP == 1);
@@ -147,20 +149,20 @@ class QLinearConv5x5 {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv5x5Scale32bit<30,32,28,32,1,1,1,1,6,5> total = 7652
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv5x5Scale32bit {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
-    alignas(32) int8_t (&weights)[M*C*KH*16];
+    alignas(32) TT (&weights)[M*C*KH*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -168,22 +170,23 @@ class QLinearConv5x5Scale32bit {
 	
   public:
     QLinearConv5x5Scale32bit (
-      int8_t (&w)[M*C*KH*16],
+      TT (&w)[M*C*KH*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-			output_window<int8_t>* out
+			input_window<TT>* in,
+			output_window<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
@@ -200,7 +203,7 @@ class QLinearConv5x5Scale32bit {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2906
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv3x3 {
   
   private:
@@ -209,14 +212,14 @@ class QLinearConv3x3 {
     static constexpr unsigned int MAC_XOFFSET = (STEP_W == 1) ? 0x03020100 : 0x06040200;
     static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
-    alignas(32) int8_t (&weights)[M*C*16];
+    alignas(32) TT (&weights)[M*C*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -224,22 +227,23 @@ class QLinearConv3x3 {
 	
   public:
     QLinearConv3x3 (
-      int8_t (&w)[M*C*16],
+      TT (&w)[M*C*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-			output_window<int8_t>* out
+			input_window<TT>* in,
+			output_window<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KH==3);
       static_assert(KW==3);
       static_assert(GROUP == 1);
@@ -258,7 +262,7 @@ class QLinearConv3x3 {
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 776955 (output_window 682564)
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvScalarStream {
   
   private:
@@ -267,13 +271,13 @@ class QLinearConvScalarStream {
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     float scale;
 	
@@ -283,17 +287,17 @@ class QLinearConvScalarStream {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     ): bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
       scale = x_scale*w_scale/y_scale;
     };
 
 		void filter(
-			input_window<int8_t>* in,
-      input_stream<int8_t>* weights,
-			output_stream<int8_t>* out
+			input_window<TT>* in,
+      input_stream<TT>* weights,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
@@ -311,7 +315,7 @@ class QLinearConvScalarStream {
  * QLinearConvHx4Stream<28,32,28,32,1,1,1,1,8,3,3,1> total = 4690 (output_window slightly faster ~0.85x time), 
  * QLinearConvHx4Stream<26,32,13,16,2,2,1,1,8,3,3,1> total = 2321
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4Stream {
   
   private:
@@ -323,13 +327,13 @@ class QLinearConvHx4Stream {
     static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -341,18 +345,19 @@ class QLinearConvHx4Stream {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-      input_stream<int8_t>* weights,
-			output_stream<int8_t>* out
+			input_window<TT>* in,
+      input_stream<TT>* weights,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
@@ -372,7 +377,7 @@ class QLinearConvHx4Stream {
  * QLinearConvHx4StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 7393, 
  * QLinearConvHx4StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 5383
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4StreamScale32bit {
   
   private:
@@ -384,13 +389,13 @@ class QLinearConvHx4StreamScale32bit {
     static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -402,18 +407,19 @@ class QLinearConvHx4StreamScale32bit {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-      input_stream<int8_t>* weights,
-			output_stream<int8_t>* out
+			input_window<TT>* in,
+      input_stream<TT>* weights,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
@@ -432,7 +438,7 @@ class QLinearConvHx4StreamScale32bit {
  * requires KW<=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1, STEP_W==1, 
  * QLinearConvHx6x8bitStream<28,32,28,32,1,1,1,1,8,3,3,1> total = 3106
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx6x8bitStream {
   
   private:
@@ -444,13 +450,13 @@ class QLinearConvHx6x8bitStream {
     static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -462,18 +468,19 @@ class QLinearConvHx6x8bitStream {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-      input_stream<int8_t>* weights,
-			output_stream<int8_t>* out
+			input_window<TT>* in,
+      input_stream<TT>* weights,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KW<=6);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
@@ -493,7 +500,7 @@ class QLinearConvHx6x8bitStream {
  * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,8,1,1,1> start = 20925,end = 23829,total = 2904
  * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> start = 25136,end = 27792,total = 2656
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1Stream {
   
   private:
@@ -501,13 +508,13 @@ class QLinearConv1x1Stream {
     static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -519,18 +526,19 @@ class QLinearConv1x1Stream {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
-      input_stream<int8_t>* weights,
-			output_stream<int8_t>* out
+			input_window<TT>* in,
+      input_stream<TT>* weights,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KH==1);
       static_assert(KW==1);
       static_assert(GROUP == 1);
@@ -550,7 +558,7 @@ class QLinearConv1x1Stream {
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KW<=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4PktStream {
   
   private:
@@ -563,14 +571,14 @@ class QLinearConvHx4PktStream {
     static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
-    alignas(32) int8_t in[INP_SIZE];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT in[INP_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -582,18 +590,19 @@ class QLinearConvHx4PktStream {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
 			input_pktstream* in_s,
-      input_stream<int8_t>* weights,
-			output_stream<int8_t>* out
+      input_stream<TT>* weights,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
@@ -611,7 +620,7 @@ class QLinearConvHx4PktStream {
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  */
-template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1PktStream {
   
   private:
@@ -620,15 +629,15 @@ class QLinearConv1x1PktStream {
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
-    alignas(32) int8_t in[INP_SIZE];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT in[INP_SIZE];
 
     float x_scale;
     float w_scale;
     float y_scale;
-    int8_t x_zero;
-    int8_t w_zero;
-    int8_t y_zero;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
 
     // precomputation
     int scalebits;
@@ -640,18 +649,19 @@ class QLinearConv1x1PktStream {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
-      int8_t w_zero,
-      int8_t y_zero
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
     );
 
 		void filter(
 			input_pktstream* in_s,
-      input_stream<int8_t>* weights,
-			output_stream<int8_t>* out
+      input_stream<TT>* weights,
+			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
       static_assert(KH==1);
       static_assert(KW==1);
       static_assert(GROUP == 1);
