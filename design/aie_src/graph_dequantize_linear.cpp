@@ -2,11 +2,12 @@
 #include "graph_utils.h"
 
 
-template <template<int, int, int> class DEQUANTIZE_LINEAR, int B, int INP_W, int OUT_W>
+template <template<typename, int, int, int> class DEQUANTIZE_LINEAR, 
+  typename TT, int B, int INP_W, int OUT_W>
 class DequantizeLinearScalarTest : public adf::graph {
 
   private:
-    DequantizeLinearGraph<DEQUANTIZE_LINEAR, B, INP_W, OUT_W> g;
+    DequantizeLinearGraph<DEQUANTIZE_LINEAR, TT, B, INP_W, OUT_W> g;
 
   public:
     adf::input_plio plin[1];
@@ -17,7 +18,7 @@ class DequantizeLinearScalarTest : public adf::graph {
       const std::string& INP_TXT, 
       const std::string& OUT_TXT,
       float y_scale,
-      int y_zero_point
+      TT y_zero_point
     ): g(y_scale, y_zero_point) { 
       plin[0] = adf::input_plio::create("plin0_dequantize_linear"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_dequantize_linear"+id+"_output", PLIO64_ARG(OUT_TXT));
@@ -28,13 +29,17 @@ class DequantizeLinearScalarTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-DequantizeLinearScalarTest<DequantizeLinearScalar, 1, 96, 84> dequantizeLinearScalar(
+typedef int8_t TT;
+const int B = 1;
+const int INP_W = 96;
+const int OUT_W = 84;
+DequantizeLinearScalarTest<DequantizeLinearScalar, TT, B, INP_W, OUT_W> dequantizeLinearScalar(
   "dequantizeLinearScalar", 
   "dequantizelinear_int8in.txt", 
   "dequantizelinear_fpout_shape84_DequantizeLinearScalar.txt",
   0.00392156889, -128);
 
-DequantizeLinearScalarTest<DequantizeLinear, 1, 96, 84> dequantizeLinear(
+DequantizeLinearScalarTest<DequantizeLinear, TT, B, INP_W, OUT_W> dequantizeLinear(
   "dequantizeLinear", 
   "dequantizelinear_int8in.txt", 
   "dequantizelinear_fpout_shape84_DequantizeLinear.txt",

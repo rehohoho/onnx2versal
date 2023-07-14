@@ -3,12 +3,13 @@
 
 
 #define DEQUANTIZE_LINEAR_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%d,%d,%d>", \
-    filter_name, B, INP_W, OUT_W);
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), B, INP_W, OUT_W);
 
-template <int B, int INP_W, int OUT_W>
-void DequantizeLinearScalar<B, INP_W, OUT_W>::filter(
-	input_window<int8_t>* in,
+
+template <typename TT, int B, int INP_W, int OUT_W>
+void DequantizeLinearScalar<TT, B, INP_W, OUT_W>::filter(
+	input_window<TT>* in,
   output_window<float>* out
 ) {
   PROFILE_HEADER2;
@@ -26,20 +27,19 @@ void DequantizeLinearScalar<B, INP_W, OUT_W>::filter(
 }
 
 
-template <int B, int INP_W, int OUT_W>
-DequantizeLinear<B, INP_W, OUT_W>::DequantizeLinear (
+template <typename TT, int B, int INP_W, int OUT_W>
+DequantizeLinear<TT, B, INP_W, OUT_W>::DequantizeLinear (
   float scale,
-  int8_t zero
+  TT zero
 ): scale(scale), zero(zero) {
   bitshift = 15 - log(scale) * inv(log(2)); // int16_t y_scale_inv_int
   iscale = float2fix(scale, bitshift);
   ishift = float2fix(-zero * scale, bitshift);
-  printf("scale %f %d shift %f %d\n", scale, iscale, -zero*scale, ishift);
 }
 
-template <int B, int INP_W, int OUT_W>
-void DequantizeLinear<B, INP_W, OUT_W>::filter(
-	input_window<int8_t>* in,
+template <typename TT, int B, int INP_W, int OUT_W>
+void DequantizeLinear<TT, B, INP_W, OUT_W>::filter(
+	input_window<TT>* in,
   output_window<float>* out
 ) {
   PROFILE_HEADER2;

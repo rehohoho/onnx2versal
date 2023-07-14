@@ -19,21 +19,21 @@
  * @brief Scalar implementation,
  * DequantizeLinearScalar<96,84> takes 296 cycles
  */
-template <int B, int INP_W, int OUT_W>
+template <typename TT, int B, int INP_W, int OUT_W>
 class DequantizeLinearScalar {
   
   private:
     float scale;
-    int8_t zero; // same type as output
+    TT zero; // same type as output
 	
   public:
     DequantizeLinearScalar (
       float scale,
-      int8_t zero
+      TT zero
     ): scale(scale), zero(zero) {};
 
 		void filter(
-			input_window<int8_t>* in,
+			input_window<TT>* in,
 			output_window<float>* out
 		);
 
@@ -45,14 +45,14 @@ class DequantizeLinearScalar {
 
 /**
  * @brief Vector implementation,
- * DequantizeLinear<96,84> takes 163 cycles
+ * DequantizeLinear<96,84> takes 154 cycles
  */
-template <int B, int INP_W, int OUT_W>
+template <typename TT, int B, int INP_W, int OUT_W>
 class DequantizeLinear {
   
   private:
     float scale;
-    int8_t zero; // same type as output
+    TT zero; // same type as output
 
     // precompute
     int32_t iscale;
@@ -62,11 +62,11 @@ class DequantizeLinear {
   public:
     DequantizeLinear (
       float scale,
-      int8_t zero
+      TT zero
     );
 
 		void filter(
-			input_window<int8_t>* in,
+			input_window<TT>* in,
 			output_window<float>* out
 		);
 

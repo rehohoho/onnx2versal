@@ -17,6 +17,7 @@
  * have same shape.
  * 
  * @tparam DEQUANTIZE_LINEAR  DequantizeLinear Kernel
+ * @tparam TT                 int8_t or uint8_t
  * @tparam B                  batch size
  * @tparam INP_W              input width
  * @tparam OUT_W              output width, expect OUT_W > INP_W
@@ -32,7 +33,8 @@
  * @connect{pout[0], B*OUT_W*4}
  * @endconnections
  */
-template <template<int, int, int> class DEQUANTIZE_LINEAR, int B, int INP_W, int OUT_W>
+template <template<typename, int, int, int> class DEQUANTIZE_LINEAR, 
+  typename TT, int B, int INP_W, int OUT_W>
 class DequantizeLinearGraph : public adf::graph {
 
   private:
@@ -45,11 +47,11 @@ class DequantizeLinearGraph : public adf::graph {
 
     DequantizeLinearGraph(
       float scale,
-      int8_t zero,
+      TT zero,
       int repeat_cnt = 1
     ) { 
       static_assert(INP_W >= OUT_W);
-      k[0] = adf::kernel::create_object<DEQUANTIZE_LINEAR<B, INP_W, OUT_W>>(scale, zero);
+      k[0] = adf::kernel::create_object<DEQUANTIZE_LINEAR<TT, B, INP_W, OUT_W>>(scale, zero);
       adf::source(k[0]) = "dequantize_linear.cc";
       adf::headers(k[0]) = {"dequantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
