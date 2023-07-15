@@ -1001,15 +1001,15 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 #define WRITE_OUT(outidx, count, tlast) \
   for (int w = 0; w < count; w+=16) { \
     auto a = readincr_v16(in); \
-    writeincr_v16(out[outidx], a); \
+    put_wms(outidx, a); \
   } \
   if (tlast) writeincr(out[outidx], 0, tlast);
 
 #define WRITE_OUT_TWICE(outidx0, outidx1, count) \
   for (int w = 0; w < count; w+=16) { \
     auto a = readincr_v16(in); \
-    writeincr_v16(out0, a); \
-    writeincr_v16(out1, a); \
+    put_wms(0, a); \
+    put_wms(1, a); \
   } \
   writeincr(out[outidx0], 0, true);
 

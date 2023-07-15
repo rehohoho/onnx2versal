@@ -201,7 +201,7 @@ class QLinearConv5x5Scale32bit {
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
- * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2906
+ * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2677
  */
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv3x3 {
@@ -209,8 +209,8 @@ class QLinearConv3x3 {
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
-    static constexpr unsigned int MAC_XOFFSET = (STEP_W == 1) ? 0x03020100 : 0x06040200;
-    static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) TT (&weights)[M*C*16];
     alignas(32) int32_t (&bias)[M];
@@ -312,8 +312,8 @@ class QLinearConvScalarStream {
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KW<=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConvHx4Stream<28,32,28,32,1,1,1,1,8,3,3,1> total = 4690 (output_window slightly faster ~0.85x time), 
- * QLinearConvHx4Stream<26,32,13,16,2,2,1,1,8,3,3,1> total = 2321
+ * QLinearConvHx4Stream<28,32,28,32,1,1,1,1,8,3,3,1> total = 2723 (output_window slightly faster ~0.85x time), 
+ * QLinearConvHx4Stream<26,32,13,16,2,2,1,1,8,3,3,1> total = 1930
  */
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4Stream {
@@ -323,8 +323,8 @@ class QLinearConvHx4Stream {
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
-    static constexpr unsigned int MAC_XOFFSET = (STEP_W == 1) ? 0x03020100 : 0x06040200;
-    static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TT ckk_row[CKK_ROW_SIZE];
@@ -374,8 +374,8 @@ class QLinearConvHx4Stream {
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KW<=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConvHx4StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 7393, 
- * QLinearConvHx4StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 5383
+ * QLinearConvHx4StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 8508
+ * QLinearConvHx4StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 4332
  */
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4StreamScale32bit {
@@ -385,8 +385,8 @@ class QLinearConvHx4StreamScale32bit {
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
-    static constexpr unsigned int MAC_XOFFSET = (STEP_W == 1) ? 0x03020100 : 0x06040200;
-    static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TT ckk_row[CKK_ROW_SIZE];
@@ -432,6 +432,68 @@ class QLinearConvHx4StreamScale32bit {
 
 
 /**
+ * @brief Vector implementation for Hx4 QLinearConv, padding with y_zero, 
+ * requires data to be arranged in (M,C,KH,KW) -> (M,C,KH',4) where KH' = KH*4 padded to nearest 16, e.g. [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
+ * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
+ * requires KW<=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ */
+template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConvHx4PktStream {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+
+    alignas(32) int32_t (&bias)[M];
+    alignas(32) TT ckk_row[CKK_ROW_SIZE];
+    alignas(32) TT in[INP_SIZE];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    TT x_zero;
+    TT w_zero;
+    TT y_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConvHx4PktStream (
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      TT x_zero,
+      TT w_zero,
+      TT y_zero
+    );
+
+		void filter(
+			input_pktstream* in_s,
+      input_stream<TT>* weights,
+			output_stream<TT>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value));
+      static_assert(KW<=4);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+			REGISTER_FUNCTION(QLinearConvHx4PktStream::filter);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
  * @brief Vector implementation for Hx4 QLinearConv using int8xint8 MACs, 
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
@@ -445,9 +507,6 @@ class QLinearConvHx6x8bitStream {
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = C_PER_M*KH*16;
-
-    static constexpr unsigned int MAC_XOFFSET = (STEP_W == 1) ? 0x03020100 : 0x06040200;
-    static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TT ckk_row[CKK_ROW_SIZE];
@@ -497,8 +556,8 @@ class QLinearConvHx6x8bitStream {
  * requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, 
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,8,1,1,1> start = 20925,end = 23829,total = 2904
- * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> start = 25136,end = 27792,total = 2656
+ * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,8,1,1,1> total = 2697
+ * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> total = 1578
  */
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1Stream {
@@ -506,6 +565,9 @@ class QLinearConv1x1Stream {
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0xb3a29180 : 0xe6c4a280;
+    static constexpr unsigned int MAC_ZSTEP = (STEP_W == 1) ? 2 : 4;
+    static constexpr int LAST_C = (C % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TT ckk_row[CKK_ROW_SIZE];
@@ -553,68 +615,6 @@ class QLinearConv1x1Stream {
 
 
 /**
- * @brief Vector implementation for Hx4 QLinearConv, padding with y_zero, 
- * requires data to be arranged in (M,C,KH,KW) -> (M,C,KH',4) where KH' = KH*4 padded to nearest 16, e.g. [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 
- * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
- * requires KW<=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-class QLinearConvHx4PktStream {
-  
-  private:
-    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    static constexpr int C_PER_M = C / GROUP;
-    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
-    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
-
-    static constexpr unsigned int MAC_XOFFSET = (STEP_W == 1) ? 0x03020100 : 0x06040200;
-    static constexpr unsigned int MAC_XSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
-
-    alignas(32) int32_t (&bias)[M];
-    alignas(32) TT ckk_row[CKK_ROW_SIZE];
-    alignas(32) TT in[INP_SIZE];
-    float x_scale;
-    float w_scale;
-    float y_scale;
-    TT x_zero;
-    TT w_zero;
-    TT y_zero;
-
-    // precomputation
-    int scalebits;
-    int16_t scale;
-	
-  public:
-    QLinearConvHx4PktStream (
-      int32_t (&b)[M],
-      float x_scale,
-      float w_scale,
-      float y_scale,
-      TT x_zero,
-      TT w_zero,
-      TT y_zero
-    );
-
-		void filter(
-			input_pktstream* in_s,
-      input_stream<TT>* weights,
-			output_stream<TT>* out
-		);
-
-		static void registerKernelClass() {
-      static_assert((std::is_same<TT, int8_t>::value));
-      static_assert(KW<=4);
-      static_assert(INP_W%16==0);
-      static_assert(OUT_W_PAD%16==0);
-      static_assert(STEP_H == 1 || STEP_H == 2);
-      static_assert(STEP_W == 1 || STEP_W == 2);
-			REGISTER_FUNCTION(QLinearConvHx4PktStream::filter);
-      REGISTER_PARAMETER(bias);
-		}
-};
-
-
-/**
  * @brief Vector implementation for 1x1 QLinearConv, 
  * requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, 
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
@@ -627,6 +627,9 @@ class QLinearConv1x1PktStream {
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0xb3a29180 : 0xe6c4a280;
+    static constexpr unsigned int MAC_ZSTEP = (STEP_W == 1) ? 2 : 4;
+    static constexpr int LAST_C = (C % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TT ckk_row[CKK_ROW_SIZE];
