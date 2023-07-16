@@ -31,26 +31,26 @@ template <typename TT, int M, int K, int N>
 class QgemmScalarStream {
   
   private:
-    alignas(32) TT (&weights)[N*K]; // KxN (256x120)
+    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
     alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    TT w_zero;
+    int8_t w_zero;
     TT y_zero;
 
     float scale;
   
   public:
     QgemmScalarStream (
-      TT (&w)[K*N],
+      int8_t (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero
     ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
       scale = x_scale*w_scale/y_scale;
@@ -78,13 +78,13 @@ template <typename TT, int M, int K, int N>
 class QgemmStream {
   
   private:
-    alignas(32) TT (&weights)[N*K]; // KxN (256x120)
+    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
     alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    TT w_zero;
+    int8_t w_zero;
     TT y_zero;
 
     // precomputation
@@ -99,13 +99,13 @@ class QgemmStream {
   
   public:
     QgemmStream (
-      TT (&w)[K*N],
+      int8_t (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero
     );
 

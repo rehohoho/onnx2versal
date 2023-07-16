@@ -53,13 +53,13 @@ void QgemmScalarStream<TT, M, K, N>::filter(
 
 template <typename TT, int M, int K, int N>
 QgemmStream<TT, M, K, N>::QgemmStream (
-  TT (&w)[K*N],
+  int8_t (&w)[K*N],
   int32_t (&b)[N],
   float x_scale,
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
   // -1 due to rounding, -1 to fit in 16b
@@ -112,7 +112,7 @@ void QgemmStream<TT, M, K, N>::filter(
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
 
   TT *in_ptr = (TT *) in->ptr;
-  TT *w_ptr = (TT *) weights;
+  int8_t *w_ptr = (int8_t *) weights;
   int32_t *b_ptr = (int32_t *) bias;
 
   v128 wmat = aie::zeros<TT,128>();

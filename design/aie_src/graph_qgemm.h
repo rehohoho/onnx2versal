@@ -43,13 +43,13 @@ class QgemmStreamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     QgemmStreamGraph(
-      std::vector<TT> weights,
+      std::vector<int8_t> weights,
       std::vector<int32_t> bias,
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero,
       int repeat_cnt = 1
     ) { 
@@ -109,13 +109,13 @@ class QgemmChunkNStreamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     QgemmChunkNStreamGraph(
-      std::vector<TT> weights,  // KxN
+      std::vector<int8_t> weights,  // KxN
       std::vector<int32_t> bias,    // N
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero,
       int repeat_cnt = 1
     ) { 
@@ -129,7 +129,7 @@ class QgemmChunkNStreamGraph : public adf::graph {
       for (int i = 0; i < CHUNK_COUNT; i++) {
         
         // build wchunk
-        std::vector<TT> wChunk;
+        std::vector<int8_t> wChunk;
         wChunk.reserve(NCHUNK*K);
         for (int j = 0; j < K*N; j+=N) {
           wChunk.insert(wChunk.end(), weights.begin()+j+i*NCHUNK, weights.begin()+j+i*NCHUNK+NCHUNK);
