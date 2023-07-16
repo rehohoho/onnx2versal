@@ -29,9 +29,9 @@ class QLinearAddInt8 {
     float a_scale;
     float b_scale;
     float c_scale;
-    int8_t a_zero;
-    int8_t b_zero;
-    int8_t c_zero;
+    TT a_zero;
+    TT b_zero;
+    TT c_zero;
 
 		int bitshift;
 		int32_t ascale;
@@ -43,9 +43,9 @@ class QLinearAddInt8 {
       float a_scale,
 			float b_scale,
 			float c_scale,
-			int8_t a_zero,
-			int8_t b_zero,
-			int8_t c_zero
+			TT a_zero,
+			TT b_zero,
+			TT c_zero
     );
 
 		void filter(
@@ -56,7 +56,7 @@ class QLinearAddInt8 {
 
 		static void registerKernelClass() {
 			static_assert(W%16==0);
-			static_assert((std::is_same<TT, int8_t>::value));
+			static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			REGISTER_FUNCTION(QLinearAddInt8::filter);
 		}
 };

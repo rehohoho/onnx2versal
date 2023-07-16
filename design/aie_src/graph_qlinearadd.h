@@ -49,9 +49,9 @@ class QLinearAddGraph : public adf::graph {
       float a_scale,
 			float b_scale,
 			float c_scale,
-			int8_t a_zero,
-			int8_t b_zero,
-			int8_t c_zero
+			TT a_zero,
+			TT b_zero,
+			TT c_zero
     ) { 
       k[0] = adf::kernel::create_object<QLINEARADD<TT, W, IS_RELU>>(
         a_scale, b_scale, c_scale, a_zero, b_zero, c_zero);

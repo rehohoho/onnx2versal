@@ -11,9 +11,9 @@ QLinearAddInt8<TT, W, IS_RELU>::QLinearAddInt8 (
   float a_scale,
   float b_scale,
   float c_scale,
-  int8_t a_zero,
-  int8_t b_zero,
-  int8_t c_zero
+  TT a_zero,
+  TT b_zero,
+  TT c_zero
 ): a_scale(a_scale), b_scale(b_scale), c_scale(c_scale), a_zero(a_zero), b_zero(b_zero), c_zero(c_zero) {
   float invc = inv(c_scale);
   bitshift = 16;
@@ -37,7 +37,7 @@ void QLinearAddInt8<TT, W, IS_RELU>::filter(
 
   aie::vector<int16_t, 16> a;
   aie::vector<int16_t, 16> b;
-  aie::vector<int8_t, 16> res;
+  aie::vector<TT, 16> res;
   
   aie::accum<acc48, 16> _a;
   aie::accum<acc48, 16> shift;
@@ -49,10 +49,10 @@ void QLinearAddInt8<TT, W, IS_RELU>::filter(
 
     _a = aie::mac(shift, a, ascale);
     _a = aie::mac(_a, b, bscale);
-    res = _a.to_vector<int8_t>(bitshift);
+    res = _a.to_vector<TT>(bitshift);
 
     if (IS_RELU)
-      res = aie::max(res, (int8_t) 0);
+      res = aie::max(res, (TT) 0);
 
     writeincr_v16(out, res);
   }

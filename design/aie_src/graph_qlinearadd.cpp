@@ -19,9 +19,9 @@ class QLinearAddGraphTest : public adf::graph {
       float a_scale,
 			float b_scale,
 			float c_scale,
-			int8_t a_zero,
-			int8_t b_zero,
-			int8_t c_zero,
+			TT a_zero,
+			TT b_zero,
+			TT c_zero,
       const std::string& INPA_TXT, 
       const std::string& INPB_TXT, 
       const std::string& OUT_TXT
@@ -39,9 +39,9 @@ class QLinearAddGraphTest : public adf::graph {
 // instance to be compiled and used in host within xclbin
 QLinearAddGraphTest<QLinearAddInt8, int8_t, 16384, 0> qlinearaddScalar(
   "qlinearaddScalar", 0.036632415, 0.11731018, 0.062222864, -128, -6, -128,
-  "k5qlinearadd_inA_shape1x16x32x32.txt", 
-  "k5qlinearadd_inB_shape1x16x32x32.txt",
-  "k5qlinearadd_goldenout_shape1x16x32x32_scalar.txt");
+  "k005qlinearadd_inA_shape1x16x32x32.txt", 
+  "k005qlinearadd_inB_shape1x16x32x32.txt",
+  "k005qlinearadd_goldenout_shape1x16x32x32_scalar.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
