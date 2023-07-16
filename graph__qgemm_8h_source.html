@@ -112,13 +112,13 @@ $(document).ready(function(){initNavTree('graph__qgemm_8h_source.html',''); init
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    adf::port&lt;output&gt; pout[1];</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <a class="code hl_class" href="classQgemmStreamGraph.html">QgemmStreamGraph</a>(</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>      std::vector&lt;TT&gt; weights,</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>      std::vector&lt;int8_t&gt; weights,</div>
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>      std::vector&lt;int32_t&gt; bias,</div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>      <span class="keywordtype">float</span> x_scale,</div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>      <span class="keywordtype">float</span> w_scale,</div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>      <span class="keywordtype">float</span> y_scale,</div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>      TT x_zero,</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      TT w_zero,</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      int8_t w_zero,</div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>      TT y_zero,</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>      <span class="keywordtype">int</span> repeat_cnt = 1</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    ) { </div>
@@ -171,13 +171,13 @@ $(document).ready(function(){initNavTree('graph__qgemm_8h_source.html',''); init
 <div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    adf::port&lt;output&gt; pout[1];</div>
 <div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
 <div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <a class="code hl_class" href="classQgemmChunkNStreamGraph.html">QgemmChunkNStreamGraph</a>(</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>      std::vector&lt;TT&gt; weights,  <span class="comment">// KxN</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>      std::vector&lt;int8_t&gt; weights,  <span class="comment">// KxN</span></div>
 <div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>      std::vector&lt;int32_t&gt; bias,    <span class="comment">// N</span></div>
 <div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>      <span class="keywordtype">float</span> x_scale,</div>
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>      <span class="keywordtype">float</span> w_scale,</div>
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>      <span class="keywordtype">float</span> y_scale,</div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>      TT x_zero,</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      TT w_zero,</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      int8_t w_zero,</div>
 <div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      TT y_zero,</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>      <span class="keywordtype">int</span> repeat_cnt = 1</div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    ) { </div>
@@ -191,7 +191,7 @@ $(document).ready(function(){initNavTree('graph__qgemm_8h_source.html',''); init
 <div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
 <div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        </div>
 <div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>        <span class="comment">// build wchunk</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        std::vector&lt;TT&gt; wChunk;</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        std::vector&lt;int8_t&gt; wChunk;</div>
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>        wChunk.reserve(NCHUNK*K);</div>
 <div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; K*N; j+=N) {</div>
 <div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>          wChunk.insert(wChunk.end(), weights.begin()+j+i*NCHUNK, weights.begin()+j+i*NCHUNK+NCHUNK);</div>

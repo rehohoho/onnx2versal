@@ -116,9 +116,9 @@ $(document).ready(function(){initNavTree('graph__qlinearadd_8h_source.html','');
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>      <span class="keywordtype">float</span> a_scale,</div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            <span class="keywordtype">float</span> b_scale,</div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>            <span class="keywordtype">float</span> c_scale,</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>            int8_t a_zero,</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>            int8_t b_zero,</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>            int8_t c_zero</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>            TT a_zero,</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>            TT b_zero,</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>            TT c_zero</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    ) { </div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      k[0] = adf::kernel::create_object&lt;QLINEARADD&lt;TT, W, IS_RELU&gt;&gt;(</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        a_scale, b_scale, c_scale, a_zero, b_zero, c_zero);</div>

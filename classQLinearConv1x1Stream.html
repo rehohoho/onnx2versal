@@ -97,19 +97,19 @@ $(document).ready(function(){initNavTree('classQLinearConv1x1Stream.html',''); i
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for 1x1 QLinearConv, requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConv1x1Stream&lt;26,32,28,32,1,1,1,1,8,1,1,1&gt; start = 20925,end = 23829,total = 2904 QLinearConv1x1Stream&lt;26,32,28,16,2,2,1,1,8,1,1,1&gt; start = 25136,end = 27792,total = 2656.  
+<p>Vector implementation for 1x1 QLinearConv, requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConv1x1Stream&lt;26,32,28,32,1,1,1,1,8,1,1,1&gt; total = 2697 QLinearConv1x1Stream&lt;26,32,28,16,2,2,1,1,8,1,1,1&gt; total = 1578.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac41cdc2808525639aa8018cca083aa1c"><td class="memItemLeft" align="right" valign="top"><a id="ac41cdc2808525639aa8018cca083aa1c" name="ac41cdc2808525639aa8018cca083aa1c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConv1x1Stream</b> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, TT w_zero, TT y_zero)</td></tr>
-<tr class="separator:ac41cdc2808525639aa8018cca083aa1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a831e00fa4649c0219f15d5c2a6f346dd"><td class="memItemLeft" align="right" valign="top"><a id="a831e00fa4649c0219f15d5c2a6f346dd" name="a831e00fa4649c0219f15d5c2a6f346dd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, input_stream&lt; TT &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a831e00fa4649c0219f15d5c2a6f346dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb07ff2cee26dbc334f47d3eabf6b39a"><td class="memItemLeft" align="right" valign="top"><a id="aeb07ff2cee26dbc334f47d3eabf6b39a" name="aeb07ff2cee26dbc334f47d3eabf6b39a"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConv1x1Stream</b> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, int8_t w_zero, TT y_zero)</td></tr>
+<tr class="separator:aeb07ff2cee26dbc334f47d3eabf6b39a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16834f394f6e8bc6a7031caac32aca43"><td class="memItemLeft" align="right" valign="top"><a id="a16834f394f6e8bc6a7031caac32aca43" name="a16834f394f6e8bc6a7031caac32aca43"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, input_stream&lt; int8_t &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a16834f394f6e8bc6a7031caac32aca43"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

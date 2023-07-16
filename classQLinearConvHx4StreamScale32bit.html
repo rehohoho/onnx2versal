@@ -97,19 +97,19 @@ $(document).ready(function(){initNavTree('classQLinearConvHx4StreamScale32bit.ht
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for Hx4 QLinearConv using 32bit scale for precision, requires data to be arranged in [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires KW&lt;=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConvHx4StreamScale32bit&lt;28,48,28,32,1,1,1,1,8,3&gt; total = 7393, QLinearConvHx4StreamScale32bit&lt;26,32,13,16,2,2,1,1,8,3&gt; total = 5383.  
+<p>Vector implementation for Hx4 QLinearConv using 32bit scale for precision, requires data to be arranged in [a,b,c,d,e,f,g,h,i] -&gt; [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, requires KW&lt;=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, QLinearConvHx4StreamScale32bit&lt;28,48,28,32,1,1,1,1,8,3&gt; total = 8508 QLinearConvHx4StreamScale32bit&lt;26,32,13,16,2,2,1,1,8,3&gt; total = 4332.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a229c5b3b8793b35c4c10b8702967f85f"><td class="memItemLeft" align="right" valign="top"><a id="a229c5b3b8793b35c4c10b8702967f85f" name="a229c5b3b8793b35c4c10b8702967f85f"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvHx4StreamScale32bit</b> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, TT w_zero, TT y_zero)</td></tr>
-<tr class="separator:a229c5b3b8793b35c4c10b8702967f85f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87791aa8b08466e3b9f20cdba920486a"><td class="memItemLeft" align="right" valign="top"><a id="a87791aa8b08466e3b9f20cdba920486a" name="a87791aa8b08466e3b9f20cdba920486a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, input_stream&lt; TT &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a87791aa8b08466e3b9f20cdba920486a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf1969026eeaf885c2061f6cfb950833"><td class="memItemLeft" align="right" valign="top"><a id="aaf1969026eeaf885c2061f6cfb950833" name="aaf1969026eeaf885c2061f6cfb950833"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvHx4StreamScale32bit</b> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, int8_t w_zero, TT y_zero)</td></tr>
+<tr class="separator:aaf1969026eeaf885c2061f6cfb950833"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7db585f8e471bc3a37fa16a2efc5ac2"><td class="memItemLeft" align="right" valign="top"><a id="aa7db585f8e471bc3a37fa16a2efc5ac2" name="aa7db585f8e471bc3a37fa16a2efc5ac2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, input_stream&lt; int8_t &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:aa7db585f8e471bc3a37fa16a2efc5ac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

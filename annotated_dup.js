@@ -69,7 +69,7 @@ var annotated_dup =
     [ "QLinearAvgpoolScalarBCHW", "classQLinearAvgpoolScalarBCHW.html", null ],
     [ "QLinearConv1x1PktStream", "classQLinearConv1x1PktStream.html", null ],
     [ "QLinearConv1x1Stream", "classQLinearConv1x1Stream.html", null ],
-    [ "QLinearConv3x3", "classQLinearConv3x3.html", "classQLinearConv3x3" ],
+    [ "QLinearConv3x3", "classQLinearConv3x3.html", null ],
     [ "QLinearConv5x5", "classQLinearConv5x5.html", "classQLinearConv5x5" ],
     [ "QLinearConv5x5Scale32bit", "classQLinearConv5x5Scale32bit.html", null ],
     [ "QLinearConvChunkHGraph", "classQLinearConvChunkHGraph.html", null ],

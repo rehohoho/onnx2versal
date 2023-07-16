@@ -24,7 +24,7 @@ var searchData=
   ['qlinearconvhx4pktstream_21',['QLinearConvHx4PktStream',['../classQLinearConvHx4PktStream.html',1,'']]],
   ['qlinearconvhx4stream_22',['QLinearConvHx4Stream',['../classQLinearConvHx4Stream.html',1,'']]],
   ['qlinearconvhx4streamscale32bit_23',['QLinearConvHx4StreamScale32bit',['../classQLinearConvHx4StreamScale32bit.html',1,'']]],
-  ['qlinearconvhx6x8bitstream_24',['QLinearConvHx6x8bitStream',['../classQLinearConvHx6x8bitStream.html',1,'QLinearConvHx6x8bitStream&lt; TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt;'],['../classQLinearConvHx6x8bitStream.html#a61efe1a8f0cd45a5ef141c39d4f273c7',1,'QLinearConvHx6x8bitStream::QLinearConvHx6x8bitStream()']]],
+  ['qlinearconvhx6x8bitstream_24',['QLinearConvHx6x8bitStream',['../classQLinearConvHx6x8bitStream.html',1,'QLinearConvHx6x8bitStream&lt; TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt;'],['../classQLinearConvHx6x8bitStream.html#ad1027089aa8ab48e85b6b07e4d3c818d',1,'QLinearConvHx6x8bitStream::QLinearConvHx6x8bitStream()']]],
   ['qlinearconvkernels_25',['QLinearConvKernels',['../group__QLinearConvKernels.html',1,'']]],
   ['qlinearconvscalar_26',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
   ['qlinearconvscalarstream_27',['QLinearConvScalarStream',['../classQLinearConvScalarStream.html',1,'']]],

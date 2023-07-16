@@ -104,11 +104,11 @@ $(document).ready(function(){initNavTree('classQLinearConvHx6x8bitStream.html','
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a61efe1a8f0cd45a5ef141c39d4f273c7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvHx6x8bitStream.html#a61efe1a8f0cd45a5ef141c39d4f273c7">QLinearConvHx6x8bitStream</a> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, TT w_zero, TT y_zero)</td></tr>
-<tr class="separator:a61efe1a8f0cd45a5ef141c39d4f273c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accc4c4ed687e2cd07056dbc2aff0d58d"><td class="memItemLeft" align="right" valign="top"><a id="accc4c4ed687e2cd07056dbc2aff0d58d" name="accc4c4ed687e2cd07056dbc2aff0d58d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, input_stream&lt; TT &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:accc4c4ed687e2cd07056dbc2aff0d58d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1027089aa8ab48e85b6b07e4d3c818d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearConvHx6x8bitStream.html#ad1027089aa8ab48e85b6b07e4d3c818d">QLinearConvHx6x8bitStream</a> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, int8_t w_zero, TT y_zero)</td></tr>
+<tr class="separator:ad1027089aa8ab48e85b6b07e4d3c818d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a880abc7428d0eed0a8fe158aabff18fc"><td class="memItemLeft" align="right" valign="top"><a id="a880abc7428d0eed0a8fe158aabff18fc" name="a880abc7428d0eed0a8fe158aabff18fc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, input_stream&lt; int8_t &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a880abc7428d0eed0a8fe158aabff18fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -117,8 +117,8 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernel
 <tr class="separator:aba995a332aef5d9ade9a03e0d37857f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a61efe1a8f0cd45a5ef141c39d4f273c7" name="a61efe1a8f0cd45a5ef141c39d4f273c7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a61efe1a8f0cd45a5ef141c39d4f273c7">&#9670;&#160;</a></span>QLinearConvHx6x8bitStream()</h2>
+<a id="ad1027089aa8ab48e85b6b07e4d3c818d" name="ad1027089aa8ab48e85b6b07e4d3c818d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad1027089aa8ab48e85b6b07e4d3c818d">&#9670;&#160;</a></span>QLinearConvHx6x8bitStream()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -158,7 +158,7 @@ template&lt;typename TT , int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int ST
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">TT&#160;</td>
+          <td class="paramtype">int8_t&#160;</td>
           <td class="paramname"><em>w_zero</em>, </td>
         </tr>
         <tr>
