@@ -100,13 +100,13 @@ class QLinearConvGraph : public adf::graph {
     static constexpr int OUT_H = (PAD_H - KH) / STEP_H + 1;
 
     QLinearConvGraph(
-      std::vector<TT> weights,
+      std::vector<int8_t> weights,
       std::vector<int32_t> bias,
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero
     ) { 
       static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
@@ -178,7 +178,7 @@ class QLinearConvStreamGraph : public adf::graph {
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero
     ) { 
       static_assert(B*C*PAD_H*PAD_W <= TILE_BYTES);
@@ -295,7 +295,7 @@ class QLinearConvChunkHGraph : public adf::graph {
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero
     ) {
       static_assert((HCHUNK % STEP_H) == (KH % STEP_H));
@@ -396,7 +396,7 @@ class QLinearConvChunkHStreamGraph : public adf::graph {
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero
     ) {
       static_assert((HCHUNK % STEP_H) == (KH % STEP_H));
@@ -541,7 +541,7 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
       float w_scale,
       float y_scale,
       TT x_zero,
-      TT w_zero,
+      int8_t w_zero,
       TT y_zero
     ) {
       static_assert((HCHUNK % STEP_H) == (KH % STEP_H));

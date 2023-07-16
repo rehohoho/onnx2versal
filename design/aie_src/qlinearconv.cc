@@ -7,6 +7,19 @@
   PROFILE_FOOTER2("%s<%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
     filter_name, typeid(TT).name(), INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP);
 
+template<typename TT>
+auto get_wss_tt(int idx) = delete;
+
+template<>
+auto get_wss_tt<int8_t>(int idx) {
+  return getb_wss(0);
+}
+
+template<>
+auto get_wss_tt<uint8_t>(int idx) {
+  return getub_wss(0);
+}
+
 
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvScalar<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
@@ -69,7 +82,7 @@ QLinearConv5x5<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, 
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   weights(w), bias(b), 
@@ -216,7 +229,7 @@ QLinearConv5x5Scale32bit<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, 
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   weights(w), bias(b), 
@@ -337,7 +350,7 @@ QLinearConv3x3<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, 
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   weights(w), bias(b), 
@@ -430,14 +443,13 @@ void QLinearConv3x3<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M,
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvScalarStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TT>* weights,
+  input_stream<int8_t>* weights,
   output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
 
-  using TTVEC = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   int weightIdx;
-  TTVEC *ckk_row_ptr;
+  v16int8 *ckk_row_ptr;
   
   int resvi = 0;
   v16int16 resv = null_v16int16();
@@ -451,7 +463,7 @@ void QLinearConvScalarStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
   for (int b = 0; b < B; b++) {
     for (int m = 0; m < M; m++) { 
 
-      ckk_row_ptr = (TTVEC *) ckk_row;
+      ckk_row_ptr = (v16int8 *) ckk_row;
       for (int i = 0; i < CKK_ROW_SIZE; i+=16) {
         *ckk_row_ptr = readincr_v16(weights); ckk_row_ptr++;
       }
@@ -465,14 +477,14 @@ void QLinearConvScalarStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
           for (int c = 0; c < C_PER_M; c++) {
             for (int p = 0; p < KH; p++) {
               for (int q = 0; q < KW; q++) {
-                int a = window_readincr(in);
-                res += a * ((int) ckk_row[weightIdx] - (int) w_zero);
+                TT a = window_readincr(in); 
+                res += a * (ckk_row[weightIdx] - w_zero);
                 weightIdx++;
               }
               window_incr(in, -KW+INP_W); // go left KW, down 1
             }
             window_incr(in, -KH*INP_W + INP_H*INP_W); // go up KH, channel 1
-            weightIdx += 16 - KH*KW;
+            weightIdx += CKK_ROW_SIZE/C_PER_M - KH*KW;
           }
           res = y_zero + round(scale * res);
           if ((std::is_same<TT, int8_t>::value)) {
@@ -536,7 +548,7 @@ QLinearConvHx4Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   bias(b), 
@@ -553,13 +565,16 @@ QLinearConvHx4Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvHx4Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TT>* weights,
+  input_stream<int8_t>* weights,
   output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
+
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   
   v32int16 wvec = null_v32int16();
-  v32int8 data = null_v32int8();
+  v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
   aie::accum<acc48,16> acc_shift;
@@ -592,27 +607,27 @@ void QLinearConvHx4Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B,
             
             for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
               wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 0);
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 4);
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 8);
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 12);
             }
             
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             if ((KH & 0x3) >= 1) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 0);
             }
             if ((KH & 0x3) >= 2) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 4);
             }
             if ((KH & 0x3) >= 3) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 8);
             }
             
@@ -623,12 +638,12 @@ void QLinearConvHx4Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B,
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
           if (STEP_W == 2) {
-            v16int8 tmp = bsrs(acc1, scalebits);
+            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
             put_ms(0, tmpint[1]);
           } else {
-            writeincr_v16(out, bsrs(acc1, scalebits));
+            writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }
         } // W
         
@@ -653,7 +668,7 @@ QLinearConvHx4StreamScale32bit<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   bias(b), 
@@ -668,7 +683,7 @@ QLinearConvHx4StreamScale32bit<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvHx4StreamScale32bit<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TT>* weights,
+  input_stream<int8_t>* weights,
   output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
@@ -775,7 +790,7 @@ QLinearConvHx4PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   bias(b), 
@@ -792,13 +807,16 @@ QLinearConvHx4PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvHx4PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_pktstream* in_s,
-  input_stream<TT>* weights,
+  input_stream<int8_t>* weights,
   output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
   
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  
   v32int16 wvec = null_v32int16();
-  v32int8 data = null_v32int8();
+  v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
   aie::accum<acc48,16> acc_shift;
@@ -812,8 +830,7 @@ void QLinearConvHx4PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
   for (int bc = 0; bc < B*C; bc++) chess_prepare_for_pipelining chess_loop_range(B*C,) {
     get_ss(0); // discard header
     for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
-      *(v16int8 *) in_ptr = getb_wss(0); 
-      in_ptr+=16;
+      *(v16 *) in_ptr = get_wss_tt<TT>(0); in_ptr+=16;
     }
     get_ss(0); // discard tlast packet added in split
   }
@@ -842,27 +859,27 @@ void QLinearConvHx4PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
             
             for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
               wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 0);
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 4);
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 8);
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 12);
             }
             
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             if ((KH & 0x3) >= 1) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 0);
             }
             if ((KH & 0x3) >= 2) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 4);
             }
             if ((KH & 0x3) >= 3) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1, 8);
             }
             
@@ -873,12 +890,12 @@ void QLinearConvHx4PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
           if (STEP_W == 2) {
-            v16int8 tmp = bsrs(acc1, scalebits);
+            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
             put_ms(0, tmpint[1]);
           } else {
-            writeincr_v16(out, bsrs(acc1, scalebits));
+            writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }
         } // W
         
@@ -938,7 +955,7 @@ QLinearConvHx6x8bitStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B,
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   bias(b), 
@@ -955,7 +972,7 @@ QLinearConvHx6x8bitStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B,
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvHx6x8bitStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TT>* weights,
+  input_stream<int8_t>* weights,
   output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
@@ -1047,7 +1064,7 @@ QLinearConv1x1Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   bias(b), 
@@ -1064,13 +1081,16 @@ QLinearConv1x1Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConv1x1Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TT>* weights,
+  input_stream<int8_t>* weights,
   output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
-  
+
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+
   v32int16 wvec = null_v32int16();
-  v32int8 data = null_v32int8();
+  v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
   aie::accum<acc48,16> acc_shift;
@@ -1099,24 +1119,24 @@ void QLinearConv1x1Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B,
 
           acc1 = acc_bias;
           
-          for (int c = 0; c <= C-16; c+=16) chess_prepare_for_pipelining chess_loop_range(C/16,) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c <= C-16; c+=16) chess_prepare_for_pipelining chess_loop_range(C/16-1,) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             for (int i = 0; i < 16; i+=2) {
-              data = upd_v(data, 0, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
-              data = upd_v(data, 1, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
             }
           }
           if (C % 16 != 0) {
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             for (int i = 0; i <= C-2; i+=2) {
-              data = upd_v(data, 0, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
-              data = upd_v(data, 1, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
             }
           }
           if (C % 2 != 0) {
-            data = upd_v(data, 0, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
+            data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
             MAC_ROW(acc1, LAST_C);
           }
           in_ptr += -C*INP_H*INP_W + 16; // go channel-C, right 16
@@ -1124,13 +1144,12 @@ void QLinearConv1x1Stream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B,
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
           if (STEP_W == 2) {
-            v16int8 tmp = bsrs(acc1, scalebits);
+            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
             put_ms(0, tmpint[1]);
-          
           } else {
-            writeincr_v16(out, bsrs(acc1, scalebits));
+            writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }
         } // W
         
@@ -1152,7 +1171,7 @@ QLinearConv1x1PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C
   float w_scale,
   float y_scale,
   TT x_zero,
-  TT w_zero,
+  int8_t w_zero,
   TT y_zero
 ):
   bias(b), 
@@ -1169,13 +1188,16 @@ QLinearConv1x1PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C
 template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConv1x1PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_pktstream* in_s,
-  input_stream<TT>* weights,
+  input_stream<int8_t>* weights,
   output_stream<TT>* out
 ) {
   PROFILE_HEADER2;
+
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   
   v32int16 wvec = null_v32int16();
-  v32int8 data = null_v32int8();
+  v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
   aie::accum<acc48,16> acc_shift;
@@ -1189,7 +1211,7 @@ void QLinearConv1x1PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
   for (int bc = 0; bc < B*C; bc++) {
     get_ss(0); // discard header
     for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
-      *(v16int8 *) in_ptr = getb_wss(0); in_ptr+=16;
+      *(v16 *) in_ptr = get_wss_tt<TT>(0); in_ptr+=16;
     }
     get_ss(0); // discard tlast packet added in split
   }
@@ -1214,24 +1236,24 @@ void QLinearConv1x1PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
 
           acc1 = acc_bias;
           
-          for (int c = 0; c <= C-16; c+=16) chess_prepare_for_pipelining chess_loop_range(C/16,) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c <= C-16; c+=16) chess_prepare_for_pipelining chess_loop_range(C/16-1,) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             for (int i = 0; i < 16; i+=2) {
-              data = upd_v(data, 0, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
-              data = upd_v(data, 1, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
             }
           }
           if (C % 16 != 0) {
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             for (int i = 0; i <= C-2; i+=2) {
-              data = upd_v(data, 0, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
-              data = upd_v(data, 1, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
+              data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
             }
           }
           if (C % 2 != 0) {
-            data = upd_v(data, 0, *(v16int8 *) in_ptr); in_ptr += INP_H*INP_W;
+            data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
             MAC_ROW(acc1, LAST_C);
           }
           in_ptr += -C*INP_H*INP_W + 16; // go channel-C, right 16
@@ -1239,13 +1261,12 @@ void QLinearConv1x1PktStream<TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
           if (STEP_W == 2) {
-            v16int8 tmp = bsrs(acc1, scalebits);
+            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
             put_ms(0, tmpint[1]);
-          
           } else {
-            writeincr_v16(out, bsrs(acc1, scalebits));
+            writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }
         } // W
         

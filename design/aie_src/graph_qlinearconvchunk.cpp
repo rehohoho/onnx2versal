@@ -30,9 +30,9 @@ class QLinearConvChunkHGraphTest : public adf::graph {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
+      TT x_zero,
       int8_t w_zero,
-      int8_t y_zero,
+      TT y_zero,
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "conv_out.txt"
     ): g(bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
@@ -74,9 +74,9 @@ class QLinearConvChunkHStreamGraphTest : public adf::graph {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
+      TT x_zero,
       int8_t w_zero,
-      int8_t y_zero,
+      TT y_zero,
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "conv_out.txt"
     ): g(bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
@@ -118,9 +118,9 @@ class QLinearConvChunkHPktStreamGraphTest : public adf::graph {
       float x_scale,
       float w_scale,
       float y_scale,
-      int8_t x_zero,
+      TT x_zero,
       int8_t w_zero,
-      int8_t y_zero,
+      TT y_zero,
       const std::string& INP_TXT,
       const std::string& OUT_TXT = "conv_out.txt"
     ): g(bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero) { 
@@ -160,7 +160,7 @@ const int W1_STRIDE2 = (INP_W+KW-1 +15)/16*16 - INP_W;
 
 const int HCHUNK = 15; // OUT_H' * strides + overlap, overlap = K - strides
 
-std::vector<int8_t> int8weights_3x3_int16int8mac {0, 1, 2, 0, 3, 4, 5, 0, 6, 7, 8, 0, 0, 0, 0, 0, 9, 10, 11, 0, 12, 13, 14, 0, 15, 16, 17, 0, 0, 0, 0, 0, 18, 19, 20, 0, 21, 22, 23, 0, 24, 25, 26, 0, 0, 0, 0, 0, 27, 28, 29, 0, 30, 31, 32, 0, 33, 34, 35, 0, 0, 0, 0, 0, 36, 37, 38, 0, 39, 40, 41, 0, 42, 43, 44, 0, 0, 0, 0, 0, 45, 46, 47, 0, 48, 49, 50, 0, 51, 52, 53, 0, 0, 0, 0, 0, 54, 55, 56, 0, 57, 58, 59, 0, 60, 61, 62, 0, 0, 0, 0, 0, 63, 64, 65, 0, 66, 67, 68, 0, 69, 70, 71, 0, 0, 0, 0, 0};
+std::vector<TT> int8weights_3x3_int16int8mac {0, 1, 2, 0, 3, 4, 5, 0, 6, 7, 8, 0, 0, 0, 0, 0, 9, 10, 11, 0, 12, 13, 14, 0, 15, 16, 17, 0, 0, 0, 0, 0, 18, 19, 20, 0, 21, 22, 23, 0, 24, 25, 26, 0, 0, 0, 0, 0, 27, 28, 29, 0, 30, 31, 32, 0, 33, 34, 35, 0, 0, 0, 0, 0, 36, 37, 38, 0, 39, 40, 41, 0, 42, 43, 44, 0, 0, 0, 0, 0, 45, 46, 47, 0, 48, 49, 50, 0, 51, 52, 53, 0, 0, 0, 0, 0, 54, 55, 56, 0, 57, 58, 59, 0, 60, 61, 62, 0, 0, 0, 0, 0, 63, 64, 65, 0, 66, 67, 68, 0, 69, 70, 71, 0, 0, 0, 0, 0};
 std::vector<int32_t> int8bias_3x3 {-900, -2759, -4617, -6475, -8334, -10192, -12050, -13909};
 
 
@@ -211,8 +211,8 @@ QLinearConvChunkHPktStreamGraphTest<SplitFilterInt8PktStream, QLinearConvHx4PktS
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
   // init gmio
-  int int8weights_3x3_int16int8mac_size = M*C*16 * sizeof(int8_t);
-  int8_t* int8weights_3x3_int16int8mac_buf = (int8_t *) adf::GMIO::malloc(int8weights_3x3_int16int8mac_size);
+  int int8weights_3x3_int16int8mac_size = M*C*16 * sizeof(TT);
+  TT* int8weights_3x3_int16int8mac_buf = (TT *) adf::GMIO::malloc(int8weights_3x3_int16int8mac_size);
   memcpy(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac.data(), int8weights_3x3_int16int8mac_size);
 
   // 3x3 stride 1
