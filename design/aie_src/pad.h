@@ -24,11 +24,11 @@ class Pad2DStreamFloat {
   private:
     static constexpr int OUT_H = INP_H + H0 + H1;
     static constexpr int OUT_W = INP_W + W0 + W1;
-    int pad_value;
+    TT pad_value;
     
   public:
     Pad2DStreamFloat(
-      int pad_value = 0
+      TT pad_value = 0
     ): pad_value(pad_value) {};
 
     void filter(
@@ -52,11 +52,11 @@ class Pad2DStreamInt8 {
   private:
     static constexpr int OUT_H = INP_H + H0 + H1;
     static constexpr int OUT_W = INP_W + W0 + W1;
-    int pad_value;
+    TT pad_value;
     
   public:
     Pad2DStreamInt8(
-      int pad_value = 0
+      TT pad_value = 0
     ): pad_value(pad_value) {};
 
     void filter(
@@ -82,11 +82,11 @@ class Pad2DWindowScalar {
   private:
     static constexpr int OUT_H = INP_H + H0 + H1;
     static constexpr int OUT_W = INP_W + W0 + W1;
-    int pad_value;
+    TT pad_value;
     
   public:
     Pad2DWindowScalar(
-      int pad_value = 0
+      TT pad_value = 0
     ): pad_value(pad_value) {};
 
     void filter(
