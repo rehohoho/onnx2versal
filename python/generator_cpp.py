@@ -20,14 +20,14 @@ class CppGenerator:
         repeats = op.gmio_repeats
         
         gmio_allocs.append(
-          f"{ctype}* {gmio_name}_buf = ({ctype} *) adf::GMIO::malloc({repeats}*{size}*sizeof({ctype}));"
+          f"{ctype}* {gmio_name}_buf = ({ctype} *) adf::GMIO::malloc({repeats}*{size}*ITER_CNT*sizeof({ctype}));"
         )
         gmio_cpys.append(
-          f"for (int i = 0; i < {repeats}; i++)\n"
+          f"for (int i = 0; i < {repeats}*ITER_CNT; i++)\n"
           f"  memcpy({gmio_name}_buf + i*{size}, {gmio_name}.data(), {size}*sizeof({ctype}));"
         )
         gmio_xfers.append(
-          f"{p.graph_name}.gmio_{gmio_name}.gm2aie_nb({gmio_name}_buf, {repeats}*{size}*sizeof({ctype}));"
+          f"{p.graph_name}.gmio_{gmio_name}.gm2aie_nb({gmio_name}_buf, {repeats}*{size}*ITER_CNT*sizeof({ctype}));"
         )
         gmio_frees.append(
           f"adf::GMIO::free({gmio_name}_buf);"

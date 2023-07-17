@@ -28,6 +28,12 @@ def cint16_fstr_send(payload_len_in_bytes: int):
 def cint16_fstr_recv(payload_len_in_bytes: int):
   return "<"+str(payload_len_in_bytes//4)+"i" 
 
+def uint8_tobytes(data: List[int]):
+  return np.real(data).astype(np.uint8)
+
+def uint8_fstr(payload_len_in_bytes: int):
+  return "<"+str(payload_len_in_bytes//1)+"B" 
+
 def int8_tobytes(data: List[int]):
   return np.real(data).astype(np.int8)
 
@@ -59,6 +65,8 @@ def get_format_to_bytes_callable(dtype: str):
     return int16_tobytes
   elif dtype == "int8":
     return int8_tobytes
+  elif dtype == "uint8":
+    return uint8_tobytes
   elif dtype == "cint16":
     return cint16_tobytes
   elif dtype == "float32":
@@ -73,6 +81,8 @@ def get_format_string_callable_send(dtype: str):
     return int16_fstr
   elif dtype == "int8":
     return int8_fstr
+  elif dtype == "uint8":
+    return uint8_fstr
   elif dtype == "cint16":
     return cint16_fstr_send
   elif dtype == "float32":
@@ -87,6 +97,8 @@ def get_format_string_callable_recv(dtype: str):
     return int16_fstr
   elif dtype == "int8":
     return int8_fstr
+  elif dtype == "uint8":
+    return uint8_fstr
   elif dtype == "cint16":
     return cint16_fstr_recv
   elif dtype == "float32":
