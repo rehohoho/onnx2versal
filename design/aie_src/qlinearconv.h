@@ -39,33 +39,33 @@
  * QLinearConvScalar<26,32,28,32,1,1,1,1,6,1> total = 625226, 
  * QLinearConvScalar<26,28,13,16,2,2,1,1,6,3> total = 189225
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvScalar {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP;
 
-    alignas(32) int8_t (&weights)[M*C_PER_M*KH*KW];
+    alignas(32) TTPARAM (&weights)[M*C_PER_M*KH*KW];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     float scale;
 	
   public:
     QLinearConvScalar (
-      TT (&w)[M*C*KH*KW],
+      TTPARAM (&w)[M*C*KH*KW],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
       scale = x_scale*w_scale/y_scale;
@@ -92,19 +92,19 @@ class QLinearConvScalar {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv5x5<30,32,28,32,1,1,1,1,6,5> total = 3513
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv5x5 {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
-    alignas(32) int8_t (&weights)[M*C*KH*16];
+    alignas(32) TTPARAM (&weights)[M*C*KH*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -113,13 +113,13 @@ class QLinearConv5x5 {
 	
   public:
     QLinearConv5x5 (
-      TT (&w)[M*C*KH*16],
+      TTPARAM (&w)[M*C*KH*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
@@ -149,19 +149,19 @@ class QLinearConv5x5 {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv5x5Scale32bit<30,32,28,32,1,1,1,1,6,5> total = 7652
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv5x5Scale32bit {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
 
-    alignas(32) int8_t (&weights)[M*C*KH*16];
+    alignas(32) TTPARAM (&weights)[M*C*KH*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -170,13 +170,13 @@ class QLinearConv5x5Scale32bit {
 	
   public:
     QLinearConv5x5Scale32bit (
-      TT (&w)[M*C*KH*16],
+      TTPARAM (&w)[M*C*KH*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
@@ -203,7 +203,7 @@ class QLinearConv5x5Scale32bit {
  * requires INP_W%16=0, OUT_W_PAD%16=0, 
  * QLinearConv3x3<28,32,28,32,1,1,1,1,6,3> total = 2677
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv3x3 {
   
   private:
@@ -212,13 +212,13 @@ class QLinearConv3x3 {
     static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
-    alignas(32) int8_t (&weights)[M*C*16];
+    alignas(32) TTPARAM (&weights)[M*C*16];
     alignas(32) int32_t (&bias)[M];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -227,13 +227,13 @@ class QLinearConv3x3 {
 	
   public:
     QLinearConv3x3 (
-      TT (&w)[M*C*16],
+      TTPARAM (&w)[M*C*16],
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
@@ -262,7 +262,7 @@ class QLinearConv3x3 {
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * QLinearConvScalarStream<28,32,28,32,1,1,1,1,6,3> total = 776955 (output_window 682564)
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvScalarStream {
   
   private:
@@ -271,12 +271,12 @@ class QLinearConvScalarStream {
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     float scale;
@@ -288,7 +288,7 @@ class QLinearConvScalarStream {
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     ): bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
       scale = x_scale*w_scale/y_scale;
@@ -296,11 +296,12 @@ class QLinearConvScalarStream {
 
 		void filter(
 			input_window<TT>* in,
-      input_stream<int8_t>* weights,
+      input_stream<TTPARAM>* weights,
 			output_stream<TT>* out
 		);
 
 		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			REGISTER_FUNCTION(QLinearConvScalarStream::filter);
       REGISTER_PARAMETER(bias);
 		}
@@ -315,7 +316,7 @@ class QLinearConvScalarStream {
  * QLinearConvHx4Stream<28,32,28,32,1,1,1,1,8,3,3,1> total = 2723 (output_window slightly faster ~0.85x time), 
  * QLinearConvHx4Stream<26,32,13,16,2,2,1,1,8,3,3,1> total = 1930
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4Stream {
   
   private:
@@ -327,12 +328,12 @@ class QLinearConvHx4Stream {
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -346,13 +347,13 @@ class QLinearConvHx4Stream {
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
 		void filter(
 			input_window<TT>* in,
-      input_stream<int8_t>* weights,
+      input_stream<TTPARAM>* weights,
 			output_stream<TT>* out
 		);
 
@@ -377,7 +378,7 @@ class QLinearConvHx4Stream {
  * QLinearConvHx4StreamScale32bit<28,48,28,32,1,1,1,1,8,3> total = 8508
  * QLinearConvHx4StreamScale32bit<26,32,13,16,2,2,1,1,8,3> total = 4332
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4StreamScale32bit {
   
   private:
@@ -389,12 +390,12 @@ class QLinearConvHx4StreamScale32bit {
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -408,13 +409,13 @@ class QLinearConvHx4StreamScale32bit {
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
 		void filter(
 			input_window<TT>* in,
-      input_stream<int8_t>* weights,
+      input_stream<TTPARAM>* weights,
 			output_stream<TT>* out
 		);
 
@@ -437,7 +438,7 @@ class QLinearConvHx4StreamScale32bit {
  * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KW<=3, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx4PktStream {
   
   private:
@@ -450,13 +451,13 @@ class QLinearConvHx4PktStream {
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
     alignas(32) TT in[INP_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -470,13 +471,13 @@ class QLinearConvHx4PktStream {
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
 		void filter(
 			input_pktstream* in_s,
-      input_stream<int8_t>* weights,
+      input_stream<TTPARAM>* weights,
 			output_stream<TT>* out
 		);
 
@@ -500,7 +501,7 @@ class QLinearConvHx4PktStream {
  * requires KW<=4, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1, STEP_W==1, 
  * QLinearConvHx6x8bitStream<28,32,28,32,1,1,1,1,8,3,3,1> total = 3106
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConvHx6x8bitStream {
   
   private:
@@ -509,12 +510,12 @@ class QLinearConvHx6x8bitStream {
     static constexpr int CKK_ROW_SIZE = C_PER_M*KH*16;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -528,13 +529,13 @@ class QLinearConvHx6x8bitStream {
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
 		void filter(
 			input_window<TT>* in,
-      input_stream<int8_t>* weights,
+      input_stream<TTPARAM>* weights,
 			output_stream<TT>* out
 		);
 
@@ -559,7 +560,7 @@ class QLinearConvHx6x8bitStream {
  * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,8,1,1,1> total = 2697
  * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> total = 1578
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1Stream {
   
   private:
@@ -570,12 +571,12 @@ class QLinearConv1x1Stream {
     static constexpr int LAST_C = (C % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -589,13 +590,13 @@ class QLinearConv1x1Stream {
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
 		void filter(
 			input_window<TT>* in,
-      input_stream<int8_t>* weights,
+      input_stream<TTPARAM>* weights,
 			output_stream<TT>* out
 		);
 
@@ -620,7 +621,7 @@ class QLinearConv1x1Stream {
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  */
-template <typename TT, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1PktStream {
   
   private:
@@ -632,14 +633,14 @@ class QLinearConv1x1PktStream {
     static constexpr int LAST_C = (C % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];
-    alignas(32) int8_t ckk_row[CKK_ROW_SIZE];
+    alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
     alignas(32) TT in[INP_SIZE];
 
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -653,13 +654,13 @@ class QLinearConv1x1PktStream {
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 
 		void filter(
 			input_pktstream* in_s,
-      input_stream<int8_t>* weights,
+      input_stream<TTPARAM>* weights,
 			output_stream<TT>* out
 		);
 

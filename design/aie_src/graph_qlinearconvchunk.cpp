@@ -4,17 +4,17 @@
 
 template <
   template<typename, int, int, int, int> class SPLIT,
-  template<typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  typename TT, typename TTPARAM, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int KH, int KW, int GROUP,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvChunkHGraphTest : public adf::graph {
 
   private:
     typedef QLinearConvChunkHGraph<SPLIT, QLINEARCONV, CONCAT, HCHUNK, 
-                                   TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
+                                   TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
                                    B, C, M, KH, KW, GROUP, 
                                    H0, H1, W0, W1> Graph;
     Graph g;
@@ -48,17 +48,17 @@ class QLinearConvChunkHGraphTest : public adf::graph {
 
 template <
   template<typename, int, int, int, int> class SPLIT,
-  template<typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  typename TT, typename TTPARAM, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int KH, int KW, int GROUP,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvChunkHStreamGraphTest : public adf::graph {
 
   private:
     typedef QLinearConvChunkHStreamGraph<SPLIT, QLINEARCONV, CONCAT, HCHUNK, 
-                                         TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
+                                         TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
                                          B, C, M, KH, KW, GROUP, 
                                          H0, H1, W0, W1> Graph;
     Graph g;
@@ -92,17 +92,17 @@ class QLinearConvChunkHStreamGraphTest : public adf::graph {
 
 template <
   template<typename, int, int, int, int> class SPLIT,
-  template<typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
+  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  typename TT, typename TTPARAM, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
   int B, int C, int M, int KH, int KW, int GROUP,
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class QLinearConvChunkHPktStreamGraphTest : public adf::graph {
 
   private:
     typedef QLinearConvChunkHPktStreamGraph<SPLIT, QLINEARCONV, CONCAT, HCHUNK, 
-                                            TT, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
+                                            TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
                                             B, C, M, KH, KW, GROUP, 
                                             H0, H1, W0, W1> Graph;
     Graph g;
@@ -136,6 +136,7 @@ class QLinearConvChunkHPktStreamGraphTest : public adf::graph {
 
 // instance to be compiled and used in host within xclbin
 typedef int8_t TT;
+typedef int8_t TTPARAM;
 const int INP_H = 26;
 const int INP_W = 28;
 const int INP_W_PAD16 = (INP_W + 15)/16*16;
@@ -174,7 +175,7 @@ std::vector<int32_t> int8bias_3x3 {-900, -2759, -4617, -6475, -8334, -10192, -12
  * Total cycles 4366
  */
 QLinearConvChunkHGraphTest<SplitInt8, QLinearConvHx4Stream, ConcatInt8Stream, HCHUNK, 
-                           TT, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
+                           TT, TTPARAM, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
                            PADH, PADH, PADW, W1> qLinearConvScalarStream(
   "qLinearConvScalarStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalar.txt");
@@ -188,7 +189,7 @@ QLinearConvChunkHGraphTest<SplitInt8, QLinearConvHx4Stream, ConcatInt8Stream, HC
  * Total cycles 4079
  */
 QLinearConvChunkHStreamGraphTest<SplitFilterInt8Stream, QLinearConvHx4Stream, ConcatInt8Stream, HCHUNK, 
-                           TT, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
+                           TT, TTPARAM, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
                            PADH, PADH, PADW, W1> qLinearConvScalarStreamHStream(
   "qLinearConvScalarStreamHStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalarStreamHStream.txt");
@@ -202,7 +203,7 @@ ConcatInt8Stream<a,8,416,416,832> start = 747,end = 4069,total = 3322
 Total cycles 4088
 */
 QLinearConvChunkHPktStreamGraphTest<SplitFilterInt8PktStream, QLinearConvHx4PktStream, ConcatInt8Stream, HCHUNK, 
-                                    TT, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
+                                    TT, TTPARAM, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
                                     PADH, PADH, PADW, W1> qLinearConvScalarStreamHPktStream(
   "qLinearConvScalarStreamHPktStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x8x26x28_QLinearConvScalarStreamHPktStream.txt");
