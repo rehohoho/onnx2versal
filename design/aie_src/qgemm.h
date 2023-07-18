@@ -27,30 +27,30 @@
  * @brief Scalar implementation for MK*KN, stores weights and biases,
  * QgemmScalarStream<1,84,16> takes 34262 cycles
  */
-template <typename TT, int M, int K, int N>
+template <typename TT, typename TTPARAM, int M, int K, int N>
 class QgemmScalarStream {
   
   private:
-    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
+    alignas(32) TTPARAM (&weights)[N*K]; // KxN (256x120)
     alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     float scale;
   
   public:
     QgemmScalarStream (
-      int8_t (&w)[K*N],
+      TTPARAM (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
       scale = x_scale*w_scale/y_scale;
@@ -74,17 +74,17 @@ class QgemmScalarStream {
  * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0
  * QgemmStream<1,84,16> takes 267 cycles (output window same cycles)
  */
-template <typename TT, int M, int K, int N>
+template <typename TT, typename TTPARAM, int M, int K, int N>
 class QgemmStream {
   
   private:
-    alignas(32) int8_t (&weights)[N*K]; // KxN (256x120)
+    alignas(32) TTPARAM (&weights)[N*K]; // KxN (256x120)
     alignas(32) int32_t (&bias)[N];     // N   (120)
     float x_scale;
     float w_scale;
     float y_scale;
     TT x_zero;
-    int8_t w_zero;
+    TTPARAM w_zero;
     TT y_zero;
 
     // precomputation
@@ -99,13 +99,13 @@ class QgemmStream {
   
   public:
     QgemmStream (
-      int8_t (&w)[K*N],
+      TTPARAM (&w)[K*N],
       int32_t (&b)[N],
       float x_scale,
       float w_scale,
       float y_scale,
       TT x_zero,
-      int8_t w_zero,
+      TTPARAM w_zero,
       TT y_zero
     );
 

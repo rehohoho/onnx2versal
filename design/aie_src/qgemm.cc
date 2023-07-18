@@ -4,11 +4,11 @@
 
 
 #define QGEMM_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%s,%d,%d,%d>", \
-    filter_name, typeid(TT).name(), M, K, N);
+  PROFILE_FOOTER2("%s<%s,%s,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), typeid(TTPARAM).name(), M, K, N);
 
-template <typename TT, int M, int K, int N>
-void QgemmScalarStream<TT, M, K, N>::filter(
+template <typename TT, typename TTPARAM, int M, int K, int N>
+void QgemmScalarStream<TT, TTPARAM, M, K, N>::filter(
 	input_window<TT>* in,      // MxK
                                  // KxN
   output_stream<TT>* out     // MxN
@@ -51,15 +51,15 @@ void QgemmScalarStream<TT, M, K, N>::filter(
 }
 
 
-template <typename TT, int M, int K, int N>
-QgemmStream<TT, M, K, N>::QgemmStream (
-  int8_t (&w)[K*N],
+template <typename TT, typename TTPARAM, int M, int K, int N>
+QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
+  TTPARAM (&w)[K*N],
   int32_t (&b)[N],
   float x_scale,
   float w_scale,
   float y_scale,
   TT x_zero,
-  int8_t w_zero,
+  TTPARAM w_zero,
   TT y_zero
 ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
   // -1 due to rounding, -1 to fit in 16b
@@ -99,8 +99,8 @@ QgemmStream<TT, M, K, N>::QgemmStream (
  * 
  * Vector registers can hold 256 int8 at most, 128 int16 at most.
  */
-template <typename TT, int M, int K, int N>
-void QgemmStream<TT, M, K, N>::filter(
+template <typename TT, typename TTPARAM, int M, int K, int N>
+void QgemmStream<TT, TTPARAM, M, K, N>::filter(
 	input_window<TT>* in,      // MxK
                                  // KxN
   output_stream<TT>* out     // MxN
@@ -112,7 +112,7 @@ void QgemmStream<TT, M, K, N>::filter(
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
 
   TT *in_ptr = (TT *) in->ptr;
-  int8_t *w_ptr = (int8_t *) weights;
+  TTPARAM *w_ptr = (TTPARAM *) weights;
   int32_t *b_ptr = (int32_t *) bias;
 
   v128 wmat = aie::zeros<TT,128>();
