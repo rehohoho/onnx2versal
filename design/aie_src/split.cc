@@ -1000,16 +1000,27 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 // 32-bit read / cycle or 128-bit read / 4 cycle
 #define WRITE_OUT(outidx, count, tlast) \
   for (int w = 0; w < count; w+=16) { \
-    auto a = readincr_v16(in); \
-    put_wms(outidx, a); \
+    auto tmp = readincr_v16(in); \
+    int *a = (int *) &tmp; \
+    put_ms(outidx, a[0]); \
+    put_ms(outidx, a[1]); \
+    put_ms(outidx, a[2]); \
+    put_ms(outidx, a[3]); \
   } \
   if (tlast) writeincr(out[outidx], 0, tlast);
 
 #define WRITE_OUT_TWICE(outidx0, outidx1, count) \
   for (int w = 0; w < count; w+=16) { \
-    auto a = readincr_v16(in); \
-    put_wms(0, a); \
-    put_wms(1, a); \
+    auto tmp = readincr_v16(in); \
+    int *a = (int *) &tmp; \
+    put_ms(outidx0, a[0]); \
+    put_ms(outidx0, a[1]); \
+    put_ms(outidx0, a[2]); \
+    put_ms(outidx0, a[3]); \
+    put_ms(outidx1, a[0]); \
+    put_ms(outidx1, a[1]); \
+    put_ms(outidx1, a[2]); \
+    put_ms(outidx1, a[3]); \
   } \
   writeincr(out[outidx0], 0, true);
 
