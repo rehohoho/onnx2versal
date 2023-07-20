@@ -16,7 +16,7 @@ float fastexp2(float val, int precision) {
 
 
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-void QlinearsoftmaxScalar<TT, INP_H, INP_W, INP_W_PAD>::filter(
+void QLinearSoftmaxScalar<TT, INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<TT>* in,
   output_stream<TT>* out
 ) {
@@ -59,12 +59,12 @@ void QlinearsoftmaxScalar<TT, INP_H, INP_W, INP_W_PAD>::filter(
   }
 #undef WRITE_OUT
 
-  QLINEARSOFTMAX_PROFILE_FOOTER("QlinearsoftmaxScalar");
+  QLINEARSOFTMAX_PROFILE_FOOTER("QLinearSoftmaxScalar");
 }
 
 
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-QlinearsoftmaxFloatmul<TT, INP_H, INP_W, INP_W_PAD>::QlinearsoftmaxFloatmul (
+QLinearSoftmaxFloatmul<TT, INP_H, INP_W, INP_W_PAD>::QLinearSoftmaxFloatmul (
   float x_scale,
   float y_scale,
   TT x_zero,
@@ -76,7 +76,7 @@ QlinearsoftmaxFloatmul<TT, INP_H, INP_W, INP_W_PAD>::QlinearsoftmaxFloatmul (
 
 
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-void QlinearsoftmaxFloatmul<TT, INP_H, INP_W, INP_W_PAD>::filter(
+void QLinearSoftmaxFloatmul<TT, INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<TT>* in,
   output_stream<TT>* out
 ) {
@@ -151,12 +151,12 @@ void QlinearsoftmaxFloatmul<TT, INP_H, INP_W, INP_W_PAD>::filter(
   
   } // INP_H
 
-  QLINEARSOFTMAX_PROFILE_FOOTER("QlinearsoftmaxFloatmul");
+  QLINEARSOFTMAX_PROFILE_FOOTER("QLinearSoftmaxFloatmul");
 }
 
 
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-QlinearsoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::QlinearsoftmaxSingleaxis (
+QLinearSoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::QLinearSoftmaxSingleaxis (
   float x_scale,
   float y_scale,
   TT x_zero,
@@ -174,7 +174,7 @@ QlinearsoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::QlinearsoftmaxSingleaxis 
 
 
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-void QlinearsoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::filter(
+void QLinearSoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::filter(
 	input_window<TT>* in,
   output_stream<TT>* out
 ) {
@@ -222,11 +222,12 @@ void QlinearsoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::filter(
     exp_v_ptr = (int32_t *) exp_v;
     for (int j = 0; j < INP_W_PAD; j+=16) {
       in_v = aie::load_v<16>(exp_v_ptr); exp_v_ptr += 16;
+      print_vec<int, int>((int *) &in_v, 16);
       auto acc = aie::mac(y_zeros, in_v, out_scale);
       auto outvec = acc.to_vector<TT>(EXP_BITSHIFT + OUT_BITSHIFT);
       writeincr_v16(out, outvec);
     }
   } // INP_H
 
-  QLINEARSOFTMAX_PROFILE_FOOTER("QlinearsoftmaxSingleaxis");
+  QLINEARSOFTMAX_PROFILE_FOOTER("QLinearSoftmaxSingleaxis");
 }

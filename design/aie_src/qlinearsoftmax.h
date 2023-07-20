@@ -6,8 +6,8 @@
 
 
 /** 
- * @defgroup QlinearsoftmaxKernels
- * @ingroup Qlinearsoftmax
+ * @defgroup QLinearSoftmaxKernels
+ * @ingroup QLinearSoftmax
  * - qy = saturate ((y / y_scale) + y_zero_point) => x = (qx - qx_zero) * qx_scale
  * - Softmax(input, axis) = Exp(input) / ReduceSum(Exp(input), axis=axis, keepdims=1)
  * 
@@ -22,10 +22,10 @@
 
 /**
  * @brief Scalar implementation.
- * QlinearsoftmaxScalar<10,20,32> takes 517922 cycles for expf, cycles 164026 for fastexp2.
+ * QLinearSoftmaxScalar<10,20,32> takes 517922 cycles for expf, cycles 164026 for fastexp2.
  */
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-class QlinearsoftmaxScalar {
+class QLinearSoftmaxScalar {
   
   private:
     float x_scale;
@@ -36,7 +36,7 @@ class QlinearsoftmaxScalar {
     float scale;
   
   public:
-    QlinearsoftmaxScalar (
+    QLinearSoftmaxScalar (
       float x_scale,
       float y_scale,
       TT x_zero,
@@ -50,18 +50,18 @@ class QlinearsoftmaxScalar {
     
     static void registerKernelClass() {
       static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
-      REGISTER_FUNCTION(QlinearsoftmaxScalar::filter);
+      REGISTER_FUNCTION(QLinearSoftmaxScalar::filter);
     };
 };
 
 
 /**
  * @brief Vector implementation using fastexp2 method, float multiplication for exp estimation
- * QlinearsoftmaxFloatmul<10,10,16> takes 3886 cycles
+ * QLinearSoftmaxFloatmul<10,10,16> takes 3886 cycles
  * requires INP_W_PAD%16=0.
  */
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-class QlinearsoftmaxFloatmul {
+class QLinearSoftmaxFloatmul {
 	
   private:
     float x_scale;
@@ -77,7 +77,7 @@ class QlinearsoftmaxFloatmul {
     float fastexp_shift;
 
   public:
-    QlinearsoftmaxFloatmul (
+    QLinearSoftmaxFloatmul (
       float x_scale,
       float y_scale,
       TT x_zero,
@@ -92,18 +92,18 @@ class QlinearsoftmaxFloatmul {
 		static void registerKernelClass() {
       static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(INP_W_PAD % 16 == 0);
-			REGISTER_FUNCTION(QlinearsoftmaxFloatmul::filter);
+			REGISTER_FUNCTION(QLinearSoftmaxFloatmul::filter);
 		}
 };
 
 
 /**
  * @brief Vector implementation using fastexp2 method for single axis, 
- * QlinearsoftmaxSingleaxis<10,10,16> takes 2239 cycles
+ * QLinearSoftmaxSingleaxis<10,10,16> takes 2239 cycles
  * requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.
  */
 template <typename TT, int INP_H, int INP_W, int INP_W_PAD>
-class QlinearsoftmaxSingleaxis {
+class QLinearSoftmaxSingleaxis {
 	
   private:
     float x_scale;
@@ -120,7 +120,7 @@ class QlinearsoftmaxSingleaxis {
     int32_t expsum_offset;
 
   public:
-    QlinearsoftmaxSingleaxis (
+    QLinearSoftmaxSingleaxis (
       float x_scale,
       float y_scale,
       TT x_zero,
@@ -135,7 +135,7 @@ class QlinearsoftmaxSingleaxis {
 		static void registerKernelClass() {
       static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(INP_W_PAD % 16 == 0);
-			REGISTER_FUNCTION(QlinearsoftmaxSingleaxis::filter);
+			REGISTER_FUNCTION(QLinearSoftmaxSingleaxis::filter);
 		}
 };
 /** @}*/
