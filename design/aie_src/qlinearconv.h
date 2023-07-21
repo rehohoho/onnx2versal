@@ -557,8 +557,8 @@ class QLinearConvHx6x8bitStream {
  * requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, 
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
- * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,8,1,1,1> total = 2697
- * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> total = 1578
+ * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,8,1,1,1> total = 2697, with uint8 w_zero 3901
+ * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> total = 2857, with uint8 w_zero 4326
  */
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1Stream {
@@ -566,8 +566,6 @@ class QLinearConv1x1Stream {
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0xb3a29180 : 0xe6c4a280;
-    static constexpr unsigned int MAC_ZSTEP = (STEP_W == 1) ? 2 : 4;
     static constexpr int LAST_C = (C % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];
@@ -628,8 +626,6 @@ class QLinearConv1x1PktStream {
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0xb3a29180 : 0xe6c4a280;
-    static constexpr unsigned int MAC_ZSTEP = (STEP_W == 1) ? 2 : 4;
     static constexpr int LAST_C = (C % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];

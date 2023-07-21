@@ -532,7 +532,7 @@ void QLinearConvScalarStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
  * 
  * stride2
  * acc0 += x0*z0 + x1*z1 x2*z2 + x3*z3
- * acc1 += x0*z2 + x1*z3 x2*z4 + x5*z4
+ * acc1 += x0*z2 + x1*z3 x2*z4 + x3*x4
  * ...
  * acc6 += x0*z12 + x1*z13 x2*z14 + x3*z15
  * acc7 += x0*z14 + x1*z15 x2*z16 + x3*z16
@@ -1050,16 +1050,19 @@ void QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP
 
 
 /**
- * int16 * int8:
  * reads weights in 4s: [a,b,c,d, 0,0,0,0, ...]
  * reads data in 32s
  * 
- * xoffsets: 4b offset for lane 0,2,4,6, for 04, off0=2*4, off2=(0+4 +1)*2 => 8,9, 10,11
- * xoffsetshi: 4b offset for lane 8,10,12,14, same selection scheme
+ * int16 * int8:
+ * xoffsets: 4b offset for every two lanes, e.g. 0 4 => 4*2=8, (0+4+1)*2=10 => 8,9, 10,11
+ * zoffsets: 4b offset for every lane, e.g. offset=4, step=4 => 4*2=8 => 8,9, 14,15
  */
 
+// only use 2/4 columns
 #define MAC_ROW(acc, widx) \
-  acc = mac16(acc, wvec, widx, 0x0, 0x0, 16, 0x1010, data, 0, MAC_ZOFFSET, 0xf7e6d5c4, MAC_ZSTEP, 0x3120); // only use 2/4 columns
+  acc = mac16(acc, wvec, widx, 0x0, 0x0, 16, 0x1010, data, 0, 0xb3a29180, 0xf7e6d5c4, 2, 0x3120); \
+  if (!(std::is_same<TTPARAM,int8_t>::value)) \
+    acc = msc16(acc, wzero, 0, 0x0, 0x0, 16, 0x3210, data, 0, 0xb3a29180, 0xf7e6d5c4, 2, 0x3120); 
 
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConv1x1Stream(
@@ -1075,7 +1078,8 @@ QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
 { 
-  assert(w_zero == 0);
+  if ((std::is_same<TTPARAM,int8_t>::value)) assert(w_zero == 0);
+
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
   assert(scalebits <= 30); // KH*KW*int8*int8*scale <= acc48, for KH=KW=1
@@ -1094,6 +1098,8 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
 
   v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  wzero = upd_v(wzero, 0, aie::broadcast<int16_t,8>(w_zero));
   v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
@@ -1103,6 +1109,9 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
 
   v16 *ckk_row_ptr = (v16 *) ckk_row;
   TT *in_ptr = (TT *) in->ptr;
+
+  int res_updi = 0;
+  v16int16 res = null_v16int16(); // for STEP_W == 2
 
   set_sat();
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
@@ -1123,7 +1132,7 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
 
           acc1 = acc_bias;
           
-          for (int c = 0; c <= C-16; c+=16) chess_prepare_for_pipelining chess_loop_range(C/16-1,) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c <= C-16; c+=16) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             for (int i = 0; i < 16; i+=2) {
               data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
@@ -1148,10 +1157,15 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
           if (STEP_W == 2) {
-            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
-            int *tmpint = (int *) &tmp;
-            put_ms(0, tmpint[0]);
-            put_ms(0, tmpint[1]);
+            v16int16 tmp = srs(acc1, scalebits);
+            v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+            if (res_updi == 1) {
+              res = upd_v(res, 1, tmphalf);
+              writeincr_v16(out, ((aie::vector<int16_t,16>) res).pack<TT>());
+            } else {
+              res = upd_v(res, 0, tmphalf);
+            }
+            res_updi = (res_updi + 1) & 0x1;
           } else {
             writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }
@@ -1182,7 +1196,7 @@ QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STE
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
 { 
-  assert(w_zero == 0);
+  if ((std::is_same<TTPARAM,int8_t>::value)) assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
   assert(scalebits <= 30); // KH*KW*int8*int8*scale <= acc48, for KH=KW=1
@@ -1201,6 +1215,8 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   
   v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  wzero = upd_v(wzero, 0, aie::broadcast<int16_t,8>(w_zero));
   v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
@@ -1210,6 +1226,9 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
 
   v16 *ckk_row_ptr = (v16 *) ckk_row;
   TT *in_ptr = (TT *) in;
+  
+  int res_updi = 0;
+  v16int16 res = null_v16int16(); // for STEP_W == 2
 
   // fill window
   for (int bc = 0; bc < B*C; bc++) {
@@ -1240,7 +1259,7 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
 
           acc1 = acc_bias;
           
-          for (int c = 0; c <= C-16; c+=16) chess_prepare_for_pipelining chess_loop_range(C/16-1,) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c <= C-16; c+=16) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             for (int i = 0; i < 16; i+=2) {
               data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
@@ -1265,10 +1284,15 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
           if (STEP_W == 2) {
-            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
-            int *tmpint = (int *) &tmp;
-            put_ms(0, tmpint[0]);
-            put_ms(0, tmpint[1]);
+            v16int16 tmp = srs(acc1, scalebits);
+            v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
+            if (res_updi == 1) {
+              res = upd_v(res, 1, tmphalf);
+              writeincr_v16(out, ((aie::vector<int16_t,16>) res).pack<TT>());
+            } else {
+              res = upd_v(res, 0, tmphalf);
+            }
+            res_updi = (res_updi + 1) & 0x1;
           } else {
             writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }
