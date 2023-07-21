@@ -19,5 +19,6 @@ var modules =
     [ "QuantizeLinear", "group__QuantizeLinear.html", "group__QuantizeLinear" ],
     [ "Softmax", "group__Softmax.html", "group__Softmax" ],
     [ "Split", "group__Split.html", "group__Split" ],
-    [ "Transpose", "group__Transpose.html", "group__Transpose" ]
+    [ "Transpose", "group__Transpose.html", "group__Transpose" ],
+    [ "QLinearSoftmaxKernels", "group__QLinearSoftmaxKernels.html", "group__QLinearSoftmaxKernels" ]
 ];

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConv1x1PktStream&lt; TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearConv1x1PktStream&lt; TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQLinearConv1x1PktStream.html','')
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classQLinearConv1x1PktStream-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConv1x1PktStream&lt; TT, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</div></div>
+  <div class="headertitle"><div class="title">QLinearConv1x1PktStream&lt; TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -104,18 +104,18 @@ $(document).ready(function(){initNavTree('classQLinearConv1x1PktStream.html','')
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a54bd505772235a4c358f289095b01643"><td class="memItemLeft" align="right" valign="top"><a id="a54bd505772235a4c358f289095b01643" name="a54bd505772235a4c358f289095b01643"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConv1x1PktStream</b> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, int8_t w_zero, TT y_zero)</td></tr>
-<tr class="separator:a54bd505772235a4c358f289095b01643"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7615064a006361cc1db087ad0e96a5c"><td class="memItemLeft" align="right" valign="top"><a id="ad7615064a006361cc1db087ad0e96a5c" name="ad7615064a006361cc1db087ad0e96a5c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_pktstream *in_s, input_stream&lt; int8_t &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:ad7615064a006361cc1db087ad0e96a5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1aac29d7f508489d1ee9edac8cb989e8"><td class="memItemLeft" align="right" valign="top"><a id="a1aac29d7f508489d1ee9edac8cb989e8" name="a1aac29d7f508489d1ee9edac8cb989e8"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConv1x1PktStream</b> (int32_t(&amp;b)[M], float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
+<tr class="separator:a1aac29d7f508489d1ee9edac8cb989e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f8fb4aad8373ec4a3537abc900353d9"><td class="memItemLeft" align="right" valign="top"><a id="a5f8fb4aad8373ec4a3537abc900353d9" name="a5f8fb4aad8373ec4a3537abc900353d9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_pktstream *in_s, input_stream&lt; TTPARAM &gt; *weights, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a5f8fb4aad8373ec4a3537abc900353d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ad861ff112b5a1fac5508d8363f8602fc"><td class="memItemLeft" align="right" valign="top"><a id="ad861ff112b5a1fac5508d8363f8602fc" name="ad861ff112b5a1fac5508d8363f8602fc"></a>
+<tr class="memitem:ae7cebe3ff943e21262321a4dacca64dc"><td class="memItemLeft" align="right" valign="top"><a id="ae7cebe3ff943e21262321a4dacca64dc" name="ae7cebe3ff943e21262321a4dacca64dc"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:ad861ff112b5a1fac5508d8363f8602fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ae7cebe3ff943e21262321a4dacca64dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="qlinearconv_8h_source.html">qlinearconv.h</a></li>

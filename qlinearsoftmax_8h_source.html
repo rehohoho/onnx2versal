@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('qlinearsoftmax_8h_source.html',''); in
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD&gt;</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="classQlinearsoftmaxScalar.html">   28</a></span><span class="keyword">class </span><a class="code hl_class" href="classQlinearsoftmaxScalar.html">QlinearsoftmaxScalar</a> {</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="classQLinearSoftmaxScalar.html">   28</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearSoftmaxScalar.html">QLinearSoftmaxScalar</a> {</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  </div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <span class="keywordtype">float</span> x_scale;</div>
@@ -111,7 +111,7 @@ $(document).ready(function(){initNavTree('qlinearsoftmax_8h_source.html',''); in
 <div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordtype">float</span> scale;</div>
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>  </div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_class" href="classQlinearsoftmaxScalar.html">QlinearsoftmaxScalar</a> (</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_class" href="classQLinearSoftmaxScalar.html">QLinearSoftmaxScalar</a> (</div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>      <span class="keywordtype">float</span> x_scale,</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>      <span class="keywordtype">float</span> y_scale,</div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>      TT x_zero,</div>
@@ -125,13 +125,13 @@ $(document).ready(function(){initNavTree('qlinearsoftmax_8h_source.html',''); in
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    </div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      <span class="keyword">static_assert</span>((std::is_same&lt;TT, int8_t&gt;::value) || (std::is_same&lt;TT, uint8_t&gt;::value));</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>      REGISTER_FUNCTION(QlinearsoftmaxScalar::filter);</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>      REGISTER_FUNCTION(QLinearSoftmaxScalar::filter);</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    };</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>};</div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD&gt;</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classQlinearsoftmaxFloatmul.html">   64</a></span><span class="keyword">class </span><a class="code hl_class" href="classQlinearsoftmaxFloatmul.html">QlinearsoftmaxFloatmul</a> {</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classQLinearSoftmaxFloatmul.html">   64</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearSoftmaxFloatmul.html">QLinearSoftmaxFloatmul</a> {</div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    </div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordtype">float</span> x_scale;</div>
@@ -147,7 +147,7 @@ $(document).ready(function(){initNavTree('qlinearsoftmax_8h_source.html',''); in
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="keywordtype">float</span> fastexp_shift;</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <a class="code hl_class" href="classQlinearsoftmaxFloatmul.html">QlinearsoftmaxFloatmul</a> (</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <a class="code hl_class" href="classQLinearSoftmaxFloatmul.html">QLinearSoftmaxFloatmul</a> (</div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>      <span class="keywordtype">float</span> x_scale,</div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>      <span class="keywordtype">float</span> y_scale,</div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>      TT x_zero,</div>
@@ -162,13 +162,13 @@ $(document).ready(function(){initNavTree('qlinearsoftmax_8h_source.html',''); in
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>      <span class="keyword">static_assert</span>((std::is_same&lt;TT, int8_t&gt;::value) || (std::is_same&lt;TT, uint8_t&gt;::value));</div>
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>            <span class="keyword">static_assert</span>(INP_W_PAD % 16 == 0);</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>            REGISTER_FUNCTION(QlinearsoftmaxFloatmul::filter);</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>            REGISTER_FUNCTION(QLinearSoftmaxFloatmul::filter);</div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        }</div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>};</div>
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD&gt;</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="classQlinearsoftmaxSingleaxis.html">  106</a></span><span class="keyword">class </span><a class="code hl_class" href="classQlinearsoftmaxSingleaxis.html">QlinearsoftmaxSingleaxis</a> {</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="classQLinearSoftmaxSingleaxis.html">  106</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearSoftmaxSingleaxis.html">QLinearSoftmaxSingleaxis</a> {</div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    </div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <span class="keywordtype">float</span> x_scale;</div>
@@ -185,7 +185,7 @@ $(document).ready(function(){initNavTree('qlinearsoftmax_8h_source.html',''); in
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    int32_t expsum_offset;</div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <a class="code hl_class" href="classQlinearsoftmaxSingleaxis.html">QlinearsoftmaxSingleaxis</a> (</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <a class="code hl_class" href="classQLinearSoftmaxSingleaxis.html">QLinearSoftmaxSingleaxis</a> (</div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>      <span class="keywordtype">float</span> x_scale,</div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>      <span class="keywordtype">float</span> y_scale,</div>
 <div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>      TT x_zero,</div>
@@ -200,13 +200,13 @@ $(document).ready(function(){initNavTree('qlinearsoftmax_8h_source.html',''); in
 <div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>      <span class="keyword">static_assert</span>((std::is_same&lt;TT, int8_t&gt;::value) || (std::is_same&lt;TT, uint8_t&gt;::value));</div>
 <div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>            <span class="keyword">static_assert</span>(INP_W_PAD % 16 == 0);</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>            REGISTER_FUNCTION(QlinearsoftmaxSingleaxis::filter);</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>            REGISTER_FUNCTION(QLinearSoftmaxSingleaxis::filter);</div>
 <div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        }</div>
 <div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>};</div>
 <div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span><span class="preprocessor">#endif </span><span class="comment">// QLINEARSOFTMAX_H_</span></div>
-<div class="ttc" id="aclassQlinearsoftmaxFloatmul_html"><div class="ttname"><a href="classQlinearsoftmaxFloatmul.html">QlinearsoftmaxFloatmul</a></div><div class="ttdoc">Vector implementation using fastexp2 method, float multiplication for exp estimation QlinearsoftmaxFl...</div><div class="ttdef"><b>Definition</b> qlinearsoftmax.h:64</div></div>
-<div class="ttc" id="aclassQlinearsoftmaxScalar_html"><div class="ttname"><a href="classQlinearsoftmaxScalar.html">QlinearsoftmaxScalar</a></div><div class="ttdoc">Scalar implementation. QlinearsoftmaxScalar&lt;10,20,32&gt; takes 517922 cycles for expf,...</div><div class="ttdef"><b>Definition</b> qlinearsoftmax.h:28</div></div>
-<div class="ttc" id="aclassQlinearsoftmaxSingleaxis_html"><div class="ttname"><a href="classQlinearsoftmaxSingleaxis.html">QlinearsoftmaxSingleaxis</a></div><div class="ttdoc">Vector implementation using fastexp2 method for single axis, QlinearsoftmaxSingleaxis&lt;10,...</div><div class="ttdef"><b>Definition</b> qlinearsoftmax.h:106</div></div>
+<div class="ttc" id="aclassQLinearSoftmaxFloatmul_html"><div class="ttname"><a href="classQLinearSoftmaxFloatmul.html">QLinearSoftmaxFloatmul</a></div><div class="ttdoc">Vector implementation using fastexp2 method, float multiplication for exp estimation QLinearSoftmaxFl...</div><div class="ttdef"><b>Definition</b> qlinearsoftmax.h:64</div></div>
+<div class="ttc" id="aclassQLinearSoftmaxScalar_html"><div class="ttname"><a href="classQLinearSoftmaxScalar.html">QLinearSoftmaxScalar</a></div><div class="ttdoc">Scalar implementation. QLinearSoftmaxScalar&lt;10,20,32&gt; takes 517922 cycles for expf,...</div><div class="ttdef"><b>Definition</b> qlinearsoftmax.h:28</div></div>
+<div class="ttc" id="aclassQLinearSoftmaxSingleaxis_html"><div class="ttname"><a href="classQLinearSoftmaxSingleaxis.html">QLinearSoftmaxSingleaxis</a></div><div class="ttdoc">Vector implementation using fastexp2 method for single axis, QLinearSoftmaxSingleaxis&lt;10,...</div><div class="ttdef"><b>Definition</b> qlinearsoftmax.h:106</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

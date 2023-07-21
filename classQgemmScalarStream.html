@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QgemmScalarStream&lt; TT, M, K, N &gt; Class Template Reference</title>
+<title>onnx2versal: QgemmScalarStream&lt; TT, TTPARAM, M, K, N &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('classQgemmScalarStream.html',''); init
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classQgemmScalarStream-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QgemmScalarStream&lt; TT, M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a> &raquo; <a class="el" href="group__QgemmKernels.html">QgemmKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">QgemmScalarStream&lt; TT, TTPARAM, M, K, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Qgemm.html">Qgemm</a> &raquo; <a class="el" href="group__QgemmKernels.html">QgemmKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -104,18 +104,18 @@ $(document).ready(function(){initNavTree('classQgemmScalarStream.html',''); init
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a98366c8171fe8b70e5f43322218d8311"><td class="memItemLeft" align="right" valign="top"><a id="a98366c8171fe8b70e5f43322218d8311" name="a98366c8171fe8b70e5f43322218d8311"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmScalarStream</b> (int8_t(&amp;w)[K *N], int32_t(&amp;b)[N], float x_scale, float w_scale, float y_scale, TT x_zero, int8_t w_zero, TT y_zero)</td></tr>
-<tr class="separator:a98366c8171fe8b70e5f43322218d8311"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a277682d7733af5149b764c6c08595f51"><td class="memItemLeft" align="right" valign="top"><a id="a277682d7733af5149b764c6c08595f51" name="a277682d7733af5149b764c6c08595f51"></a>
+<tr class="memitem:a788a2939fe8c0a518d415c8aa8cfdf8e"><td class="memItemLeft" align="right" valign="top"><a id="a788a2939fe8c0a518d415c8aa8cfdf8e" name="a788a2939fe8c0a518d415c8aa8cfdf8e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmScalarStream</b> (TTPARAM(&amp;w)[K *N], int32_t(&amp;b)[N], float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
+<tr class="separator:a788a2939fe8c0a518d415c8aa8cfdf8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e27a7d12ffed6dfc2970108fa39ccc5"><td class="memItemLeft" align="right" valign="top"><a id="a1e27a7d12ffed6dfc2970108fa39ccc5" name="a1e27a7d12ffed6dfc2970108fa39ccc5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a277682d7733af5149b764c6c08595f51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a1e27a7d12ffed6dfc2970108fa39ccc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a3f565ba8e5be1c961e9754c694944b76"><td class="memItemLeft" align="right" valign="top"><a id="a3f565ba8e5be1c961e9754c694944b76" name="a3f565ba8e5be1c961e9754c694944b76"></a>
+<tr class="memitem:a65615859ed747fe85c6b717f4472b173"><td class="memItemLeft" align="right" valign="top"><a id="a65615859ed747fe85c6b717f4472b173" name="a65615859ed747fe85c6b717f4472b173"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a3f565ba8e5be1c961e9754c694944b76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a65615859ed747fe85c6b717f4472b173"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="qgemm_8h_source.html">qgemm.h</a></li>
