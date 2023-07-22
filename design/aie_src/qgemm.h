@@ -72,7 +72,7 @@ class QgemmScalarStream {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0
- * QgemmStream<1,84,16> takes 267 cycles (output window same cycles)
+ * QgemmStream<1,84,16> takes 269 cycles, 280 cycles for uint8 weights
  */
 template <typename TT, typename TTPARAM, int M, int K, int N>
 class QgemmStream {

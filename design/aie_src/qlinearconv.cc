@@ -537,8 +537,8 @@ void QLinearConvScalarStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
  * acc6 += x0*z12 + x1*z13 x2*z14 + x3*z15
  * acc7 += x0*z14 + x1*z15 x2*z16 + x3*z16
  * 
- * xoffsets: 4b offset for lane 0,2,4,6, for 04, off0=2*4, off2=(0+4 +1)*2 => 8,9, 10,11
- * xoffsetshi: 4b offset for lane 8,10,12,14, same selection scheme
+ * xoffsets: 4b offset for every two lanes, e.g. 0 4 => 4*2=8, (0+4+1)*2=10 => 8,9, 10,11
+ * zoffsets: 4b offset for every lane, e.g. offset=4, step=4 => 4*2=8 => 8,9, 14,15
  */
 #define MAC_ROW(acc, widx) \
   acc = mac16(acc, wvec, widx, 0x0, 0x0, 2, 0x1010, data, 0, MAC_ZOFFSET, 0x87766554, 2, MAC_ZSQUARE); \

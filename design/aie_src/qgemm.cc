@@ -75,6 +75,8 @@ QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
  * https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits
  * int8 * int8 requires x indexing %4, z indexing %2
  * 
+ * reduce_add separately is slower, no instruction parallelism
+ * 
  *          z0  z1  z2  z3  z4  z5  z6  z7
  * acc0  += x0  x16 x32 x48 x64 x80 x96 x112
  * acc1  += x1  x17
@@ -93,21 +95,22 @@ QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
  * acc14 += x14 x30
  * acc15 += x15 x31
  * 
- * xidx: 30 => 0-3, 16-19, 33 => 12-15, 28-31 (square executes on 4x2 matrix)
- * zidx: 00 => 0,1, 2,3 => 0 1 0 1
- * acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
- * 
- * Vector registers can hold 256 int8 at most, 128 int16 at most.
+ * xoffsets: 4b offset for every four lanes, e.g. 1 2 => 2*4=8, (1+2+1)*4=16 => 8 9 10 11, 16,17,18,19
+ *           square executes on 4x2 matrix
+ * zoffsets: 2b offset for every lane, e.g. 4 => 4*2=8 => 8,9
+ *           adjacent lane pairs are duplicated, e.g. lane0, lane1, lane0, lane1
+ *           square executes on 2x2 matrix
  */
 template <typename TT, typename TTPARAM, int M, int K, int N>
 void QgemmStream<TT, TTPARAM, M, K, N>::filter(
 	input_window<TT>* in,      // MxK
-                                 // KxN
+                             // KxN
   output_stream<TT>* out     // MxN
 ) {
   PROFILE_HEADER2;
 
-  using v128 = typename std::conditional<(std::is_same<TT, int8_t>::value), v128int8, v128uint8>::type;
+  using v128 = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v128int8, v128uint8>::type;
+  using v64 = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v64int8, v64uint8>::type;
   using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
 
@@ -115,8 +118,10 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
   TTPARAM *w_ptr = (TTPARAM *) weights;
   int32_t *b_ptr = (int32_t *) bias;
 
-  v128 wmat = aie::zeros<TT,128>();
+  v128 wmat = aie::zeros<TTPARAM,128>();
+  v64 wzero = aie::broadcast<TTPARAM,64>(w_zero);
   v32 inmat = aie::zeros<TT,32>();
+
   aie::accum<acc48,16> aieacc1;
   aie::accum<acc48,16> acc_shift1;
   acc_shift1.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
@@ -136,30 +141,37 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
   wmat = upd_v(wmat, 6, *(v16 *) w_ptr); w_ptr += N; \
   wmat = upd_v(wmat, 7, *(v16 *) w_ptr); w_ptr += N;
 
+#define MAC_ROW(in_zstart) \
+  acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, in_zstart, 0x00000000, 2, 0x1010); \
+  if (!(std::is_same<TTPARAM,int8_t>::value)) \
+    acc1 = msc16(acc1, wzero, 0, 0x33323130, 0, 0x3120, inmat, in_zstart, 0x00000000, 2, 0x1010);
+
   for (int i = 0; i < M; i++) chess_prepare_for_pipelining chess_loop_range(M,) {
     for (int j = 0; j < N; j+=16) chess_prepare_for_pipelining chess_loop_range(N/16,) {
       
       acc1 = null_v16acc48();
 
+      wzero = aie::broadcast<TTPARAM,64>(w_zero);
       for (int k = 0; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
         inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += 16; // load input[k:k+8]
         LOAD_W; // load weight[k:k+8,n:n+16]
-        acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
+        MAC_ROW(0);
         LOAD_W; // load weight[k+8:k+16,n:n+16]
-        acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 8, 0x00000000, 2, 0x1010);
+        MAC_ROW(8);
       } // K-16
-      if (RUN_8CHUNK) {
-        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += 8;
+      if (K % 16 != 0) {
+        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += K % 16;
+      }
+      if (K % 16 >= 8) {
         LOAD_W;
-        acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
+        MAC_ROW(0);
       } // K-8
-      if (RUN_LASTCHUNK) {
-        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += K_REM16;
-        wmat = aie::zeros<TT,128>();
+      if (K % 8 > 0) {
+        wmat = aie::zeros<TTPARAM,128>();
         for (int p = 0; p < K_REM16; p++) {
           wmat = upd_v(wmat, p, *(v16 *) w_ptr); w_ptr += N;
         }
-        acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);
+        MAC_ROW(0);
       } // K
 
       aieacc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
