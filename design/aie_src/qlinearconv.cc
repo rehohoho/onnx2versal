@@ -541,7 +541,9 @@ void QLinearConvScalarStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
  * xoffsetshi: 4b offset for lane 8,10,12,14, same selection scheme
  */
 #define MAC_ROW(acc, widx) \
-  acc = mac16(acc, wvec, widx, 0x0, 0x0, 2, 0x1010, data, 0, MAC_ZOFFSET, 0x87766554, 2, MAC_ZSQUARE);
+  acc = mac16(acc, wvec, widx, 0x0, 0x0, 2, 0x1010, data, 0, MAC_ZOFFSET, 0x87766554, 2, MAC_ZSQUARE); \
+  if (!(std::is_same<TTPARAM,int8_t>::value)) \
+    acc = msc16(acc, wzero, 0, 0x0, 0x0, 2, 0x1010, data, 0, MAC_ZOFFSET, 0x87766554, 2, MAC_ZSQUARE);
 
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConvHx4Stream(
@@ -557,7 +559,7 @@ QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
 { 
-  assert(w_zero == 0);
+  if ((std::is_same<TTPARAM,int8_t>::value)) assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
   assert(scalebits <= 28); // KH*KW*int8*int8*scale <= acc48, for KH=KW=3
@@ -576,6 +578,9 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   
   v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  for (int i = 0; i < KW; i++)
+    wzero = upd_elem(wzero, i, w_zero);
   v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
@@ -677,7 +682,7 @@ QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
 { 
-  assert(w_zero == 0);
+  if ((std::is_same<TTPARAM,int8_t>::value)) assert(w_zero == 0);
   scalebits = 31;
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 }
@@ -693,6 +698,9 @@ void QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD,
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   
   v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  for (int i = 0; i < KW; i++)
+    wzero = upd_elem(wzero, i, w_zero);
   v32int8 data = null_v32int8();
 
   v16acc48 acc1 = undef_v16acc48();
@@ -801,7 +809,7 @@ QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STE
   x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
   x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
 { 
-  assert(w_zero == 0);
+  if ((std::is_same<TTPARAM,int8_t>::value)) assert(w_zero == 0);
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
   assert(scalebits <= 28); // KH*KW*int8*int8*scale <= acc48, for KH=KW=3
@@ -820,6 +828,9 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   
   v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  for (int i = 0; i < KW; i++)
+    wzero = upd_elem(wzero, i, w_zero);
   v32 data = aie::zeros<TT,32>();
 
   v16acc48 acc1 = undef_v16acc48();
