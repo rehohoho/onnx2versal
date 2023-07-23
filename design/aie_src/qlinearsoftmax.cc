@@ -166,10 +166,18 @@ QLinearSoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::QLinearSoftmaxSingleaxis 
   fastexp_scale = float2fix(x_scale/256, EXP_BITSHIFT);
   fastexp_shift = float2fix(-x_zero*x_scale/256+1, EXP_BITSHIFT);
 
-  long long exp_shift = fastexp_shift + float2fix(x_zero*x_scale/256, EXP_BITSHIFT);
-  for (int i = 0; i < 8; i++)
-    exp_shift = (exp_shift*exp_shift) >> EXP_BITSHIFT;
-  expsum_offset = (int32_t) exp_shift; // for in[i] = 0
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+  
+  aie::vector<int32_t,16> in_v = aie::broadcast<int32_t,16>(x_zero);
+  aie::accum<acc48,16> fastexp_shifts;
+  fastexp_shifts.from_vector(aie::broadcast<int32_t,16>(fastexp_shift), 0);
+  
+  in_v = aie::mac(fastexp_shifts, in_v, fastexp_scale).to_vector<int32_t>(0);
+  for (int k = 0; k < 8; k++) chess_flatten_loop {
+    in_v = aie::mul_square(in_v).to_vector<int32_t>(EXP_BITSHIFT);
+  } // exp(x)
+  expsum_offset = (int32_t) ext_elem(in_v, 0); // for in[i] = 0
 };
 
 

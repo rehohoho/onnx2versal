@@ -112,7 +112,7 @@ class QLinearSoftmaxSingleaxis {
     TT y_zero;
 
     int EXP_BITSHIFT = 24;
-    int OUT_BITSHIFT = 8;
+    int OUT_BITSHIFT = 4;
 
     // precompute
     int16_t fastexp_scale;

@@ -2,18 +2,20 @@
 #include "graph_utils.h"
 
 
-template <template<typename, int, int, int> class QLINEARSOFTMAX, 
+template <
+  template<typename, int, int, int, int, int, int, int, int> class PAD,
+  template<typename, int, int, int> class QLINEARSOFTMAX, 
   typename TT, int INP_H, int INP_W, int INP_W_PAD>
-class QlinearsoftmaxStreamGraphTest : public adf::graph {
+class QLinearSoftmaxStreamGraphTest : public adf::graph {
 
   private:
-    QlinearsoftmaxStreamGraph<QLINEARSOFTMAX, TT, INP_H, INP_W, INP_W_PAD> g;
+    QLinearSoftmaxStreamGraph<PAD, QLINEARSOFTMAX, TT, INP_H, INP_W, INP_W_PAD> g;
 
   public:
     adf::input_plio plin[1];
     adf::output_plio plout[1];
 
-    QlinearsoftmaxStreamGraphTest(
+    QLinearSoftmaxStreamGraphTest(
       const std::string& id,
       float x_scale,
       float y_scale,
@@ -35,23 +37,23 @@ typedef int8_t TT;
 const int INP_H = 10;
 const int INP_W = 20;
 const int INP_W_PAD = 32;
-QlinearsoftmaxStreamGraphTest<QlinearsoftmaxScalar, TT, INP_H, INP_W, INP_W_PAD> qlinearsoftmaxScalar(
+QLinearSoftmaxStreamGraphTest<Pad2DStreamInt8, QLinearSoftmaxScalar, TT, INP_H, INP_W, INP_W_PAD> qlinearsoftmaxScalar(
   "qlinearsoftmaxScalar", 
   0.004, 0.003, -128, -128,
   "qlinearsoftmax_int8in.txt", 
-  "qlinearsoftmax_int8out_shape10x20_QlinearsoftmaxScalar.txt");
+  "qlinearsoftmax_int8out_shape10x20_QLinearSoftmaxScalar.txt");
 
-QlinearsoftmaxStreamGraphTest<QlinearsoftmaxFloatmul, TT, INP_H, INP_W, INP_W_PAD> qlinearsoftmaxFloatmul(
+QLinearSoftmaxStreamGraphTest<Pad2DStreamInt8, QLinearSoftmaxFloatmul, TT, INP_H, INP_W, INP_W_PAD> qlinearsoftmaxFloatmul(
   "qlinearsoftmaxFloatmul", 
   0.004, 0.003, -128, -128,
   "qlinearsoftmax_int8in.txt", 
-  "qlinearsoftmax_int8out_shape10x20_QlinearsoftmaxFloatmul.txt");
+  "qlinearsoftmax_int8out_shape10x20_QLinearSoftmaxFloatmul.txt");
 
-QlinearsoftmaxStreamGraphTest<QlinearsoftmaxSingleaxis, TT, INP_H, INP_W, INP_W_PAD> qlinearsoftmaxSingleaxis(
+QLinearSoftmaxStreamGraphTest<Pad2DStreamInt8, QLinearSoftmaxSingleaxis, TT, INP_H, INP_W, INP_W_PAD> qlinearsoftmaxSingleaxis(
   "qlinearsoftmaxSingleaxis", 
   0.004, 0.003, -128, -128,
   "qlinearsoftmax_int8in.txt", 
-  "qlinearsoftmax_int8out_shape10x20_QlinearsoftmaxSingleaxis.txt");
+  "qlinearsoftmax_int8out_shape10x20_QLinearSoftmaxSingleaxis.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
