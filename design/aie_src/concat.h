@@ -266,7 +266,7 @@ class ConcatInt8 {
 		static void registerKernelClass() {
 			static_assert(INP_W%16==0);
 			static_assert(OUT_W%16==0);
-			static_assert(std::is_same<TT, int8_t>::value);
+			static_assert(std::is_same<TT, int8_t>::value || std::is_same<TT, uint8_t>::value);
 			if (LCNT == 8) {
 				REGISTER_FUNCTION(ConcatInt8::filter8);
 			} else if (LCNT == 7) {
