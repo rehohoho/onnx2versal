@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQgemmStream.html',''); initResiza
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for MK*KN, stores weights and biases, requires N%16=0 QgemmStream&lt;1,84,16&gt; takes 267 cycles (output window same cycles)  
+<p>Vector implementation for MK*KN, stores weights and biases, requires N%16=0 QgemmStream&lt;1,84,16&gt; takes 269 cycles, 280 cycles for uint8 weights.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qgemm_8h_source.html">qgemm.h</a>&gt;</code></p>
@@ -145,10 +145,10 @@ template&lt;typename TT , typename TTPARAM , int M, int K, int N&gt; </div>
       </table>
 </div><div class="memdoc">
 <p>QgemmStream&lt;28,32,24,32,1,1,6,5&gt;</p>
-<p><a href="https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits">https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits</a> int8 * int8 requires x indexing %4, z indexing %2 </p><pre class="fragment">     z0  z1  z2  z3  z4  z5  z6  z7
+<p><a href="https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits">https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/MAC-on-8x8-bits</a> int8 * int8 requires x indexing %4, z indexing %2</p>
+<p>reduce_add separately is slower, no instruction parallelism </p><pre class="fragment">     z0  z1  z2  z3  z4  z5  z6  z7
 </pre><p> acc0 += x0 x16 x32 x48 x64 x80 x96 x112 acc1 += x1 x17 acc2 += x2 x18 acc3 += x3 x19 acc4 += x4 x20 acc5 += x5 x21 acc6 += x6 x22 acc7 += x7 x23 acc8 += x8 x24 acc9 += x9 x25 acc10 += x10 x26 acc11 += x11 x27 acc12 += x12 x28 acc13 += x13 x29 acc14 += x14 x30 acc15 += x15 x31</p>
-<p>xidx: 30 =&gt; 0-3, 16-19, 33 =&gt; 12-15, 28-31 (square executes on 4x2 matrix) zidx: 00 =&gt; 0,1, 2,3 =&gt; 0 1 0 1 acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, 0, 0x00000000, 2, 0x1010);</p>
-<p>Vector registers can hold 256 int8 at most, 128 int16 at most. </p>
+<p>xoffsets: 4b offset for every four lanes, e.g. 1 2 =&gt; 2*4=8, (1+2+1)*4=16 =&gt; 8 9 10 11, 16,17,18,19 square executes on 4x2 matrix zoffsets: 2b offset for every lane, e.g. 4 =&gt; 4*2=8 =&gt; 8,9 adjacent lane pairs are duplicated, e.g. lane0, lane1, lane0, lane1 square executes on 2x2 matrix </p>
 
 </div>
 </div>

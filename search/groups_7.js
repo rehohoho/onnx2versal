@@ -9,7 +9,7 @@ var searchData=
   ['qlinearmac_6',['QlinearMac',['../group__QlinearMac.html',1,'']]],
   ['qlinearmackernels_7',['QlinearMacKernels',['../group__QlinearMacKernels.html',1,'']]],
   ['qlinearpool2d_8',['QLinearPool2D',['../group__QLinearPool2D.html',1,'']]],
-  ['qlinearsoftmax_9',['Qlinearsoftmax',['../group__Qlinearsoftmax.html',1,'']]],
+  ['qlinearsoftmax_9',['QLinearSoftmax',['../group__QLinearSoftmax.html',1,'']]],
   ['qlinearsoftmaxkernels_10',['QLinearSoftmaxKernels',['../group__QLinearSoftmaxKernels.html',1,'']]],
   ['quantizelinear_11',['QuantizeLinear',['../group__QuantizeLinear.html',1,'']]],
   ['quantizelinearkernels_12',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]]

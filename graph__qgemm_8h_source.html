@@ -223,7 +223,7 @@ $(document).ready(function(){initNavTree('graph__qgemm_8h_source.html',''); init
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; CHUNK_COUNT; i++) {</div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>        adf::connect&lt;adf::window&lt;M*K&gt;&gt; (pin[0], k[i].in[0]);</div>
 <div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>        adf::connect&lt;adf::stream&gt; (k[i].out[0], concat_g.pin[i]);</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        adf::samples_per_iteration(k[i].out[0]) = M*N;</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        adf::samples_per_iteration(k[i].out[0]) = M*NCHUNK;</div>
 <div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>      }</div>
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>      adf::connect&lt;adf::stream&gt; (concat_g.pout[0], pout[0]);</div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    }</div>

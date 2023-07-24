@@ -15,10 +15,9 @@ var modules =
     [ "QLinearConv", "group__QLinearConv.html", "group__QLinearConv" ],
     [ "QlinearMac", "group__QlinearMac.html", "group__QlinearMac" ],
     [ "QLinearPool2D", "group__QLinearPool2D.html", "group__QLinearPool2D" ],
-    [ "Qlinearsoftmax", "group__Qlinearsoftmax.html", "group__Qlinearsoftmax" ],
+    [ "QLinearSoftmax", "group__QLinearSoftmax.html", "group__QLinearSoftmax" ],
     [ "QuantizeLinear", "group__QuantizeLinear.html", "group__QuantizeLinear" ],
     [ "Softmax", "group__Softmax.html", "group__Softmax" ],
     [ "Split", "group__Split.html", "group__Split" ],
-    [ "Transpose", "group__Transpose.html", "group__Transpose" ],
-    [ "QLinearSoftmaxKernels", "group__QLinearSoftmaxKernels.html", "group__QLinearSoftmaxKernels" ]
+    [ "Transpose", "group__Transpose.html", "group__Transpose" ]
 ];

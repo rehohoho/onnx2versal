@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QlinearMacScalar&lt; B, W, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: QlinearMacScalar&lt; TT, TTPARAM, B, W, IS_RELU &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,29 +93,29 @@ $(document).ready(function(){initNavTree('classQlinearMacScalar.html',''); initR
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classQlinearMacScalar-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QlinearMacScalar&lt; B, W, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QlinearMac.html">QlinearMac</a> &raquo; <a class="el" href="group__QlinearMacKernels.html">QlinearMacKernels</a></div></div></div>
+  <div class="headertitle"><div class="title">QlinearMacScalar&lt; TT, TTPARAM, B, W, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QlinearMac.html">QlinearMac</a> &raquo; <a class="el" href="group__QlinearMacKernels.html">QlinearMacKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="classQlinearMac.html" title="QlinearMac vector implementation, requires W%16 == 0, QlinearMacScalar&lt;14,128,0&gt; 1253 cycles.">QlinearMac</a> scalar implementation, QlinearMacScalar&lt;14,128,0&gt; 418513 cycles.  
+<p><a class="el" href="classQlinearMac.html" title="QlinearMac vector implementation, requires W%16 == 0, QlinearMacScalar&lt;14,128,0&gt; 1256 cycles,...">QlinearMac</a> scalar implementation, QlinearMacScalar&lt;14,128,0&gt; 418101 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qlinearmac_8h_source.html">qlinearmac.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9d72ca9a988f926b7b560fc24a1383e9"><td class="memItemLeft" align="right" valign="top"><a id="a9d72ca9a988f926b7b560fc24a1383e9" name="a9d72ca9a988f926b7b560fc24a1383e9"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QlinearMacScalar</b> (int8_t(&amp;w)[W], int8_t(&amp;b)[W], float x_scale, float w_scale, float b_scale, float z_scale, float y_scale, int8_t x_zero, int8_t w_zero, int8_t b_zero, int8_t z_zero, int8_t y_zero)</td></tr>
-<tr class="separator:a9d72ca9a988f926b7b560fc24a1383e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33a89ab5b114ee64b226819cdef704db"><td class="memItemLeft" align="right" valign="top"><a id="a33a89ab5b114ee64b226819cdef704db" name="a33a89ab5b114ee64b226819cdef704db"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; int8_t &gt; *in, output_window&lt; int8_t &gt; *out)</td></tr>
-<tr class="separator:a33a89ab5b114ee64b226819cdef704db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8358a9aab93744290cad803a012d896d"><td class="memItemLeft" align="right" valign="top"><a id="a8358a9aab93744290cad803a012d896d" name="a8358a9aab93744290cad803a012d896d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QlinearMacScalar</b> (TTPARAM(&amp;w)[W], TTPARAM(&amp;b)[W], float x_scale, float w_scale, float b_scale, float z_scale, float y_scale, TT x_zero, TTPARAM w_zero, TTPARAM b_zero, TT z_zero, TT y_zero)</td></tr>
+<tr class="separator:a8358a9aab93744290cad803a012d896d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad498db0f80141d6b8d99eacfd08e0b3d"><td class="memItemLeft" align="right" valign="top"><a id="ad498db0f80141d6b8d99eacfd08e0b3d" name="ad498db0f80141d6b8d99eacfd08e0b3d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_window&lt; TT &gt; *out)</td></tr>
+<tr class="separator:ad498db0f80141d6b8d99eacfd08e0b3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:afd3ce2d257e143752d9825e7fba75e32"><td class="memItemLeft" align="right" valign="top"><a id="afd3ce2d257e143752d9825e7fba75e32" name="afd3ce2d257e143752d9825e7fba75e32"></a>
+<tr class="memitem:aa9235e18a39a55a270ab97b4994e4325"><td class="memItemLeft" align="right" valign="top"><a id="aa9235e18a39a55a270ab97b4994e4325" name="aa9235e18a39a55a270ab97b4994e4325"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:afd3ce2d257e143752d9825e7fba75e32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aa9235e18a39a55a270ab97b4994e4325"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="qlinearmac_8h_source.html">qlinearmac.h</a></li>
