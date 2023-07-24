@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 import onnxruntime
-from onnxruntime.quantization import QuantFormat, QuantType, quantize_static
+from onnxruntime.quantization import QuantFormat, QuantType, quantize_static, CalibrationMethod
 from onnxruntime.quantization import CalibrationDataReader
 
 
@@ -54,7 +54,6 @@ if __name__ == "__main__":
   parser.add_argument("qonnx",     nargs=1, help="required path to output quantized onnx file")
   parser.add_argument("input_npy", nargs=1, help="path to input data .npy, assume first dim is batch")
   parser.add_argument("-data", type=str, default="../data", help="path to data directory")
-  parser.add_argument("-is_class", action="store_true", help="whether to argmax during run_model")
   args = parser.parse_args()
   args.onnx = args.onnx[0]
   args.qonnx = args.qonnx[0]
@@ -74,8 +73,10 @@ if __name__ == "__main__":
     data_reader,
     quant_format=Q_FORMAT,
     per_channel=Q_PER_CHANNEL,
-    weight_type=QuantType.QInt8,
+    activation_type=QuantType.QUInt8,
+    weight_type=QuantType.QUInt8,
     optimize_model=False,
+    calibrate_method=CalibrationMethod.MinMax
   )
   print("Calibrated and quantized model saved.")
 
