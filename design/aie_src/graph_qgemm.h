@@ -162,7 +162,7 @@ class QgemmChunkNStreamGraph : public adf::graph {
       for (int i = 0; i < CHUNK_COUNT; i++) {
         adf::connect<adf::window<M*K>> (pin[0], k[i].in[0]);
         adf::connect<adf::stream> (k[i].out[0], concat_g.pin[i]);
-        adf::samples_per_iteration(k[i].out[0]) = M*N;
+        adf::samples_per_iteration(k[i].out[0]) = M*NCHUNK;
       }
       adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
     }
