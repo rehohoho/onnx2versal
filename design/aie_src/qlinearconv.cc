@@ -1170,13 +1170,11 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
           if (STEP_W == 2) {
             v16int16 tmp = srs(acc1, scalebits);
             v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
-            if (res_updi == 1) {
-              res = upd_v(res, 1, tmphalf);
-              writeincr_v16(out, ((aie::vector<int16_t,16>) res).pack<TT>());
-            } else {
-              res = upd_v(res, 0, tmphalf);
-            }
-            res_updi = (res_updi + 1) & 0x1;
+            tmp = upd_v(tmp, 0, tmphalf);
+            aie::vector<TT,16> tmpout = ((aie::vector<int16_t,16>) tmp).pack<TT>();
+            int *tmpint = (int *) &(tmpout);
+            put_ms(0, tmpint[0]);
+            put_ms(0, tmpint[1]);
           } else {
             writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }
