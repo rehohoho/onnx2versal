@@ -63,9 +63,9 @@ QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
   TT y_zero
 ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
   // -1 due to rounding, -1 to fit in 16b
-  scalebits = std::abs(log(x_scale*w_scale/y_scale) / log(2)) + 15;
-  if (scalebits >= 48 - log(K)/log(2) - 16)
-    printf("WARNING: scalebits %d vs %f \n", scalebits, 48 - log(K)/log(2) - 16); // K*int8*int8*scale <= acc48
+  scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
+  // if (scalebits >= 48 - log(K)/log(2) - 16)
+  //   printf("WARNING: scalebits %d vs %f \n", scalebits, 48 - log(K)/log(2) - 16); // K*int8*int8*scale <= acc48
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
 };
 
@@ -159,16 +159,16 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
         LOAD_W; // load weight[k+8:k+16,n:n+16]
         MAC_ROW(8);
       } // K-16
-      if (K % 16 != 0) {
-        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += K % 16;
+      if ((K & 0xf) != 0) {
+        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += (K & 0xf);
       }
-      if (K % 16 >= 8) {
+      if ((K & 0xf) >= 8) {
         LOAD_W;
         MAC_ROW(0);
       } // K-8
-      if (K % 8 > 0) {
+      if ((K & 0x3) > 0) {
         wmat = aie::zeros<TTPARAM,128>();
-        for (int p = 0; p < K_REM16; p++) {
+        for (int p = 0; p < (K & 0xf); p++) {
           wmat = upd_v(wmat, p, *(v16 *) w_ptr); w_ptr += N;
         }
         MAC_ROW(0);

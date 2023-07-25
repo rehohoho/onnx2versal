@@ -92,11 +92,6 @@ class QgemmStream {
     int16_t scale;
     int32_t shift;
 
-    static constexpr int K_REM16 = K%16;
-    static constexpr int RUN_8CHUNK = K_REM16 >= 8;
-    static constexpr int K_REM8 = RUN_8CHUNK ? K_REM16 - 8 : K_REM16;
-    static constexpr int RUN_LASTCHUNK = K_REM8 > 0;
-  
   public:
     QgemmStream (
       TTPARAM (&w)[K*N],
