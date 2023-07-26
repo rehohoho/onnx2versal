@@ -223,6 +223,9 @@ class AddOp(OpParser):
     return f"adf::connect<> {self.name}_s{i} ({last_port}, {self.name}.pin[{i}]);\n" + \
       f"adf::fifo_depth({self.name}_s{i}) = {self.W//8};\n"
 
+  def get_computation_count(self):
+    return self.W
+
 
 class ArgmaxOp(OpParser):
   include_file: str = "graph_argmax.h"
@@ -294,7 +297,11 @@ class ConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
+    try:
+      HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_PARAM_SIZE, offset)
+    except Exception as e:
+      print(e)
+      HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -357,6 +364,9 @@ class ConvOp(OpParser):
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
   
+  def get_computation_count(self):
+    return self.B * self.M * self.C * self.KH * self.KW * self.OUT_H * self.OUT_W_PAD
+  
 
 class DequantizeLinearOp(OpParser):
   """Use input tensor, pad width to vector boundary for INP_SIZE
@@ -397,6 +407,9 @@ class DequantizeLinearOp(OpParser):
   # def disable_output_pad(self):
   #   self.out_size = self.tout.size
   #   super().disable_output_pad()
+
+  def get_computation_count(self):
+    return self.B * self.OUT_W
 
 
 class GemmOp(OpParser):
@@ -477,6 +490,9 @@ class GemmOp(OpParser):
   def disable_output_pad(self):
     self.register(disable_N_pad=True)
     super().disable_output_pad()
+  
+  def get_computation_count(self):
+    return self.M * self.K * self.N
 
 
 class MacOp(OpParser):
@@ -518,6 +534,9 @@ class MacOp(OpParser):
     if self.W % 8 == 0:
       kernel = "MacFloat"
     return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
+  
+  def get_computation_count(self):
+    return self.B * self.W
 
 
 class PoolOp(OpParser):
@@ -573,6 +592,9 @@ class PoolOp(OpParser):
       CCHUNK, _ = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
       return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
         f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+    
+    def get_computation_count(self):
+      return self.B * self.C * self.INP_H * self.INP_W
 
 
 class QGemmOp(OpParser):
@@ -621,7 +643,7 @@ class QGemmOp(OpParser):
 
     tout = pad_lastdim(tout, "QGemm tout", vector_size, value=tin_zero) # config
     self.K, self.N = tin.shape[-1], tout.shape[-1]
-    self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
+    # self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
     self.out_size = tout.size # host buffer sizes
 
     if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE:
@@ -633,7 +655,7 @@ class QGemmOp(OpParser):
     
     elif tw.nbytes <= MAX_PARAM_SIZE * 8:
       chunkSize = MAX_PARAM_SIZE//(tw.nbytes//self.N) //16*16
-      concat = "ConcatInt8" if chunkSize % 16 == 0 and self.N % 16 == 0 else "ConcatScalar"
+      concat = "ConcatInt8Stream"
       self.kernel_type = f"QgemmChunkNStreamGraph<{kernel},{concat},{chunkSize},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.dtype)},{self.M},{self.K},{self.N}>"
     
     else:
@@ -641,6 +663,9 @@ class QGemmOp(OpParser):
     
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
+  
+  def get_computation_count(self):
+    return self.M*self.K*self.N + self.M*self.N*2 # add bias then quantize
 
 
 class QLinearAddOp(OpParser):
@@ -688,6 +713,9 @@ class QLinearAddOp(OpParser):
       return f"adf::connect<> {self.name}_s{i} ({last_port}, {self.name}.pin[{i}]);\n" + \
           f"adf::fifo_depth({self.name}_s{i}) = {self.W//4};"
     return super().get_connect_line(last_port, i)
+  
+  def get_computation_count(self):
+    return self.W*2 # quantize
 
 
 class QLinearConvOp(OpParser):
@@ -761,6 +789,10 @@ class QLinearConvOp(OpParser):
     else:
       self.graph = "QLinearConvChunkHPktStreamGraph" if self.HCHUNK - overlap*2 >= 0 else "QLinearConvChunkHStreamGraph"
       self.split_kernel = "SplitFilterInt8PktStream" if self.HCHUNK - overlap*2 >= 0 else "SplitInt8"
+    # if self.name == "k008qlinearconv":
+    #   import ipdb;ipdb.set_trace()
+    #   (self.HCHUNK - self.KH) / self.STEP_H + 1
+    #   (HCHUNK - KH) / STEP_H + 1
     
   def register_params(self, 
                       tensors: List[np.ndarray], 
@@ -836,6 +868,10 @@ class QLinearConvOp(OpParser):
     
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
+  
+  def get_computation_count(self):
+    return self.B*self.C*self.OUT_H*self.OUT_W_PAD * (self.KH*self.KW + 1) # quantize
+
 
 class QLinearMacOp(OpParser):
   include_file: str = "graph_qlinearmac.h"
@@ -890,6 +926,9 @@ class QLinearMacOp(OpParser):
       self.B, self.repeat = factor_int(self.B, self.W * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
 
     return f"{graph}<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.B},{self.W},{int(self.is_relu)}> {self.name};"
+  
+  def get_computation_count(self):
+    return self.B*self.W*3 # quantize twice
 
 
 class QLinearPoolOp(OpParser):
@@ -949,11 +988,13 @@ class QLinearPoolOp(OpParser):
       return f"QLinearPoolChunkCStreamGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
         f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
     
-  
   def disable_output_pad(self):
     self.OUT_W = self.unpadded_OUT_W
     self.out_size = self.tout.size
     super().disable_output_pad()
+  
+  def get_computation_count(self):
+    return self.B*self.C*self.OUT_H*self.OUT_W * (self.KH*self.KW + 1) # quantize
 
 
 class QLinearSoftmaxOp(OpParser):
@@ -1005,6 +1046,9 @@ class QLinearSoftmaxOp(OpParser):
       kernel = "QLinearSoftmaxSingleaxis" # accuracy option
     return f"{graph}<Pad2DStreamInt8,{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
+  def get_computation_count(self):
+    return self.INP_H*self.INP_W_PAD * 12 # mac, 8x mul_square, add, mac, srs
+
 
 class QuantizeLinearOp(OpParser):
   """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for OUT_W
@@ -1035,16 +1079,22 @@ class QuantizeLinearOp(OpParser):
     self.INP_H, self.INP_W, self.OUT_W = inH, tin.shape[-1], tout.shape[-1]
     self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
+    
+    # self.INP_H, self.repeat = factor_int(self.INP_H, self.INP_W*4, MAX_PARAM_SIZE)
   
   def get_kernel_line(self) -> str:
     if self.INP_W % 4 == 0 and self.OUT_W % 16 == 0:
       return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
+      # return f"QuantizeLinearGraph<QuantizeLinearFmul,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
     else:
       raise NotImplementedError(f"Expect INP_W%4==0, OUT_W%16==0, but got INP_W {self.INP_W}, OUT_W {self.OUT_W}")
   
   def disable_input_pad(self):
     # self.INP_W = self.inW
     super().disable_input_pad()
+  
+  def get_computation_count(self):
+    return self.INP_H*self.INP_W_PAD * 2
 
 
 class SoftmaxOp(OpParser):
@@ -1081,6 +1131,9 @@ class SoftmaxOp(OpParser):
       kernel = "SoftmaxSingleaxis"
     return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
+  def get_computation_count(self):
+    return self.INP_H*self.INP_W_PAD * 12 # mac, 8x mul_square, add, mac, srs
+
 
 class TransposeOp(OpParser):
   include_file: str = "graph_transpose.h"
@@ -1113,4 +1166,6 @@ class TransposeOp(OpParser):
       return f"TransposeChunkHPktStreamGraph<{split_kernel},{kernel},{concat_kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
     else:
       return f"TransposeGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
-
+  
+  def get_computation_count(self):
+    return self.B*self.H*self.W*self.C

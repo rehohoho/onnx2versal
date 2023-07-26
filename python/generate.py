@@ -46,12 +46,14 @@ if __name__ == '__main__':
 
   # Load data, shape according to model def, run with ONNX Runtime
   many_inputs = np.load(args.input_npy)[:args.ndata]
-  single_input = many_inputs[[0]]
+  single_input = many_inputs[[16]]
   input_shape = ort_session.get_inputs()[0].shape
   
   if single_input.ndim > len(input_shape):
     single_input = single_input.reshape(-1, *(single_input.shape[-len(input_shape)+1:]))
     many_inputs = many_inputs.reshape(-1, *(many_inputs.shape[-len(input_shape)+1:]))
+    single_input = single_input[:14]
+    many_inputs = many_inputs[:14*args.ndata]
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}
   ort_outs = ort_session.run(None, ort_inputs)
 
