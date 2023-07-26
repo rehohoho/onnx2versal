@@ -420,7 +420,7 @@ class ConvReluChunkHGraph : public adf::graph {
           adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
-        adf::runtime<ratio>(pad[0]) = 0.1;
+        adf::runtime<ratio>(pad[0]) = 0.6;
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
@@ -569,7 +569,7 @@ class ConvReluChunkHStreamGraph : public adf::graph {
           adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
-        adf::runtime<ratio>(pad[0]) = 0.1;
+        adf::runtime<ratio>(pad[0]) = 0.6;
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         for (int i = 0; i < (LCNT+1)/2; i++)
@@ -672,7 +672,7 @@ class ConvReluChunkHPktStreamGraph : public adf::graph {
           adf::kernel::create_object<Pad2DStreamFloat<float_t, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
-        adf::runtime<ratio>(pad[0]) = 0.1;
+        adf::runtime<ratio>(pad[0]) = 0.6;
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);

@@ -205,6 +205,7 @@ class AddOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
     self.dtype = tout.dtype
+    self.disable_last_file_output = True
 
     self.filename_2_tensor[f"{self.name}_inA_{get_shape_str(ta)}.txt"] = ta
     self.filename_2_tensor[f"{self.name}_inB_{get_shape_str(tb)}.txt"] = tb
@@ -296,10 +297,10 @@ class ConvOp(OpParser):
     HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
-    if self.HCHUNK == PAD_H:
+    if self.HCHUNK >= PAD_H - (self.STEP_H-1):
       self.graph = "ConvReluStreamGraph"
       self.disable_last_file_output = True
-      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
+      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= 32768
     else:
       self.graph = "ConvReluChunkHPktStreamGraph" if self.HCHUNK - overlap*2 >= 0 else "ConvReluChunkHStreamGraph"
       self.split_kernel = "SplitFilterFloatPktStream" if self.HCHUNK - overlap*2 >= 0 else "SplitFilterFloatStream"
@@ -660,6 +661,7 @@ class QLinearAddOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
     self.dtype = tout.dtype
+    self.disable_last_file_output = True
 
     self.argname_2_tensor[f"{self.name}_inA_scale"] = ta_scale
     self.argname_2_tensor[f"{self.name}_inB_scale"] = tb_scale
@@ -754,6 +756,7 @@ class QLinearConvOp(OpParser):
 
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
       self.graph = "QLinearConvStreamGraph"
+      self.disable_last_file_output = True
       assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
     else:
       self.graph = "QLinearConvChunkHPktStreamGraph" if self.HCHUNK - overlap*2 >= 0 else "QLinearConvChunkHStreamGraph"
