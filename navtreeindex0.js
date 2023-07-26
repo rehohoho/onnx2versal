@@ -94,7 +94,7 @@ var NAVTREEINDEX0 =
 "classQgemmChunkNStreamGraph.html":[8,10,2],
 "classQgemmScalarStream.html":[8,10,0,0],
 "classQgemmStream.html":[8,10,0,1],
-"classQgemmStream.html#a769c753807d131dc61270ac076bce474":[8,10,0,1,0],
+"classQgemmStream.html#a35364e9954992fd6f8e790375c259ca8":[8,10,0,1,0],
 "classQgemmStreamGraph.html":[8,10,1],
 "classQlinearMac.html":[8,13,0,1],
 "classQlinearMacGraph.html":[8,13,1],

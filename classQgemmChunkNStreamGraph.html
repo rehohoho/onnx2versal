@@ -104,31 +104,21 @@ $(document).ready(function(){initNavTree('classQgemmChunkNStreamGraph.html','');
 <p><code>#include &lt;<a class="el" href="graph__qgemm_8h_source.html">graph_qgemm.h</a>&gt;</code></p>
 
 <p>Inherits adf::graph.</p>
-<div class="dynheader">
-Collaboration diagram for QgemmChunkNStreamGraph&lt; QGEMM, CONCAT, NCHUNK, TT, TTPARAM, M, K, N &gt;:</div>
-<div class="dyncontent">
-<div class="center"><img src="classQgemmChunkNStreamGraph__coll__graph.png" border="0" usemap="#aQgemmChunkNStreamGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01TT_00_01TTPARAM_00_01M_00_01K_00_01N_01_4_coll__map" alt="Collaboration graph"/></div>
-<map name="aQgemmChunkNStreamGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01TT_00_01TTPARAM_00_01M_00_01K_00_01N_01_4_coll__map" id="aQgemmChunkNStreamGraph_3_01QGEMM_00_01CONCAT_00_01NCHUNK_00_01TT_00_01TTPARAM_00_01M_00_01K_00_01N_01_4_coll__map">
-<area shape="rect" title="Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,..." alt="" coords="5,124,219,180"/>
-<area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="26,5,198,61"/>
-<area shape="poly" title=" " alt="" coords="115,76,115,123,109,123,109,76"/>
-</map>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a2c35614ba45957747c61535e7852f948"><td class="memItemLeft" align="right" valign="top"><a id="a2c35614ba45957747c61535e7852f948" name="a2c35614ba45957747c61535e7852f948"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmChunkNStreamGraph</b> (std::vector&lt; TTPARAM &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero, int repeat_cnt=1)</td></tr>
-<tr class="separator:a2c35614ba45957747c61535e7852f948"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a818bd15ba9a3923892754ac367692e63"><td class="memItemLeft" align="right" valign="top"><a id="a818bd15ba9a3923892754ac367692e63" name="a818bd15ba9a3923892754ac367692e63"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QgemmChunkNStreamGraph</b> (std::vector&lt; TTPARAM &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
+<tr class="separator:a818bd15ba9a3923892754ac367692e63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a636ecad5a359f8439336f5fab33485e5"><td class="memItemLeft" align="right" valign="top"><a id="a636ecad5a359f8439336f5fab33485e5" name="a636ecad5a359f8439336f5fab33485e5"></a>
 adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>k</b> [CHUNK_COUNT]</td></tr>
 <tr class="separator:a636ecad5a359f8439336f5fab33485e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23c5938748c858a8511ac8bde4037cc2"><td class="memItemLeft" align="right" valign="top"><a id="a23c5938748c858a8511ac8bde4037cc2" name="a23c5938748c858a8511ac8bde4037cc2"></a>
-<a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, TT, CHUNK_COUNT, M, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
-<tr class="separator:a23c5938748c858a8511ac8bde4037cc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6df6816e10acad26d86c277a1c27cbd"><td class="memItemLeft" align="right" valign="top"><a id="ab6df6816e10acad26d86c277a1c27cbd" name="ab6df6816e10acad26d86c277a1c27cbd"></a>
+ConcatStreamGraph&lt; CONCAT, TT, CHUNK_COUNT, M, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
+<tr class="separator:ab6df6816e10acad26d86c277a1c27cbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a149d2906b1503ed7035d29b644be4f92"><td class="memItemLeft" align="right" valign="top"><a id="a149d2906b1503ed7035d29b644be4f92" name="a149d2906b1503ed7035d29b644be4f92"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
 <tr class="separator:a149d2906b1503ed7035d29b644be4f92"><td class="memSeparator" colspan="2">&#160;</td></tr>

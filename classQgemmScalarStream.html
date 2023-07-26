@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQgemmScalarStream.html',''); init
 </div><!--header-->
 <div class="contents">
 
-<p>Scalar implementation for MK*KN, stores weights and biases, QgemmScalarStream&lt;1,84,16&gt; takes 34262 cycles.  
+<p>Scalar implementation for MK*KN, stores weights and biases, QgemmScalarStream&lt;a,a,1,80,32&gt; takes 17376 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qgemm_8h_source.html">qgemm.h</a>&gt;</code></p>
@@ -107,9 +107,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a788a2939fe8c0a518d415c8aa8cfdf8e"><td class="memItemLeft" align="right" valign="top"><a id="a788a2939fe8c0a518d415c8aa8cfdf8e" name="a788a2939fe8c0a518d415c8aa8cfdf8e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>QgemmScalarStream</b> (TTPARAM(&amp;w)[K *N], int32_t(&amp;b)[N], float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
 <tr class="separator:a788a2939fe8c0a518d415c8aa8cfdf8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e27a7d12ffed6dfc2970108fa39ccc5"><td class="memItemLeft" align="right" valign="top"><a id="a1e27a7d12ffed6dfc2970108fa39ccc5" name="a1e27a7d12ffed6dfc2970108fa39ccc5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_window&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a1e27a7d12ffed6dfc2970108fa39ccc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f8593cd8b093962c56a1ac176673bcc"><td class="memItemLeft" align="right" valign="top"><a id="a6f8593cd8b093962c56a1ac176673bcc" name="a6f8593cd8b093962c56a1ac176673bcc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a6f8593cd8b093962c56a1ac176673bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

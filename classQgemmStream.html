@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classQgemmStream.html',''); initResiza
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for MK*KN, stores weights and biases, requires N%16=0 QgemmStream&lt;1,84,16&gt; takes 269 cycles, 280 cycles for uint8 weights.  
+<p>Vector implementation for MK*KN, stores weights and biases, requires N%16=0 QgemmStream&lt;a,a,1,80,32&gt; takes 227 cycles.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="qgemm_8h_source.html">qgemm.h</a>&gt;</code></p>
@@ -107,8 +107,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ad2b43663ce1be0737bb4c24d1e36ea4f"><td class="memItemLeft" align="right" valign="top"><a id="ad2b43663ce1be0737bb4c24d1e36ea4f" name="ad2b43663ce1be0737bb4c24d1e36ea4f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>QgemmStream</b> (TTPARAM(&amp;w)[K *N], int32_t(&amp;b)[N], float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
 <tr class="separator:ad2b43663ce1be0737bb4c24d1e36ea4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a769c753807d131dc61270ac076bce474"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmStream.html#a769c753807d131dc61270ac076bce474">filter</a> (input_window&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a769c753807d131dc61270ac076bce474"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35364e9954992fd6f8e790375c259ca8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQgemmStream.html#a35364e9954992fd6f8e790375c259ca8">filter</a> (input_stream&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a35364e9954992fd6f8e790375c259ca8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -117,8 +117,8 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernel
 <tr class="separator:a847afc8a62fe270919dcc02a682d84ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a769c753807d131dc61270ac076bce474" name="a769c753807d131dc61270ac076bce474"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a769c753807d131dc61270ac076bce474">&#9670;&#160;</a></span>filter()</h2>
+<a id="a35364e9954992fd6f8e790375c259ca8" name="a35364e9954992fd6f8e790375c259ca8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35364e9954992fd6f8e790375c259ca8">&#9670;&#160;</a></span>filter()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -128,7 +128,7 @@ template&lt;typename TT , typename TTPARAM , int M, int K, int N&gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classQgemmStream.html">QgemmStream</a>&lt; TT, TTPARAM, M, K, N &gt;::filter </td>
           <td>(</td>
-          <td class="paramtype">input_window&lt; TT &gt; *&#160;</td>
+          <td class="paramtype">input_stream&lt; TT &gt; *&#160;</td>
           <td class="paramname"><em>in</em>, </td>
         </tr>
         <tr>
