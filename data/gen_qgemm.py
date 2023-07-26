@@ -8,7 +8,7 @@ np.random.seed(0)
 
 
 M = 1
-K = 84
+K = 80
 N = 30
 tin_scale = 0.004
 tw_scale = 0.003

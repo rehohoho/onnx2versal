@@ -25,7 +25,7 @@
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * QgemmScalarStream<1,84,16> takes 34262 cycles
+ * QgemmScalarStream<a,a,1,80,32> takes 17376 cycles
  */
 template <typename TT, typename TTPARAM, int M, int K, int N>
 class QgemmScalarStream {
@@ -41,6 +41,7 @@ class QgemmScalarStream {
     TT y_zero;
 
     float scale;
+    alignas(32) TT in_row[K];
   
   public:
     QgemmScalarStream (
@@ -57,7 +58,7 @@ class QgemmScalarStream {
     };
 
     void filter(
-      input_window<TT>* in,   // MxK  (1x256)
+      input_stream<TT>* in,   // MxK  (1x256)
       output_stream<TT>* out  // MxN  (1x120)
     );
     
@@ -72,7 +73,7 @@ class QgemmScalarStream {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, requires N%16=0
- * QgemmStream<1,84,16> takes 269 cycles, 280 cycles for uint8 weights
+ * QgemmStream<a,a,1,80,32> takes 227 cycles
  */
 template <typename TT, typename TTPARAM, int M, int K, int N>
 class QgemmStream {
@@ -92,6 +93,8 @@ class QgemmStream {
     int16_t scale;
     int32_t shift;
 
+    alignas(32) TT in_row[K];
+
   public:
     QgemmStream (
       TTPARAM (&w)[K*N],
@@ -105,12 +108,13 @@ class QgemmStream {
     );
 
     void filter(
-      input_window<TT>* in,   // MxK  (1x256)
+      input_stream<TT>* in,   // MxK  (1x256)
       output_stream<TT>* out  // MxN  (1x120)
     );
     
     static void registerKernelClass() {
       static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
+      static_assert(K % 16 == 0);
       static_assert(N % 16 == 0);
       REGISTER_FUNCTION(QgemmStream::filter);
       REGISTER_PARAMETER(weights);

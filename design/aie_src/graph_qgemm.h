@@ -52,15 +52,14 @@ class QgemmStreamGraph : public adf::graph {
       float y_scale,
       TT x_zero,
       TTPARAM w_zero,
-      TT y_zero,
-      int repeat_cnt = 1
+      TT y_zero
     ) { 
       k[0] = adf::kernel::create_object<QGEMM<TT, TTPARAM, M, K, N>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
       adf::source(k[0]) = "qgemm.cc";
       adf::headers(k[0]) = {"qgemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
-      adf::repetition_count(k[0]) = repeat_cnt;
+        adf::heap_size(k[0]) = K + 1024;
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos;
@@ -68,9 +67,10 @@ class QgemmStreamGraph : public adf::graph {
       adf::location<adf::parameter>(k[0].param[1]) = tilePos;
       adf::location<adf::parameter>(k[0].param[1]) = adf::offset((K*N+31)/32*32);
 
-      adf::connect<adf::window<M*K>> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (k[0].out[0], pout[0]);
       
+      adf::samples_per_iteration(k[0].in[0]) = M*K;
       adf::samples_per_iteration(k[0].out[0]) = M*N;
     }
 
@@ -92,21 +92,11 @@ template <
 class QgemmChunkNStreamGraph : public adf::graph {
 
   private:
-    adf::relative_coordinate tileOffsets[8] = {
-      {.col_offset = -1, .row_offset = 1}, // top row
-      {.col_offset = 0, .row_offset = 1},
-      {.col_offset = 1, .row_offset = 1},
-      {.col_offset = -1, .row_offset = -1}, // bottom row
-      {.col_offset = 0, .row_offset = -1},
-      {.col_offset = 1, .row_offset = -1},
-      {.col_offset = -1, .row_offset = 0}, // left, right
-      {.col_offset = 1, .row_offset = 0},
-    };
 
   public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel k[CHUNK_COUNT];
-    ConcatGraph<CONCAT, TT, CHUNK_COUNT, M, NCHUNK, N> concat_g;
+    ConcatStreamGraph<CONCAT, TT, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
     adf::port<input> pin[1];
     adf::port<output> pout[1];
@@ -119,8 +109,7 @@ class QgemmChunkNStreamGraph : public adf::graph {
       float y_scale,
       TT x_zero,
       TTPARAM w_zero,
-      TT y_zero,
-      int repeat_cnt = 1
+      TT y_zero
     ) { 
       static_assert(CHUNK_COUNT <= 8);
       static_assert(M*K <= TILE_BYTES);
@@ -147,10 +136,15 @@ class QgemmChunkNStreamGraph : public adf::graph {
         adf::source(k[i]) = "qgemm.cc";
         adf::headers(k[i]) = {"qgemm.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
-        adf::repetition_count(k[i]) = repeat_cnt;
+        adf::heap_size(k[i]) = K + 1024;
+
+        if ((i&0x1) == 1) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        }
+        if (i == 2 || i == 6) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});
+        }
         
-        adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
-          adf::relative_offset(tileOffsets[i]);
         adf::location_constraint tilePos = adf::location<adf::kernel>(k[i]);
         adf::location<adf::parameter>(k[i].param[0]) = tilePos;
         adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
@@ -160,11 +154,16 @@ class QgemmChunkNStreamGraph : public adf::graph {
       }
 
       for (int i = 0; i < CHUNK_COUNT; i++) {
-        adf::connect<adf::window<M*K>> (pin[0], k[i].in[0]);
+        adf::connect<adf::stream> (pin[0], k[i].in[0]);
         adf::connect<adf::stream> (k[i].out[0], concat_g.pin[i]);
         adf::samples_per_iteration(k[i].out[0]) = M*NCHUNK;
       }
       adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
+
+      for (int i = 0; i < concat_g.k1.size(); i++) {
+        adf::location<adf::kernel>(concat_g.k1[i]) = 
+          adf::location<adf::kernel>(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+      }
     }
 
 };

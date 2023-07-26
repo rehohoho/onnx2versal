@@ -9,11 +9,14 @@
 
 template <typename TT, typename TTPARAM, int M, int K, int N>
 void QgemmScalarStream<TT, TTPARAM, M, K, N>::filter(
-	input_window<TT>* in,      // MxK
-                                 // KxN
+	input_stream<TT>* in,      // MxK
+                             // KxN
   output_stream<TT>* out     // MxN
 ) {
   PROFILE_HEADER2;
+
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  TT *in_ptr = (TT *) in_row;
 
   int weightIdx = 0;
   int resvi = 0;
@@ -25,15 +28,24 @@ void QgemmScalarStream<TT, TTPARAM, M, K, N>::filter(
   resvi = (resvi + 1) & 0xf;
 
   for (int i = 0; i < M; i++) {
+    
+    for (int k = 0; k < K; k+=16) {
+      *(v16 *) in_ptr = readincr_v16(in); in_ptr += 16;
+    }
+    in_ptr -= K;
+
     for (int j = 0; j < N; j++) {
+      
       int res = bias[j];
       weightIdx = j;
+
       for (int k = 0; k < K; k++) {
-        int a = window_readincr(in);
+        int a = in_row[k];
         int b = weights[weightIdx];
         weightIdx += N;
         res += a * (b-w_zero);
       }
+
       res = y_zero + round(scale * res);
       if ((std::is_same<TT, int8_t>::value)) {
         res = std::min(std::max(res, -128), 127);
@@ -41,9 +53,7 @@ void QgemmScalarStream<TT, TTPARAM, M, K, N>::filter(
         res = std::min(std::max(res, 0), 255);
       }
       WRITE_OUT(res);
-      window_incr(in, -K); // repeat same in row for next j
-    }
-    window_incr(in, K); // next in row for next N
+    } // N
   }
 #undef WRITE_OUT
 
@@ -62,11 +72,14 @@ QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
   TTPARAM w_zero,
   TT y_zero
 ): weights(w), bias(b), x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), x_zero(x_zero), w_zero(w_zero), y_zero(y_zero) {
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
-  // if (scalebits >= 48 - log(K)/log(2) - 16)
-  //   printf("WARNING: scalebits %d vs %f \n", scalebits, 48 - log(K)/log(2) - 16); // K*int8*int8*scale <= acc48
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
+  printf("scalebits %d scale %d\n", scalebits, scale);
 };
 
 /**
@@ -103,7 +116,7 @@ QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
  */
 template <typename TT, typename TTPARAM, int M, int K, int N>
 void QgemmStream<TT, TTPARAM, M, K, N>::filter(
-	input_window<TT>* in,      // MxK
+	input_stream<TT>* in,      // MxK
                              // KxN
   output_stream<TT>* out     // MxN
 ) {
@@ -114,7 +127,7 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
   using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
 
-  TT *in_ptr = (TT *) in->ptr;
+  TT *in_ptr = (TT *) in_row;
   TTPARAM *w_ptr = (TTPARAM *) weights;
   int32_t *b_ptr = (int32_t *) bias;
 
@@ -147,11 +160,29 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
     acc1 = msc16(acc1, wzero, 0, 0x33323130, 0, 0x3120, inmat, in_zstart, 0x00000000, 2, 0x1010);
 
   for (int i = 0; i < M; i++) chess_prepare_for_pipelining chess_loop_range(M,) {
-    for (int j = 0; j < N; j+=16) chess_prepare_for_pipelining chess_loop_range(N/16,) {
+    
+    // first 16 of N, store input row
+    acc1 = null_v16acc48();
+    for (int k = 0; k < K; k+=16) {
+      *(v16 *) in_ptr = readincr_v16(in); 
+      inmat = upd_v(inmat, 0, *(v16 *) in_ptr);
+      LOAD_W; // load weight[k:k+8,n:n+16]
+      MAC_ROW(0);
+      LOAD_W; // load weight[k+8:k+16,n:n+16]
+      MAC_ROW(8);
+      in_ptr += 16;
+    }
+    in_ptr -= K;
+    w_ptr += -K*N + 16; // next
+    aieacc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
+    aieacc1 = aie::mac(acc_shift1, aieacc1.to_vector<int32_t>(0), scale);
+    writeincr_v16(out, aieacc1.to_vector<TT>(scalebits));
+
+    // rest of N, use input row
+    for (int j = 16; j < N; j+=16) {
       
       acc1 = null_v16acc48();
 
-      wzero = aie::broadcast<TTPARAM,64>(w_zero);
       for (int k = 0; k <= K-16; k+=16) { // += input[k:k+16] * weight[k:k+8,n:n+16]
         inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += 16; // load input[k:k+8]
         LOAD_W; // load weight[k:k+8,n:n+16]
@@ -159,34 +190,18 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
         LOAD_W; // load weight[k+8:k+16,n:n+16]
         MAC_ROW(8);
       } // K-16
-      if ((K & 0xf) != 0) {
-        inmat = upd_v(inmat, 0, *(v16 *) in_ptr); in_ptr += (K & 0xf);
-      }
-      if ((K & 0xf) >= 8) {
-        LOAD_W;
-        MAC_ROW(0);
-      } // K-8
-      if ((K & 0x3) > 0) {
-        wmat = aie::zeros<TTPARAM,128>();
-        for (int p = 0; p < (K & 0xf); p++) {
-          wmat = upd_v(wmat, p, *(v16 *) w_ptr); w_ptr += N;
-        }
-        MAC_ROW(0);
-      } // K
+      in_ptr -= K;        // reset
+      w_ptr += -K*N + 16; // next
 
       aieacc1 = aie::add((aie::accum<acc48,16>) acc1, aie::load_v<16>(b_ptr)); b_ptr += 16;
       aieacc1 = aie::mac(acc_shift1, aieacc1.to_vector<int32_t>(0), scale);
       writeincr_v16(out, aieacc1.to_vector<TT>(scalebits));
-
-      in_ptr -= K;        // reset
-      w_ptr += -K*N + 16; // next
     } // N
     
     // Error when M > 1
     // Internal error: chess-backend: mist/block_depcies.cpp:1481: int min_distance_to(const CFG&, const Bundle*, Macro_node*): Assertion `n' failed.
     chess_separator_scheduler();
 
-    in_ptr += K;
     b_ptr -= N; // reset
     w_ptr -= N;    // reset
   } // M
