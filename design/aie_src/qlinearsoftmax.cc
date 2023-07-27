@@ -230,7 +230,6 @@ void QLinearSoftmaxSingleaxis<TT, INP_H, INP_W, INP_W_PAD>::filter(
     exp_v_ptr = (int32_t *) exp_v;
     for (int j = 0; j < INP_W_PAD; j+=16) {
       in_v = aie::load_v<16>(exp_v_ptr); exp_v_ptr += 16;
-      print_vec<int, int>((int *) &in_v, 16);
       auto acc = aie::mac(y_zeros, in_v, out_scale);
       auto outvec = acc.to_vector<TT>(EXP_BITSHIFT + OUT_BITSHIFT);
       writeincr_v16(out, outvec);

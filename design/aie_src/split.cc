@@ -846,14 +846,15 @@ void SplitFilterFloatPktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 
   if (OVERLAP > 0) {
     for (int h = 0; h < H; h++) chess_prepare_for_pipelining chess_loop_range(H,) {
-
       writeHeader(out[0], 0, ID[0]);
       WRITE_OUT(0, FIRST_STRIDE, false);
 
       for (int i = 1; i < LCNT; i++) chess_flatten_loop {
         writeHeader(out[i&0x1], 0, ID[i]);
         WRITE_OUT_TWICE(1 - (i&0x1), i&0x1, OVERLAP);
-        WRITE_OUT(i&0x1, STRIDE, false);
+        if (STRIDE != 0) {
+          WRITE_OUT(i&0x1, STRIDE, false);
+        }
       } // LCNT
 
       int i = LCNT - 1;

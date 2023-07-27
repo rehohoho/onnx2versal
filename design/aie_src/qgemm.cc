@@ -79,7 +79,6 @@ QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
   // -1 due to rounding, -1 to fit in 16b
   scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
   scale = float2fix(x_scale*w_scale/y_scale, scalebits);
-  printf("scalebits %d scale %d\n", scalebits, scale);
 };
 
 /**
