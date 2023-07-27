@@ -108,6 +108,11 @@ ConvReluGraphTest<Conv5x5on8Relu, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STE
   "conv5x5on8ReluBCHW", fpweights_pad, fpbias, 
   "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_Conv5x5on8Relu.txt");
 
+ConvReluStreamGraphTest<ConvHx8ReluStream, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, 
+                  B, C, M, KH, KW, GROUP, IS_RELU, PADH, PADH, PADW, PADW> convHx6ReluStream(
+  "convHx6ReluStream", fpbias, 
+  "conv_fpin.txt", "convbchw_fpout_shape1x4x24x24_ConvHx6ReluStream.txt");
+
 
 const int KH3x3 = 3;
 const int KW3x3 = 3;
@@ -191,6 +196,10 @@ ConvReluStreamGraphTest<Conv1x1ReluStream,
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
   // init gmio
+  int fpweights_5x5_size = M*C*5*8 * sizeof(float_t);
+  float_t* fpweights_5x5_buf = (float_t *) adf::GMIO::malloc(fpweights_5x5_size);
+  memcpy(fpweights_5x5_buf, fpweights_pad.data(), fpweights_5x5_size);
+  
   int fpweights_3x3_size = M*C*3*3 * sizeof(float_t);
   float_t* fpweights_3x3_buf = (float_t *) adf::GMIO::malloc(fpweights_3x3_size);
   memcpy(fpweights_3x3_buf, fpweights_3x3.data(), fpweights_3x3_size);
@@ -219,6 +228,11 @@ int main(int argc, char ** argv) {
   adfCheck(conv5x5on8ReluBCHW.init(), "init conv5x5on8ReluBCHW");
   adfCheck(conv5x5on8ReluBCHW.run(ITER_CNT), "run conv5x5on8ReluBCHW");
 	adfCheck(conv5x5on8ReluBCHW.end(), "end conv5x5on8ReluBCHW");
+
+  adfCheck(convHx6ReluStream.init(), "init convHx6ReluStream");
+  convHx6ReluStream.gmio_w.gm2aie_nb(fpweights_5x5_buf, fpweights_5x5_size);
+  adfCheck(convHx6ReluStream.run(ITER_CNT), "run convHx6ReluStream");
+	adfCheck(convHx6ReluStream.end(), "end convHx6ReluStream");
 
   // 3x3 BCHW window, stride = 1
   adfCheck(convReluScalarBCHW_3x3.init(), "init convReluScalarBCHW_3x3");
@@ -272,6 +286,7 @@ int main(int argc, char ** argv) {
 	adfCheck(conv1x1ReluStream.end(), "end conv1x1ReluStream");
 
   // cleanup gmio
+  adf::GMIO::free(fpweights_5x5_buf);
   adf::GMIO::free(fpweights_3x3_buf);
   adf::GMIO::free(fpweights_3x3_pad_buf);
   adf::GMIO::free(fpweights_3x3_groupC_buf);

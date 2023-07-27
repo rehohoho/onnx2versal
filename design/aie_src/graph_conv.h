@@ -31,7 +31,14 @@ void set_heap_size(adf::kernel k) {
     CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
     ConvHx4Out4ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
   ) {
-    adf::heap_size(k) = C/GROUP*((KH*KW+3)/4*4) *4 + 1024; // caches CKK weights
+    adf::heap_size(k) = C/GROUP*((KH*KW+3)/4*4) *4 + 1024; // caches CKK weights, padded to 4
+  }
+  else if (
+    (std::is_same<
+    CONV<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>, 
+    ConvHx8ReluStream<INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP,IS_RELU>>::value)
+  ) {
+    adf::heap_size(k) = C/GROUP*KH*8 *4 + OUT_W_PAD*4 + 1024; // caches CKK weights, padded to 8 and one OUT_ROW
   }
   else if (
     (std::is_same<
@@ -634,7 +641,7 @@ class ConvReluChunkHPktStreamGraph : public adf::graph {
 
   public:
     adf::port<adf::input> pin[2];
-    adf::port<adf::output> pout[1];
+    adf::port<adf::output> pout[2];
 
     ConvReluChunkHPktStreamGraph(
       std::vector<float> bias
@@ -676,6 +683,7 @@ class ConvReluChunkHPktStreamGraph : public adf::graph {
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
+        adf::connect<adf::stream> (pad[0].out[0], pout[1]);
         
         adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;

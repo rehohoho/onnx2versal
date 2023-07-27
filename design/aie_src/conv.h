@@ -229,6 +229,47 @@ class ConvReluScalarStream {
 
 
 /**
+ * @brief Scalar stream implementation for BCHW, stores biases,
+ * requires GROUP==1, 
+ * ConvHx8ReluStream<28,28,24,24,1,1,1,2,4,5,5,1,1> total = 24133
+ */
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+class ConvHx8ReluStream {
+
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
+    static constexpr int CKK_ROW_SIZE = C_PER_M*KH*8;
+    alignas(32) float (&bias)[M];
+    alignas(32) float ckk_row[CKK_ROW_SIZE];
+    alignas(32) float width_row[OUT_W_PAD];
+
+  public:
+    ConvHx8ReluStream(
+      float (&b)[M]
+    ): bias(b) {}; 
+
+    void filter(
+      input_window<float>* in,      // BCHW
+      input_stream<float>* weights, // MCKK
+      output_stream<float>* out     // BMHW
+    );
+    
+    static void registerKernelClass() {
+      static_assert(C % GROUP == 0);
+      static_assert(KW<=8);
+      static_assert(INP_W%4==0);
+      static_assert(OUT_W_PAD%8==0);
+      static_assert(STEP_H == 1 && STEP_W == 1);
+      REGISTER_FUNCTION(ConvHx8ReluStream::filter);
+      REGISTER_PARAMETER(bias);
+    }
+
+};
+
+
+/**
  * @brief Vector stream implementation for BCHW, stores biases,
  * requires KW<=3, INP_W%4==0, OUT_W_PAD%(8|4)==0, STEP_H==1|2, STEP_W==1|2, GROUP==1, 
  * ConvHx4ReluStream<26,28,24,24,1,1,1,2,4,3,3,1,1> total = 13734

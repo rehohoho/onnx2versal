@@ -354,6 +354,94 @@ void ConvReluScalarStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 }
 
 
+template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
+          int B, int C, int M, int KH, int KW, int GROUP, int IS_RELU>
+void ConvHx8ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, IS_RELU>::filter(
+	input_window<float>* in,
+  input_stream<float>* restrict weights,
+  output_stream<float>* restrict out
+) {
+  PROFILE_HEADER2;
+
+  float* restrict w_ptr = (float *) ckk_row;
+  float* restrict width_ptr = (float *) width_row;
+  v16float data = null_v16float();
+
+#define UPD_DATA \
+  data = upd_w(data, 0, window_readincr_v8(in)); \
+  data = upd_w(data, 1, window_readincr_v8(in)); \
+  window_incr(in, INP_W-16);
+
+#define MAC_ROW(acc) \
+  for (int q = 0; q < KW; q++) { \
+    acc = fpmac(acc, data, q, 0x76543210, *(v8float *) w_ptr, q, 0x00000000); \
+  }
+
+  // BHWM
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) {// computes one output channel
+
+      for (int i = 0; i < CKK_ROW_SIZE; i+=4) chess_prepare_for_pipelining chess_loop_range(CKK_ROW_SIZE/4,) {
+        *(v4float *) w_ptr = readincr_v4(weights); w_ptr += 4;
+      }
+      w_ptr -= CKK_ROW_SIZE;
+
+      for (int h = 0; h < OUT_H; h+=2) chess_prepare_for_pipelining chess_loop_range(OUT_H/2,) {
+        for (int w = 0; w < OUT_W_PAD; w+=8) chess_prepare_for_pipelining chess_loop_range(OUT_W_PAD/8,) { // computes 8 output channel pixels
+          
+          v8float acc1 = aie::broadcast<float, 8>(bias[m]);
+          v8float acc2 = aie::broadcast<float, 8>(bias[m]);
+
+          for (int c = 0; c < C; c++) chess_prepare_for_pipelining chess_loop_range(C,) { // computes 8 partial products over 5x5 kernel
+            UPD_DATA;
+            MAC_ROW(acc1);
+            
+            for (int p = 0; p < KH-1; p++) {
+              UPD_DATA;
+              MAC_ROW(acc2);
+              w_ptr += 8;
+              MAC_ROW(acc1);
+            }
+            
+            UPD_DATA;
+            MAC_ROW(acc2);
+            w_ptr += 8;
+            window_incr(in, INP_H*INP_W - 6*INP_W);
+          }
+          window_incr(in, -C*INP_H*INP_W + 8); // data go channel -C, right 8
+          w_ptr -= CKK_ROW_SIZE;
+
+          if (IS_RELU) {
+            acc1 = fpmax(acc1, null_v8float(), 0, 0x76543210);
+            acc2 = fpmax(acc2, null_v8float(), 0, 0x76543210);
+          }
+          writeincr_v4(out, ext_v(acc1, 0));
+          writeincr_v4(out, ext_v(acc1, 1));
+          *(v4float *) width_ptr = ext_v(acc2, 0); width_ptr += 4;
+          *(v4float *) width_ptr = ext_v(acc2, 1); width_ptr += 4;
+        } // W
+        width_ptr -= OUT_W_PAD;
+
+        for (int w = 0; w < OUT_W_PAD; w+=4) {
+          writeincr_v4(out, *(v4float *) width_ptr); width_ptr += 4;
+        }
+        width_ptr -= OUT_W_PAD;
+
+        window_incr(in, 2*INP_W*STEP_W - OUT_W_PAD*STEP_H); // go left OUT_W_PAD, go down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      
+      window_incr(in, -OUT_H*INP_W*STEP_H); // go up OUT_H*STEP_H
+    } // M
+  } // B
+
+#undef UPD_DATA
+#undef MAC_ROW
+
+  CONV_PROFILE_FOOTER("ConvHx8ReluStream");
+}
+
+
 #define MAC_ROW(acc) \
   for (int i = 0; i < KW; i++) { \
     acc = fpmac(acc, data, i, 0x76543210, *(v8float *) w_ptr, i, 0); \
