@@ -221,7 +221,7 @@ void GemmReluScalarMKKN<M, K, N, IS_RELU>::filter(
     window_incr(in, K); // next in row for next N
   }
 
-  PROFILE_FOOTER;
+  GEMM_PROFILE_FOOTER("GemmReluScalarMKKN");
 }
 
 

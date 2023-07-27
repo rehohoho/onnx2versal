@@ -219,22 +219,11 @@ template <
 class GemmReluMkknChunkGraph : public adf::graph {
 
   private:
-    adf::relative_coordinate tileOffsets[8] = {
-      {.col_offset = -1, .row_offset = 0}, // left, right
-      {.col_offset = 1, .row_offset = 0},
-      {.col_offset = -1, .row_offset = 1}, // bottom row
-      {.col_offset = 0, .row_offset = 1},
-      {.col_offset = 1, .row_offset = 1},
-      {.col_offset = -1, .row_offset = -1}, // top row
-      {.col_offset = 0, .row_offset = -1},
-      {.col_offset = 1, .row_offset = -1},
-    };
-
-  public:
     static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
     adf::kernel gemms[CHUNK_COUNT];
-    ConcatGraph<CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N> concat_g;
+    ConcatStreamGraph<CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N> concat_g;
     
+  public:
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
@@ -269,8 +258,6 @@ class GemmReluMkknChunkGraph : public adf::graph {
         adf::runtime<ratio>(gemms[i]) = 0.6;
         adf::repetition_count(gemms[i]) = repeat_cnt;
 
-        adf::location<adf::kernel>(gemms[i]) = adf::location<adf::kernel>(concat_g.k[0]) + 
-          adf::relative_offset(tileOffsets[i]);
         adf::location_constraint tilePos = adf::location<adf::kernel>(gemms[i]);
         adf::location<adf::parameter>(gemms[i].param[0]) = tilePos;
         adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(0);

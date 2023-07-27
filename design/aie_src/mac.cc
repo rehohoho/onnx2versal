@@ -1,14 +1,16 @@
 #include "mac.h"
 #include "kernel_utils.h"
 
+#define MAC_PROFILE_FOOTER(filter_name) \
+  PROFILE_FOOTER2("%s<%s,%d,%d,%d>", \
+    filter_name, typeid(TT).name(), B, W, IS_RELU);
 
 template <typename TT, int B, int W, int IS_RELU>
 void MacScalar<TT, B, W, IS_RELU>::filter(
 	input_window<TT>* in,
   output_window<TT>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running MacScalar<%s,%d,%d,%d>\n", typeid(TT).name(), B, W, IS_RELU));
+  PROFILE_HEADER2;
   
   for (int b = 0; b < B; b++) {
     for (int w = 0; w < W; w++) {
@@ -20,7 +22,7 @@ void MacScalar<TT, B, W, IS_RELU>::filter(
     }
   }
 
-  PROFILE_FOOTER;
+  MAC_PROFILE_FOOTER("MacScalar");
 }
 
 
@@ -29,8 +31,7 @@ void MacFloat<TT, B, W, IS_RELU>::filter(
 	input_window<float>* in,
   output_window<float>* out
 ) {
-  PROFILE_HEADER(printf(
-    "Running MacFloat<%s,%d,%d,%d>\n", typeid(float).name(), B, W, IS_RELU));
+  PROFILE_HEADER2;
   
   v8float data = undef_v8float();
   v8float *w_ptr = (v8float *) weights;
@@ -54,5 +55,5 @@ void MacFloat<TT, B, W, IS_RELU>::filter(
     b_ptr -= W/8;
   }
 
-  PROFILE_FOOTER;
+  MAC_PROFILE_FOOTER("MacFloat");
 }
