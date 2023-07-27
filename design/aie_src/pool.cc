@@ -124,7 +124,7 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
         in1 += 4*INP_W/8 - INP_W/8;
         in2 += 4*INP_W/8 - INP_W/8;
         in3 += 4*INP_W/8 - INP_W/8;
-        window_incr(out_window, OUT_W);
+        window_incr(out_window, 2*OUT_W - INP_W/KW);
       } // H
     } // C
   } // B

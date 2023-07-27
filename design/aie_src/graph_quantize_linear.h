@@ -43,12 +43,14 @@ class QuantizeLinearGraph : public adf::graph {
 
     QuantizeLinearGraph(
       float y_scale,
-      TT y_zero
+      TT y_zero,
+      int repeat_cnt = 1
     ) { 
       k[0] = adf::kernel::create_object<QUANTIZE_LINEAR<TT, INP_H, INP_W, OUT_W>>(y_scale, y_zero);
       adf::source(k[0]) = "quantize_linear.cc";
       adf::headers(k[0]) = {"quantize_linear.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::repetition_count(k[0]) = repeat_cnt;
       
       adf::connect<adf::window<INP_H*INP_W*4>> (pin[0], k[0].in[0]);
       adf::connect<adf::window<INP_H*OUT_W>> (k[0].out[0], pout[0]);

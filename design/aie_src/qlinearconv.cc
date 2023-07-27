@@ -1027,7 +1027,7 @@ void QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP
         
           for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) { // computes 2x16 partial products over 3x3 kernel
             
-            for (int p = 0; p < KH-1; p++) chess_flatten_loop {
+            for (int p = 0; p < KH-1; p++) {
               wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
               data = *(v32int8 *) in_ptr; in_ptr += INP_W;
               MAC_ROW(acc1);

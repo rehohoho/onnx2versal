@@ -299,6 +299,8 @@ class ConvOp(OpParser):
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
     try:
       HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_PARAM_SIZE, offset)
+      if (PAD_H - HCHUNK) // (HCHUNK - overlap) + 1:
+        HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
     except Exception as e:
       print(e)
       HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
@@ -347,6 +349,9 @@ class ConvOp(OpParser):
       elif self.KW <= 4 and self.INP_W_PAD % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
         kernel = "ConvHx4ReluPktStream" if self.graph == "ConvReluChunkHPktStreamGraph" else "ConvHx4ReluStream"
         tw = pad_lastdim(tw, "Conv weights", 4)
+      elif self.KW <= 6 and self.INP_W_PAD % 4 == 0 and self.OUT_W_PAD % 8 == 0 and self.STEP_H == 1 and self.STEP_W == 1:
+        tw = pad_lastdim(tw, "Conv weights", get_vector_boundary(tw))
+        kernel = "ConvHx8ReluStream"
     
     self.gmioname_2_tensor[f"{self.name}_w"] = tw
     self.gmio_repeats = 1
@@ -460,9 +465,9 @@ class GemmOp(OpParser):
         kernel = "GemmReluMKKN" if self.K % 4 == 0 and self.N % 4 == 0 else "GemmReluScalarMKKN"
         self.kernel_type = f"GemmReluGraph<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       else:
-        kernel = "GemmReluMKKN" if self.K % 4 == 0 and chunkSize % 4 == 0 else "GemmReluScalarMKKN"
         chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.N) //8*8, self.N)
-        concat_kernel = "ConcatFloat" if chunkSize % 4 == 0 and self.N % 4 == 0 else "ConcatScalar"
+        kernel = "GemmReluMKKN" if self.K % 4 == 0 and chunkSize % 4 == 0 else "GemmReluScalarMKKN"
+        concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
         self.kernel_type = f"GemmReluMkknChunkGraph<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       
     else:
@@ -564,21 +569,25 @@ class PoolOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
     
-    tin = pad_lastdim(tin, "PoolOp tin", get_vector_boundary(tin)) #files
+    vector_boundary = 8 if self.OUT_W > 4 else 4
+    tin = pad_lastdim(tin, "PoolOp tin", vector_boundary) #files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    tout = pad_lastdim(tout, "QLinearPoolOp tout", vector_boundary)
     
-    self.INP_W = tin.shape[-1]
+    self.INP_W, self.OUT_W_PAD = tin.shape[-1], tout.shape[-1]
     self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
     if self.reduction_mode == "max":
       kernel = "MaxpoolScalarBCHW"
-      if self.INP_W % 8 == 0 and self.OUT_W % 4 == 0 and self.KH == self.KW == 2 and self.dtype == "float32":
+      if self.INP_W//self.OUT_W == 2 and self.INP_W % 8 == 0 and self.OUT_W_PAD % 4 == 0 and self.KH == self.KW == 2 and self.dtype == "float32":
         kernel = "Maxpool2x2FloatBCHW"
-      elif self.INP_W % 16 == 0 and self.OUT_W % 8 == 0 and self.KH == self.KW == 2 and self.dtype == "int8":
+        self.OUT_W = self.OUT_W_PAD
+      elif self.INP_W//self.OUT_W == 2 and self.INP_W % 16 == 0 and self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 2 and self.dtype == "int8":
         kernel = "Maxpool2x2Int8BCHW"
+        self.OUT_W = self.OUT_W_PAD
     elif self.reduction_mode == "avg":
       kernel = "AvgpoolScalarBCHW"
     else:
