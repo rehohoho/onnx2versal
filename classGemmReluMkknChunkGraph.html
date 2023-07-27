@@ -92,7 +92,6 @@ $(document).ready(function(){initNavTree('classGemmReluMkknChunkGraph.html','');
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classGemmReluMkknChunkGraph-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">GemmReluMkknChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Gemm.html">Gemm</a></div></div></div>
 </div><!--header-->
@@ -104,16 +103,6 @@ $(document).ready(function(){initNavTree('classGemmReluMkknChunkGraph.html','');
 <p><code>#include &lt;<a class="el" href="graph__gemm_8h_source.html">graph_gemm.h</a>&gt;</code></p>
 
 <p>Inherits adf::graph.</p>
-<div class="dynheader">
-Collaboration diagram for GemmReluMkknChunkGraph&lt; GEMM, CONCAT, NCHUNK, M, K, N, IS_RELU &gt;:</div>
-<div class="dyncontent">
-<div class="center"><img src="classGemmReluMkknChunkGraph__coll__graph.png" border="0" usemap="#aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_00_01IS__RELU_01_4_coll__map" alt="Collaboration graph"/></div>
-<map name="aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_00_01IS__RELU_01_4_coll__map" id="aGemmReluMkknChunkGraph_3_01GEMM_00_01CONCAT_00_01NCHUNK_00_01M_00_01K_00_01N_00_01IS__RELU_01_4_coll__map">
-<area shape="rect" title="Multiinstance graph for MxK times KxN that stores weights and biases Requires KxN_RND weight,..." alt="" coords="5,124,209,180"/>
-<area shape="rect" href="classConcatGraph.html" title=" " alt="" coords="21,5,193,61"/>
-<area shape="poly" title=" " alt="" coords="110,76,110,123,104,123,104,76"/>
-</map>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -123,24 +112,12 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:af121300d34358b1d80b91b1db26248ab"><td class="memItemLeft" align="right" valign="top"><a id="af121300d34358b1d80b91b1db26248ab" name="af121300d34358b1d80b91b1db26248ab"></a>
-adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>gemms</b> [CHUNK_COUNT]</td></tr>
-<tr class="separator:af121300d34358b1d80b91b1db26248ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4423bdcb2ff544e2db6e387d9c82ab9e"><td class="memItemLeft" align="right" valign="top"><a id="a4423bdcb2ff544e2db6e387d9c82ab9e" name="a4423bdcb2ff544e2db6e387d9c82ab9e"></a>
-<a class="el" href="classConcatGraph.html">ConcatGraph</a>&lt; CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>concat_g</b></td></tr>
-<tr class="separator:a4423bdcb2ff544e2db6e387d9c82ab9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a183ab38a8213c8dadafa5c84e629afd9"><td class="memItemLeft" align="right" valign="top"><a id="a183ab38a8213c8dadafa5c84e629afd9" name="a183ab38a8213c8dadafa5c84e629afd9"></a>
 adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
 <tr class="separator:a183ab38a8213c8dadafa5c84e629afd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2049b9f3face3c7a95471636272735b"><td class="memItemLeft" align="right" valign="top"><a id="ad2049b9f3face3c7a95471636272735b" name="ad2049b9f3face3c7a95471636272735b"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
 <tr class="separator:ad2049b9f3face3c7a95471636272735b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
-Static Public Attributes</h2></td></tr>
-<tr class="memitem:a5c4d3587a637f4b1ce06d3354174f0fc"><td class="memItemLeft" align="right" valign="top"><a id="a5c4d3587a637f4b1ce06d3354174f0fc" name="a5c4d3587a637f4b1ce06d3354174f0fc"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>CHUNK_COUNT</b> = (N + NCHUNK - 1) / NCHUNK</td></tr>
-<tr class="separator:a5c4d3587a637f4b1ce06d3354174f0fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>design/aie_src/<a class="el" href="graph__gemm_8h_source.html">graph_gemm.h</a></li>
