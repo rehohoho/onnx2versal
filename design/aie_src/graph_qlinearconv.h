@@ -23,9 +23,12 @@ void set_heap_size(adf::kernel k) {
     QLinearConvHx4Stream<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
-    QLinearConvHx4StreamScale32bit<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
+    QLinearConvHx4StreamScale32bit<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
+    (std::is_same<
+    QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
+    QLinearConvHx6x8bitStream<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
   ) {
-    adf::heap_size(k) = C*16 + 1024; // caches CKK weights
+    adf::heap_size(k) = C/GROUP*((KH*KW+15)/16*16) + 1024; // caches CKK weights
   }
   else if (
     (std::is_same<

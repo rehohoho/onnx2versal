@@ -987,8 +987,8 @@ QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TTPARAM>* weights,
-  output_stream<TT>* out
+  input_stream<TTPARAM>* restrict weights,
+  output_stream<TT>* restrict out
 ) {
   PROFILE_HEADER2;
   
@@ -1044,7 +1044,7 @@ void QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP
         } // W
         
         in_ptr += INP_W*STEP_W - OUT_W_PAD*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
-        // chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
@@ -1063,6 +1063,8 @@ void QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP
 /**
  * reads weights in 4s: [a,b,c,d, 0,0,0,0, ...]
  * reads data in 32s
+ * 
+ * bandwidth constrained (compute:loads = 1:1)
  * 
  * int16 * int8:
  * xoffsets: 4b offset for every two lanes, e.g. 0 4 => 4*2=8, (0+4+1)*2=10 => 8,9, 10,11
@@ -1145,7 +1147,7 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
           
           for (int c = 0; c <= C-16; c+=16) { // computes 2x16 partial products over 3x3 kernel
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            for (int i = 0; i < 16; i+=2) {
+            for (int i = 0; i < 16; i+=2) chess_flatten_loop {
               data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
