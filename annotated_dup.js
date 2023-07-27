@@ -25,6 +25,7 @@ var annotated_dup =
     [ "ConvHx4ReluPktStream", "classConvHx4ReluPktStream.html", null ],
     [ "ConvHx4ReluStream", "classConvHx4ReluStream.html", null ],
     [ "ConvHx4ReluStreamMultiRow", "classConvHx4ReluStreamMultiRow.html", null ],
+    [ "ConvHx8ReluStream", "classConvHx8ReluStream.html", null ],
     [ "ConvReluChunkHGraph", "classConvReluChunkHGraph.html", null ],
     [ "ConvReluChunkHPktStreamGraph", "classConvReluChunkHPktStreamGraph.html", null ],
     [ "ConvReluChunkHStreamGraph", "classConvReluChunkHStreamGraph.html", null ],

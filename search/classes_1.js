@@ -22,12 +22,13 @@ var searchData=
   ['convhx4relupktstream_19',['ConvHx4ReluPktStream',['../classConvHx4ReluPktStream.html',1,'']]],
   ['convhx4relustream_20',['ConvHx4ReluStream',['../classConvHx4ReluStream.html',1,'']]],
   ['convhx4relustreammultirow_21',['ConvHx4ReluStreamMultiRow',['../classConvHx4ReluStreamMultiRow.html',1,'']]],
-  ['convreluchunkhgraph_22',['ConvReluChunkHGraph',['../classConvReluChunkHGraph.html',1,'']]],
-  ['convreluchunkhpktstreamgraph_23',['ConvReluChunkHPktStreamGraph',['../classConvReluChunkHPktStreamGraph.html',1,'']]],
-  ['convreluchunkhstreamgraph_24',['ConvReluChunkHStreamGraph',['../classConvReluChunkHStreamGraph.html',1,'']]],
-  ['convreluchunkmgraph_25',['ConvReluChunkMGraph',['../classConvReluChunkMGraph.html',1,'']]],
-  ['convrelugraph_26',['ConvReluGraph',['../classConvReluGraph.html',1,'']]],
-  ['convreluscalar_27',['ConvReluScalar',['../classConvReluScalar.html',1,'']]],
-  ['convreluscalarstream_28',['ConvReluScalarStream',['../classConvReluScalarStream.html',1,'']]],
-  ['convrelustreamgraph_29',['ConvReluStreamGraph',['../classConvReluStreamGraph.html',1,'']]]
+  ['convhx8relustream_22',['ConvHx8ReluStream',['../classConvHx8ReluStream.html',1,'']]],
+  ['convreluchunkhgraph_23',['ConvReluChunkHGraph',['../classConvReluChunkHGraph.html',1,'']]],
+  ['convreluchunkhpktstreamgraph_24',['ConvReluChunkHPktStreamGraph',['../classConvReluChunkHPktStreamGraph.html',1,'']]],
+  ['convreluchunkhstreamgraph_25',['ConvReluChunkHStreamGraph',['../classConvReluChunkHStreamGraph.html',1,'']]],
+  ['convreluchunkmgraph_26',['ConvReluChunkMGraph',['../classConvReluChunkMGraph.html',1,'']]],
+  ['convrelugraph_27',['ConvReluGraph',['../classConvReluGraph.html',1,'']]],
+  ['convreluscalar_28',['ConvReluScalar',['../classConvReluScalar.html',1,'']]],
+  ['convreluscalarstream_29',['ConvReluScalarStream',['../classConvReluScalarStream.html',1,'']]],
+  ['convrelustreamgraph_30',['ConvReluStreamGraph',['../classConvReluStreamGraph.html',1,'']]]
 ];
