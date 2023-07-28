@@ -586,7 +586,7 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
   v16acc48 acc1 = undef_v16acc48();
   aie::accum<acc48,16> acc_shift;
   aie::accum<acc48,16> acc_bias;
-  acc_shift.from_vector(aie::broadcast<int16_t, 16>(this->y_zero), scalebits);
+  acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
 
   v16 *ckk_row_ptr = (v16 *) ckk_row;
   TT *in_ptr = (TT *) in->ptr;
@@ -603,7 +603,7 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
       }
       ckk_row_ptr -= CKK_ROW_SIZE/16;
       
-      acc_bias.from_vector(aie::broadcast<int32_t, 16>(this->bias[m]), 0);
+      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
       for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
         for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
@@ -625,19 +625,11 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
             }
             
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            if ((KH & 0x3) >= 1) {
+            for (int p = 0; p < (KH & 0x3); p++) {
               data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 0);
+              MAC_ROW(acc1, p*4);
             }
-            if ((KH & 0x3) >= 2) {
-              data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 4);
-            }
-            if ((KH & 0x3) >= 3) {
-              data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 8);
-            }
-            
+
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
           }
           in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
@@ -746,17 +738,9 @@ void QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD,
             }
             
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            if ((KH & 0x3) >= 1) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 0);
-            }
-            if ((KH & 0x3) >= 2) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 4);
-            }
-            if ((KH & 0x3) >= 3) {
-              data = *(v32int8 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 8);
+            for (int p = 0; p < (KH & 0x3); p++) {
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, p*4);
             }
             
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
@@ -885,17 +869,9 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
             }
             
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            if ((KH & 0x3) >= 1) {
+            for (int p = 0; p < (KH & 0x3); p++) {
               data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 0);
-            }
-            if ((KH & 0x3) >= 2) {
-              data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 4);
-            }
-            if ((KH & 0x3) >= 3) {
-              data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, 8);
+              MAC_ROW(acc1, p*4);
             }
             
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
