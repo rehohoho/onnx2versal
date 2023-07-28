@@ -310,6 +310,62 @@ class ConcatFloatStream {
 
 /**
  * @brief Scalar implementation for stream concat, 
+ */
+template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
+class ConcatFloatStreamWithStall {
+	public:
+		void filter(
+			input_stream<TT>* in0,
+			input_stream<TT>* in1,
+			output_stream<TT>* out
+		);
+		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4); // 32-bit stream
+			// also expects INP_W1 < OUT_W, not included due to conditional instances in graph
+			REGISTER_FUNCTION(ConcatFloatStreamWithStall::filter);
+		}
+};
+
+
+/**
+ * @brief Scalar implementation for stream concat, 
+ * ConcatFloatStreamSequentially<f,4,32,32,64> takes ~1000 cycles
+ */
+template <typename TT>
+class ConcatFloatStreamSequentially {
+	private:
+		int H;
+		int INP_W1;
+		int INP_W2;
+		int OUT_W;
+	
+	public:
+		ConcatFloatStreamSequentially(
+			int H,
+			int INP_W1,
+			int INP_W2,
+			int OUT_W
+		): H(H), INP_W1(INP_W1), INP_W2(INP_W2), OUT_W(OUT_W) {};
+
+		void filter(
+			input_stream<TT>* in0,
+			input_stream<TT>* in1,
+			output_stream<TT>* out
+		);
+		static void registerKernelClass() {
+			static_assert(sizeof(TT) == 4); // 32-bit stream
+			// also expects INP_W1 < OUT_W, not included due to conditional instances in graph
+			REGISTER_FUNCTION(ConcatFloatStreamSequentially::filter);
+			REGISTER_PARAMETER(H);
+			REGISTER_PARAMETER(INP_W1);
+			REGISTER_PARAMETER(INP_W2);
+			REGISTER_PARAMETER(OUT_W);
+		}
+};
+
+
+/**
+ * @brief Scalar implementation for stream concat, 
  * ConcatFloatPktStream<f,4,32,32,64> takes cycles
  */
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>

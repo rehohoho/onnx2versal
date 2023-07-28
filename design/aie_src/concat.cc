@@ -702,6 +702,68 @@ void ConcatFloatStream<TT, H, INP_W1, INP_W2, OUT_W>::filter(
 }
 
 
+template <typename TT, int H, int INP_W1, int INP_W2, int OUT_W>
+void ConcatFloatStreamWithStall<TT, H, INP_W1, INP_W2, OUT_W>::filter(
+	input_stream<TT>* in0,
+  input_stream<TT>* in1,
+  output_stream<TT>* out
+) {
+  PROFILE_HEADER2;
+
+  for (int h = 0; h < H; h++) {
+    for (int i = 0; i < INP_W1; i++)
+      writeincr(out, readincr(in0));
+    
+    if (INP_W1 + INP_W2 <= OUT_W) {
+      for (int i = 0; i < INP_W2; i++) {
+        writeincr(out, readincr(in1));
+        chess_separator_scheduler(1);
+      }
+      for (int i = 0; i < OUT_W - INP_W1 - INP_W2; i++)
+        writeincr(out, 0);
+    } else {
+      for (int i = 0; i < OUT_W - INP_W1; i++)
+        writeincr(out, readincr(in1));  
+      for (int i = 0; i < INP_W1 + INP_W2 - OUT_W; i++)
+        readincr(in1);
+    }
+  }
+
+  PROFILE_FOOTER2("ConcatFloatStreamWithStall<%s,%d,%d,%d,%d>", 
+    typeid(TT).name(), H, INP_W1, INP_W2, OUT_W);
+}
+
+
+template <typename TT>
+void ConcatFloatStreamSequentially<TT>::filter(
+	input_stream<TT>* restrict in0,
+  input_stream<TT>* restrict in1,
+  output_stream<TT>* restrict out
+) {
+  PROFILE_HEADER2;
+
+  for (int h = 0; h < H; h++) {
+    for (int i = 0; i < INP_W1; i++)
+      writeincr(out, readincr(in0));
+    
+    if (INP_W1 + INP_W2 <= OUT_W) {
+      for (int i = 0; i < INP_W2; i++)
+        writeincr(out, readincr(in1));
+      for (int i = 0; i < OUT_W - INP_W1 - INP_W2; i++)
+        writeincr(out, 0);
+    } else {
+      for (int i = 0; i < OUT_W - INP_W1; i++)
+        writeincr(out, readincr(in1));  
+      for (int i = 0; i < INP_W1 + INP_W2 - OUT_W; i++)
+        readincr(in1);
+    }
+  }
+
+  PROFILE_FOOTER2("ConcatFloatStreamSequentially<%s,%d,%d,%d,%d>", 
+    typeid(TT).name(), H, INP_W1, INP_W2, OUT_W);
+}
+
+
 template <typename TT, int LCNT, int H, int INP_W, int OUT_W>
 void ConcatFloatPktStream<TT, LCNT, H, INP_W, OUT_W>::filter(
 	input_pktstream* in,

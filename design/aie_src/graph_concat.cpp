@@ -118,6 +118,35 @@ class ConcatTwiceGraphTest : public adf::graph {
 };
 
 
+template <template<typename> class CONCAT,
+  typename TT, int LCNT, int H, int INP_W, int OUT_W>
+class ConcatStreamSequentiallyGraphTest : public adf::graph {
+
+  private:
+    ConcatStreamSequentiallyGraph<CONCAT, TT, LCNT, H, INP_W, OUT_W> g;
+
+  public:
+    adf::input_plio plin[LCNT];
+    adf::output_plio plout[1];
+
+    ConcatStreamSequentiallyGraphTest(
+      const std::string& id,
+      const std::string& OUT_TXT = "concat_out.txt",
+      const std::vector<std::string> INP_TXT = std::vector<std::string>()
+    ) {
+      for (int i = 0; i < LCNT; i++) {
+        std::string plin_name = "plin"+std::to_string(i)+"_concat_"+id+"_input"; 
+        plin[i] = adf::input_plio::create(plin_name, PLIO64_ARG(INP_TXT[i]));
+        adf::connect<adf::stream> (plin[i].out[0], g.pin[i]);
+      }
+      
+      plout[0] = adf::output_plio::create("plout0_concat_"+id+"_output", PLIO64_ARG(OUT_TXT));
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
+    }
+
+};
+
+
 // instance to be compiled and used in host within xclbin
 const int H = 4;
 const int INP_W = 32; // % 16 for int8, % 8 for float
@@ -137,6 +166,9 @@ ConcatGraphTest<ConcatFloat, float_t, LCNT, H, INP_W, OUT_W> concatFloat(
 
 
 // float32 stream
+ConcatStreamSequentiallyGraphTest<ConcatFloatStreamSequentially, float_t, 8, H, INP_W, 240> concatStreamSequentially(
+  "concatStreamSequentially", "concat_fpout_shape4x240_ConcatFloatStream.txt", fp_txts);
+
 ConcatStreamGraphTest<ConcatFloatStream, float_t, 2, H, INP_W, 48> concatStreamScalar2(
   "concatStreamScalar2", "concat_fpout_shape4x48_ConcatStreamScalar.txt", fp_txts);
 ConcatStreamGraphTest<ConcatFloatStream, float_t, 3, H, INP_W, 80> concatStreamScalar3(
@@ -214,6 +246,10 @@ int main(int argc, char ** argv) {
 	adfCheck(concatFloat.end(), "end concatFloat");
 
   // stream
+  adfCheck(concatStreamSequentially.init(), "init concatStreamSequentially");
+  adfCheck(concatStreamSequentially.run(ITER_CNT), "run concatStreamSequentially");
+	adfCheck(concatStreamSequentially.end(), "end concatStreamSequentially");
+  
   adfCheck(concatStreamScalar2.init(), "init concatStreamScalar2");
   adfCheck(concatStreamScalar2.run(ITER_CNT), "run concatStreamScalar2");
 	adfCheck(concatStreamScalar2.end(), "end concatStreamScalar2");

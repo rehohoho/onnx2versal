@@ -95,6 +95,8 @@ class ConcatStreamGraph : public adf::graph {
         k1.push_back(_k);
         adf::connect<adf::stream> (pin[i], _k.in[0]);
         adf::connect<adf::stream> (pin[i+1], _k.in[1]);
+        adf::samples_per_iteration(_k.in[0]) = H*INP_W;
+        adf::samples_per_iteration(_k.in[1]) = H*INP_W;
         adf::location<adf::stack> (_k) = adf::location<adf::kernel>(_k);
       }
       if (LCNT > 3) { // kernel in loop will be included during compilation otherwise
@@ -103,6 +105,8 @@ class ConcatStreamGraph : public adf::graph {
           k2.push_back(_k);
           adf::connect<adf::stream> (k1[i/2].out[0], _k.in[0]);
           adf::connect<adf::stream> (k1[i/2+1].out[0], _k.in[1]);
+          adf::samples_per_iteration(_k.in[0]) = H*2*INP_W;
+          adf::samples_per_iteration(_k.in[1]) = H*2*INP_W;
           adf::location<adf::stack> (_k) = adf::location<adf::kernel>(_k);
         }
       }
@@ -166,6 +170,50 @@ class ConcatStreamGraph : public adf::graph {
         adf::connect<adf::stream> (_k.out[0], pout[0]);
         adf::samples_per_iteration(_k.out[0]) = H*OUT_W;
       }
+      
+    }
+
+};
+
+
+template <template<typename> class CONCAT_STREAM,
+  typename TT, int LCNT, int H, int INP_W, int OUT_W>
+class ConcatStreamSequentiallyGraph : public adf::graph {
+
+  public:
+    adf::kernel k[LCNT-1];
+    adf::port<input> pin[LCNT];
+    adf::port<output> pout[1];
+
+    adf::kernel create_concat_kernel(
+      int mINP_W1,
+      int mINP_W2,
+      int mOUT_W
+    ) {
+      adf::kernel new_k = adf::kernel::create_object<CONCAT_STREAM<TT>>(H, mINP_W1, mINP_W2, mOUT_W);
+      adf::source(new_k) = "concat.cc";
+      adf::headers(new_k) = {"concat.h"};
+      adf::runtime<ratio>(new_k) = 0.6;
+      return new_k;
+    }
+
+    // separate tiles since each tile only 2 input streams
+    ConcatStreamSequentiallyGraph() {
+      static_assert(LCNT >= 2);
+
+      adf::kernel _k;
+      
+      k[0] = create_concat_kernel(INP_W, INP_W, 2*INP_W);
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (pin[1], k[0].in[1]);
+      
+      for (int i = 1; i < LCNT-1; i++) {
+        k[i] = create_concat_kernel((i+1)*INP_W, INP_W, (i+2)*INP_W);
+        adf::connect<adf::stream> (k[i-1].out[0], k[i].in[0]);
+        adf::connect<adf::stream> (pin[i+1], k[i].in[1]);
+      }
+
+      adf::connect<adf::stream> (k[LCNT-2].out[0], pout[0]);
       
     }
 
