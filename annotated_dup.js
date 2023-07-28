@@ -9,6 +9,8 @@ var annotated_dup =
     [ "ConcatFloat", "classConcatFloat.html", null ],
     [ "ConcatFloatPktStream", "classConcatFloatPktStream.html", null ],
     [ "ConcatFloatStream", "classConcatFloatStream.html", null ],
+    [ "ConcatFloatStreamSequentially", "classConcatFloatStreamSequentially.html", null ],
+    [ "ConcatFloatStreamWithStall", "classConcatFloatStreamWithStall.html", null ],
     [ "ConcatGraph", "classConcatGraph.html", null ],
     [ "ConcatInt8", "classConcatInt8.html", null ],
     [ "ConcatInt8Stream", "classConcatInt8Stream.html", null ],
@@ -120,5 +122,7 @@ var annotated_dup =
     [ "SplitTwoStreamGraph", "classSplitTwoStreamGraph.html", null ],
     [ "TransposeChunkHPktStreamGraph", "classTransposeChunkHPktStreamGraph.html", null ],
     [ "TransposeGraph", "classTransposeGraph.html", null ],
-    [ "TransposeScalarBHWC2BCHW", "classTransposeScalarBHWC2BCHW.html", null ]
+    [ "TransposeHChunkGraph", "classTransposeHChunkGraph.html", null ],
+    [ "TransposeScalarBHWC2BCHW", "classTransposeScalarBHWC2BCHW.html", null ],
+    [ "TransposeScalarPktStreamBHWC2BCHW", "classTransposeScalarPktStreamBHWC2BCHW.html", null ]
 ];
