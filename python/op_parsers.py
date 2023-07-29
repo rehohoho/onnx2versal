@@ -95,10 +95,18 @@ def factor_int(n: int,
   
   factor_pairs = factor_pairs + [(f2, f1) for f1, f2 in factor_pairs[::-1]]
 
-  for f1, f2 in factor_pairs:
-    if f1 * multiplier + offset <= upper_bound:
-      return f1, f2
-  raise ValueError(f"Unable to find factors f1, f2 of {n} such that f1*{multiplier} <= {upper_bound}")
+  if n > 32: # force split into ~8 chunks
+    for i, (f1, f2) in enumerate(factor_pairs):
+      if f2 > 8: break
+    f1, f2 = factor_pairs[i-1]
+    if f1 * multiplier + offset > upper_bound:
+      raise ValueError(f"Unable to find factors f1, f2 of {n} such that f1*{multiplier} <= {upper_bound}")
+    return f1, f2
+  
+  else:
+    for f1, f2 in factor_pairs:
+      if f1 * multiplier + offset <= upper_bound:
+        return f1, f2
 
 
 class OpParser:
@@ -659,16 +667,15 @@ class QGemmOp(OpParser):
       raise NotImplementedError(f"No QGemm implementation for input size {tin.nbytes} or output size {tout.nbytes}")
       
     kernel = "QgemmStream" if self.N%16==0 else "QgemmScalarStream"
-    if tw.nbytes <= MAX_PARAM_SIZE:
-      self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"
-    
-    elif tw.nbytes <= MAX_PARAM_SIZE * 8:
-      chunkSize = MAX_PARAM_SIZE//(tw.nbytes//self.N) //16*16
+    if tw.nbytes > MAX_PARAM_SIZE * 8:
+      raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}")
+
+    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, MAX_PARAM_SIZE)
+    if chunkSize == self.N:
+      self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
+    else:
       concat = "ConcatInt8Stream"
       self.kernel_type = f"QgemmChunkNStreamGraph<{kernel},{concat},{chunkSize},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.dtype)},{self.M},{self.K},{self.N}>"
-    
-    else:
-      raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}")
     
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
