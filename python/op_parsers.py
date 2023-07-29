@@ -1169,10 +1169,8 @@ class TransposeOp(OpParser):
   def get_kernel_line(self) -> str:
     kernel = "TransposeScalarBHWC2BCHW"
     if self.B*self.H*self.W*self.C*self.dtype.itemsize > TILE_SIZE:
-      concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
-      split_kernel = "SplitFilterFloatPktStream" if self.dtype == "float32" else "SplitFilterInt8PktStream"
       HCHUNK, _ = factor_int(self.H, self.B*self.W*self.C*self.dtype.itemsize, TILE_SIZE)
-      return f"TransposeChunkHPktStreamGraph<{split_kernel},{kernel},{concat_kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
+      return f"TransposeHChunkGraph<{kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
     else:
       return f"TransposeGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
   
