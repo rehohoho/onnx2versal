@@ -7,6 +7,7 @@ TILE_SIZE = 31712
 MAX_PARAM_SIZE = 32768 // 2 # ping-pong buffer, fit input and output ping pongs
 PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
+MAX_CHUNKS = 8
 
 
 def round_away(x):
@@ -85,7 +86,8 @@ def get_attribute_dict(attributes: List[Any]):
 def factor_int(n: int, 
                multiplier: int, 
                upper_bound: int,
-               offset: int = 0):
+               offset: int = 0,
+               force_split: bool = False):
   factor_pairs = []
   factor = 1
   while factor <= n ** 0.5:
@@ -95,9 +97,9 @@ def factor_int(n: int,
   
   factor_pairs = factor_pairs + [(f2, f1) for f1, f2 in factor_pairs[::-1]]
 
-  if n > 32: # force split into ~8 chunks
+  if force_split: # force split into ~8 chunks
     for i, (f1, f2) in enumerate(factor_pairs):
-      if f2 > 8: break
+      if f2 > MAX_CHUNKS: break
     f1, f2 = factor_pairs[i-1]
     if f1 * multiplier + offset > upper_bound:
       raise ValueError(f"Unable to find factors f1, f2 of {n} such that f1*{multiplier} <= {upper_bound}")
@@ -305,13 +307,7 @@ class ConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    try:
-      HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_PARAM_SIZE, offset)
-      if (PAD_H - HCHUNK) // (HCHUNK - overlap) + 1:
-        HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
-    except Exception as e:
-      print(e)
-      HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split=True)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -660,7 +656,6 @@ class QGemmOp(OpParser):
 
     tout = pad_lastdim(tout, "QGemm tout", vector_size, value=tin_zero) # config
     self.K, self.N = tin.shape[-1], tout.shape[-1]
-    # self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE) # batch window size
     self.out_size = tout.size # host buffer sizes
 
     if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE:
@@ -670,7 +665,7 @@ class QGemmOp(OpParser):
     if tw.nbytes > MAX_PARAM_SIZE * 8:
       raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}")
 
-    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, MAX_PARAM_SIZE)
+    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, MAX_PARAM_SIZE, force_split=self.N >= 32)
     if chunkSize == self.N:
       self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
     else:
@@ -791,11 +786,7 @@ class QLinearConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    try:
-      HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_PARAM_SIZE, offset)
-    except Exception as e:
-      print(e)
-      HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split=True)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -1095,13 +1086,10 @@ class QuantizeLinearOp(OpParser):
     self.INP_H, self.INP_W, self.OUT_W = inH, tin.shape[-1], tout.shape[-1]
     self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
-    
-    # self.INP_H, self.repeat = factor_int(self.INP_H, self.INP_W*4, MAX_PARAM_SIZE)
   
   def get_kernel_line(self) -> str:
     if self.INP_W % 4 == 0 and self.OUT_W % 16 == 0:
       return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
-      # return f"QuantizeLinearGraph<QuantizeLinearFmul,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
     else:
       raise NotImplementedError(f"Expect INP_W%4==0, OUT_W%16==0, but got INP_W {self.INP_W}, OUT_W {self.OUT_W}")
   
