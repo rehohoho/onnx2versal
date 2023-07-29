@@ -125,6 +125,7 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
   using v64 = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v64int8, v64uint8>::type;
   using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  using v16w = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v16int8, v16uint8>::type;
 
   TT *in_ptr = (TT *) in_row;
   TTPARAM *w_ptr = (TTPARAM *) weights;
@@ -144,14 +145,14 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
 
 #define LOAD_W \
-  wmat = upd_v(wmat, 0, *(v16 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 1, *(v16 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 2, *(v16 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 3, *(v16 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 4, *(v16 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 5, *(v16 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 6, *(v16 *) w_ptr); w_ptr += N; \
-  wmat = upd_v(wmat, 7, *(v16 *) w_ptr); w_ptr += N;
+  wmat = upd_v(wmat, 0, *(v16w *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 1, *(v16w *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 2, *(v16w *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 3, *(v16w *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 4, *(v16w *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 5, *(v16w *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 6, *(v16w *) w_ptr); w_ptr += N; \
+  wmat = upd_v(wmat, 7, *(v16w *) w_ptr); w_ptr += N;
 
 #define MAC_ROW(in_zstart) \
   acc1 = mac16(acc1, wmat, 0, 0x33323130, 32, 0x3120, inmat, in_zstart, 0x00000000, 2, 0x1010); \
