@@ -685,106 +685,114 @@ AssertionError: 11 / 12 tests passed.
 ### tiny_kws_int8
 Note need ~26gb ram and ~1h for aiesimulator. Previous run on int8 only starts 5725 ends 330087.
 ```
-QuantizeLinearFmulStream<h,49,12,16> start = 5305,end = 6870,total = 1565
-Pad2DStreamInt8<h,1,49,10,16,4,5,1,5> start = 5304,end = 6948,total = 1644
-QLinearConvHx4Stream<h,h,58,16,5,16,2,2,1,1,64,10,4,1> start = 6969,end = 111150,total = 104181
-Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5308,end = 111216,total = 105908
-SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5320,end = 111234,total = 105914
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5373,end = 116885,total = 111512
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5374,end = 117196,total = 111822
-ConcatInt8Stream<h,64,80,80,160> start = 5314,end = 117206,total = 111892
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5376,end = 117508,total = 112132
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5377,end = 117876,total = 112499
-ConcatInt8Stream<h,64,80,80,160> start = 5317,end = 117886,total = 112569
-ConcatInt8Stream<h,64,160,160,320> start = 5312,end = 117899,total = 112587
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5371,end = 117909,total = 112538
-ConcatInt8Stream<h,64,320,80,400> start = 5308,end = 117937,total = 112629
-Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5314,end = 147850,total = 142536
-SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5328,end = 147873,total = 142545
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5387,end = 190903,total = 185516
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5388,end = 191012,total = 185624
-ConcatInt8Stream<h,64,80,80,160> start = 5328,end = 191022,total = 185694
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5390,end = 191128,total = 185738
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5391,end = 191218,total = 185827
-ConcatInt8Stream<h,64,80,80,160> start = 5331,end = 191228,total = 185897
-ConcatInt8Stream<h,64,160,160,320> start = 5326,end = 191241,total = 185915
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5379,end = 191299,total = 185920
-ConcatInt8Stream<h,64,320,80,400> start = 5324,end = 191311,total = 185987
-Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5330,end = 196622,total = 191292
-SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5338,end = 196640,total = 191302
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5391,end = 202786,total = 197395
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5392,end = 202932,total = 197540
-ConcatInt8Stream<h,64,80,80,160> start = 5332,end = 202942,total = 197610
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5394,end = 203079,total = 197685
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5395,end = 203282,total = 197887
-ConcatInt8Stream<h,64,80,80,160> start = 5335,end = 203292,total = 197957
-ConcatInt8Stream<h,64,160,160,320> start = 5334,end = 203305,total = 197971
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5389,end = 203315,total = 197926
-ConcatInt8Stream<h,64,320,80,400> start = 5330,end = 203343,total = 198013
-Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5335,end = 233255,total = 227920
-SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5347,end = 233278,total = 227931
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5403,end = 276308,total = 270905
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5404,end = 276417,total = 271013
-ConcatInt8Stream<h,64,80,80,160> start = 5344,end = 276427,total = 271083
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5406,end = 276529,total = 271123
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5407,end = 276621,total = 271214
-ConcatInt8Stream<h,64,80,80,160> start = 5347,end = 276631,total = 271284
-ConcatInt8Stream<h,64,160,160,320> start = 5342,end = 276644,total = 271302
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5398,end = 276704,total = 271306
-ConcatInt8Stream<h,64,320,80,400> start = 5341,end = 276715,total = 271374
-Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5348,end = 282026,total = 276678
-SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5359,end = 282044,total = 276685
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5406,end = 288192,total = 282786
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5407,end = 288336,total = 282929
-ConcatInt8Stream<h,64,80,80,160> start = 5347,end = 288346,total = 282999
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5409,end = 288483,total = 283074
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5410,end = 288686,total = 283276
-ConcatInt8Stream<h,64,80,80,160> start = 5350,end = 288696,total = 283346
-ConcatInt8Stream<h,64,160,160,320> start = 5349,end = 288709,total = 283360
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5415,end = 288720,total = 283305
-ConcatInt8Stream<h,64,320,80,400> start = 5355,end = 288746,total = 283391
-Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5355,end = 318656,total = 313301
-SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5362,end = 318680,total = 313318
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5419,end = 361709,total = 356290
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5420,end = 361818,total = 356398
-ConcatInt8Stream<h,64,80,80,160> start = 5360,end = 361828,total = 356468
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5422,end = 361934,total = 356512
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5423,end = 362024,total = 356601
-ConcatInt8Stream<h,64,80,80,160> start = 5363,end = 362034,total = 356671
-ConcatInt8Stream<h,64,160,160,320> start = 5358,end = 362047,total = 356689
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5413,end = 362106,total = 356693
-ConcatInt8Stream<h,64,320,80,400> start = 5356,end = 362117,total = 356761
-Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5359,end = 367426,total = 362067
-SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5373,end = 367446,total = 362073
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5422,end = 373593,total = 368171
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5423,end = 373737,total = 368314
-ConcatInt8Stream<h,64,80,80,160> start = 5363,end = 373747,total = 368384
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5425,end = 373884,total = 368459
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5426,end = 374087,total = 368661
-ConcatInt8Stream<h,64,80,80,160> start = 5366,end = 374097,total = 368731
-ConcatInt8Stream<h,64,160,160,320> start = 5370,end = 374111,total = 368741
-QLinearConvHx4PktStream<h,h,7,16,5,16,1,1,1,64,64,3,3,64> start = 5429,end = 374122,total = 368693
-ConcatInt8Stream<h,64,320,80,400> start = 5369,end = 374146,total = 368777
-Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5372,end = 404057,total = 398685
-SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5384,end = 404079,total = 398695
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5435,end = 447108,total = 441673
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5436,end = 447217,total = 441781
-ConcatInt8Stream<h,64,80,80,160> start = 5376,end = 447227,total = 441851
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5438,end = 447327,total = 441889
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5439,end = 447419,total = 441980
-ConcatInt8Stream<h,64,80,80,160> start = 5379,end = 447429,total = 442050
-ConcatInt8Stream<h,64,160,160,320> start = 5376,end = 447440,total = 442064
-QLinearConv1x1PktStream<h,h,5,16,5,16,1,1,1,64,64,1,1,1> start = 5432,end = 447506,total = 442074
-ConcatInt8Stream<h,64,320,80,400> start = 5372,end = 447516,total = 442144
-SplitInt8<h,1,25600,12800,0>::filter2 start = 5401,end = 447542,total = 442141
-ConcatInt8Stream<h,1,32,32,64> start = 5366,end = 460351,total = 454985
-QgemmStream<h,h,1,64,16> start = 460364,end = 460492,total = 128
-Pad2DStreamInt8<h,1,1,12,16,0,0,0,4> start = 5350,end = 460546,total = 455196
-7013 9885 1151330 54616 7013 156 353372 541979123 212647 4973 9 4411312 16783873 16783873 16783873 16783873 
-QLinearSoftmaxSingleaxis<h, 1,12,16> start = 460558,end = 461685,total = 1127
-DequantizeLinear<h,1,16,12> start = 461704,end = 461768,total = 64
-QLinearAvgpoolScalarBCHW<25,16,1,1,1,64,25,5> start = 447672,end = 472973,total = 25301
-QLinearAvgpoolScalarBCHW<25,16,1,1,1,64,25,5> start = 447676,end = 472977,total = 25301
+QuantizeLinearFmulStream<h,49,12,16> start = 5623,end = 7188,total = 1565
+Pad2DStreamInt8<h,1,49,10,16,4,5,1,5> start = 5624,end = 7265,total = 1641
+SplitFilterInt8PktStream<h,1,928,288,128>::filter5 start = 5631,end = 7353,total = 1722
+QLinearConvHx4PktStream<h,a,18,16,5,16,2,2,1,1,64,10,4,1> start = 5678,end = 35515,total = 29837
+ConcatInt8Stream<h,64,80,80,160> start = 5621,end = 35831,total = 30210
+QLinearConvHx4PktStream<h,a,18,16,5,16,2,2,1,1,64,10,4,1> start = 5679,end = 35825,total = 30146
+QLinearConvHx4PktStream<h,a,18,16,5,16,2,2,1,1,64,10,4,1> start = 5681,end = 36140,total = 30459
+ConcatInt8Stream<h,64,80,80,160> start = 5624,end = 36262,total = 30638
+QLinearConvHx4PktStream<h,a,18,16,5,16,2,2,1,1,64,10,4,1> start = 5682,end = 36256,total = 30574
+ConcatInt8Stream<h,64,160,160,320> start = 5623,end = 36275,total = 30652
+QLinearConvHx4PktStream<h,a,18,16,5,16,2,2,1,1,64,10,4,1> start = 5685,end = 36298,total = 30613
+ConcatInt8Stream<h,64,320,80,400> start = 5627,end = 36306,total = 30679
+Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5628,end = 55797,total = 50169
+SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5640,end = 55815,total = 50175
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5693,end = 58870,total = 53177
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5694,end = 59016,total = 53322
+ConcatInt8Stream<h,64,80,80,160> start = 5634,end = 59026,total = 53392
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5696,end = 59157,total = 53461
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5697,end = 59360,total = 53663
+ConcatInt8Stream<h,64,80,80,160> start = 5637,end = 59370,total = 53733
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5689,end = 59397,total = 53708
+ConcatInt8Stream<h,64,160,160,320> start = 5632,end = 60945,total = 55313
+ConcatInt8Stream<h,64,320,80,400> start = 5629,end = 62236,total = 56607
+Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5629,end = 92424,total = 86795
+SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5659,end = 92455,total = 86796
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5711,end = 126716,total = 121005
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5712,end = 126825,total = 121113
+ConcatInt8Stream<h,64,80,80,160> start = 5652,end = 126835,total = 121183
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5714,end = 126937,total = 121223
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5715,end = 127029,total = 121314
+ConcatInt8Stream<h,64,80,80,160> start = 5655,end = 127039,total = 121384
+ConcatInt8Stream<h,64,160,160,320> start = 5651,end = 127051,total = 121400
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5710,end = 127114,total = 121404
+ConcatInt8Stream<h,64,320,80,400> start = 5653,end = 127125,total = 121472
+Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5656,end = 141067,total = 135411
+SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5672,end = 141087,total = 135415
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5725,end = 144139,total = 138414
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5726,end = 144283,total = 138557
+ConcatInt8Stream<h,64,80,80,160> start = 5666,end = 144293,total = 138627
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5728,end = 144430,total = 138702
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5729,end = 144633,total = 138904
+ConcatInt8Stream<h,64,80,80,160> start = 5669,end = 144643,total = 138974
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5725,end = 144667,total = 138942
+ConcatInt8Stream<h,64,160,160,320> start = 5665,end = 146217,total = 140552
+ConcatInt8Stream<h,64,320,80,400> start = 5662,end = 147508,total = 141846
+Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5647,end = 177702,total = 172055
+SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5647,end = 177728,total = 172081
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5696,end = 211988,total = 206292
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5697,end = 212097,total = 206400
+ConcatInt8Stream<h,64,80,80,160> start = 5637,end = 212107,total = 206470
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5699,end = 212211,total = 206512
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5700,end = 212303,total = 206603
+ConcatInt8Stream<h,64,80,80,160> start = 5640,end = 212313,total = 206673
+ConcatInt8Stream<h,64,160,160,320> start = 5639,end = 212326,total = 206687
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5702,end = 212389,total = 206687
+ConcatInt8Stream<h,64,320,80,400> start = 5642,end = 212399,total = 206757
+Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5642,end = 226336,total = 220694
+SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5626,end = 226366,total = 220740
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5677,end = 229420,total = 223743
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5678,end = 229564,total = 223886
+ConcatInt8Stream<h,64,80,80,160> start = 5618,end = 229574,total = 223956
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5680,end = 229707,total = 224027
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5681,end = 229910,total = 224229
+ConcatInt8Stream<h,64,80,80,160> start = 5621,end = 229920,total = 224299
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5676,end = 229947,total = 224271
+ConcatInt8Stream<h,64,160,160,320> start = 5616,end = 231495,total = 225879
+ConcatInt8Stream<h,64,320,80,400> start = 5613,end = 232786,total = 227173
+Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5606,end = 262976,total = 257370
+SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5612,end = 262999,total = 257387
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5665,end = 297258,total = 291593
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5666,end = 297369,total = 291703
+ConcatInt8Stream<h,64,80,80,160> start = 5606,end = 297379,total = 291773
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5668,end = 297483,total = 291815
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5669,end = 297575,total = 291906
+ConcatInt8Stream<h,64,80,80,160> start = 5609,end = 297585,total = 291976
+ConcatInt8Stream<h,64,160,160,320> start = 5608,end = 297598,total = 291990
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5663,end = 297658,total = 291995
+ConcatInt8Stream<h,64,320,80,400> start = 5604,end = 297668,total = 292064
+Pad2DStreamInt8<h,64,25,5,16,1,1,1,10> start = 5597,end = 311609,total = 306012
+SplitFilterInt8PktStream<h,64,432,112,32>::filter5 start = 5608,end = 311627,total = 306019
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5661,end = 314679,total = 309018
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5662,end = 314823,total = 309161
+ConcatInt8Stream<h,64,80,80,160> start = 5602,end = 314833,total = 309231
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5664,end = 314970,total = 309306
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5665,end = 315173,total = 309508
+ConcatInt8Stream<h,64,80,80,160> start = 5605,end = 315183,total = 309578
+QLinearConvHx4PktStream<h,a,7,16,5,16,1,1,1,64,64,3,3,64> start = 5657,end = 315208,total = 309551
+ConcatInt8Stream<h,64,160,160,320> start = 5600,end = 316758,total = 311158
+ConcatInt8Stream<h,64,320,80,400> start = 5598,end = 318048,total = 312450
+Pad2DStreamInt8<h,64,25,5,16,0,0,0,11> start = 5596,end = 348236,total = 342640
+SplitFilterInt8PktStream<h,64,400,80,0>::filter5 start = 5604,end = 348258,total = 342654
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5657,end = 382517,total = 376860
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5658,end = 382628,total = 376970
+ConcatInt8Stream<h,64,80,80,160> start = 5598,end = 382638,total = 377040
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5660,end = 382742,total = 377082
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5661,end = 382834,total = 377173
+ConcatInt8Stream<h,64,80,80,160> start = 5601,end = 382844,total = 377243
+ConcatInt8Stream<h,64,160,160,320> start = 5600,end = 382857,total = 377257
+QLinearConv1x1PktStream<h,a,5,16,5,16,1,1,1,64,64,1,1,1> start = 5655,end = 382917,total = 377262
+ConcatInt8Stream<h,64,320,80,400> start = 5599,end = 382930,total = 377331
+SplitInt8<h,1,25600,12800,0>::filter2 start = 5642,end = 382962,total = 377320
+ConcatInt8Stream<h,1,32,32,64> start = 5611,end = 395769,total = 390158
+QgemmStream<h,a,1,64,16> start = 5669,end = 395850,total = 390181
+Pad2DStreamInt8<h,1,1,12,16,0,0,0,4> start = 5609,end = 395897,total = 390288
+QLinearSoftmaxSingleaxis<h, 1,12,16> start = 395911,end = 396084,total = 173
+DequantizeLinear<h,1,16,12> start = 396104,end = 396168,total = 64
+QLinearAvgpoolScalarBCHW<25,16,1,1,1,64,25,5> start = 383092,end = 408392,total = 25300
+QLinearAvgpoolScalarBCHW<25,16,1,1,1,64,25,5> start = 383096,end = 408395,total = 25299
 core(s) are done executing
 [INFO]: Fifo Guidance report generated ./AIESim_FIFO_Guidance.json
 Exiting!
@@ -853,4 +861,144 @@ Max relative difference: 0.003952569169960474
 
 ### tiny_vww_int8
 ```
+TransposeScalarBHWC2BCHW<f,1,24,96,3> start = 20243,end = 28213,total = 7970
+TransposeScalarBHWC2BCHW<f,1,24,96,3> start = 27163,end = 35133,total = 7970
+SplitFilterFloatStreamTwice<f,1,27648,6912,0>::filter2 start = 13282,end = 40987,total = 27705
+SplitFilterFloatStreamTwice<f,1,27648,6912,0>::filter0 start = 13284,end = 40990,total = 27706
+TransposeScalarBHWC2BCHW<f,1,24,96,3> start = 34074,end = 42044,total = 7970
+TransposeScalarBHWC2BCHW<f,1,24,96,3> start = 40993,end = 48963,total = 7970
+ConcatFloatStreamWithStall<f,3,2304,2304,4608> start = 13287,end = 52570,total = 39283
+ConcatFloatStreamWithStall<f,3,2304,2304,4608> start = 13284,end = 66400,total = 53116
+ConcatFloatStreamWithStall<f,3,4608,4608,9216> start = 13289,end = 84842,total = 71553
+QuantizeLinearFmulStream<h,288,96,96> start = 13287,end = 87733,total = 74446
+Pad2DStreamInt8<h,3,96,96,96,0,1,0,16> start = 13289,end = 87829,total = 74540
+SplitFilterInt8PktStream<h,3,10864,3696,112>::filter3 start = 13299,end = 87865,total = 74566
+QLinearConvHx4PktStream<h,h,33,112,48,48,2,2,1,3,8,3,3,1> start = 13356,end = 110718,total = 97362
+ConcatInt8Stream<h,8,768,768,1536> start = 13297,end = 117345,total = 104048
+QLinearConvHx4PktStream<h,h,33,112,48,48,2,2,1,3,8,3,3,1> start = 13357,end = 117343,total = 103986
+ConcatInt8Stream<h,8,1536,768,2304> start = 13299,end = 123612,total = 110313
+QLinearConvHx4PktStream<h,h,33,112,48,48,2,2,1,3,8,3,3,1> start = 13359,end = 123609,total = 110250
+Pad2DStreamInt8<h,8,48,48,48,1,1,1,15> start = 13302,end = 123688,total = 110386
+SplitFilterInt8PktStream<h,8,3200,1664,128>::filter2 start = 13306,end = 123720,total = 110414
+QLinearConvHx4PktStream<h,h,26,64,48,48,1,1,1,8,8,3,3,8> start = 13360,end = 127510,total = 114150
+QLinearConvHx4PktStream<h,h,26,64,48,48,1,1,1,8,8,3,3,8> start = 13361,end = 131010,total = 117649
+ConcatInt8Stream<h,8,1152,1152,2304> start = 13301,end = 131020,total = 117719
+SplitFilterInt8PktStream<h,8,2304,1152,0>::filter2 start = 13312,end = 131260,total = 117948
+QLinearConv1x1PktStream<h,h,24,48,48,48,1,1,1,8,16,1,1,1> start = 13366,end = 164621,total = 151255
+QLinearConv1x1PktStream<h,h,24,48,48,48,1,1,1,8,16,1,1,1> start = 13367,end = 165052,total = 151685
+ConcatInt8Stream<h,16,1152,1152,2304> start = 13307,end = 165068,total = 151761
+Pad2DStreamInt8<h,16,48,48,48,0,1,0,16> start = 13313,end = 165502,total = 152189
+SplitFilterInt8PktStream<h,16,3136,832,64>::filter4 start = 13319,end = 165531,total = 152212
+QLinearConvHx4PktStream<h,h,13,64,24,32,2,2,1,16,16,3,3,16> start = 13369,end = 176437,total = 163068
+QLinearConvHx4PktStream<h,h,13,64,24,32,2,2,1,16,16,3,3,16> start = 13370,end = 177312,total = 163942
+ConcatInt8Stream<h,16,192,192,384> start = 13310,end = 177319,total = 164009
+QLinearConvHx4PktStream<h,h,13,64,24,32,2,2,1,16,16,3,3,16> start = 13372,end = 177707,total = 164335
+QLinearConvHx4PktStream<h,h,13,64,24,32,2,2,1,16,16,3,3,16> start = 13373,end = 178067,total = 164694
+ConcatInt8Stream<h,16,192,192,384> start = 13313,end = 178074,total = 164761
+ConcatInt8Stream<h,16,384,384,768> start = 13315,end = 178084,total = 164769
+Pad2DStreamInt8<h,16,24,24,32,0,0,0,8> start = 13311,end = 178126,total = 164815
+QLinearConv1x1Stream<h,h,24,32,24,32,1,1,1,16,32,1,1,1> start = 178147,end = 241262,total = 63115
+Pad2DStreamInt8<h,32,24,24,32,1,1,1,7> start = 13306,end = 241327,total = 228021
+SplitFilterInt8PktStream<h,32,832,448,64>::filter2 start = 13310,end = 241351,total = 228041
+QLinearConvHx4PktStream<h,h,14,32,24,32,1,1,1,32,32,3,3,32> start = 13369,end = 251344,total = 237975
+QLinearConvHx4PktStream<h,h,14,32,24,32,1,1,1,32,32,3,3,32> start = 13370,end = 252131,total = 238761
+ConcatInt8Stream<h,32,384,384,768> start = 13310,end = 252141,total = 238831
+Pad2DStreamInt8<h,32,24,24,32,0,0,0,8> start = 13313,end = 260793,total = 247480
+SplitFilterInt8PktStream<h,32,768,384,0>::filter2 start = 13317,end = 260818,total = 247501
+QLinearConv1x1PktStream<h,h,12,32,24,32,1,1,1,32,32,1,1,1> start = 13375,end = 312033,total = 298658
+QLinearConv1x1PktStream<h,h,12,32,24,32,1,1,1,32,32,1,1,1> start = 13376,end = 312306,total = 298930
+ConcatInt8Stream<h,32,384,384,768> start = 13316,end = 312316,total = 299000
+Pad2DStreamInt8<h,32,24,24,32,0,1,0,8> start = 13319,end = 312397,total = 299078
+SplitFilterInt8PktStream<h,32,800,416,32>::filter2 start = 13323,end = 312423,total = 299100
+QLinearConvHx4PktStream<h,h,13,32,12,16,2,2,1,32,32,3,3,32> start = 13379,end = 324874,total = 311495
+QLinearConvHx4PktStream<h,h,13,32,12,16,2,2,1,32,32,3,3,32> start = 13380,end = 325128,total = 311748
+ConcatInt8Stream<h,32,96,96,192> start = 13319,end = 325135,total = 311816
+Pad2DStreamInt8<h,32,12,12,16,0,0,0,4> start = 13320,end = 325184,total = 311864
+QLinearConv1x1Stream<h,h,12,16,12,16,1,1,1,32,64,1,1,1> start = 325203,end = 384257,total = 59054
+Pad2DStreamInt8<h,64,12,12,16,1,1,1,3> start = 13317,end = 384316,total = 370999
+QLinearConvHx4Stream<h,h,14,16,12,16,1,1,1,64,64,3,3,64> start = 384332,end = 398273,total = 13941
+Pad2DStreamInt8<h,64,12,12,16,0,0,0,4> start = 13291,end = 402987,total = 389696
+QLinearConv1x1Stream<h,h,12,16,12,16,1,1,1,64,64,1,1,1> start = 403007,end = 500418,total = 97411
+Pad2DStreamInt8<h,64,12,12,16,0,1,0,4> start = 13276,end = 500487,total = 487211
+QLinearConvHx4Stream<h,h,13,16,6,16,2,2,1,64,64,3,3,64> start = 500508,end = 511367,total = 10859
+Pad2DStreamInt8<h,64,6,6,16,0,0,0,10> start = 13278,end = 511414,total = 498136
+QLinearConv1x1Stream<h,h,6,16,6,16,1,1,1,64,128,1,1,1> start = 511434,end = 614050,total = 102616
+Pad2DStreamInt8<h,128,6,6,16,1,1,1,9> start = 13244,end = 614126,total = 600882
+QLinearConvHx4Stream<h,h,8,16,6,16,1,1,1,128,128,3,3,128> start = 614142,end = 628915,total = 14773
+Pad2DStreamInt8<h,128,6,6,16,0,0,0,10> start = 13237,end = 634451,total = 621214
+QLinearConv1x1Stream<h,h,6,16,6,16,1,1,1,128,128,1,1,1> start = 634471,end = 816789,total = 182318
+Pad2DStreamInt8<h,128,6,6,16,1,1,1,9> start = 13234,end = 816848,total = 803614
+QLinearConvHx4Stream<h,h,8,16,6,16,1,1,1,128,128,3,3,128> start = 816864,end = 831637,total = 14773
+Pad2DStreamInt8<h,128,6,6,16,0,0,0,10> start = 13236,end = 837173,total = 823937
+QLinearConv1x1Stream<h,h,6,16,6,16,1,1,1,128,128,1,1,1> start = 837193,end = 1019511,total = 182318
+Pad2DStreamInt8<h,128,6,6,16,1,1,1,9> start = 13230,end = 1019573,total = 1006343
+QLinearConvHx4Stream<h,h,8,16,6,16,1,1,1,128,128,3,3,128> start = 1019589,end = 1034362,total = 14773
+Pad2DStreamInt8<h,128,6,6,16,0,0,0,10> start = 13228,end = 1039896,total = 1026668
+QLinearConv1x1Stream<h,h,6,16,6,16,1,1,1,128,128,1,1,1> start = 1039916,end = 1222234,total = 182318
+Pad2DStreamInt8<h,128,6,6,16,1,1,1,9> start = 13226,end = 1222294,total = 1209068
+QLinearConvHx4Stream<h,h,8,16,6,16,1,1,1,128,128,3,3,128> start = 1222310,end = 1237083,total = 14773
+Pad2DStreamInt8<h,128,6,6,16,0,0,0,10> start = 13228,end = 1242619,total = 1229391
+QLinearConv1x1Stream<h,h,6,16,6,16,1,1,1,128,128,1,1,1> start = 1242639,end = 1424957,total = 182318
+Pad2DStreamInt8<h,128,6,6,16,1,1,1,9> start = 13253,end = 1425028,total = 1411775
+QLinearConvHx4Stream<h,h,8,16,6,16,1,1,1,128,128,3,3,128> start = 1425044,end = 1439817,total = 14773
+Pad2DStreamInt8<h,128,6,6,16,0,0,0,10> start = 13258,end = 1445353,total = 1432095
+QLinearConv1x1Stream<h,h,6,16,6,16,1,1,1,128,128,1,1,1> start = 1445373,end = 1627691,total = 182318
+Pad2DStreamInt8<h,128,6,6,16,0,1,0,10> start = 13262,end = 1627756,total = 1614494
+QLinearConvHx4Stream<h,h,7,16,3,16,2,2,1,128,128,3,3,128> start = 1627777,end = 1639445,total = 11668
+Pad2DStreamInt8<h,128,3,3,16,0,0,0,13> start = 13266,end = 1639664,total = 1626398
+QLinearConv1x1Stream<h,h,3,16,3,16,1,1,1,128,256,1,1,1> start = 1639684,end = 1838385,total = 198701
+Pad2DStreamInt8<h,256,3,3,16,1,1,1,12> start = 13253,end = 1838449,total = 1825196
+SplitFilterInt8Stream<h,256,80,48,32>::filter2 start = 13251,end = 1838459,total = 1825208
+SplitFilterInt8StreamTwice<h,256,80,48,32>::filter0 start = 13246,end = 1838463,total = 1825217
+QLinearConvHx4Stream<h,h,3,16,3,16,1,1,1,256,256,3,3,256> start = 1838434,end = 1843869,total = 5435
+QLinearConvHx4Stream<h,h,3,16,3,16,1,1,1,256,256,3,3,256> start = 1838458,end = 1843893,total = 5435
+ConcatInt8Stream<h,256,16,16,32> start = 13246,end = 1843904,total = 1830658
+QLinearConvHx4Stream<h,h,3,16,3,16,1,1,1,256,256,3,3,256> start = 1838475,end = 1843910,total = 5435
+ConcatInt8Stream<h,256,32,16,48> start = 13244,end = 1843922,total = 1830678
+Pad2DStreamInt8<h,256,3,3,16,0,0,0,13> start = 13242,end = 1862091,total = 1848849
+QLinearConv1x1Stream<h,h,3,16,3,16,1,1,1,256,256,1,1,1> start = 1862112,end = 2232079,total = 369967
+QLinearAvgpoolScalarBCHW<3,16,1,1,1,256,3,3> start = 2232091,end = 2269741,total = 37650
+QgemmStream<h,h,1,256,16> start = 13305,end = 2269788,total = 2256483
+Pad2DStreamInt8<h,1,1,2,16,0,0,0,14> start = 13269,end = 2269844,total = 2256575
+QLinearSoftmaxSingleaxis<h, 1,2,16> start = 2269856,end = 2270028,total = 172
+DequantizeLinear<h,1,16,4> start = 2270046,end = 2270102,total = 56
+
+Checking 1/14: k000transpose_goldenout_shape1x3x96x96.txt                                       against k000transpose_goldenout_shape1x3x96x96.txt              TEST: OK!
+Checking 2/14: k001quantizelinear_goldenout_shape1x3x96x96.txt                                  against k001quantizelinear_goldenout_shape1x3x96x96.txt         TEST: OK!
+Checking 3/14: k002qlinearconv_goldenout_shape1x8x48x48.txt                                     against k002qlinearconv_goldenout_shape1x8x48x48.txt            TEST: FAILED! Only 18430/18432 passed.
+Max absolute difference: 1.0
+Max relative difference: 0.027777777777777776
+Checking 4/14: k003qlinearconv_goldenout_shape1x8x48x48.txt                                     against k003qlinearconv_goldenout_shape1x8x48x48.txt            TEST: FAILED! Only 18424/18432 passed.
+Max absolute difference: 1.0
+Max relative difference: 0.041666666666666664
+Checking 5/14: k004qlinearconv_goldenout_shape1x16x48x48.txt                                    against k004qlinearconv_goldenout_shape1x16x48x48.txt           TEST: FAILED! Only 36845/36864 passed.
+Max absolute difference: 1.0
+Max relative difference: 0.25
+Checking 6/14: k006qlinearconv_goldenout_shape1x32x24x24.txt                                    against k006qlinearconv_goldenout_shape1x32x24x24.txt           TEST: FAILED! Only 2229/18432 passed.
+Max absolute difference: 254.0
+Max relative difference: 254.0
+Checking 7/14: k007qlinearconv_goldenout_shape1x32x24x24.txt                                    against k007qlinearconv_goldenout_shape1x32x24x24.txt           TEST: FAILED! Only 4591/18432 passed.
+Max absolute difference: 254.0
+Max relative difference: 254.0
+Checking 8/14: k008qlinearconv_goldenout_shape1x32x24x24.txt                                    against k008qlinearconv_goldenout_shape1x32x24x24.txt           TEST: FAILED! Only 3311/18432 passed.
+Max absolute difference: 254.0
+Max relative difference: 254.0
+Checking 9/14: k026qlinearconv_goldenout_shape1x256x3x3.txt                                     against k026qlinearconv_goldenout_shape1x256x3x3.txt            TEST: FAILED! Only 2118/2304 passed.
+Max absolute difference: 42.0
+Max relative difference: 15.0
+Checking 10/14: k028qlinearconv_goldenout_shape1x256x3x3.txt                                     against k028qlinearconv_goldenout_shape1x256x3x3.txt           TEST: FAILED! Only 2189/2304 passed.
+Max absolute difference: 55.0
+Max relative difference: 10.0
+Checking 11/14: k029qlinearpool_goldenout_shape1x256x1x1.txt                                     against k029qlinearpool_goldenout_shape1x256x1x1.txt           TEST: FAILED! Only 236/256 passed.
+Max absolute difference: 22.0
+Max relative difference: 21.0
+Checking 12/14: k031qgemm_goldenout_shape1x2.txt                                                 against k031qgemm_goldenout_shape1x2.txt                       TEST: FAILED! Only 0/2 passed.
+Max absolute difference: 27.0
+Max relative difference: 0.26262626262626265
+Checking 13/14: k032qlinearsoftmax_goldenout_shape1x2.txt                                        against k032qlinearsoftmax_goldenout_shape1x2.txt              TEST: FAILED! Only 0/2 passed.
+Max absolute difference: 121.0
+Max relative difference: 5.260869565217392
+Checking 14/14: k033dequantizeLinear_goldenout_shape1x2.txt                                      against k033dequantizeLinear_goldenout_shape1x2.txt            TEST: FAILED! Only 0/2 passed.
+Max absolute difference: 0.47265625
+Max relative difference: 5.260869565217392
 ```
