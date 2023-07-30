@@ -740,106 +740,114 @@ tiny_kws</h2>
 <div class="line">AssertionError: 11 / 12 tests passed.</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md35"></a>
 tiny_kws_int8</h2>
-<p>Note need ~26gb ram and ~1h for aiesimulator. Previous run on int8 only starts 5725 ends 330087. </p><div class="fragment"><div class="line">QuantizeLinearFmulStream&lt;h,49,12,16&gt; start = 5305,end = 6870,total = 1565</div>
-<div class="line">Pad2DStreamInt8&lt;h,1,49,10,16,4,5,1,5&gt; start = 5304,end = 6948,total = 1644</div>
-<div class="line">QLinearConvHx4Stream&lt;h,h,58,16,5,16,2,2,1,1,64,10,4,1&gt; start = 6969,end = 111150,total = 104181</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5308,end = 111216,total = 105908</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5320,end = 111234,total = 105914</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5373,end = 116885,total = 111512</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5374,end = 117196,total = 111822</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5314,end = 117206,total = 111892</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5376,end = 117508,total = 112132</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5377,end = 117876,total = 112499</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5317,end = 117886,total = 112569</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5312,end = 117899,total = 112587</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5371,end = 117909,total = 112538</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5308,end = 117937,total = 112629</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5314,end = 147850,total = 142536</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5328,end = 147873,total = 142545</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5387,end = 190903,total = 185516</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5388,end = 191012,total = 185624</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5328,end = 191022,total = 185694</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5390,end = 191128,total = 185738</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5391,end = 191218,total = 185827</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5331,end = 191228,total = 185897</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5326,end = 191241,total = 185915</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5379,end = 191299,total = 185920</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5324,end = 191311,total = 185987</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5330,end = 196622,total = 191292</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5338,end = 196640,total = 191302</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5391,end = 202786,total = 197395</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5392,end = 202932,total = 197540</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5332,end = 202942,total = 197610</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5394,end = 203079,total = 197685</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5395,end = 203282,total = 197887</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5335,end = 203292,total = 197957</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5334,end = 203305,total = 197971</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5389,end = 203315,total = 197926</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5330,end = 203343,total = 198013</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5335,end = 233255,total = 227920</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5347,end = 233278,total = 227931</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5403,end = 276308,total = 270905</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5404,end = 276417,total = 271013</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5344,end = 276427,total = 271083</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5406,end = 276529,total = 271123</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5407,end = 276621,total = 271214</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5347,end = 276631,total = 271284</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5342,end = 276644,total = 271302</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5398,end = 276704,total = 271306</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5341,end = 276715,total = 271374</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5348,end = 282026,total = 276678</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5359,end = 282044,total = 276685</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5406,end = 288192,total = 282786</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5407,end = 288336,total = 282929</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5347,end = 288346,total = 282999</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5409,end = 288483,total = 283074</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5410,end = 288686,total = 283276</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5350,end = 288696,total = 283346</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5349,end = 288709,total = 283360</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5415,end = 288720,total = 283305</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5355,end = 288746,total = 283391</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5355,end = 318656,total = 313301</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5362,end = 318680,total = 313318</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5419,end = 361709,total = 356290</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5420,end = 361818,total = 356398</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5360,end = 361828,total = 356468</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5422,end = 361934,total = 356512</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5423,end = 362024,total = 356601</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5363,end = 362034,total = 356671</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5358,end = 362047,total = 356689</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5413,end = 362106,total = 356693</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5356,end = 362117,total = 356761</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5359,end = 367426,total = 362067</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5373,end = 367446,total = 362073</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5422,end = 373593,total = 368171</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5423,end = 373737,total = 368314</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5363,end = 373747,total = 368384</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5425,end = 373884,total = 368459</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5426,end = 374087,total = 368661</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5366,end = 374097,total = 368731</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5370,end = 374111,total = 368741</div>
-<div class="line">QLinearConvHx4PktStream&lt;h,h,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5429,end = 374122,total = 368693</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5369,end = 374146,total = 368777</div>
-<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5372,end = 404057,total = 398685</div>
-<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5384,end = 404079,total = 398695</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5435,end = 447108,total = 441673</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5436,end = 447217,total = 441781</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5376,end = 447227,total = 441851</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5438,end = 447327,total = 441889</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5439,end = 447419,total = 441980</div>
-<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5379,end = 447429,total = 442050</div>
-<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5376,end = 447440,total = 442064</div>
-<div class="line">QLinearConv1x1PktStream&lt;h,h,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5432,end = 447506,total = 442074</div>
-<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5372,end = 447516,total = 442144</div>
-<div class="line">SplitInt8&lt;h,1,25600,12800,0&gt;::filter2 start = 5401,end = 447542,total = 442141</div>
-<div class="line">ConcatInt8Stream&lt;h,1,32,32,64&gt; start = 5366,end = 460351,total = 454985</div>
-<div class="line">QgemmStream&lt;h,h,1,64,16&gt; start = 460364,end = 460492,total = 128</div>
-<div class="line">Pad2DStreamInt8&lt;h,1,1,12,16,0,0,0,4&gt; start = 5350,end = 460546,total = 455196</div>
-<div class="line">7013 9885 1151330 54616 7013 156 353372 541979123 212647 4973 9 4411312 16783873 16783873 16783873 16783873 </div>
-<div class="line">QLinearSoftmaxSingleaxis&lt;h, 1,12,16&gt; start = 460558,end = 461685,total = 1127</div>
-<div class="line">DequantizeLinear&lt;h,1,16,12&gt; start = 461704,end = 461768,total = 64</div>
-<div class="line">QLinearAvgpoolScalarBCHW&lt;25,16,1,1,1,64,25,5&gt; start = 447672,end = 472973,total = 25301</div>
-<div class="line">QLinearAvgpoolScalarBCHW&lt;25,16,1,1,1,64,25,5&gt; start = 447676,end = 472977,total = 25301</div>
+<p>Note need ~26gb ram and ~1h for aiesimulator. Previous run on int8 only starts 5725 ends 330087. </p><div class="fragment"><div class="line">QuantizeLinearFmulStream&lt;h,49,12,16&gt; start = 5623,end = 7188,total = 1565</div>
+<div class="line">Pad2DStreamInt8&lt;h,1,49,10,16,4,5,1,5&gt; start = 5624,end = 7265,total = 1641</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,1,928,288,128&gt;::filter5 start = 5631,end = 7353,total = 1722</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,18,16,5,16,2,2,1,1,64,10,4,1&gt; start = 5678,end = 35515,total = 29837</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5621,end = 35831,total = 30210</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,18,16,5,16,2,2,1,1,64,10,4,1&gt; start = 5679,end = 35825,total = 30146</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,18,16,5,16,2,2,1,1,64,10,4,1&gt; start = 5681,end = 36140,total = 30459</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5624,end = 36262,total = 30638</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,18,16,5,16,2,2,1,1,64,10,4,1&gt; start = 5682,end = 36256,total = 30574</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5623,end = 36275,total = 30652</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,18,16,5,16,2,2,1,1,64,10,4,1&gt; start = 5685,end = 36298,total = 30613</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5627,end = 36306,total = 30679</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5628,end = 55797,total = 50169</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5640,end = 55815,total = 50175</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5693,end = 58870,total = 53177</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5694,end = 59016,total = 53322</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5634,end = 59026,total = 53392</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5696,end = 59157,total = 53461</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5697,end = 59360,total = 53663</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5637,end = 59370,total = 53733</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5689,end = 59397,total = 53708</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5632,end = 60945,total = 55313</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5629,end = 62236,total = 56607</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5629,end = 92424,total = 86795</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5659,end = 92455,total = 86796</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5711,end = 126716,total = 121005</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5712,end = 126825,total = 121113</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5652,end = 126835,total = 121183</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5714,end = 126937,total = 121223</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5715,end = 127029,total = 121314</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5655,end = 127039,total = 121384</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5651,end = 127051,total = 121400</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5710,end = 127114,total = 121404</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5653,end = 127125,total = 121472</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5656,end = 141067,total = 135411</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5672,end = 141087,total = 135415</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5725,end = 144139,total = 138414</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5726,end = 144283,total = 138557</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5666,end = 144293,total = 138627</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5728,end = 144430,total = 138702</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5729,end = 144633,total = 138904</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5669,end = 144643,total = 138974</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5725,end = 144667,total = 138942</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5665,end = 146217,total = 140552</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5662,end = 147508,total = 141846</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5647,end = 177702,total = 172055</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5647,end = 177728,total = 172081</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5696,end = 211988,total = 206292</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5697,end = 212097,total = 206400</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5637,end = 212107,total = 206470</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5699,end = 212211,total = 206512</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5700,end = 212303,total = 206603</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5640,end = 212313,total = 206673</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5639,end = 212326,total = 206687</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5702,end = 212389,total = 206687</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5642,end = 212399,total = 206757</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5642,end = 226336,total = 220694</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5626,end = 226366,total = 220740</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5677,end = 229420,total = 223743</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5678,end = 229564,total = 223886</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5618,end = 229574,total = 223956</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5680,end = 229707,total = 224027</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5681,end = 229910,total = 224229</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5621,end = 229920,total = 224299</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5676,end = 229947,total = 224271</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5616,end = 231495,total = 225879</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5613,end = 232786,total = 227173</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5606,end = 262976,total = 257370</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5612,end = 262999,total = 257387</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5665,end = 297258,total = 291593</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5666,end = 297369,total = 291703</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5606,end = 297379,total = 291773</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5668,end = 297483,total = 291815</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5669,end = 297575,total = 291906</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5609,end = 297585,total = 291976</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5608,end = 297598,total = 291990</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5663,end = 297658,total = 291995</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5604,end = 297668,total = 292064</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,1,1,1,10&gt; start = 5597,end = 311609,total = 306012</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,432,112,32&gt;::filter5 start = 5608,end = 311627,total = 306019</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5661,end = 314679,total = 309018</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5662,end = 314823,total = 309161</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5602,end = 314833,total = 309231</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5664,end = 314970,total = 309306</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5665,end = 315173,total = 309508</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5605,end = 315183,total = 309578</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,a,7,16,5,16,1,1,1,64,64,3,3,64&gt; start = 5657,end = 315208,total = 309551</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5600,end = 316758,total = 311158</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5598,end = 318048,total = 312450</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,25,5,16,0,0,0,11&gt; start = 5596,end = 348236,total = 342640</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,64,400,80,0&gt;::filter5 start = 5604,end = 348258,total = 342654</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5657,end = 382517,total = 376860</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5658,end = 382628,total = 376970</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5598,end = 382638,total = 377040</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5660,end = 382742,total = 377082</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5661,end = 382834,total = 377173</div>
+<div class="line">ConcatInt8Stream&lt;h,64,80,80,160&gt; start = 5601,end = 382844,total = 377243</div>
+<div class="line">ConcatInt8Stream&lt;h,64,160,160,320&gt; start = 5600,end = 382857,total = 377257</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,a,5,16,5,16,1,1,1,64,64,1,1,1&gt; start = 5655,end = 382917,total = 377262</div>
+<div class="line">ConcatInt8Stream&lt;h,64,320,80,400&gt; start = 5599,end = 382930,total = 377331</div>
+<div class="line">SplitInt8&lt;h,1,25600,12800,0&gt;::filter2 start = 5642,end = 382962,total = 377320</div>
+<div class="line">ConcatInt8Stream&lt;h,1,32,32,64&gt; start = 5611,end = 395769,total = 390158</div>
+<div class="line">QgemmStream&lt;h,a,1,64,16&gt; start = 5669,end = 395850,total = 390181</div>
+<div class="line">Pad2DStreamInt8&lt;h,1,1,12,16,0,0,0,4&gt; start = 5609,end = 395897,total = 390288</div>
+<div class="line">QLinearSoftmaxSingleaxis&lt;h, 1,12,16&gt; start = 395911,end = 396084,total = 173</div>
+<div class="line">DequantizeLinear&lt;h,1,16,12&gt; start = 396104,end = 396168,total = 64</div>
+<div class="line">QLinearAvgpoolScalarBCHW&lt;25,16,1,1,1,64,25,5&gt; start = 383092,end = 408392,total = 25300</div>
+<div class="line">QLinearAvgpoolScalarBCHW&lt;25,16,1,1,1,64,25,5&gt; start = 383096,end = 408395,total = 25299</div>
 <div class="line">core(s) are done executing</div>
 <div class="line">[INFO]: Fifo Guidance report generated ./AIESim_FIFO_Guidance.json</div>
 <div class="line">Exiting!</div>
@@ -904,7 +912,147 @@ tiny_kws_int8</h2>
 tiny_vww</h2>
 <div class="fragment"></div><!-- fragment --><h2><a class="anchor" id="autotoc_md37"></a>
 tiny_vww_int8</h2>
-<div class="fragment"></div><!-- fragment --> </div></div><!-- contents -->
+<div class="fragment"><div class="line">TransposeScalarBHWC2BCHW&lt;f,1,24,96,3&gt; start = 20243,end = 28213,total = 7970</div>
+<div class="line">TransposeScalarBHWC2BCHW&lt;f,1,24,96,3&gt; start = 27163,end = 35133,total = 7970</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,1,27648,6912,0&gt;::filter2 start = 13282,end = 40987,total = 27705</div>
+<div class="line">SplitFilterFloatStreamTwice&lt;f,1,27648,6912,0&gt;::filter0 start = 13284,end = 40990,total = 27706</div>
+<div class="line">TransposeScalarBHWC2BCHW&lt;f,1,24,96,3&gt; start = 34074,end = 42044,total = 7970</div>
+<div class="line">TransposeScalarBHWC2BCHW&lt;f,1,24,96,3&gt; start = 40993,end = 48963,total = 7970</div>
+<div class="line">ConcatFloatStreamWithStall&lt;f,3,2304,2304,4608&gt; start = 13287,end = 52570,total = 39283</div>
+<div class="line">ConcatFloatStreamWithStall&lt;f,3,2304,2304,4608&gt; start = 13284,end = 66400,total = 53116</div>
+<div class="line">ConcatFloatStreamWithStall&lt;f,3,4608,4608,9216&gt; start = 13289,end = 84842,total = 71553</div>
+<div class="line">QuantizeLinearFmulStream&lt;h,288,96,96&gt; start = 13287,end = 87733,total = 74446</div>
+<div class="line">Pad2DStreamInt8&lt;h,3,96,96,96,0,1,0,16&gt; start = 13289,end = 87829,total = 74540</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,3,10864,3696,112&gt;::filter3 start = 13299,end = 87865,total = 74566</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,33,112,48,48,2,2,1,3,8,3,3,1&gt; start = 13356,end = 110718,total = 97362</div>
+<div class="line">ConcatInt8Stream&lt;h,8,768,768,1536&gt; start = 13297,end = 117345,total = 104048</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,33,112,48,48,2,2,1,3,8,3,3,1&gt; start = 13357,end = 117343,total = 103986</div>
+<div class="line">ConcatInt8Stream&lt;h,8,1536,768,2304&gt; start = 13299,end = 123612,total = 110313</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,33,112,48,48,2,2,1,3,8,3,3,1&gt; start = 13359,end = 123609,total = 110250</div>
+<div class="line">Pad2DStreamInt8&lt;h,8,48,48,48,1,1,1,15&gt; start = 13302,end = 123688,total = 110386</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,8,3200,1664,128&gt;::filter2 start = 13306,end = 123720,total = 110414</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,26,64,48,48,1,1,1,8,8,3,3,8&gt; start = 13360,end = 127510,total = 114150</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,26,64,48,48,1,1,1,8,8,3,3,8&gt; start = 13361,end = 131010,total = 117649</div>
+<div class="line">ConcatInt8Stream&lt;h,8,1152,1152,2304&gt; start = 13301,end = 131020,total = 117719</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,8,2304,1152,0&gt;::filter2 start = 13312,end = 131260,total = 117948</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,h,24,48,48,48,1,1,1,8,16,1,1,1&gt; start = 13366,end = 164621,total = 151255</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,h,24,48,48,48,1,1,1,8,16,1,1,1&gt; start = 13367,end = 165052,total = 151685</div>
+<div class="line">ConcatInt8Stream&lt;h,16,1152,1152,2304&gt; start = 13307,end = 165068,total = 151761</div>
+<div class="line">Pad2DStreamInt8&lt;h,16,48,48,48,0,1,0,16&gt; start = 13313,end = 165502,total = 152189</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,16,3136,832,64&gt;::filter4 start = 13319,end = 165531,total = 152212</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,13,64,24,32,2,2,1,16,16,3,3,16&gt; start = 13369,end = 176437,total = 163068</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,13,64,24,32,2,2,1,16,16,3,3,16&gt; start = 13370,end = 177312,total = 163942</div>
+<div class="line">ConcatInt8Stream&lt;h,16,192,192,384&gt; start = 13310,end = 177319,total = 164009</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,13,64,24,32,2,2,1,16,16,3,3,16&gt; start = 13372,end = 177707,total = 164335</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,13,64,24,32,2,2,1,16,16,3,3,16&gt; start = 13373,end = 178067,total = 164694</div>
+<div class="line">ConcatInt8Stream&lt;h,16,192,192,384&gt; start = 13313,end = 178074,total = 164761</div>
+<div class="line">ConcatInt8Stream&lt;h,16,384,384,768&gt; start = 13315,end = 178084,total = 164769</div>
+<div class="line">Pad2DStreamInt8&lt;h,16,24,24,32,0,0,0,8&gt; start = 13311,end = 178126,total = 164815</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,24,32,24,32,1,1,1,16,32,1,1,1&gt; start = 178147,end = 241262,total = 63115</div>
+<div class="line">Pad2DStreamInt8&lt;h,32,24,24,32,1,1,1,7&gt; start = 13306,end = 241327,total = 228021</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,32,832,448,64&gt;::filter2 start = 13310,end = 241351,total = 228041</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,14,32,24,32,1,1,1,32,32,3,3,32&gt; start = 13369,end = 251344,total = 237975</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,14,32,24,32,1,1,1,32,32,3,3,32&gt; start = 13370,end = 252131,total = 238761</div>
+<div class="line">ConcatInt8Stream&lt;h,32,384,384,768&gt; start = 13310,end = 252141,total = 238831</div>
+<div class="line">Pad2DStreamInt8&lt;h,32,24,24,32,0,0,0,8&gt; start = 13313,end = 260793,total = 247480</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,32,768,384,0&gt;::filter2 start = 13317,end = 260818,total = 247501</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,h,12,32,24,32,1,1,1,32,32,1,1,1&gt; start = 13375,end = 312033,total = 298658</div>
+<div class="line">QLinearConv1x1PktStream&lt;h,h,12,32,24,32,1,1,1,32,32,1,1,1&gt; start = 13376,end = 312306,total = 298930</div>
+<div class="line">ConcatInt8Stream&lt;h,32,384,384,768&gt; start = 13316,end = 312316,total = 299000</div>
+<div class="line">Pad2DStreamInt8&lt;h,32,24,24,32,0,1,0,8&gt; start = 13319,end = 312397,total = 299078</div>
+<div class="line">SplitFilterInt8PktStream&lt;h,32,800,416,32&gt;::filter2 start = 13323,end = 312423,total = 299100</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,13,32,12,16,2,2,1,32,32,3,3,32&gt; start = 13379,end = 324874,total = 311495</div>
+<div class="line">QLinearConvHx4PktStream&lt;h,h,13,32,12,16,2,2,1,32,32,3,3,32&gt; start = 13380,end = 325128,total = 311748</div>
+<div class="line">ConcatInt8Stream&lt;h,32,96,96,192&gt; start = 13319,end = 325135,total = 311816</div>
+<div class="line">Pad2DStreamInt8&lt;h,32,12,12,16,0,0,0,4&gt; start = 13320,end = 325184,total = 311864</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,12,16,12,16,1,1,1,32,64,1,1,1&gt; start = 325203,end = 384257,total = 59054</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,12,12,16,1,1,1,3&gt; start = 13317,end = 384316,total = 370999</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,14,16,12,16,1,1,1,64,64,3,3,64&gt; start = 384332,end = 398273,total = 13941</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,12,12,16,0,0,0,4&gt; start = 13291,end = 402987,total = 389696</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,12,16,12,16,1,1,1,64,64,1,1,1&gt; start = 403007,end = 500418,total = 97411</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,12,12,16,0,1,0,4&gt; start = 13276,end = 500487,total = 487211</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,13,16,6,16,2,2,1,64,64,3,3,64&gt; start = 500508,end = 511367,total = 10859</div>
+<div class="line">Pad2DStreamInt8&lt;h,64,6,6,16,0,0,0,10&gt; start = 13278,end = 511414,total = 498136</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,6,16,6,16,1,1,1,64,128,1,1,1&gt; start = 511434,end = 614050,total = 102616</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,1,1,1,9&gt; start = 13244,end = 614126,total = 600882</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,8,16,6,16,1,1,1,128,128,3,3,128&gt; start = 614142,end = 628915,total = 14773</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,0,0,0,10&gt; start = 13237,end = 634451,total = 621214</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,6,16,6,16,1,1,1,128,128,1,1,1&gt; start = 634471,end = 816789,total = 182318</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,1,1,1,9&gt; start = 13234,end = 816848,total = 803614</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,8,16,6,16,1,1,1,128,128,3,3,128&gt; start = 816864,end = 831637,total = 14773</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,0,0,0,10&gt; start = 13236,end = 837173,total = 823937</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,6,16,6,16,1,1,1,128,128,1,1,1&gt; start = 837193,end = 1019511,total = 182318</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,1,1,1,9&gt; start = 13230,end = 1019573,total = 1006343</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,8,16,6,16,1,1,1,128,128,3,3,128&gt; start = 1019589,end = 1034362,total = 14773</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,0,0,0,10&gt; start = 13228,end = 1039896,total = 1026668</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,6,16,6,16,1,1,1,128,128,1,1,1&gt; start = 1039916,end = 1222234,total = 182318</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,1,1,1,9&gt; start = 13226,end = 1222294,total = 1209068</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,8,16,6,16,1,1,1,128,128,3,3,128&gt; start = 1222310,end = 1237083,total = 14773</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,0,0,0,10&gt; start = 13228,end = 1242619,total = 1229391</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,6,16,6,16,1,1,1,128,128,1,1,1&gt; start = 1242639,end = 1424957,total = 182318</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,1,1,1,9&gt; start = 13253,end = 1425028,total = 1411775</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,8,16,6,16,1,1,1,128,128,3,3,128&gt; start = 1425044,end = 1439817,total = 14773</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,0,0,0,10&gt; start = 13258,end = 1445353,total = 1432095</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,6,16,6,16,1,1,1,128,128,1,1,1&gt; start = 1445373,end = 1627691,total = 182318</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,6,6,16,0,1,0,10&gt; start = 13262,end = 1627756,total = 1614494</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,7,16,3,16,2,2,1,128,128,3,3,128&gt; start = 1627777,end = 1639445,total = 11668</div>
+<div class="line">Pad2DStreamInt8&lt;h,128,3,3,16,0,0,0,13&gt; start = 13266,end = 1639664,total = 1626398</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,3,16,3,16,1,1,1,128,256,1,1,1&gt; start = 1639684,end = 1838385,total = 198701</div>
+<div class="line">Pad2DStreamInt8&lt;h,256,3,3,16,1,1,1,12&gt; start = 13253,end = 1838449,total = 1825196</div>
+<div class="line">SplitFilterInt8Stream&lt;h,256,80,48,32&gt;::filter2 start = 13251,end = 1838459,total = 1825208</div>
+<div class="line">SplitFilterInt8StreamTwice&lt;h,256,80,48,32&gt;::filter0 start = 13246,end = 1838463,total = 1825217</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,3,16,3,16,1,1,1,256,256,3,3,256&gt; start = 1838434,end = 1843869,total = 5435</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,3,16,3,16,1,1,1,256,256,3,3,256&gt; start = 1838458,end = 1843893,total = 5435</div>
+<div class="line">ConcatInt8Stream&lt;h,256,16,16,32&gt; start = 13246,end = 1843904,total = 1830658</div>
+<div class="line">QLinearConvHx4Stream&lt;h,h,3,16,3,16,1,1,1,256,256,3,3,256&gt; start = 1838475,end = 1843910,total = 5435</div>
+<div class="line">ConcatInt8Stream&lt;h,256,32,16,48&gt; start = 13244,end = 1843922,total = 1830678</div>
+<div class="line">Pad2DStreamInt8&lt;h,256,3,3,16,0,0,0,13&gt; start = 13242,end = 1862091,total = 1848849</div>
+<div class="line">QLinearConv1x1Stream&lt;h,h,3,16,3,16,1,1,1,256,256,1,1,1&gt; start = 1862112,end = 2232079,total = 369967</div>
+<div class="line">QLinearAvgpoolScalarBCHW&lt;3,16,1,1,1,256,3,3&gt; start = 2232091,end = 2269741,total = 37650</div>
+<div class="line">QgemmStream&lt;h,h,1,256,16&gt; start = 13305,end = 2269788,total = 2256483</div>
+<div class="line">Pad2DStreamInt8&lt;h,1,1,2,16,0,0,0,14&gt; start = 13269,end = 2269844,total = 2256575</div>
+<div class="line">QLinearSoftmaxSingleaxis&lt;h, 1,2,16&gt; start = 2269856,end = 2270028,total = 172</div>
+<div class="line">DequantizeLinear&lt;h,1,16,4&gt; start = 2270046,end = 2270102,total = 56</div>
+<div class="line"> </div>
+<div class="line">Checking 1/14: k000transpose_goldenout_shape1x3x96x96.txt                                       against k000transpose_goldenout_shape1x3x96x96.txt              TEST: OK!</div>
+<div class="line">Checking 2/14: k001quantizelinear_goldenout_shape1x3x96x96.txt                                  against k001quantizelinear_goldenout_shape1x3x96x96.txt         TEST: OK!</div>
+<div class="line">Checking 3/14: k002qlinearconv_goldenout_shape1x8x48x48.txt                                     against k002qlinearconv_goldenout_shape1x8x48x48.txt            TEST: FAILED! Only 18430/18432 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.027777777777777776</div>
+<div class="line">Checking 4/14: k003qlinearconv_goldenout_shape1x8x48x48.txt                                     against k003qlinearconv_goldenout_shape1x8x48x48.txt            TEST: FAILED! Only 18424/18432 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.041666666666666664</div>
+<div class="line">Checking 5/14: k004qlinearconv_goldenout_shape1x16x48x48.txt                                    against k004qlinearconv_goldenout_shape1x16x48x48.txt           TEST: FAILED! Only 36845/36864 passed.</div>
+<div class="line">Max absolute difference: 1.0</div>
+<div class="line">Max relative difference: 0.25</div>
+<div class="line">Checking 6/14: k006qlinearconv_goldenout_shape1x32x24x24.txt                                    against k006qlinearconv_goldenout_shape1x32x24x24.txt           TEST: FAILED! Only 2229/18432 passed.</div>
+<div class="line">Max absolute difference: 254.0</div>
+<div class="line">Max relative difference: 254.0</div>
+<div class="line">Checking 7/14: k007qlinearconv_goldenout_shape1x32x24x24.txt                                    against k007qlinearconv_goldenout_shape1x32x24x24.txt           TEST: FAILED! Only 4591/18432 passed.</div>
+<div class="line">Max absolute difference: 254.0</div>
+<div class="line">Max relative difference: 254.0</div>
+<div class="line">Checking 8/14: k008qlinearconv_goldenout_shape1x32x24x24.txt                                    against k008qlinearconv_goldenout_shape1x32x24x24.txt           TEST: FAILED! Only 3311/18432 passed.</div>
+<div class="line">Max absolute difference: 254.0</div>
+<div class="line">Max relative difference: 254.0</div>
+<div class="line">Checking 9/14: k026qlinearconv_goldenout_shape1x256x3x3.txt                                     against k026qlinearconv_goldenout_shape1x256x3x3.txt            TEST: FAILED! Only 2118/2304 passed.</div>
+<div class="line">Max absolute difference: 42.0</div>
+<div class="line">Max relative difference: 15.0</div>
+<div class="line">Checking 10/14: k028qlinearconv_goldenout_shape1x256x3x3.txt                                     against k028qlinearconv_goldenout_shape1x256x3x3.txt           TEST: FAILED! Only 2189/2304 passed.</div>
+<div class="line">Max absolute difference: 55.0</div>
+<div class="line">Max relative difference: 10.0</div>
+<div class="line">Checking 11/14: k029qlinearpool_goldenout_shape1x256x1x1.txt                                     against k029qlinearpool_goldenout_shape1x256x1x1.txt           TEST: FAILED! Only 236/256 passed.</div>
+<div class="line">Max absolute difference: 22.0</div>
+<div class="line">Max relative difference: 21.0</div>
+<div class="line">Checking 12/14: k031qgemm_goldenout_shape1x2.txt                                                 against k031qgemm_goldenout_shape1x2.txt                       TEST: FAILED! Only 0/2 passed.</div>
+<div class="line">Max absolute difference: 27.0</div>
+<div class="line">Max relative difference: 0.26262626262626265</div>
+<div class="line">Checking 13/14: k032qlinearsoftmax_goldenout_shape1x2.txt                                        against k032qlinearsoftmax_goldenout_shape1x2.txt              TEST: FAILED! Only 0/2 passed.</div>
+<div class="line">Max absolute difference: 121.0</div>
+<div class="line">Max relative difference: 5.260869565217392</div>
+<div class="line">Checking 14/14: k033dequantizeLinear_goldenout_shape1x2.txt                                      against k033dequantizeLinear_goldenout_shape1x2.txt            TEST: FAILED! Only 0/2 passed.</div>
+<div class="line">Max absolute difference: 0.47265625</div>
+<div class="line">Max relative difference: 5.260869565217392</div>
+</div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
