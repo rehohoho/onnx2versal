@@ -143,46 +143,68 @@ $(document).ready(function(){initNavTree('graph__qlinearpool_8h_source.html','')
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classQLinearPoolChunkCStreamGraph.html">   85</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearPoolChunkCStreamGraph.html">QLinearPoolChunkCStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="keyword">typedef</span> <a class="code hl_class" href="classSplitGraph.html">SplitGraph&lt;SPLIT, TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0&gt;</a> <a class="code hl_class" href="classSplitGraph.html">mSplitGraph</a>;</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <a class="code hl_class" href="classSplitGraph.html">mSplitGraph</a> split_graph;</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = mSplitGraph::LCNT;</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    ConcatStreamGraph&lt;CONCAT, TT, LCNT, B, CCHUNK*OUT_H*OUT_W, C*OUT_H*OUT_W&gt; concat_graph;</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    adf::kernel k[LCNT];</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    std::string id;</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    adf::port&lt;input&gt; pin[1];</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    adf::port&lt;output&gt; pout[1];</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <a class="code hl_class" href="classQLinearPoolChunkCStreamGraph.html">QLinearPoolChunkCStreamGraph</a>(</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>      <span class="keywordtype">float</span> in_scale,</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>      <span class="keywordtype">float</span> out_scale,</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>      int8_t in_zero,</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>      int8_t out_zero</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    ) { </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = C/CCHUNK;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    ConcatStreamGraph&lt;CONCAT, TT, LCNT, B, CCHUNK*OUT_H*OUT_W, C*OUT_H*OUT_W&gt; concat_graph;</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    adf::kernel split[(LCNT+1)/2];</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    adf::kernel k[LCNT];</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    std::string id;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    adf::port&lt;input&gt; pin[1];</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <a class="code hl_class" href="classQLinearPoolChunkCStreamGraph.html">QLinearPoolChunkCStreamGraph</a>(</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>      <span class="keywordtype">float</span> in_scale,</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>      <span class="keywordtype">float</span> out_scale,</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>      int8_t in_zero,</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>      int8_t out_zero</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    ) { </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      <span class="keyword">static_assert</span>(C % CCHUNK == 0);</div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      <span class="keyword">static_assert</span>(LCNT &lt;= 8);</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      adf::connect&lt;adf::stream&gt; (pin[0], split_graph.pin[0]);</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        k[i] = adf::kernel::create_object&lt;QLINEARPOOL&lt;TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW&gt;&gt;(</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>          in_scale, out_scale, in_zero, out_zero);</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        adf::source(k[i]) = <span class="stringliteral">&quot;qlinearpool.cc&quot;</span>;</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;qlinearpool.h&quot;</span>};</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        </div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        adf::connect&lt;adf::window&lt;B*CCHUNK*INP_H*INP_W*<span class="keyword">sizeof</span>(TT)&gt;&gt; (split_graph.pout[i], k[i].in[0]);</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        adf::connect&lt;adf::stream, adf::window&lt;B*CCHUNK*OUT_H*OUT_W*<span class="keyword">sizeof</span>(TT)&gt;&gt; (k[i].out[0], concat_graph.pin[i]);</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT/2; i++) {</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        split[i] = adf::kernel::create_object&lt;SplitFilterInt8StreamTwice&lt;TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0&gt;&gt;(i*2);</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        adf::source(split[i]) = <span class="stringliteral">&quot;split.cc&quot;</span>;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        adf::headers(split[i]) = {<span class="stringliteral">&quot;split.h&quot;</span>};</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        adf::runtime&lt;ratio&gt;(split[i]) = 0.6;</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        adf::connect&lt;adf::stream&gt; (pin[0], split[i].in[0]);</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        adf::samples_per_iteration(split[i].in[0]) = B*C*INP_H*INP_W;</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        adf::samples_per_iteration(split[i].out[0]) = B*CCHUNK*INP_H*INP_W;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        adf::samples_per_iteration(split[i].out[1]) = B*CCHUNK*INP_H*INP_W;</div>
 <div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      }</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    }</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span> </div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>};</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARPOOL_GRAPH_H__</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      <span class="keywordflow">if</span> ((LCNT &amp; 0x1) == 1) {</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        <span class="keywordtype">int</span> i = (LCNT+1)/2 - 1;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        split[i] = adf::kernel::create_object&lt;SplitFilterInt8Stream&lt;TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0&gt;&gt;(LCNT-1);</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        adf::source(split[i]) = <span class="stringliteral">&quot;split.cc&quot;</span>;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        adf::headers(split[i]) = {<span class="stringliteral">&quot;split.h&quot;</span>};</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        adf::runtime&lt;ratio&gt;(split[i]) = 0.6;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>        adf::connect&lt;adf::stream&gt; (pin[0], split[i].in[0]);</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>        adf::samples_per_iteration(split[i].in[0]) = B*C*INP_H*INP_W;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>        adf::samples_per_iteration(split[i].out[0]) = B*CCHUNK*INP_H*INP_W;</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>      }</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        k[i] = adf::kernel::create_object&lt;QLINEARPOOL&lt;TT, INP_H, INP_W, OUT_H, OUT_W, B, CCHUNK, KH, KW&gt;&gt;(</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>          in_scale, out_scale, in_zero, out_zero);</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        adf::source(k[i]) = <span class="stringliteral">&quot;qlinearpool.cc&quot;</span>;</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;qlinearpool.h&quot;</span>};</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>        </div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>        adf::connect&lt;adf::window&lt;B*CCHUNK*INP_H*INP_W&gt;&gt; (split[i/2].out[i&amp;0x1], k[i].in[0]);</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        adf::connect&lt;adf::stream&gt; (k[i].out[0], concat_graph.pin[i]);</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>        adf::samples_per_iteration(k[i].out[0]) = B*CCHUNK*OUT_H*OUT_W;</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>      }</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>      </div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    }</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>};</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARPOOL_GRAPH_H__</span></div>
 <div class="ttc" id="aclassQLinearPoolChunkCStreamGraph_html"><div class="ttname"><a href="classQLinearPoolChunkCStreamGraph.html">QLinearPoolChunkCStreamGraph</a></div><div class="ttdoc">Multi instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearpool.h:85</div></div>
 <div class="ttc" id="aclassQLinearPoolStreamGraph_html"><div class="ttname"><a href="classQLinearPoolStreamGraph.html">QLinearPoolStreamGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearpool.h:40</div></div>
-<div class="ttc" id="aclassSplitGraph_html"><div class="ttname"><a href="classSplitGraph.html">SplitGraph</a></div><div class="ttdoc">Graph wrapper for arbitrary split kernel implementation and lanes.</div><div class="ttdef"><b>Definition</b> graph_split.h:37</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
