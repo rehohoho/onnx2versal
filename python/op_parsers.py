@@ -101,14 +101,13 @@ def factor_int(n: int,
     for i, (f1, f2) in enumerate(factor_pairs):
       if f2 > MAX_CHUNKS: break
     f1, f2 = factor_pairs[i-1]
-    if f1 * multiplier + offset > upper_bound:
-      raise ValueError(f"Unable to find factors f1, f2 of {n} such that f1*{multiplier} <= {upper_bound}")
-    return f1, f2
+    if f1 * multiplier + offset <= upper_bound:
+      return f1, f2
   
-  else:
-    for f1, f2 in factor_pairs:
-      if f1 * multiplier + offset <= upper_bound:
-        return f1, f2
+  for f1, f2 in factor_pairs:
+    if f1 * multiplier + offset <= upper_bound:
+      return f1, f2
+  raise ValueError(f"Unable to find factors f1, f2 of {n} such that f1*{multiplier} <= {upper_bound}")
 
 
 class OpParser:
@@ -190,6 +189,9 @@ class OpParser:
     only required if dimensions padded affect weights"""
     print(f"Disabled output padding for {self.name}, may result in choosing scalar op instead of vector.")
 
+  def get_input_shape(self) -> List[int]:
+    return []
+  
   def get_computation_count(self):
     return 0
   
@@ -235,6 +237,9 @@ class AddOp(OpParser):
 
   def get_computation_count(self):
     return self.W
+  
+  def get_input_shape(self):
+    return [self.W]
 
 
 class ArgmaxOp(OpParser):
@@ -376,6 +381,9 @@ class ConvOp(OpParser):
   def get_computation_count(self):
     return self.B * self.M * self.C * self.KH * self.KW * self.OUT_H * self.OUT_W_PAD
   
+  def get_input_shape(self):
+    return [self.B, self.C, self.INP_H, self.INP_W_PAD]
+  
 
 class DequantizeLinearOp(OpParser):
   """Use input tensor, pad width to vector boundary for INP_SIZE
@@ -412,13 +420,12 @@ class DequantizeLinearOp(OpParser):
     if self.INP_W % 16 == 0 and self.OUT_W % 4 == 0:
       kernel = "DequantizeLinear"
     return f"{graph}<{kernel},{dtype_to_cstr(self.in_dtype)},{self.B},{self.INP_W},{self.OUT_W}> {self.name};"
-  
-  # def disable_output_pad(self):
-  #   self.out_size = self.tout.size
-  #   super().disable_output_pad()
 
   def get_computation_count(self):
     return self.B * self.OUT_W
+  
+  def get_input_shape(self):
+    return [self.B, self.INP_W]
 
 
 class GemmOp(OpParser):
@@ -502,6 +509,9 @@ class GemmOp(OpParser):
   
   def get_computation_count(self):
     return self.M * self.K * self.N
+  
+  def get_input_shape(self):
+    return [self.M, self.K]
 
 
 class MacOp(OpParser):
@@ -796,10 +806,6 @@ class QLinearConvOp(OpParser):
     else:
       self.graph = "QLinearConvChunkHPktStreamGraph" if self.HCHUNK - overlap*2 >= 0 else "QLinearConvChunkHStreamGraph"
       self.split_kernel = "SplitFilterInt8PktStream" if self.HCHUNK - overlap*2 >= 0 else "SplitInt8"
-    # if self.name == "k008qlinearconv":
-    #   import ipdb;ipdb.set_trace()
-    #   (self.HCHUNK - self.KH) / self.STEP_H + 1
-    #   (HCHUNK - KH) / STEP_H + 1
     
   def register_params(self, 
                       tensors: List[np.ndarray], 
@@ -816,16 +822,6 @@ class QLinearConvOp(OpParser):
 
     self.pad_and_save_files(tin, tout, tin_zero)
     self.pick_graph()
-    
-    # if self.name == "k002qlinearconv":
-    #   import ipdb;ipdb.set_trace()
-    #   import torch
-    #   tout_ = torch.nn.functional.conv2d(
-    #     torch.Tensor(np.clip(np.pad(tin, ((0,0),(0,0),(0,1),(0,1)),constant_values=0).astype(int) - tin_zero, 0, 255)),
-    #     torch.Tensor(tw.astype(int) - tw_zero),
-    #     torch.Tensor(tbias[:]), stride=2, groups=self.GROUP).numpy() * tin_scale*tw_scale/tout_scale
-    #   tout_ = round_away(tout_) + tout_zero
-    #   tout_ = np.clip(tout_, 0, 255).astype(np.uint8)
     
     tbias = tbias - tin_zero * (tw.astype(int) - tw_zero).reshape(self.M, -1).sum(1).astype(np.int32)
 
@@ -850,14 +846,9 @@ class QLinearConvOp(OpParser):
         self.graph = "QLinearConvChunkHStreamGraph"
         self.split_kernel = "SplitInt8"
 
-    # import ipdb;ipdb.set_trace()
-    # test = tw[14].flatten()[:40] * np.array([int(i) for i in "0 0 0 0 0 0 0 0 0 117 205 0 0 119 205 209 0 116 205 208 0 118 202 207 0 116 204 209 0 116 203 207 0 115 209 208 0 115 207 211 ".split()])
-    # test = test.sum() + tbias[14]
-    # tin_scale*tw_scale/tout_scale * test
     self.gmioname_2_tensor[f"{self.name}_w"] = tw
     self.gmio_repeats = 1
   
-    # removed windowed graph (QLinearConvGraph) and kernels
     if self.graph == "QLinearConvStreamGraph":
       self.kernel_type = f"{self.graph}<{self.pad_kernel},{kernel},{self.get_graph_targs()}"
     elif self.graph in ["QLinearConvChunkHStreamGraph", "QLinearConvChunkHPktStreamGraph"]:
@@ -1005,8 +996,7 @@ class QLinearPoolOp(OpParser):
 
 
 class QLinearSoftmaxOp(OpParser):
-  """Use input tensor for INP_H, pad width to vector boundary for INP_W,
-  Use output tensor for OUT_H, pad width to vector boundary for OUT_W
+  """Use original INP_H and INP_W, pad INP_W to vector boundary for INP_W_PAD,
   """
   include_file: str = "graph_qlinearsoftmax.h"
 
@@ -1049,8 +1039,8 @@ class QLinearSoftmaxOp(OpParser):
   def get_kernel_line(self) -> str:
     graph = "QLinearSoftmaxStreamGraph"
     kernel = "QLinearSoftmaxScalar"
-    if self.INP_W_PAD % 16 == 0:
-      kernel = "QLinearSoftmaxSingleaxis" # accuracy option
+    # if self.INP_W_PAD % 16 == 0:
+    #   kernel = "QLinearSoftmaxSingleaxis" # accuracy option
     return f"{graph}<Pad2DStreamInt8,{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
   def get_computation_count(self):
@@ -1058,8 +1048,7 @@ class QLinearSoftmaxOp(OpParser):
 
 
 class QuantizeLinearOp(OpParser):
-  """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for OUT_W
-  Assumes only output has to meet vector boundaries.
+  """Use original INP_H, pads INP_W and OUT_W to vector boundary
   """
   include_file: str = "graph_quantize_linear.h"
 
@@ -1099,10 +1088,13 @@ class QuantizeLinearOp(OpParser):
   
   def get_computation_count(self):
     return self.INP_H*self.INP_W_PAD * 2
+  
+  def get_input_shape(self):
+    return [self.INP_H, self.INP_W]
 
 
 class SoftmaxOp(OpParser):
-  """Use input tensor for INP_H, INP_W, pads INP_W to vector boundary for OUT_W
+  """Use original INP_H and INP_W, pads INP_W to vector boundary for OUT_W
   Assumes only output has to meet vector boundaries.
   """
   include_file: str = "graph_softmax.h"
@@ -1137,6 +1129,9 @@ class SoftmaxOp(OpParser):
 
   def get_computation_count(self):
     return self.INP_H*self.INP_W_PAD * 12 # mac, 8x mul_square, add, mac, srs
+  
+  def get_input_shape(self):
+    return [self.INP_H, self.INP_W_PAD]
 
 
 class TransposeOp(OpParser):
@@ -1171,3 +1166,6 @@ class TransposeOp(OpParser):
   
   def get_computation_count(self):
     return self.B*self.H*self.W*self.C
+  
+  def get_input_shape(self):
+    return [self.B, self.H, self.W, self.C]
