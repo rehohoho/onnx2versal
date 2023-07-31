@@ -119,9 +119,9 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
 </table>
 <ul>
 <li>Models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark.</li>
-<li>Latency is calculated using aiesimulator results through AI Engine programming API, specifically <code>aie::tile::current().cycles()</code>.</li>
-<li>Throughput is calculated based on longest running streaming tile for one running instance on aiesimulator. Obtained by running <code>throughput.py</code> on aiesimulator output files.</li>
-<li>Accuracy is calculated by running <code>get_accuracy.py</code> on x86simulator outputs. For example, for int8 Keyword Spotting, we ran <code>TARGET=sw_emu EXTIO=1 DOUT=0 DLOG=0 GRAPH=tiny_kws_int8 make graph clean_reports aiesim ITER_CNT=1000</code></li>
+<li>Latency is calculated based on AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator outputs.</li>
+<li>Throughput is calculated based on longest running streaming tile on aiesimulator. Obtained by running <code>throughput.py</code> on aiesimulator output files.</li>
+<li>Accuracy is calculated by comparing argmaxed probabilities or finding mean squared anomaly scores then computing area under curve. Obtained by running <code>get_accuracy.py</code> on x86simulator outputs.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md26"></a>
 Procedure</h1>
@@ -143,6 +143,7 @@ Replication</h1>
 <div class="line">rm ../models/${GRAPH}_infer.onnx</div>
 <div class="line">python generate.py ../models/${GRAPH}_int8.onnx ../data/$GRAPH/X_test.npy</div>
 <div class="line">TARGET=hw_emu GRAPH=${GRAPH}_int8 make graph aiesim_profile</div>
+</div><!-- fragment --><p>x86simulator run </p><div class="fragment"><div class="line">TARGET=sw_emu EXTIO=1 DOUT=0 DLOG=0 GRAPH=${GRAPH} make graph clean_reports aiesim ITER_CNT=1000</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md28"></a>
 Result outputs</h1>
 <p>This codebase outputs start and ending cycles for each kernel used when running aiesimulator. At the end of each simulation, it does a <code>np.allclose</code> check against golden values from running the ONNX model with ONNXRuntime with absolute tolerance 1e-05, relative tolerance 1e-03. If <code>absolute(a - b) &lt;= (atol + rtol * absolute(b))</code> is element-wise True, the check returns OK. </p>
