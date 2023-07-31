@@ -85,11 +85,10 @@ template <
 class QLinearPoolChunkCStreamGraph : public adf::graph {
 
   private:
-    typedef SplitGraph<SPLIT, TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0> mSplitGraph;
-    mSplitGraph split_graph;
-    static constexpr int LCNT = mSplitGraph::LCNT;
+    static constexpr int LCNT = C/CCHUNK;
     ConcatStreamGraph<CONCAT, TT, LCNT, B, CCHUNK*OUT_H*OUT_W, C*OUT_H*OUT_W> concat_graph;
 
+    adf::kernel split[(LCNT+1)/2];
     adf::kernel k[LCNT];
     std::string id;
 
@@ -103,18 +102,42 @@ class QLinearPoolChunkCStreamGraph : public adf::graph {
       int8_t in_zero,
       int8_t out_zero
     ) { 
+      static_assert(C % CCHUNK == 0);
       static_assert(LCNT <= 8);
-      adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
+
+      for (int i = 0; i < LCNT/2; i++) {
+        split[i] = adf::kernel::create_object<SplitFilterInt8StreamTwice<TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0>>(i*2);
+        adf::source(split[i]) = "split.cc";
+        adf::headers(split[i]) = {"split.h"};
+        adf::runtime<ratio>(split[i]) = 0.6;
+
+        adf::connect<adf::stream> (pin[0], split[i].in[0]);
+        adf::samples_per_iteration(split[i].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(split[i].out[0]) = B*CCHUNK*INP_H*INP_W;
+        adf::samples_per_iteration(split[i].out[1]) = B*CCHUNK*INP_H*INP_W;
+      }
+      if ((LCNT & 0x1) == 1) {
+        int i = (LCNT+1)/2 - 1;
+        split[i] = adf::kernel::create_object<SplitFilterInt8Stream<TT, B, C*INP_H*INP_W, CCHUNK*INP_H*INP_W, 0>>(LCNT-1);
+        adf::source(split[i]) = "split.cc";
+        adf::headers(split[i]) = {"split.h"};
+        adf::runtime<ratio>(split[i]) = 0.6;
+
+        adf::connect<adf::stream> (pin[0], split[i].in[0]);
+        adf::samples_per_iteration(split[i].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(split[i].out[0]) = B*CCHUNK*INP_H*INP_W;
+      }
 
       for (int i = 0; i < LCNT; i++) {
-        k[i] = adf::kernel::create_object<QLINEARPOOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>>(
+        k[i] = adf::kernel::create_object<QLINEARPOOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, CCHUNK, KH, KW>>(
           in_scale, out_scale, in_zero, out_zero);
         adf::source(k[i]) = "qlinearpool.cc";
         adf::headers(k[i]) = {"qlinearpool.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
         
-        adf::connect<adf::window<B*CCHUNK*INP_H*INP_W*sizeof(TT)>> (split_graph.pout[i], k[i].in[0]);
-        adf::connect<adf::stream, adf::window<B*CCHUNK*OUT_H*OUT_W*sizeof(TT)>> (k[i].out[0], concat_graph.pin[i]);
+        adf::connect<adf::window<B*CCHUNK*INP_H*INP_W>> (split[i/2].out[i&0x1], k[i].in[0]);
+        adf::connect<adf::stream> (k[i].out[0], concat_graph.pin[i]);
+        adf::samples_per_iteration(k[i].out[0]) = B*CCHUNK*OUT_H*OUT_W;
       }
       
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);

@@ -21,106 +21,111 @@ TARGET=hw_emu GRAPH=${GRAPH}_int8 make graph aiesim_profile
 ### hls4ml_jettag
 
 ```
-# Truncated output
-Running GemmReluMKKN<1,16,64>
-start = 1634,end = 2041,total = 407
-Running GemmReluMKKN<1,64,32>
-start = 2454,end = 2964,total = 510
-Running GemmReluMKKN<1,32,32>
-start = 3335,end = 3633,total = 298
-Running GemmMKKN<1,32,8>
-start = 4004,end = 4123,total = 119
-Running SoftmaxSingleaxis<1,5,8>
-start = 4485,end = 4617,total = 132
+GemmReluMKKN<1,16,64,1> start = 1501,end = 1913,total = 412
+GemmReluMKKN<1,64,32,1> start = 2123,end = 2641,total = 518
+GemmReluMKKN<1,32,32,1> start = 2822,end = 3128,total = 306
+GemmReluMKKN<1,32,8,0> start = 3303,end = 3419,total = 116
+SoftmaxSingleaxis<1,5,8> start = 3568,end = 3708,total = 140
+
+Checking 1/5: k000gemm_goldenout_shape1x64.txt                                                 against k000gemm_goldenout_shape1x64.txt                 TEST: OK!
+Checking 2/5: k003gemm_goldenout_shape1x32.txt                                                 against k003gemm_goldenout_shape1x32.txt                 TEST: OK!
+Checking 3/5: k006gemm_goldenout_shape1x32.txt                                                 against k006gemm_goldenout_shape1x32.txt                 TEST: OK!
+Checking 4/5: k009gemm_goldenout_shape1x5.txt                                                  against k009gemm_goldenout_shape1x5.txt                  TEST: OK!
+Checking 5/5: k011softmax_goldenout_shape1x5.txt                                               against k011softmax_goldenout_shape1x5.txt               TEST: FAILED! Only 1/5 passed.
+Max absolute difference: 0.0006341933999999272
+Max relative difference: 0.024902617338628467
 ```
-total 1466 cycles
 
 ### hls4ml_jettag_int8
 
 ```
-QuantizeLinearFmulStream<1,16,16> start = 920,end = 989,total = 69
-QgemmStream<1,16,64> start = 1001,end = 1182,total = 181
-QgemmStream<1,64,32> start = 1196,end = 1398,total = 202
-QgemmStream<1,32,32> start = 1412,end = 1553,total = 141
-QgemmStream<1,32,16> start = 1567,end = 1650,total = 83
-QlinearsoftmaxSingleaxis<1,5,16> start = 1664,end = 1835,total = 171
-Running DequantizeLinear<1,16,8> start = 1910,end = 1960,total = 50
-```
-start to end 1040 cycles
+QuantizeLinearFmulStream<a,1,16,16> start = 884,end = 953,total = 69
+QgemmStream<a,a,1,16,64> start = 944,end = 1118,total = 174
+QgemmStream<a,a,1,64,32> start = 946,end = 1242,total = 296
+QgemmStream<a,a,1,32,32> start = 948,end = 1361,total = 413
+QgemmStream<a,a,1,32,16> start = 950,end = 1432,total = 482
+Pad2DStreamInt8<a,1,1,5,16,0,0,0,11> start = 893,end = 1480,total = 587
+QLinearSoftmaxSingleaxis<a, 1,5,16> start = 1494,end = 1666,total = 172
+DequantizeLinear<a,1,16,8> start = 1684,end = 1740,total = 56
 
+Checking 1/7: k000quantizelinear_goldenout_shape1x16.txt                                       against k000quantizelinear_goldenout_shape1x16.txt       TEST: OK!
+Checking 2/7: k001qgemm_goldenout_shape1x64.txt                                                against k001qgemm_goldenout_shape1x64.txt                TEST: OK!
+Checking 3/7: k002qgemm_goldenout_shape1x32.txt                                                against k002qgemm_goldenout_shape1x32.txt                TEST: OK!
+Checking 4/7: k003qgemm_goldenout_shape1x32.txt                                                against k003qgemm_goldenout_shape1x32.txt                TEST: OK!
+Checking 5/7: k004qgemm_goldenout_shape1x5.txt                                                 against k004qgemm_goldenout_shape1x5.txt                 TEST: OK!
+Checking 6/7: k005qlinearsoftmax_goldenout_shape1x5.txt                                        against k005qlinearsoftmax_goldenout_shape1x5.txt        TEST: OK!
+Checking 7/7: k006dequantizeLinear_goldenout_shape1x5.txt                                      against k006dequantizeLinear_goldenout_shape1x5.txt      TEST: OK!
+```
 
 ### lenet_mnist
+Previous run starts 3221 ends 59766.
+```
+Pad2DStreamFloat<f,1,28,28,32,0,0,0,4> start = 2836,end = 3748,total = 912
+ConvHx8ReluStream<28,32,24,24,1,1,1,1,6,5,5,1,1> start = 3768,end = 27956,total = 24188
+Maxpool2x2FloatBCHW<24,24,12,16,1,6,2,2> start = 27963,end = 28870,total = 907
+Pad2DStreamFloat<f,6,12,12,16,0,0,0,4> start = 2830,end = 30157,total = 27327
+ConvHx8ReluStream<12,16,8,8,1,1,1,6,16,5,5,1,1> start = 30176,end = 61266,total = 31090
+Maxpool2x2FloatBCHW<8,8,4,4,1,16,2,2> start = 61266,end = 61564,total = 298
+GemmReluMKKN<1,256,16,1> start = 61963,end = 62869,total = 906
+GemmReluMKKN<1,256,16,1> start = 61965,end = 62871,total = 906
+GemmReluMKKN<1,256,16,1> start = 61965,end = 62871,total = 906
+GemmReluMKKN<1,256,16,1> start = 61967,end = 62873,total = 906
+GemmReluMKKN<1,256,16,1> start = 61968,end = 62874,total = 906
+GemmReluMKKN<1,256,16,1> start = 61969,end = 62875,total = 906
+GemmReluMKKN<1,256,16,1> start = 61970,end = 62876,total = 906
+GemmReluMKKN<1,256,16,1> start = 61975,end = 62881,total = 906
+ConcatFloatStream<f,1,16,16,32> start = 2834,end = 63034,total = 60200
+ConcatFloatStream<f,1,16,16,32> start = 2837,end = 63037,total = 60200
+ConcatFloatStream<f,1,16,16,32> start = 2828,end = 63039,total = 60211
+ConcatFloatStream<f,1,16,16,32> start = 2826,end = 63046,total = 60220
+ConcatFloatStream<f,1,32,32,64> start = 2833,end = 63087,total = 60254
+ConcatFloatStream<f,1,32,32,64> start = 2827,end = 63088,total = 60261
+ConcatFloatStream<f,1,64,64,120> start = 2831,end = 63168,total = 60337
+GemmReluMKKN<1,120,32,1> start = 63177,end = 64073,total = 896
+GemmReluMKKN<1,120,32,1> start = 63179,end = 64075,total = 896
+GemmReluMKKN<1,120,32,1> start = 63179,end = 64075,total = 896
+ConcatFloatStream<f,1,32,32,64> start = 2828,end = 64282,total = 61454
+ConcatFloatStream<f,1,64,32,84> start = 2827,end = 64329,total = 61502
+GemmReluScalarMKKN<1,84,10,1> start = 64334,end = 66236,total = 1902
 
+Checking 1/7: k000conv_goldenout_shape1x6x24x24.txt                                            against k000conv_goldenout_shape1x6x24x24.txt            TEST: OK!
+Checking 2/7: k002pool_goldenout_shape1x6x12x12.txt                                            against k002pool_goldenout_shape1x6x12x12.txt            TEST: OK!
+Checking 3/7: k003conv_goldenout_shape1x16x8x8.txt                                             against k003conv_goldenout_shape1x16x8x8.txt             TEST: OK!
+Checking 4/7: k005pool_goldenout_shape1x16x4x4.txt                                             against k005pool_goldenout_shape1x16x4x4.txt             TEST: OK!
+Checking 5/7: k014gemm_goldenout_shape1x120.txt                                                against k014gemm_goldenout_shape1x120.txt                TEST: OK!
+Checking 6/7: k016gemm_goldenout_shape1x84.txt                                                 against k016gemm_goldenout_shape1x84.txt                 TEST: OK!
+Checking 7/7: k018gemm_goldenout_shape1x10.txt                                                 against k018gemm_goldenout_shape1x10.txt                 TEST: OK!
 ```
-# Truncated outoput
-Running Conv5x5on8ReluBCHW<28, 24, 1, 1, 6>
-start = 3221,end = 20149,total = 16928
-Running Maxpool2x2FloatBCHW::filter<24,24,12,12,1,6>
-start = 24557,end = 25458,total = 901
-Running Conv5x5on8ReluBCHW<12, 8, 1, 6, 16>
-start = 26639,end = 52715,total = 26076
-Running Maxpool2x2FloatBCHW::filter<8,8,4,4,1,16>
-start = 54090,end = 54381,total = 291
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-Running GemmReluMKKN<1,256,16>
-start = 54809,end = 55712,total = 903
-start = 54813,end = 55716,total = 903
-start = 54813,end = 55716,total = 903
-start = 54817,end = 55720,total = 903
-start = 54821,end = 55724,total = 903
-start = 54825,end = 55728,total = 903
-start = 54829,end = 55732,total = 903
-start = 54833,end = 55736,total = 903
-Running ConcatFloat<8,1,16,120>::filter8
-start = 55936,end = 56062,total = 126
-Running GemmReluMKKN<1,120,32>
-Running GemmReluMKKN<1,120,32>
-Running GemmReluMKKN<1,120,32>
-start = 56382,end = 57270,total = 888
-start = 56386,end = 57274,total = 888
-start = 56390,end = 57278,total = 888
-Running ConcatFloat<3,1,32,84>::filter3
-start = 57426,end = 57499,total = 73
-Running GemmReluMKKN<1,84,48>
-start = 57771,end = 58744,total = 973
-Running ConcatScalar<1,1,48,10>::filter1
-start = 58888,end = 59766,total = 878
-```
-total 48037 cycles, note GemmReluMKKN runs in parallel
 
 ### lenet_mnist_int8
+Previous run starts 3035 ends 24222.
+```
+QuantizeLinearFmulStream<a,28,28,32> start = 1574,end = 3324,total = 1750
+Pad2DStreamInt8<a,1,28,28,32,0,0,0,4> start = 1573,end = 3365,total = 1792
+QLinearConvHx6x8bitStream<a,a,28,32,24,32,1,1,1,1,6,5,5,1> start = 3385,end = 6303,total = 2918
+Maxpool2x2Int8BCHW<24,32,12,16,1,6,2,2> start = 6323,end = 6652,total = 329
+Pad2DStreamInt8<a,6,12,12,16,0,0,0,4> start = 1571,end = 8517,total = 6946
+QLinearConvHx6x8bitStream<a,a,12,16,8,16,1,1,1,6,16,5,5,1> start = 8538,end = 21537,total = 12999
+MaxpoolScalarBCHW<8,16,4,4,1,16,2,2> start = 21554,end = 25152,total = 3598
+QgemmStream<a,a,1,256,64> start = 1689,end = 26386,total = 24697
+QgemmStream<a,a,1,256,64> start = 1690,end = 26386,total = 24696
+ConcatInt8Stream<a,1,64,64,128> start = 1569,end = 26413,total = 24844
+QgemmStream<a,a,1,128,96> start = 1687,end = 27212,total = 25525
+QgemmStream<a,a,1,96,16> start = 1685,end = 27266,total = 25581
+DequantizeLinear<a,1,16,12> start = 27286,end = 27350,total = 64
 
+Checking 1/9: k000quantizelinear_goldenout_shape1x1x28x28.txt                                  against k000quantizelinear_goldenout_shape1x1x28x28.txt  TEST: OK!
+Checking 2/9: k001qlinearconv_goldenout_shape1x6x24x24.txt                                     against k001qlinearconv_goldenout_shape1x6x24x24.txt     TEST: OK!
+Checking 3/9: k002pool_goldenout_shape1x6x12x12.txt                                            against k002pool_goldenout_shape1x6x12x12.txt            TEST: OK!
+Checking 4/9: k003qlinearconv_goldenout_shape1x16x8x8.txt                                      against k003qlinearconv_goldenout_shape1x16x8x8.txt      TEST: OK!
+Checking 5/9: k004pool_goldenout_shape1x16x4x4.txt                                             against k004pool_goldenout_shape1x16x4x4.txt             TEST: OK!
+Checking 6/9: k006qgemm_goldenout_shape1x120.txt                                               against k006qgemm_goldenout_shape1x120.txt               TEST: OK!
+Checking 7/9: k007qgemm_goldenout_shape1x84.txt                                                against k007qgemm_goldenout_shape1x84.txt                TEST: OK!
+Checking 8/9: k008qgemm_goldenout_shape1x10.txt                                                against k008qgemm_goldenout_shape1x10.txt                TEST: OK!
+Checking 9/9: k009dequantizeLinear_goldenout_shape1x10.txt                                     against k009dequantizeLinear_goldenout_shape1x10.txt     TEST: FAILED! Only 7/10 passed.
 ```
-# Truncated output
-Running QuantizeLinearVector<28,28,32>
-start = 3035,end = 4980,total = 1945
-Running QLinearConv5x5<28,32,24,32,1,1,6,5>
-start = 5372,end = 8609,total = 3237
-Running Maxpool2x2Int8BCHW::filter<24,32,12,16,1,6>
-start = 10137,end = 10461,total = 324
-Running QLinearConv5x5<12,16,8,16,1,6,16,5>
-start = 10929,end = 15814,total = 4885
-Running MaxpoolScalarBCHW::filter<8,16,4,4,1,16>
-start = 16547,end = 20141,total = 3594
-Running QgemmStream<1,256,128>
-start = 20377,end = 22554,total = 2177
-Running QgemmStream<1,128,96>
-start = 22750,end = 23627,total = 877
-Running QgemmStream<1,96,16>
-start = 23827,end = 23976,total = 149
-Running DequantizeLinearScalar<16,10>
-start = 24140,end = 24222,total = 82
-```
-total 17270 cycles
 
 ### tiny_ad
-
 ```
 GemmReluMKKNStream<14,640,128,0> start = 169041,end = 743098,total = 574057
 MacFloat<f,14,128,1> start = 745036,end = 745998,total = 962
