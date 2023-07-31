@@ -25,18 +25,7 @@
 var NAVTREE =
 [
   [ "onnx2versal", "index.html", [
-    [ "Requirements", "index.html#autotoc_md1", null ],
-    [ "Setup", "index.html#autotoc_md2", null ],
-    [ "Usage - Generate", "index.html#autotoc_md3", null ],
-    [ "Usage - Simulation, Verification, Profiling, Hardware Build", "index.html#autotoc_md4", null ],
-    [ "Directory structure", "index.html#autotoc_md5", null ],
-    [ "Let me dev", "index.html#autotoc_md6", [
-      [ "Important documentation", "index.html#autotoc_md7", null ],
-      [ "Write a graph", "index.html#autotoc_md8", null ],
-      [ "Write a op", "index.html#autotoc_md9", null ],
-      [ "Add data", "index.html#autotoc_md10", null ],
-      [ "Test the op", "index.html#autotoc_md11", null ]
-    ] ],
+    [ "onnx2aiengine", "index.html", "index" ],
     [ "Lenet Example", "md_lenet__example.html", [
       [ "Requirements and setup", "md_lenet__example.html#autotoc_md13", null ],
       [ "Train Lenet model on MNIST", "md_lenet__example.html#autotoc_md14", null ],
@@ -51,7 +40,11 @@ var NAVTREE =
       [ "Functional/performance check: runs system in hardware emulation with QEMU", "md_lenet__example.html#autotoc_md23", null ],
       [ "Test system on hardware", "md_lenet__example.html#autotoc_md24", null ]
     ] ],
-    [ "Profiling", "md_profile.html", null ],
+    [ "Profiling", "md_profile.html", [
+      [ "Procedure", "md_profile.html#autotoc_md26", null ],
+      [ "Replication", "md_profile.html#autotoc_md27", null ],
+      [ "Result outputs", "md_profile.html#autotoc_md28", null ]
+    ] ],
     [ "Modules", "modules.html", "modules" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -69,7 +62,8 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"add_8h_source.html"
+"add_8h_source.html",
+"transpose_8h_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
