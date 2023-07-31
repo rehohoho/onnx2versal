@@ -11,7 +11,7 @@ from generator_cpp import CppGenerator
 from generator_xtg import XtgGenerator
 from generator_cfg import CfgGenerator
 from generator_host import HostGenerator
-from op_parsers import save_tensor
+from op_parsers import save_tensor, pad_lastdim
 
 
 def generate_inter_graph(onnx_path: str,
@@ -46,12 +46,13 @@ if __name__ == '__main__':
 
   # Load data, shape according to model def, run with ONNX Runtime
   many_inputs = np.load(args.input_npy)[:args.ndata]
-  single_input = many_inputs[[16]]
+  single_input = many_inputs[[0]]
   input_shape = ort_session.get_inputs()[0].shape
   
   if single_input.ndim > len(input_shape):
     single_input = single_input.reshape(-1, *(single_input.shape[-len(input_shape)+1:]))
     many_inputs = many_inputs.reshape(-1, *(many_inputs.shape[-len(input_shape)+1:]))
+    # for tiny_ad
     single_input = single_input[:14]
     many_inputs = many_inputs[:14*args.ndata]
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}
@@ -77,8 +78,19 @@ if __name__ == '__main__':
   ort_inputs = {ort_session.get_inputs()[0].name: many_inputs}
   ort_outs = ort_session.run(None, ort_inputs)
   
-  inp_filename = parser.get_filename(list(parser.modelin_2_tensor.keys())[0], False)
-  model_input_path = f"{args.data}/{inp_filename}"
+  # save inputs
+  inp_name = list(parser.modelin_2_tensor.keys())[0]
+  inp_filename = parser.get_filename(inp_name, True)
+  inp_shape = parser.op_list[0].get_input_shape()
+  
+  model_input_path = f"{args.data}/{parser.get_filename(inp_name, True)}"
+  single_input = single_input.reshape(1, *inp_shape[:-1], -1)
+  single_input = pad_lastdim(single_input, "single input", inp_shape[-1])
+  save_tensor(model_input_path, single_input)
+
+  model_input_path = f"{args.data}/{parser.get_filename(inp_name, False)}"
+  many_inputs = many_inputs.reshape(args.ndata, *inp_shape[:-1], -1)
+  many_inputs = pad_lastdim(many_inputs, "many inputs", inp_shape[-1])
   save_tensor(model_input_path, many_inputs)
 
   out_op = list(parser.modelout_2_op.values())[-1]

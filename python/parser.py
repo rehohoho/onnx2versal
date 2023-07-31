@@ -43,10 +43,6 @@ class Parser:
       self.nodeout_2_adfport[model_input.name] = f"plin[{i}].out[0]"
     self.modelout_2_op = {i.name: None for i in model.graph.output}
 
-    # save inputs
-    for inp_name, input_tensor in self.modelin_2_tensor.items():
-      save_tensor(f"{self.data_path}/{self.get_filename(inp_name)}", input_tensor)
-
     # store I/O tensors and model parameters
     self.input_tensors: List[np.ndarray] = input_tensors
     self.initializers: Mapping[str, np.ndarray] = {
