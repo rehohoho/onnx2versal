@@ -1,6 +1,6 @@
-﻿# onnx2versal
+﻿# onnx2aiengine
 
-This repo holds AIE kernels/graphs and generator scripts to create system level design given `model.onnx` and `data.npy`. Verify, profile and run your ONNX models on Versal machines! The pipeline only converts to AIE kernels currently.
+This repo holds AIE kernels/graphs and generator scripts to create system level design given `some_model.onnx` and `some_data.npy`. Verify, profile and run your ONNX models on AI engine machines!
 
 * See end to end example at [Lenet Example](lenet_example.md) <br />
 * See profiling of examples at [Profile](profile.md) <br />
@@ -10,6 +10,8 @@ This repo holds AIE kernels/graphs and generator scripts to create system level 
 * See documentation for AIE kernels and graphs used at https://rehohoho.github.io/onnx2versal/
 
 ## Requirements
+This pipeline has only been tested on VCK190 using the following software.
+
 * Vitis Software Platform 2022.2
 * xilinx-versal-common image
 * X86 XRT (only for software system emulation)
