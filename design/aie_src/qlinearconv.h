@@ -565,8 +565,9 @@ class QLinearConv1x1Stream {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
-    static constexpr int LAST_C = (C % 16) / 2;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = (C_PER_M+15)/16*16;
+    static constexpr int LAST_C = (C_PER_M % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
@@ -602,7 +603,6 @@ class QLinearConv1x1Stream {
       static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
       static_assert(KH==1);
       static_assert(KW==1);
-      static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
@@ -624,9 +624,10 @@ class QLinearConv1x1PktStream {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = (C+15)/16*16;
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
-    static constexpr int LAST_C = (C % 16) / 2;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = (C_PER_M+15)/16*16;
+    static constexpr int LAST_C = (C_PER_M % 16) / 2;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
@@ -664,7 +665,6 @@ class QLinearConv1x1PktStream {
       static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
       static_assert(KH==1);
       static_assert(KW==1);
-      static_assert(GROUP == 1);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);

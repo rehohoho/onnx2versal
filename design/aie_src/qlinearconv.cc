@@ -1005,7 +1005,7 @@ void QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP
 
           acc1 = acc_bias;
         
-          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) {
             
             for (int p = 0; p < KH-1; p++) {
               wvec = upd_v(wvec, 0, *ckk_row_ptr); ckk_row_ptr++;
@@ -1126,27 +1126,27 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
 
           acc1 = acc_bias;
           
-          for (int c = 0; c <= C-16; c+=16) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c <= C_PER_M-16; c+=16) {
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            for (int i = 0; i < 16; i+=2) chess_flatten_loop {
+            for (int i = 0; i < 16; i+=2) {
               data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
             }
           }
-          if (C % 16 != 0) {
+          if (C_PER_M % 16 != 0) {
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            for (int i = 0; i <= C-2; i+=2) {
+            for (int i = 0; i <= C_PER_M-2; i+=2) {
               data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
             }
           }
-          if (C % 2 != 0) {
+          if (C_PER_M % 2 != 0) {
             data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
             MAC_ROW(acc1, LAST_C);
           }
-          in_ptr += -C*INP_H*INP_W + 16; // go channel-C, right 16
+          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel-C_PER_M, right 16
           ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -1167,6 +1167,9 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
     } // M
   } // B
 
@@ -1252,7 +1255,7 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
 
           acc1 = acc_bias;
           
-          for (int c = 0; c <= C-16; c+=16) { // computes 2x16 partial products over 3x3 kernel
+          for (int c = 0; c <= C_PER_M-16; c+=16) {
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
             for (int i = 0; i < 16; i+=2) {
               data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
@@ -1260,19 +1263,19 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
               MAC_ROW(acc1, i);
             }
           }
-          if (C % 16 != 0) {
+          if (C_PER_M % 16 != 0) {
             wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            for (int i = 0; i <= C-2; i+=2) {
+            for (int i = 0; i <= C_PER_M-2; i+=2) {
               data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               data = upd_v(data, 1, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
               MAC_ROW(acc1, i);
             }
           }
-          if (C % 2 != 0) {
+          if (C_PER_M % 2 != 0) {
             data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
             MAC_ROW(acc1, LAST_C);
           }
-          in_ptr += -C*INP_H*INP_W + 16; // go channel-C, right 16
+          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel-C_PER_M, right 16
           ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
@@ -1295,6 +1298,9 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
     } // M
   } // B
 
