@@ -94,28 +94,32 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="autotoc_md25"></a> </p><table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadCenter">Use Case   </th><th class="markdownTableHeadCenter">Dtype   </th><th class="markdownTableHeadCenter">Latency (cycles or ns)   </th><th class="markdownTableHeadCenter">Throughput (instances/s)   </th><th class="markdownTableHeadCenter">Accuracy (first 1k)   </th><th class="markdownTableHeadCenter">Quality Target<br  />
+<th class="markdownTableHeadCenter">Use Case   </th><th class="markdownTableHeadCenter">Dtype   </th><th class="markdownTableHeadCenter">Latency (cycles or ns)   </th><th class="markdownTableHeadCenter">Throughput (instances/s)   </th><th class="markdownTableHeadCenter">Resource Utilization (Kernels/Buffers/Stream/PLIO/GMIO)   </th><th class="markdownTableHeadCenter">Accuracy (first 1k)   </th><th class="markdownTableHeadCenter">Quality Target<br  />
 (Closed&amp;#160;Division)   </th><th class="markdownTableHeadCenter">Model    </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyCenter">Keyword Spotting   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">839599 <br  />
  402772   </td><td class="markdownTableBodyCenter">4125 <br  />
- 36640   </td><td class="markdownTableBodyCenter">91.1% (Top 1)   </td><td class="markdownTableBodyCenter">90% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/keyword_spotting/keras_model.py">DS-CNN</a>    </td></tr>
+ 36640   </td><td class="markdownTableBodyCenter">100/110/161/2/9 <br  />
+ 108/119/166/2/9   </td><td class="markdownTableBodyCenter">91.1% (Top 1)   </td><td class="markdownTableBodyCenter">90% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/keyword_spotting/keras_model.py">DS-CNN</a>    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyCenter">Visual Wake Words   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">- <br  />
  2249859   </td><td class="markdownTableBodyCenter">- <br  />
- 3384   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter">80% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py">MobileNet</a>    </td></tr>
+ 3384   </td><td class="markdownTableBodyCenter"><br  />
+ 101/103/189/15/27   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter">80% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py">MobileNet</a>    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyCenter">Image Classification   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">1028165 <br  />
  763915   </td><td class="markdownTableBodyCenter">6033 <br  />
- 4842   </td><td class="markdownTableBodyCenter">86.8% (Top 1)   </td><td class="markdownTableBodyCenter">85% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py">ResNet</a>    </td></tr>
+ 4842   </td><td class="markdownTableBodyCenter">99/116/198/13/9 <br  />
+ 41/49/112/12/9   </td><td class="markdownTableBodyCenter">86.8% (Top 1)   </td><td class="markdownTableBodyCenter">85% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py">ResNet</a>    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyCenter">Anomaly Detection   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">25843356 <br  />
  422940   </td><td class="markdownTableBodyCenter">89 <br  />
- 4986   </td><td class="markdownTableBodyCenter">0.880 (AUC)   </td><td class="markdownTableBodyCenter">0.85 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py">Deep AutoEncoder</a>   </td></tr>
+ 4986   </td><td class="markdownTableBodyCenter">55/97/208/20/2 <br  />
+ 147/159/202/0/2   </td><td class="markdownTableBodyCenter">0.880 (AUC)   </td><td class="markdownTableBodyCenter">0.85 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py">Deep AutoEncoder</a>   </td></tr>
 </table>
 <ul>
 <li>Models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark.</li>
