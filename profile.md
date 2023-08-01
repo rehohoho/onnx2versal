@@ -1,11 +1,11 @@
 ## Profiling
 
-|       Use Case       | Dtype            | Latency (cycles or ns)| Throughput (instances/s) | Accuracy (first 1k) | Quality Target<br>(Closed&#160;Division) | Model 
-|:--------------------:|:----------------:|:---------------------:|:------------------------:|:-------------------:|:----------------:|:-------------------:|
-|   Keyword Spotting   | fp32 <br/> uint8 | 839599 <br/> 402772   | 4125 <br/> 36640         | 91.1% (Top 1)       | 90% (Top 1)      |      [DS-CNN](https://github.com/mlcommons/tiny/blob/master/benchmark/training/keyword_spotting/keras_model.py)
-|   Visual Wake Words  | fp32 <br/> uint8 | - <br/> 2249859       | - <br/> 3384             | 82.5% (Top 1)       | 80% (Top 1)      |     [MobileNet](https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py)
-| Image Classification | fp32 <br/> uint8 | 1028165 <br/> 763915  | 6033 <br/> 4842          | 86.8% (Top 1)       | 85% (Top 1)      |      [ResNet](https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py)
-|   Anomaly Detection  | fp32 <br/> uint8 | 25843356 <br/> 422940 | 89 <br/> 4986            | 0.880 (AUC)         | 0.85 (AUC)       | [Deep AutoEncoder](https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py)
+|       Use Case       | Dtype            | Latency (cycles or ns)| Throughput (instances/s) | Resource Utilization (Kernels/Buffers/Stream/PLIO/GMIO) | Accuracy (first 1k) | Quality Target<br>(Closed&#160;Division) | Model 
+|:--------------------:|:----------------:|:---------------------:|:------------------------:|:-------------------------------------:|:-------------------:|:----------------:|:-------------------:|
+|   Keyword Spotting   | fp32 <br/> uint8 | 839599 <br/> 402772   | 4125 <br/> 36640         | 100/110/161/2/9 <br/> 108/119/166/2/9 | 91.1% (Top 1)       | 90% (Top 1)      |      [DS-CNN](https://github.com/mlcommons/tiny/blob/master/benchmark/training/keyword_spotting/keras_model.py)
+|   Visual Wake Words  | fp32 <br/> uint8 | - <br/> 2249859       | - <br/> 3384             | <br/> 101/103/189/15/27               | 82.5% (Top 1)       | 80% (Top 1)      |     [MobileNet](https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py)
+| Image Classification | fp32 <br/> uint8 | 1028165 <br/> 763915  | 6033 <br/> 4842          | 99/116/198/13/9 <br/> 41/49/112/12/9  | 86.8% (Top 1)       | 85% (Top 1)      |      [ResNet](https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py)
+|   Anomaly Detection  | fp32 <br/> uint8 | 25843356 <br/> 422940 | 89 <br/> 4986            | 55/97/208/20/2 <br/> 147/159/202/0/2  | 0.880 (AUC)         | 0.85 (AUC)       | [Deep AutoEncoder](https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py)
 
 * Models used are pretrained models *directly* from MLPerf Tiny Benchmark.
 * Latency is calculated based on AI Engine programming logging API, specifically `aie::tile::current().cycles()`. Obtained through aiesimulator outputs.
