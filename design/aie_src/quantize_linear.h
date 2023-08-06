@@ -56,7 +56,7 @@ class QuantizeLinear {
   
   private:
     float y_scale;
-    int8_t y_zero; // same type as output
+    TT y_zero; // same type as output
 
     // precompute
     int xbitshift = 16; // ybitshift in [0:16], acc48 result
@@ -66,12 +66,12 @@ class QuantizeLinear {
   public:
     QuantizeLinear (
       float y_scale,
-      int8_t y_zero
+      TT y_zero
     );
 
 		void filter(
 			input_window<float>* in,
-			output_window<int8_t>* out
+			output_window<TT>* out
 		);
 
 		static void registerKernelClass() {
@@ -116,7 +116,7 @@ class QuantizeLinearFmul {
 /**
  * @brief Vector stream implementation,
  * requires INP_W%4==0, OUT_W%16==0, INP_W <= OUT_W, 
- * QuantizeLinearFmulStream<1*1*28*28> takes 1750 cycles,
+ * QuantizeLinearFmulStream<1*1*28*28> takes 1669 cycles,
  */
 template <typename TT, int INP_H, int INP_W, int OUT_W>
 class QuantizeLinearFmulStream {
