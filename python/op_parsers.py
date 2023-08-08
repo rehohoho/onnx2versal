@@ -87,7 +87,7 @@ def factor_int(n: int,
                multiplier: int, 
                upper_bound: int,
                offset: int = 0,
-               force_split: bool = False):
+               force_split_chunksize: int = -1):
   factor_pairs = []
   factor = 1
   while factor <= n ** 0.5:
@@ -97,10 +97,11 @@ def factor_int(n: int,
   
   factor_pairs = factor_pairs + [(f2, f1) for f1, f2 in factor_pairs[::-1]]
 
-  if force_split: # force split into ~8 chunks
+  if force_split_chunksize != -1:
     for i, (f1, f2) in enumerate(factor_pairs):
+      if f1 < force_split_chunksize: break
       if f2 > MAX_CHUNKS: break
-    f1, f2 = factor_pairs[i-1]
+    f1, f2 = factor_pairs[max(i-1, 0)]
     if f1 * multiplier + offset <= upper_bound:
       return f1, f2
   
@@ -312,7 +313,7 @@ class ConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split=True)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -415,11 +416,9 @@ class DequantizeLinearOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    graph = "DequantizeLinearGraph"
-    kernel = "DequantizeLinearScalar"
     if self.INP_W % 16 == 0 and self.OUT_W % 4 == 0:
-      kernel = "DequantizeLinear"
-    return f"{graph}<{kernel},{dtype_to_cstr(self.in_dtype)},{self.B},{self.INP_W},{self.OUT_W}> {self.name};"
+      return f"DequantizeLinearGraph<DequantizeLinear,{dtype_to_cstr(self.in_dtype)},{self.B},{self.INP_W},{self.OUT_W}> {self.name};"
+    return f"DequantizeLinearGraph<DequantizeLinearScalar,{dtype_to_cstr(self.in_dtype)},{self.B},{self.INP_W},{self.OUT_W}> {self.name};"
 
   def get_computation_count(self):
     return self.B * self.OUT_W
@@ -463,11 +462,10 @@ class GemmOp(OpParser):
     
     if tw.nbytes <= MAX_PARAM_SIZE * 8:
       
-      if not disable_N_pad:
-        tw = pad_lastdim(tw, "Gemm tw", get_vector_boundary(tw))
-        tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
-        self.N = tw.shape[-1]
-      self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE)
+      tw = pad_lastdim(tw, "Gemm tw", get_vector_boundary(tw))
+      tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
+      self.N = tw.shape[-1]
+      self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE, 0, force_split_chunksize=32)
       
       self.argname_2_tensor[f"{self.name}_w"] = tw
       self.argname_2_tensor[f"{self.name}_b"] = tbias
@@ -483,29 +481,26 @@ class GemmOp(OpParser):
       
     else:
       
-      if not disable_N_pad:
-        tw = pad_lastdim(tw, "Gemm tw", 8)
-        tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
-        self.N = tw.shape[-1]
-      self.M, self.repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE)
-      
-      if self.K % 4 == 0 and self.N % 8 == 0:
-        self.gmioname_2_tensor[f"{self.name}_w"] = tw.reshape(self.K, -1, 8).transpose(1,0,2)
-        self.gmio_repeats = (self.M // 4 + self.M % 4) * self.repeat
-      else:
-        self.gmioname_2_tensor[f"{self.name}_w"] = tw.transpose() # MKNK
-        self.gmio_repeats = self.M * self.repeat  
+      tw = pad_lastdim(tw, "Gemm tw", 8)
+      tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
+      self.N = tw.shape[-1]
+      self.M, repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE, 0, force_split_chunksize=32)
       self.argname_2_tensor[f"{self.name}_b"] = tbias
       
-      kernel = "GemmReluMKKNStream" if self.K % 4 == 0 and self.N % 8 == 0 else "GemmReluScalarMKNKStream"
-      self.kernel_type = f"GemmReluStreamGraph<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
-    
+      if self.N > 64:
+        nchunk, nchunk_count = factor_int(self.N, 0, 1, 0, force_split_chunksize=self.N//8)
+        tw = tw.reshape(self.K, nchunk_count, nchunk).transpose(1,0,2)
+        for i in range(nchunk_count):
+          self.gmioname_2_tensor[f"{self.name}_w{i}"] = tw[i].reshape(self.K, -1, 8).transpose(1,0,2)
+          self.gmio_repeats = (self.M // 4 + self.M % 4) * repeat
+        self.kernel_type = f"GemmReluMkknChunkNStreamGraph<GemmReluMKKNStream,ConcatFloatStream,{nchunk},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+      else:
+        self.gmioname_2_tensor[f"{self.name}_w"] = tw.reshape(self.K, -1, 8).transpose(1,0,2)
+        self.gmio_repeats = (self.M // 4 + self.M % 4) * repeat
+        self.kernel_type = f"GemmReluStreamGraph<GemmReluMKKNStream,{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+      
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
-  
-  def disable_output_pad(self):
-    self.register(disable_N_pad=True)
-    super().disable_output_pad()
   
   def get_computation_count(self):
     return self.M * self.K * self.N
@@ -648,17 +643,6 @@ class QGemmOp(OpParser):
   
     vector_size = get_vector_boundary(tin)
     tbias = (tbias - (tw.astype(int) - tw_zero).sum(0) * tin_zero).astype(np.int32)
-
-    tw = pad_lastdim(tw, "QGemm weights", vector_size) # heap
-    tbias = pad_lastdim(tbias, "QGemm bias", vector_size)
-    self.argname_2_tensor[f"{self.name}_w"] = tw
-    self.argname_2_tensor[f"{self.name}_b"] = tbias
-    self.argname_2_tensor[f"{self.name}_xscale"] = tin_scale
-    self.argname_2_tensor[f"{self.name}_wscale"] = tw_scale
-    self.argname_2_tensor[f"{self.name}_yscale"] = tout_scale
-    self.argname_2_tensor[f"{self.name}_xzero"] = tin_zero
-    self.argname_2_tensor[f"{self.name}_wzero"] = tw_zero
-    self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
     
     tin = pad_lastdim(tin, "QGemm tin", vector_size, value=tin_zero) #files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
@@ -668,6 +652,18 @@ class QGemmOp(OpParser):
     self.K, self.N = tin.shape[-1], tout.shape[-1]
     self.out_size = tout.size # host buffer sizes
 
+    # must pad both dims due to second mac for -wzero
+    tw = np.pad(tw, ((0, self.K-tw.shape[0]), (0, self.N-tw.shape[1])), "constant", constant_values=tw_zero)
+    tbias = pad_lastdim(tbias, "QGemm bias", vector_size)
+    self.argname_2_tensor[f"{self.name}_w"] = tw
+    self.argname_2_tensor[f"{self.name}_b"] = tbias
+    self.argname_2_tensor[f"{self.name}_xscale"] = tin_scale
+    self.argname_2_tensor[f"{self.name}_wscale"] = tw_scale
+    self.argname_2_tensor[f"{self.name}_yscale"] = tout_scale
+    self.argname_2_tensor[f"{self.name}_xzero"] = tin_zero
+    self.argname_2_tensor[f"{self.name}_wzero"] = tw_zero
+    self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
+
     if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE:
       raise NotImplementedError(f"No QGemm implementation for input size {tin.nbytes} or output size {tout.nbytes}")
       
@@ -675,7 +671,7 @@ class QGemmOp(OpParser):
     if tw.nbytes > MAX_PARAM_SIZE * 8:
       raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}")
 
-    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, MAX_PARAM_SIZE, force_split=self.N >= 32)
+    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, MAX_PARAM_SIZE, force_split_chunksize=16)
     if chunkSize == self.N:
       self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
     else:
@@ -796,7 +792,7 @@ class QLinearConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split=True)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=16)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -1077,10 +1073,14 @@ class QuantizeLinearOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    if self.INP_W % 4 == 0 and self.OUT_W % 16 == 0:
-      return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
-    else:
+    if not (self.INP_W % 4 == 0 and self.OUT_W % 16 == 0):
       raise NotImplementedError(f"Expect INP_W%4==0, OUT_W%16==0, but got INP_W {self.INP_W}, OUT_W {self.OUT_W}")
+
+    self.HCHUNK, _ = factor_int(self.INP_H, self.INP_W*4, TILE_SIZE, 0, force_split_chunksize=1)
+    if self.HCHUNK == self.INP_H:
+      return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
+    return f"QuantizeLinearChunkHPktStreamGraph<QuantizeLinearFmulStream,{self.HCHUNK},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
+    
   
   def disable_input_pad(self):
     # self.INP_W = self.inW
