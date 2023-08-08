@@ -990,8 +990,13 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 ) {
   PROFILE_HEADER2;
 
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+
   uint32 ID[LCNT];
   output_pktstream *out[2] = {out0, out1};
+  
+  v16 tmp;
+  int *a;
 
   for (int i = 0; i < (LCNT+1)/2; i++)
     ID[2*i] = getPacketid(out0, i);
@@ -1000,20 +1005,25 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 
 // 32-bit read / cycle or 128-bit read / 4 cycle
 #define WRITE_OUT(outidx, count, tlast) \
-  for (int w = 0; w < count; w+=16) { \
-    auto tmp = readincr_v16(in); \
-    int *a = (int *) &tmp; \
+  for (int w = 0; w < count-16; w+=16) { \
+    tmp = readincr_v16(in); \
+    a = (int *) &tmp; \
     put_ms(outidx, a[0]); \
     put_ms(outidx, a[1]); \
     put_ms(outidx, a[2]); \
     put_ms(outidx, a[3]); \
   } \
-  if (tlast) writeincr(out[outidx], 0, tlast);
+  tmp = readincr_v16(in); \
+  a = (int *) &tmp; \
+  put_ms(outidx, a[0]); \
+  put_ms(outidx, a[1]); \
+  put_ms(outidx, a[2]); \
+  writeincr(out[outidx], a[3], tlast);
 
 #define WRITE_OUT_TWICE(outidx0, outidx1, count) \
-  for (int w = 0; w < count; w+=16) { \
+  for (int w = 0; w < count-16; w+=16) { \
     auto tmp = readincr_v16(in); \
-    int *a = (int *) &tmp; \
+    a = (int *) &tmp; \
     put_ms(outidx0, a[0]); \
     put_ms(outidx0, a[1]); \
     put_ms(outidx0, a[2]); \
@@ -1023,7 +1033,16 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
     put_ms(outidx1, a[2]); \
     put_ms(outidx1, a[3]); \
   } \
-  writeincr(out[outidx0], 0, true);
+  auto tmp = readincr_v16(in); \
+  a = (int *) &tmp; \
+  put_ms(outidx0, a[0]); \
+  put_ms(outidx0, a[1]); \
+  put_ms(outidx0, a[2]); \
+  writeincr(out[outidx0], a[3], true); \
+  put_ms(outidx1, a[0]); \
+  put_ms(outidx1, a[1]); \
+  put_ms(outidx1, a[2]); \
+  put_ms(outidx1, a[3]);
 
 #define READ_IN(count) \
   for (int w = 0; w < count; w+=16) \

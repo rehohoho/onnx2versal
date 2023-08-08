@@ -835,7 +835,6 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
     for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
       *(v16 *) in_ptr = get_wss_tt<TT>(0); in_ptr+=16;
     }
-    get_ss(0); // discard tlast packet added in split
   }
   in_ptr = (TT *) in;
   
