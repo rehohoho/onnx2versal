@@ -98,14 +98,12 @@ class GemmReluStreamGraph : public adf::graph {
     adf::port<output> pout[1];
 
     GemmReluStreamGraph(
-      std::vector<float> bias,
-      int repeat_cnt = 1
+      std::vector<float> bias
     ) { 
       k[0] = adf::kernel::create_object<GEMM<M, K, N, IS_RELU>>(bias);
       adf::source(k[0]) = "gemm.cc";
       adf::headers(k[0]) = {"gemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
-      adf::repetition_count(k[0]) = repeat_cnt;
       adf::heap_size(k[0]) = 16384;
 
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
@@ -271,6 +269,69 @@ class GemmReluMkknChunkGraph : public adf::graph {
         adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat_g.pin[i]);
       }
       adf::connect<adf::stream> (concat_g.pout[0], pout[0]);
+    }
+
+};
+
+
+/**
+ * @brief Multiinstance graph for MxK times KxN that stores biases
+ */
+template <
+  template<int, int, int, int> class GEMM, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int NCHUNK, int M, int K, int N, int IS_RELU>
+class GemmReluMkknChunkNStreamGraph : public adf::graph {
+
+  private:
+    static const int CHUNK_COUNT = (N + NCHUNK - 1) / NCHUNK; // ceiling
+    adf::kernel gemms[CHUNK_COUNT];
+    ConcatStreamGraph<CONCAT, float_t, CHUNK_COUNT, M, NCHUNK, N> concat_graph;
+    
+  public:
+    adf::port<input> pin[1 + CHUNK_COUNT];
+    adf::port<output> pout[1];
+
+    GemmReluMkknChunkNStreamGraph(
+      std::vector<float> bias
+    ) { 
+      static_assert(CHUNK_COUNT <= 8);
+      static_assert(M*NCHUNK*4 <= TILE_BYTES);
+
+      std::vector<float> bChunk;
+
+      for (int i = 0; i < CHUNK_COUNT; i++) {
+        // build bChunk
+        bChunk = std::vector<float>(bias.begin()+i*NCHUNK, bias.begin()+i*NCHUNK+NCHUNK);
+        bChunk.resize(NCHUNK, 0);
+        
+        gemms[i] = adf::kernel::create_object<GEMM<M, K, NCHUNK, IS_RELU>>(bChunk);
+        adf::source(gemms[i]) = "gemm.cc";
+        adf::headers(gemms[i]) = {"gemm.h"};
+        adf::runtime<ratio>(gemms[i]) = 0.6;
+
+        adf::connect<adf::stream> (pin[0], gemms[i].in[0]);
+        adf::connect<adf::stream> (pin[1+i], gemms[i].in[1]);
+        adf::connect<adf::window<M*NCHUNK*4>> (gemms[i].out[0], concat_graph.pin[i]);
+
+         adf::samples_per_iteration(gemms[i].in[0]) = M*K;
+         adf::samples_per_iteration(gemms[i].in[1]) = K*NCHUNK;
+
+        adf::location<adf::parameter>(gemms[i].param[0]) = adf::location<adf::kernel>(gemms[i]);
+        adf::location<adf::parameter>(gemms[i].param[0]) = adf::offset(0);
+        // arbitrary input/output buffer location due to interconnect design
+      }
+
+      adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
+
+      for (int i = 0; i < concat_graph.k1.size(); i++) {
+        adf::location<adf::kernel>(concat_graph.k1[i]) = 
+          adf::location<adf::kernel>(gemms[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        
+        adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
+        adf::location<adf::stack>(gemms[i*2]) = cTilePos;
+        adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
+      }
     }
 
 };
