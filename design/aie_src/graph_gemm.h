@@ -309,6 +309,7 @@ class GemmReluMkknChunkNStreamGraph : public adf::graph {
         adf::source(gemms[i]) = "gemm.cc";
         adf::headers(gemms[i]) = {"gemm.h"};
         adf::runtime<ratio>(gemms[i]) = 0.6;
+        adf::heap_size(gemms[i]) = 16384;
 
         adf::connect<adf::stream> (pin[0], gemms[i].in[0]);
         adf::connect<adf::stream> (pin[1+i], gemms[i].in[1]);
