@@ -14,19 +14,10 @@ class HostGenerator:
       f'#define INPUT{i}_FILENAME "{self.p.get_filename(inp_name)}"'
       for i, inp_name in enumerate(self.p.modelin_2_tensor)
     ]
-    outfiles += [
-      f'#define OUTPUT{i}_FILENAME "{self.p.get_filename(op.get_output_filename())}"'
-      for i, op in enumerate(self.p.modelout_2_op.values())
-    ]
+    outfiles += [f'#define OUTPUT{i}_FILENAME "{fn}"' for i, fn in enumerate(self.p.get_output_filename(True))]
     outfiles += ["#else"]
-    outfiles += [
-      f'#define INPUT{i}_FILENAME "{self.p.get_filename(inp_name, False)}"'
-      for i, inp_name in enumerate(self.p.modelin_2_tensor)
-    ]
-    outfiles += [
-      f'#define OUTPUT{i}_FILENAME "{self.p.get_filename(op.get_output_filename(), False)}"'
-      for i, op in enumerate(self.p.modelout_2_op.values())
-    ]
+    outfiles += [f'#define INPUT{i}_FILENAME "{fn}"' for i, fn in enumerate(self.p.get_input_filename(False))]
+    outfiles += [f'#define OUTPUT{i}_FILENAME "{fn}"' for i, fn in enumerate(self.p.get_output_filename(False))]
     outfiles += ["#endif"]
     
     n_outs = len(self.p.modelout_2_op)

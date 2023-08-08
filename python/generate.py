@@ -79,22 +79,19 @@ if __name__ == '__main__':
   ort_outs = ort_session.run(None, ort_inputs)
   
   # save inputs
-  inp_name = list(parser.modelin_2_tensor.keys())[0]
-  inp_filename = parser.get_filename(inp_name, True)
   inp_shape = parser.op_list[0].get_input_shape()
   
-  model_input_path = f"{args.data}/{parser.get_filename(inp_name, True)}"
+  model_input_path = f"{args.data}/{parser.get_input_filename(True)[0]}"
   single_input = single_input.reshape(1, *inp_shape[:-1], -1)
   single_input = pad_lastdim(single_input, "single input", inp_shape[-1])
   save_tensor(model_input_path, single_input)
 
-  model_input_path = f"{args.data}/{parser.get_filename(inp_name, False)}"
+  model_input_path = f"{args.data}/{parser.get_input_filename(False)[0]}"
   many_inputs = many_inputs.reshape(args.ndata, *inp_shape[:-1], -1)
   many_inputs = pad_lastdim(many_inputs, "many inputs", inp_shape[-1])
   save_tensor(model_input_path, many_inputs)
 
-  out_op = list(parser.modelout_2_op.values())[-1]
-  out_filename = parser.get_filename(out_op.get_output_filename(), False)
+  out_filename = parser.get_output_filename(False)[0]
   model_output_path = f"{args.data}/{out_filename}"
   save_tensor(model_output_path, ort_outs[-1])
 

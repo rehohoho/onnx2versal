@@ -75,7 +75,15 @@ class Parser:
       return self.output_tensors[name]
     else:
       raise ValueError(f"Unable to find {name} in initializers or output_tensors.")
-    
+  
+  def get_input_filename(self, is_dout: bool) -> List[str]:
+    input_filenames = [i for i in self.modelin_2_tensor.keys()]
+    return [self.get_filename(fn, is_dout) for fn in input_filenames]
+
+  def get_output_filename(self, is_dout: bool) -> List[str]:
+    output_filenames = [op.get_output_filename() for op in self.modelout_2_op.values()]
+    return [self.get_filename(fn, is_dout) for fn in output_filenames]
+
   def register_port(self, 
                     onnx_innames: List[str], 
                     onnx_outnames: List[str], 
@@ -245,7 +253,7 @@ class Parser:
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
 
-      elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape"]:
+      elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape", "Flatten"]:
         if len(self.op_list) == 0:
           print(f"Adding output output {node.output[0]} output")
           self.nodeout_2_adfport[node.output[0]] = "plin[0].out[0]"
