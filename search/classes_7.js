@@ -34,9 +34,10 @@ var searchData=
   ['qlinearsoftmaxsingleaxis_31',['QLinearSoftmaxSingleaxis',['../classQLinearSoftmaxSingleaxis.html',1,'']]],
   ['qlinearsoftmaxstreamgraph_32',['QLinearSoftmaxStreamGraph',['../classQLinearSoftmaxStreamGraph.html',1,'']]],
   ['quantizelinear_33',['QuantizeLinear',['../classQuantizeLinear.html',1,'']]],
-  ['quantizelinearfmul_34',['QuantizeLinearFmul',['../classQuantizeLinearFmul.html',1,'']]],
-  ['quantizelinearfmulstream_35',['QuantizeLinearFmulStream',['../classQuantizeLinearFmulStream.html',1,'']]],
-  ['quantizelineargraph_36',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearscalar_37',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
-  ['quantizelinearstreamgraph_38',['QuantizeLinearStreamGraph',['../classQuantizeLinearStreamGraph.html',1,'']]]
+  ['quantizelinearchunkhpktstreamgraph_34',['QuantizeLinearChunkHPktStreamGraph',['../classQuantizeLinearChunkHPktStreamGraph.html',1,'']]],
+  ['quantizelinearfmul_35',['QuantizeLinearFmul',['../classQuantizeLinearFmul.html',1,'']]],
+  ['quantizelinearfmulstream_36',['QuantizeLinearFmulStream',['../classQuantizeLinearFmulStream.html',1,'']]],
+  ['quantizelineargraph_37',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearscalar_38',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearstreamgraph_39',['QuantizeLinearStreamGraph',['../classQuantizeLinearStreamGraph.html',1,'']]]
 ];

@@ -24,7 +24,7 @@ var searchData=
   ['qlinearconvhx4pktstream_21',['QLinearConvHx4PktStream',['../classQLinearConvHx4PktStream.html',1,'']]],
   ['qlinearconvhx4stream_22',['QLinearConvHx4Stream',['../classQLinearConvHx4Stream.html',1,'']]],
   ['qlinearconvhx4streamscale32bit_23',['QLinearConvHx4StreamScale32bit',['../classQLinearConvHx4StreamScale32bit.html',1,'']]],
-  ['qlinearconvhx6x8bitstream_24',['QLinearConvHx6x8bitStream',['../classQLinearConvHx6x8bitStream.html',1,'QLinearConvHx6x8bitStream&lt; TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt;'],['../classQLinearConvHx6x8bitStream.html#abbce0d4d7db2a0608a624d4c39eec9ec',1,'QLinearConvHx6x8bitStream::QLinearConvHx6x8bitStream()']]],
+  ['qlinearconvhx6x8bitstream_24',['QLinearConvHx6x8bitStream',['../classQLinearConvHx6x8bitStream.html#abbce0d4d7db2a0608a624d4c39eec9ec',1,'QLinearConvHx6x8bitStream::QLinearConvHx6x8bitStream()'],['../classQLinearConvHx6x8bitStream.html',1,'QLinearConvHx6x8bitStream&lt; TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP &gt;']]],
   ['qlinearconvkernels_25',['QLinearConvKernels',['../group__QLinearConvKernels.html',1,'']]],
   ['qlinearconvscalar_26',['QLinearConvScalar',['../classQLinearConvScalar.html',1,'']]],
   ['qlinearconvscalarstream_27',['QLinearConvScalarStream',['../classQLinearConvScalarStream.html',1,'']]],
@@ -44,10 +44,11 @@ var searchData=
   ['qlinearsoftmaxsingleaxis_41',['QLinearSoftmaxSingleaxis',['../classQLinearSoftmaxSingleaxis.html',1,'']]],
   ['qlinearsoftmaxstreamgraph_42',['QLinearSoftmaxStreamGraph',['../classQLinearSoftmaxStreamGraph.html',1,'']]],
   ['quantizelinear_43',['QuantizeLinear',['../classQuantizeLinear.html',1,'QuantizeLinear&lt; TT, INP_H, INP_W, OUT_W &gt;'],['../group__QuantizeLinear.html',1,'(Global Namespace)']]],
-  ['quantizelinearfmul_44',['QuantizeLinearFmul',['../classQuantizeLinearFmul.html',1,'']]],
-  ['quantizelinearfmulstream_45',['QuantizeLinearFmulStream',['../classQuantizeLinearFmulStream.html',1,'']]],
-  ['quantizelineargraph_46',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
-  ['quantizelinearkernels_47',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
-  ['quantizelinearscalar_48',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
-  ['quantizelinearstreamgraph_49',['QuantizeLinearStreamGraph',['../classQuantizeLinearStreamGraph.html',1,'']]]
+  ['quantizelinearchunkhpktstreamgraph_44',['QuantizeLinearChunkHPktStreamGraph',['../classQuantizeLinearChunkHPktStreamGraph.html',1,'']]],
+  ['quantizelinearfmul_45',['QuantizeLinearFmul',['../classQuantizeLinearFmul.html',1,'']]],
+  ['quantizelinearfmulstream_46',['QuantizeLinearFmulStream',['../classQuantizeLinearFmulStream.html',1,'']]],
+  ['quantizelineargraph_47',['QuantizeLinearGraph',['../classQuantizeLinearGraph.html',1,'']]],
+  ['quantizelinearkernels_48',['QuantizeLinearKernels',['../group__QuantizeLinearKernels.html',1,'']]],
+  ['quantizelinearscalar_49',['QuantizeLinearScalar',['../classQuantizeLinearScalar.html',1,'']]],
+  ['quantizelinearstreamgraph_50',['QuantizeLinearStreamGraph',['../classQuantizeLinearStreamGraph.html',1,'']]]
 ];

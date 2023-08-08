@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: GemmReluStreamGraph&lt; GEMM, M, K, N, IS_RELU &gt; Class Template Reference</title>
+<title>onnx2versal: QuantizeLinearChunkHPktStreamGraph&lt; QUANTIZE_LINEAR, HCHUNK, TT, INP_H, INP_W, OUT_W &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classGemmReluStreamGraph.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQuantizeLinearChunkHPktStreamGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,49 +92,47 @@ $(document).ready(function(){initNavTree('classGemmReluStreamGraph.html',''); in
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="classGemmReluStreamGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">GemmReluStreamGraph&lt; GEMM, M, K, N, IS_RELU &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Gemm.html">Gemm</a></div></div></div>
+<a href="classQuantizeLinearChunkHPktStreamGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QuantizeLinearChunkHPktStreamGraph&lt; QUANTIZE_LINEAR, HCHUNK, TT, INP_H, INP_W, OUT_W &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QuantizeLinear.html">QuantizeLinear</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Single instance graph that streams weights and biases, significantly slower.  
- <a href="classGemmReluStreamGraph.html#details">More...</a></p>
+<p>Multi instance pktstream graph.  
+ <a href="classQuantizeLinearChunkHPktStreamGraph.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="graph__gemm_8h_source.html">graph_gemm.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="graph__quantize__linear_8h_source.html">graph_quantize_linear.h</a>&gt;</code></p>
 
 <p>Inherits adf::graph.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a857fc950238fc0d60c40f36587cf4a41"><td class="memItemLeft" align="right" valign="top"><a id="a857fc950238fc0d60c40f36587cf4a41" name="a857fc950238fc0d60c40f36587cf4a41"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>GemmReluStreamGraph</b> (std::vector&lt; float &gt; bias)</td></tr>
-<tr class="separator:a857fc950238fc0d60c40f36587cf4a41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2ee9365408d688b80fd26c686e65baa"><td class="memItemLeft" align="right" valign="top"><a id="ab2ee9365408d688b80fd26c686e65baa" name="ab2ee9365408d688b80fd26c686e65baa"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QuantizeLinearChunkHPktStreamGraph</b> (float y_scale, TT y_zero)</td></tr>
+<tr class="separator:ab2ee9365408d688b80fd26c686e65baa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ac9f6dfde3d344c72a935c74ebca62f95"><td class="memItemLeft" align="right" valign="top"><a id="ac9f6dfde3d344c72a935c74ebca62f95" name="ac9f6dfde3d344c72a935c74ebca62f95"></a>
-adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [2]</td></tr>
-<tr class="separator:ac9f6dfde3d344c72a935c74ebca62f95"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9b6713d5c4dbc1840f73964234c2745"><td class="memItemLeft" align="right" valign="top"><a id="ae9b6713d5c4dbc1840f73964234c2745" name="ae9b6713d5c4dbc1840f73964234c2745"></a>
+<tr class="memitem:a4cbbce7582300b0cf422ae9d05c3a3bf"><td class="memItemLeft" align="right" valign="top"><a id="a4cbbce7582300b0cf422ae9d05c3a3bf" name="a4cbbce7582300b0cf422ae9d05c3a3bf"></a>
+adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
+<tr class="separator:a4cbbce7582300b0cf422ae9d05c3a3bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a313b9eec4541b871a20c01440de79e40"><td class="memItemLeft" align="right" valign="top"><a id="a313b9eec4541b871a20c01440de79e40" name="a313b9eec4541b871a20c01440de79e40"></a>
 adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:ae9b6713d5c4dbc1840f73964234c2745"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a313b9eec4541b871a20c01440de79e40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; int, int, int, int &gt; class GEMM, int M, int K, int N, int IS_RELU&gt;<br />
-class GemmReluStreamGraph&lt; GEMM, M, K, N, IS_RELU &gt;</div><p>&lt;dl class= </p>
-<p>&lt;td class= </p>
-<p>&lt;td class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int &gt; class QUANTIZE_LINEAR, int HCHUNK, typename TT, int INP_H, int INP_W, int OUT_W&gt;<br />
+class QuantizeLinearChunkHPktStreamGraph&lt; QUANTIZE_LINEAR, HCHUNK, TT, INP_H, INP_W, OUT_W &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>design/aie_src/<a class="el" href="graph__gemm_8h_source.html">graph_gemm.h</a></li>
+<li>design/aie_src/<a class="el" href="graph__quantize__linear_8h_source.html">graph_quantize_linear.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classGemmReluStreamGraph.html">GemmReluStreamGraph</a></li>
+    <li class="navelem"><a class="el" href="classQuantizeLinearChunkHPktStreamGraph.html">QuantizeLinearChunkHPktStreamGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>
