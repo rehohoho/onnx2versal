@@ -9,14 +9,14 @@
 
 template <typename TT, typename TTPARAM, int M, int K, int N>
 void QgemmScalarStream<TT, TTPARAM, M, K, N>::filter(
-	input_stream<TT>* in,      // MxK
+	input_stream<TT>* restrict in,      // MxK
                              // KxN
-  output_stream<TT>* out     // MxN
+  output_stream<TT>* restrict out     // MxN
 ) {
   PROFILE_HEADER2;
 
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
-  TT *in_ptr = (TT *) in_row;
+  TT* restrict in_ptr = (TT *) in_row;
 
   int weightIdx = 0;
   int resvi = 0;
@@ -115,9 +115,9 @@ QgemmStream<TT, TTPARAM, M, K, N>::QgemmStream (
  */
 template <typename TT, typename TTPARAM, int M, int K, int N>
 void QgemmStream<TT, TTPARAM, M, K, N>::filter(
-	input_stream<TT>* in,      // MxK
+	input_stream<TT>* restrict in,      // MxK
                              // KxN
-  output_stream<TT>* out     // MxN
+  output_stream<TT>* restrict out     // MxN
 ) {
   PROFILE_HEADER2;
 
@@ -127,9 +127,9 @@ void QgemmStream<TT, TTPARAM, M, K, N>::filter(
   using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   using v16w = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v16int8, v16uint8>::type;
 
-  TT *in_ptr = (TT *) in_row;
-  TTPARAM *w_ptr = (TTPARAM *) weights;
-  int32_t *b_ptr = (int32_t *) bias;
+  TT* restrict in_ptr = (TT *) in_row;
+  TTPARAM* restrict w_ptr = (TTPARAM *) weights;
+  int32_t* restrict b_ptr = (int32_t *) bias;
 
   v128 wmat = aie::zeros<TTPARAM,128>();
   v64 wzero = aie::broadcast<TTPARAM,64>(w_zero);

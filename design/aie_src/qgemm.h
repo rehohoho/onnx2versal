@@ -25,7 +25,7 @@
 
 /**
  * @brief Scalar implementation for MK*KN, stores weights and biases,
- * QgemmScalarStream<a,a,1,80,32> takes 17376 cycles
+ * QgemmScalarStream<a,a,1,80,32> takes 17340 cycles
  */
 template <typename TT, typename TTPARAM, int M, int K, int N>
 class QgemmScalarStream {
