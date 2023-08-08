@@ -39,13 +39,13 @@ void GemmReluScalarMKNKStream<M, K, N, IS_RELU>::filter(
 
 template <int M, int K, int N, int IS_RELU>
 void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
-	input_stream<float>* in,      // MxK
-  input_stream<float>* weight,  // KxN
+	input_stream<float>* restrict in,      // MxK
+  input_stream<float>* restrict weight,  // KxN
   output_window<float>* out     // MxN
 ) {
   PROFILE_HEADER2;
   
-  float *b_ptr = (float *) bias;
+  float* b_ptr = (float *) bias;
   v8float matW = null_v8float();
 
 #define MAC_ROW(k1, k2, k3, k4) \
@@ -56,10 +56,10 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
   acc3 = aie::mac(acc3, (aie::vector<float, 8>) matW, k3); \
   acc4 = aie::mac(acc4, (aie::vector<float, 8>) matW, k4);
 
-  for (int i = 0; i < M-3; i+=4) {
-    v4float *in_ptr = (v4float *) in_row;
-    for (int k = 0; k < 4*K; k+=4) {
-      *in_ptr = readincr_v4(in); in_ptr ++;
+  for (int i = 0; i <= M-4; i+=4) {
+    float* in_ptr = (float *) in_row;
+    for (int k = 0; k < 4*K; k++) {
+      *in_ptr = readincr(in); in_ptr++;
     }
 
     float *out_row_ptr = (float *) out_row;
@@ -71,7 +71,7 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
       aie::accum<accfloat,8> acc3 = *(v8float *) (b_ptr + j);
       aie::accum<accfloat,8> acc4 = *(v8float *) (b_ptr + j);
 
-      for (int k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[k:k+8,n:n+16]
+      for (int k = 0; k <= K-8; k+=8) { // += input[k:k+8]*weight[k:k+8,n:n+16]
         MAC_ROW(in_row[k+0], in_row[k+K+0], in_row[k+2*K+0], in_row[k+3*K+0]); // += input[0]*weight[0:16]
         MAC_ROW(in_row[k+1], in_row[k+K+1], in_row[k+2*K+1], in_row[k+3*K+1]);
         MAC_ROW(in_row[k+2], in_row[k+K+2], in_row[k+2*K+2], in_row[k+3*K+2]);
@@ -83,8 +83,8 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
       } // K
 
       int k = K/8*8;
-      if (K%8 != 0) {
-        for (int p = 0; p < 4; p++) {
+      if ((K&0x7) != 0) {
+        for (int p = 0; p < (K&0x7); p++) {
           MAC_ROW(in_row[k+p], in_row[k+K+p], in_row[k+2*K+p], in_row[k+3*K+p]);
         }
       } // K
@@ -119,17 +119,17 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
   matW = upd_v(matW, 1, readincr_v4(weight)); \
   acc1 = aie::mac(acc1, (aie::vector<float, 8>) matW, k1);
   
-  for (int i = 0; i < M%4; i++) {
-    v4float *in_ptr = (v4float *) in_row;
-    for (int k = 0; k < K; k+=4) {
-      *in_ptr = readincr_v4(in); in_ptr ++;
+  for (int i = 0; i < (M&0x3); i++) {
+    float* in_ptr = (float *) in_row;
+    for (int k = 0; k < K; k++) {
+      *in_ptr = readincr(in); in_ptr ++;
     }
 
     for (int j = 0; j < N; j+=8) { // 2x v8float output per iter
 
       aie::accum<accfloat,8> acc1 = *(v8float *) (b_ptr + j);
 
-      for (int k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[k:k+8,n:n+16]
+      for (int k = 0; k <= K-8; k+=8) { // += input[k:k+8]*weight[k:k+8,n:n+16]
         MAC_ROW(in_row[k+0]); // += input[0]*weight[0:16]
         MAC_ROW(in_row[k+1]);
         MAC_ROW(in_row[k+2]);
@@ -141,8 +141,8 @@ void GemmReluMKKNStream<M, K, N, IS_RELU>::filter(
       } // K
 
       int k = K/8*8;
-      if (K%8 != 0) {
-        for (int p = 0; p < 4; p++) {
+      if ((K&0x7) != 0) {
+        for (int p = 0; p < (K&0x7); p++) {
           MAC_ROW(in_row[k+p]);
         }
       } // K
@@ -252,7 +252,7 @@ void GemmReluMKKN<M, K, N, IS_RELU>::filter(
       v8float acc1 = *(v8float *) (b_ptr + j);
       v8float acc2 = *(v8float *) (b_ptr + j + 8);
 
-      for (int k = 0; k < K-7; k+=8) { // += input[k:k+8]*weight[k:16]
+      for (int k = 0; k <= K-8; k+=8) { // += input[k:k+8]*weight[k:16]
         matA = *(v8float *) a_ptr; a_ptr += 8;
         MAC_ROW(0); // += input[0]*weight[0:16]
         MAC_ROW(1);

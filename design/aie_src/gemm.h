@@ -113,7 +113,7 @@ class GemmReluScalarMKKN {
 /**
  * @brief Vector implementation for MK*KN, streams input, outputs, weights, stores bias,
  * requires K%4==0 and N%8==0
- * GemmReluMKKNStream<7,36,10> total = 3630
+ * GemmReluMKKNStream<7,36,10> total = 3100
  */
 template <int M, int K, int N, int IS_RELU>
 class GemmReluMKKNStream {
@@ -133,7 +133,7 @@ class GemmReluMKKNStream {
       output_window<float>* out     // MxN
     );
     static void registerKernelClass() {
-      static_assert(K%4==0 && N%8==0 && (4*K + 3*N)*4 <= 16384);
+      static_assert((4*K + 3*N)*4 <= 16384);
       REGISTER_FUNCTION(GemmReluMKKNStream::filter);
       REGISTER_PARAMETER(bias);
     };
