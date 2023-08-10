@@ -313,7 +313,7 @@ class ConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=4)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -792,7 +792,7 @@ class QLinearConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=16)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=4)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
