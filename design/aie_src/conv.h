@@ -119,7 +119,7 @@ class ConvHx4Relu {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*(KH*KW+3)/4*4;
+    static constexpr int CKK_ROW_SIZE = C*((KH*KW+3)/4*4);
 
     alignas(32) float (&weights)[M*CKK_ROW_SIZE];
     alignas(32) float (&bias)[M];
@@ -283,7 +283,7 @@ class ConvHx4ReluStream {
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
-    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);
 
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[CKK_ROW_SIZE];
@@ -323,7 +323,7 @@ class ConvHx4ReluStreamMultiRow {
 
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*(KH*KW+3)/4*4;
+    static constexpr int CKK_ROW_SIZE = C*((KH*KW+3)/4*4);
     
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[CKK_ROW_SIZE];
@@ -366,7 +366,7 @@ class ConvHx4Out4ReluStream {
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
-    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);
 
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[CKK_ROW_SIZE];
@@ -488,7 +488,7 @@ class ConvHx4ReluPktStream {
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
-    static constexpr int CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
 
     alignas(32) float (&bias)[M];

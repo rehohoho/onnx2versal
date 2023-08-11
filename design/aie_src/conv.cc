@@ -932,5 +932,5 @@ void Conv1x1ReluPktStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 
 #undef MAC_ROW
 
-  CONV_PROFILE_FOOTER("Conv1x1ReluStream");
+  CONV_PROFILE_FOOTER("Conv1x1ReluPktStream");
 }
