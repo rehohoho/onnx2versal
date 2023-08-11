@@ -28,15 +28,22 @@ class TransposeGraphTest : public adf::graph {
 
 
 // instance to be compiled and used in host within xclbin
-TransposeGraphTest<TransposeScalarBHWC2BCHW, float_t, 1, 4, 4, 16> fpscalar(
-  "fpscalar", "transpose_fpin.txt", "transpose_fpout_shape1x16x4x4_TransposeScalarBHWC2BCHW.txt");
+TransposeGraphTest<TransposeScalarBHWC2BCHW, float_t, 1, 4, 4, 16> fp_bhwc2bchw(
+  "fp_bhwc2bchw", "transpose_fp_bchw_shape1x4x4x16.txt", "transpose_fp_bhwc_shape1x16x4x4_TransposeScalarBHWC2BCHW.txt");
+
+TransposeGraphTest<TransposeScalarBCHW2BHWC, float_t, 1, 4, 4, 16> fp_bchw2bhwc(
+  "fp_bchw2bhwc", "transpose_fp_bhwc_shape1x16x4x4.txt", "transpose_fp_bchw_shape1x4x4x16_TransposeScalarBCHW2BHWC.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
-  adfCheck(fpscalar.init(), "init fpscalar");
-  adfCheck(fpscalar.run(ITER_CNT), "run fpscalar");
-	adfCheck(fpscalar.end(), "end fpscalar");
+  adfCheck(fp_bhwc2bchw.init(), "init fp_bhwc2bchw");
+  adfCheck(fp_bhwc2bchw.run(ITER_CNT), "run fp_bhwc2bchw");
+	adfCheck(fp_bhwc2bchw.end(), "end fp_bhwc2bchw");
+
+  adfCheck(fp_bchw2bhwc.init(), "init fp_bchw2bhwc");
+  adfCheck(fp_bchw2bhwc.run(ITER_CNT), "run fp_bchw2bhwc");
+	adfCheck(fp_bchw2bhwc.end(), "end fp_bchw2bhwc");
   return 0;
 }
 #endif

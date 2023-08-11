@@ -34,6 +34,32 @@ void TransposeScalarBHWC2BCHW<TT, B, H, W, C>::filter(
 
 
 template <typename TT, int B, int H, int W, int C>
+void TransposeScalarBCHW2BHWC<TT, B, H, W, C>::filter(
+	input_window<TT>* in,
+  output_stream<TT>* restrict out
+) {
+  PROFILE_HEADER2;
+
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int h = 0; h < H; h++) {
+      for (int w = 0; w < W; w++) {
+        for (int c = 0; c < C; c++) { 
+          TT a = window_read(in);
+          writeincr(out, a);
+          window_incr(in, H*W);
+        } // W
+        window_incr(in, -C*H*W + 1);
+        chess_separator_scheduler();
+      } // H
+
+    }
+  }
+
+  TRANSPOSE_PROFILE_FOOTER("TransposeScalarBCHW2BHWC");
+}
+
+
+template <typename TT, int B, int H, int W, int C>
 void TransposeScalarPktStreamBHWC2BCHW<TT, B, H, W, C>::filter(
 	input_pktstream* in,
   output_window<TT>* out

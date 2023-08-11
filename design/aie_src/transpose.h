@@ -30,6 +30,24 @@ class TransposeScalarBHWC2BCHW {
 
 
 /**
+ * @brief Scalar implementation for BHWC to BCHW,
+ * TransposeScalarBCHW2BHWC::filter<f,1,4,4,16>, total = 410
+ */
+template <typename TT, int B, int H, int W, int C>
+class TransposeScalarBCHW2BHWC {
+  public:
+    void filter(
+      input_window<TT>* in,
+      output_stream<TT>* restrict out
+    );
+
+    static void registerKernelClass() {
+      REGISTER_FUNCTION(TransposeScalarBCHW2BHWC::filter);
+    }
+};
+
+
+/**
  * @brief Scalar implementation using input pktstream for BHWC to BCHW,
  */
 template <typename TT, int B, int H, int W, int C>
