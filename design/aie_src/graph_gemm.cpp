@@ -94,6 +94,10 @@ GemmReluStreamGraphTest<GemmReluMKKNStream, M, K, N_PAD8, 1> gemmReluMKKNStream(
   "gemmReluMKKNStream", fpbias,
   "gemm_fpin.txt", "gemmMKKN_fpout_shape7x10_GemmReluMKKNStream.txt");
 
+GemmReluStreamGraphTest<GemmReluMKKNTwoAccsStream, M, K, N_PAD8, 1> gemmReluMKKNTwoAccsStream(
+  "gemmReluMKKNTwoAccsStream", fpbias,
+  "gemm_fpin.txt", "gemmMKKN_fpout_shape7x10_GemmReluMKKNTwoAccsStream.txt");
+
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
@@ -128,6 +132,11 @@ int main(int argc, char ** argv) {
   gemmReluMKKNStream.gmio_w.gm2aie_nb(mkkn_shuffled_buf, M*K*N_PAD8*sizeof(float_t));
   adfCheck(gemmReluMKKNStream.run(ITER_CNT), "run gemmReluMKKNStream");
 	adfCheck(gemmReluMKKNStream.end(), "end gemmReluMKKNStream");
+
+  adfCheck(gemmReluMKKNTwoAccsStream.init(), "init gemmReluMKKNTwoAccsStream");
+  gemmReluMKKNTwoAccsStream.gmio_w.gm2aie_nb(mkkn_shuffled_buf, M*K*N_PAD8*sizeof(float_t));
+  adfCheck(gemmReluMKKNTwoAccsStream.run(ITER_CNT), "run gemmReluMKKNTwoAccsStream");
+	adfCheck(gemmReluMKKNTwoAccsStream.end(), "end gemmReluMKKNTwoAccsStream");
   
   // cleanup gmio
   adf::GMIO::free(mknk_buf);
