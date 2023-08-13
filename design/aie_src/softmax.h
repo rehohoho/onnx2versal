@@ -26,6 +26,7 @@ double fastexp(float val);
 
 /**
  * @brief approximation with (1 + x/256)^256
+ * Error is small for [-512. 1.5]
  */
 float fastexp2(float val, int precision);
 
@@ -43,7 +44,8 @@ class SoftmaxScalar {
 	  float coef[10] = {1, 0.5, 0.16666666666666666, 0.041666666666666664, 0.008333333333333333, 0.001388888888888889, 0.0001984126984126984, 2.48015873015873e-05, 2.7557319223985893e-06, 2.755731922398589e-07};
 		
 		/**
-		 * taylor series for e^x  
+		 * taylor series for e^x for 10 terms
+		 * Error is small for [-4, 4]
 		 */
 		float fastexp3(float val, int precision);
 
@@ -73,7 +75,7 @@ class SoftmaxSingleaxis {
 		);
 
 		static void registerKernelClass() {
-			static_assert(INP_W_PAD % 4 == 0);
+			static_assert(INP_W_PAD % 8 == 0);
 			REGISTER_FUNCTION(SoftmaxSingleaxis::filter);
 		}
 };

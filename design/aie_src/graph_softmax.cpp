@@ -35,7 +35,7 @@ SoftmaxGraphTest<SoftmaxMultiaxis, 10, 10, 16> softmaxMultiaxis(
   "softmaxMultiaxis", "softmax_fpin.txt", "softmax_fpout_shape10x10_SoftmaxMultiaxis.txt");
 
 
-#ifdef __X86SIM__
+#if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
 	adfCheck(softmaxScalar.init(), "init softmaxScalar");
   adfCheck(softmaxScalar.run(ITER_CNT), "run softmaxScalar");
@@ -47,24 +47,6 @@ int main(int argc, char ** argv) {
 
   adfCheck(softmaxMultiaxis.init(), "init softmaxMultiaxis");
   adfCheck(softmaxMultiaxis.run(ITER_CNT), "run softmaxMultiaxis");
-	adfCheck(softmaxMultiaxis.end(), "end softmaxMultiaxis");
-  return 0;
-}
-#endif
-
-
-#ifdef __AIESIM__
-int main(int argc, char ** argv) {
-	adfCheck(softmaxScalar.init(), "init softmaxScalar");
-  get_graph_throughput_by_port(softmaxScalar, "plout[0]", softmaxScalar.plout[0], 10*10, sizeof(float), ITER_CNT);
-	adfCheck(softmaxScalar.end(), "end softmaxScalar");
-
-  adfCheck(softmaxSingleaxis.init(), "init softmaxSingleaxis");
-  get_graph_throughput_by_port(softmaxSingleaxis, "plout[0]", softmaxSingleaxis.plout[0], 10*10, sizeof(float), ITER_CNT);
-	adfCheck(softmaxSingleaxis.end(), "end softmaxSingleaxis");
-
-  adfCheck(softmaxMultiaxis.init(), "init softmaxMultiaxis");
-  get_graph_throughput_by_port(softmaxMultiaxis, "plout[0]", softmaxMultiaxis.plout[0], 10*10, sizeof(float), ITER_CNT);
 	adfCheck(softmaxMultiaxis.end(), "end softmaxMultiaxis");
   return 0;
 }
