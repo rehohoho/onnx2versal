@@ -30,8 +30,8 @@
  * @connect{pout[0], B*H*W*C*sizeof(TT)}
  * @endconnections
  */
-template <template<typename, int, int, int, int> class TRANSPOSE, 
-  typename TT, int B, int H, int W, int C>
+template <template<typename, int, int, int, int, int> class TRANSPOSE, 
+  typename TT, int B, int H, int W, int C, int PAD_W>
 class TransposeGraph : public adf::graph {
 
   private:
@@ -42,14 +42,13 @@ class TransposeGraph : public adf::graph {
     adf::port<output> pout[1];
 
     TransposeGraph() { 
-      k[0] = adf::kernel::create_object<TRANSPOSE<TT, B, H, W, C>>();
+      k[0] = adf::kernel::create_object<TRANSPOSE<TT, B, H, W, C, PAD_W>>();
       adf::source(k[0]) = "transpose.cc";
       adf::headers(k[0]) = {"transpose.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<B*H*W*C*sizeof(TT)>> (pin[0], k[0].in[0]);
-      adf::connect<adf::stream> (k[0].out[0], pout[0]);
-      adf::samples_per_iteration(k[0].out[0]) = B*C*H*W;
+      adf::connect<adf::window<B*H*PAD_W*C*sizeof(TT)>> (pin[0], k[0].in[0]);
+      adf::connect<adf::window<B*H*W*C*sizeof(TT)>> (k[0].out[0], pout[0]);
     }
 
 };
@@ -64,9 +63,9 @@ class TransposeGraph : public adf::graph {
  * @endconnections
  */
 template <
-  template<typename, int, int, int, int> class TRANSPOSE, 
+  template<typename, int, int, int, int, int> class TRANSPOSE, 
   int HCHUNK,
-  typename TT, int B, int H, int W, int C>
+  typename TT, int B, int H, int W, int C, int PAD_W>
 class TransposeHChunkGraph : public adf::graph {
 
   private:
@@ -110,14 +109,14 @@ class TransposeHChunkGraph : public adf::graph {
       }
 
       for (int i = 0; i < LCNT; i++) {
-        k[i] = adf::kernel::create_object<TRANSPOSE<TT, B, HCHUNK, W, C>>();
+        k[i] = adf::kernel::create_object<TRANSPOSE<TT, B, HCHUNK, W, C, PAD_W>>();
         adf::source(k[i]) = "transpose.cc";
         adf::headers(k[i]) = {"transpose.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
         if (B*C*HCHUNK*W*4 > MAX_PARAM_BYTES)
           adf::single_buffer(k[i].in[0]);
         
-        adf::connect<adf::window<B*HCHUNK*W*C*sizeof(TT)>> (split[i/2].out[i&0x1], k[i].in[0]);
+        adf::connect<adf::window<B*HCHUNK*PAD_W*C*sizeof(TT)>> (split[i/2].out[i&0x1], k[i].in[0]);
         adf::connect<adf::stream> (k[i].out[0], concat_graph.pin[i]);
         adf::samples_per_iteration(k[i].out[0]) = B*C*HCHUNK*W;
       }
@@ -137,10 +136,10 @@ class TransposeHChunkGraph : public adf::graph {
  */
 template <
   template<typename, int, int, int, int> class SPLIT,
-  template<typename, int, int, int, int> class TRANSPOSE, 
+  template<typename, int, int, int, int, int> class TRANSPOSE, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
-  typename TT, int B, int H, int W, int C>
+  typename TT, int B, int H, int W, int C, int PAD_W>
 class TransposeChunkHPktStreamGraph : public adf::graph {
 
   private:
@@ -163,7 +162,7 @@ class TransposeChunkHPktStreamGraph : public adf::graph {
       adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
 
       for (int i = 0; i < LCNT; i++) {
-        k[i] = adf::kernel::create_object<TRANSPOSE<TT, B, HCHUNK, W, C>>();
+        k[i] = adf::kernel::create_object<TRANSPOSE<TT, B, HCHUNK, W, C, PAD_W>>();
         adf::source(k[i]) = "transpose.cc";
         adf::headers(k[i]) = {"transpose.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
@@ -176,7 +175,6 @@ class TransposeChunkHPktStreamGraph : public adf::graph {
         if ((i&0x1) == 1) {
           adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
         }
-        // adf::location<adf::buffer>(k[0].in[0]) = adf::location<adf::kernel>(k[0]);
       }
       
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
