@@ -324,7 +324,7 @@ class QLinearConvHx4Stream {
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
@@ -362,8 +362,8 @@ class QLinearConvHx4Stream {
       static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
-      static_assert(STEP_H == 1 || STEP_H == 2);
-      static_assert(STEP_W == 1 || STEP_W == 2);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
 			REGISTER_FUNCTION(QLinearConvHx4Stream::filter);
       REGISTER_PARAMETER(bias);
 		}
@@ -386,7 +386,7 @@ class QLinearConvHx4StreamScale32bit {
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
@@ -424,8 +424,8 @@ class QLinearConvHx4StreamScale32bit {
       static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
-      static_assert(STEP_H == 1 || STEP_H == 2);
-      static_assert(STEP_W == 1 || STEP_W == 2);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
 			REGISTER_FUNCTION(QLinearConvHx4StreamScale32bit::filter);
       REGISTER_PARAMETER(bias);
 		}
@@ -447,7 +447,7 @@ class QLinearConvHx4PktStream {
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
 
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
 
     alignas(32) int32_t (&bias)[M];
@@ -486,8 +486,8 @@ class QLinearConvHx4PktStream {
       static_assert(KW<=4);
       static_assert(INP_W%16==0);
       static_assert(OUT_W_PAD%16==0);
-      static_assert(STEP_H == 1 || STEP_H == 2);
-      static_assert(STEP_W == 1 || STEP_W == 2);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
 			REGISTER_FUNCTION(QLinearConvHx4PktStream::filter);
       REGISTER_PARAMETER(bias);
 		}
@@ -627,7 +627,7 @@ class QLinearConv1x1PktStream {
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = (C_PER_M+15)/16*16;
-    static constexpr int LAST_C = (C_PER_M % 16) / 2;
+    static constexpr int LAST_C = (C_PER_M % 16 - 1) /2*2;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];

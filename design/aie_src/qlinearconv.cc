@@ -443,12 +443,11 @@ void QLinearConv3x3<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W,
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConvScalarStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TTPARAM>* weights,
-  output_stream<TT>* out
+  input_stream<TTPARAM>* restrict weights,
+  output_stream<TT>* restrict out
 ) {
   PROFILE_HEADER2;
 
-  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
   using v16w = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v16int8, v16uint8>::type;
 
   int weightIdx;
@@ -533,10 +532,16 @@ void QLinearConvScalarStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
  * 
  * stride2
  * acc0 += x0*z0 + x1*z1 x2*z2 + x3*z3
- * acc1 += x0*z2 + x1*z3 x2*z4 + x3*x4
+ * acc1 += x0*z2 + x1*z3 x2*z4 + x3*x5
  * ...
  * acc6 += x0*z12 + x1*z13 x2*z14 + x3*z15
- * acc7 += x0*z14 + x1*z15 x2*z16 + x3*z16
+ * acc7 += x0*z14 + x1*z15 x2*z16 + x3*z17
+ * 
+ * stride4
+ * acc0 += x0*z0  + x1*z1  x2*z2 + x3*z3
+ * acc1 += x0*z4  + x1*z5  x2*z6 + x3*x7
+ * acc2 += x0*z8  + x1*z9  x2*z10 + x3*z11
+ * acc3 += x0*z12 + x1*z13 x2*z14 + x3*z15
  * 
  * xoffsets: 4b offset for every two lanes, e.g. 0 4 => 4*2=8, (0+4+1)*2=10 => 8,9, 10,11
  * zoffsets: 4b offset for every lane, e.g. offset=4, step=4 => 4*2=8 => 8,9, 14,15
@@ -626,10 +631,12 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
               MAC_ROW(acc1, 12);
             }
             
-            wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            for (int p = 0; p < (KH & 0x3); p++) {
-              data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, p*4);
+            if ((KH & 0x3) != 0) {
+              wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
+              for (int p = 0; p < (KH & 0x3); p++) {
+                data = *(v32 *) in_ptr; in_ptr += INP_W;
+                MAC_ROW(acc1, p*4);
+              }
             }
 
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
@@ -638,7 +645,11 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
           ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
-          if (STEP_W == 2) {
+          if (STEP_W == 4) {
+            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
+            int *tmpint = (int *) &tmp;
+            put_ms(0, tmpint[0]);
+          } else if (STEP_W == 2) {
             v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
@@ -740,10 +751,12 @@ void QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD,
               MAC_ROW(acc1, 12);
             }
             
-            wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            for (int p = 0; p < (KH & 0x3); p++) {
-              data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, p*4);
+            if ((KH & 0x3) != 0) {
+              wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
+              for (int p = 0; p < (KH & 0x3); p++) {
+                data = *(v32 *) in_ptr; in_ptr += INP_W;
+                MAC_ROW(acc1, p*4);
+              }
             }
             
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
@@ -757,7 +770,11 @@ void QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD,
           auto aieacc1_2 = aie::mac(acc_shift, (aie::vector<int32_t,8>) accbuf1_2, scale);
           auto fat_acc1 = aie::concat(aieacc1_1, aieacc1_2);
 
-          if (STEP_W == 2) {
+          if (STEP_W == 4) {
+            v16 tmp = fat_acc1.to_vector<TT>(scalebits);
+            int *tmpint = (int *) &tmp;
+            put_ms(0, tmpint[0]);
+          } else if (STEP_W == 2) {
             v16 tmp = fat_acc1.to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
@@ -871,10 +888,12 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
               MAC_ROW(acc1, 12);
             }
             
-            wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
-            for (int p = 0; p < (KH & 0x3); p++) {
-              data = *(v32 *) in_ptr; in_ptr += INP_W;
-              MAC_ROW(acc1, p*4);
+            if ((KH & 0x3) != 0) {
+              wvec = upd_w(wvec, 0, unpack(*ckk_row_ptr)); ckk_row_ptr++;
+              for (int p = 0; p < (KH & 0x3); p++) {
+                data = *(v32 *) in_ptr; in_ptr += INP_W;
+                MAC_ROW(acc1, p*4);
+              }
             }
             
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
@@ -883,7 +902,11 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
           ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
-          if (STEP_W == 2) {
+          if (STEP_W == 4) {
+            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
+            int *tmpint = (int *) &tmp;
+            put_ms(0, tmpint[0]);
+          } else if (STEP_W == 2) {
             v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
@@ -1038,16 +1061,20 @@ void QLinearConvHx6x8bitStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP
   CONV_PROFILE_FOOTER("QLinearConvHx6x8bitStream");
 }
 
-
 /**
- * reads weights in 4s: [a,b,c,d, 0,0,0,0, ...]
- * reads data in 32s
- * 
  * bandwidth constrained (compute:loads = 1:1)
+ *          z0  z1    z16=0  z17=0
+ * acc0  += x0  x16
+ * acc1  += x1  x17
+ * ...
+ * acc14 += x14 x30
+ * acc15 += x15 x31
+ * 
  * 
  * int16 * int8:
  * xoffsets: 4b offset for every two lanes, e.g. 0 4 => 4*2=8, (0+4+1)*2=10 => 8,9, 10,11
- * zoffsets: 4b offset for every lane, e.g. offset=4, step=4 => 4*2=8 => 8,9, 14,15
+ * zoffsets: 2b offset for every lane, e.g. offset=80, step=2 => 0*2=0  => 0, 1,  2, 3,
+ *                                                               8*2=16 => 16,17, 18,19,
  */
 
 // only use 2/4 columns
@@ -1271,6 +1298,8 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
           }
           if (C_PER_M % 2 != 0) {
             data = upd_v(data, 0, *(v16 *) in_ptr); in_ptr += INP_H*INP_W;
+            v16 zeros = aie::zeros<TT,16>();
+            data = upd_v(data, 1, zeros);
             MAC_ROW(acc1, LAST_C);
           }
           in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel-C_PER_M, right 16
