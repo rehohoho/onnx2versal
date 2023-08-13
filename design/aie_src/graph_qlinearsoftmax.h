@@ -56,6 +56,7 @@ class QLinearSoftmaxStreamGraph : public adf::graph {
       adf::source(k[0]) = "qlinearsoftmax.cc";
       adf::headers(k[0]) = {"qlinearsoftmax.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
+      adf::stack_size(k[0]) = 2048;
 
       if (INP_W_PAD > INP_W) {
         pad.push_back(
