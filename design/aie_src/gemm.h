@@ -174,7 +174,7 @@ class GemmReluMKKNStream {
 
 /**
  * @brief Vector implementation for MK*KN, stores weights and biases, 
- * requires K%4=0, N%4=0
+ * requires K%4=0, N%8=0
  * GemmReluMKKN<7,36,10> total = 1470
  */
 template <int M, int K, int N, int IS_RELU>
@@ -199,7 +199,7 @@ class GemmReluMKKN {
     );
     
     static void registerKernelClass() {
-      static_assert(K%4==0 && N%4==0);
+      static_assert(K%4==0 && N%8==0);
       REGISTER_FUNCTION(GemmReluMKKN::filter);
       REGISTER_PARAMETER(weights);
       REGISTER_PARAMETER(bias);

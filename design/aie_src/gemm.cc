@@ -389,12 +389,7 @@ void GemmReluMKKN<M, K, N, IS_RELU>::filter(
         acc2 = fpmax(acc2, zeros, 0, 0x76543210);
       }
 
-      if (N - j < 8) {
-        float *acc_ptr = (float *) &acc1;
-        for (int i = 0; i < N - j; i++) {
-          window_writeincr(out, acc_ptr[i]);
-        }
-      } else if (N - j < 16) {
+      if (N - j < 16) {
         window_writeincr(out, acc1);
         float *acc_ptr = (float *) &acc2;
         for (int i = 0; i < N - j - 8; i++) {
