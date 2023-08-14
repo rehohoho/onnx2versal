@@ -110,10 +110,10 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar implementation. QLinearSoftmaxScalar&lt;10,20,32&gt; takes 517922 cycles for expf, cycles 164026 for fastexp2.  <a href="classQLinearSoftmaxScalar.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearSoftmaxFloatmul.html">QLinearSoftmaxFloatmul&lt; TT, INP_H, INP_W, INP_W_PAD &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation using fastexp2 method, float multiplication for exp estimation QLinearSoftmaxFloatmul&lt;10,10,16&gt; takes 3886 cycles requires INP_W_PAD%16=0.  <a href="classQLinearSoftmaxFloatmul.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation using fastexp2 method, float multiplication for exp estimation QLinearSoftmaxFloatmul&lt;10,10,16&gt; takes 6410 cycles requires INP_W_PAD%16=0.  <a href="classQLinearSoftmaxFloatmul.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQLinearSoftmaxSingleaxis.html">QLinearSoftmaxSingleaxis&lt; TT, INP_H, INP_W, INP_W_PAD &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation using fastexp2 method for single axis, QLinearSoftmaxSingleaxis&lt;10,10,16&gt; takes 2239 cycles requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.  <a href="classQLinearSoftmaxSingleaxis.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector implementation using fastexp2 method for single axis, QLinearSoftmaxSingleaxis&lt;10,10,16&gt; takes 5185 cycles requires INP_W_PAD%16=0. Slightly less accurate due to srs after each mult.  <a href="classQLinearSoftmaxSingleaxis.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -121,7 +121,7 @@ Classes</h2></td></tr>
 <li>qy = saturate ((y / y_scale) + y_zero_point) =&gt; x = (qx - qx_zero) * qx_scale</li>
 <li>Softmax(input, axis) = Exp(input) / ReduceSum(Exp(input), axis=axis, keepdims=1)</li>
 </ul>
-<p>For exp(x) ~= (1 + x/256)**256, Let x1 = 1+x/256 = 1 + (qx-qx_zero)*qx_scale/256 = qx*qx_scale/256 - qx_zero*qx_scale/256 + 1 Then x' = x1*x1 (8 times)</p>
+<p>For exp(x) ~= (1 + x/256)**256, Exp shift is redundant as softmax divides, Minus max for numerical stability, we have x1 = 1+(x - xmax)/256 = 1 + (qx - xmax)*qx_scale/256 Then x' = x1*x1 (8 times)</p>
 <p>For y = exp(x)/div, qy = exp(x)/div/qy_scale + qy_zero </p>
 </div><!-- contents -->
 </div><!-- doc-content -->

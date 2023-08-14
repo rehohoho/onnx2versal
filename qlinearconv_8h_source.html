@@ -349,7 +349,7 @@ $(document).ready(function(){initNavTree('qlinearconv_8h_source.html',''); initR
 <div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> C_PER_M = C / GROUP;</div>
 <div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);</div>
 <div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span> </div>
-<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;</div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);</div>
 <div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;</div>
 <div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span> </div>
 <div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[M];</div>
@@ -387,8 +387,8 @@ $(document).ready(function(){initNavTree('qlinearconv_8h_source.html',''); initR
 <div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>      <span class="keyword">static_assert</span>(KW&lt;=4);</div>
 <div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>      <span class="keyword">static_assert</span>(INP_W%16==0);</div>
 <div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span>      <span class="keyword">static_assert</span>(OUT_W_PAD%16==0);</div>
-<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>      <span class="keyword">static_assert</span>(STEP_H == 1 || STEP_H == 2);</div>
-<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>      <span class="keyword">static_assert</span>(STEP_W == 1 || STEP_W == 2);</div>
+<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>      <span class="keyword">static_assert</span>(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);</div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>      <span class="keyword">static_assert</span>(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);</div>
 <div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>            REGISTER_FUNCTION(QLinearConvHx4Stream::filter);</div>
 <div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>      REGISTER_PARAMETER(bias);</div>
 <div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>        }</div>
@@ -403,7 +403,7 @@ $(document).ready(function(){initNavTree('qlinearconv_8h_source.html',''); initR
 <div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> C_PER_M = C / GROUP;</div>
 <div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);</div>
 <div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span> </div>
-<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;</div>
+<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);</div>
 <div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;</div>
 <div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span> </div>
 <div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[M];</div>
@@ -441,8 +441,8 @@ $(document).ready(function(){initNavTree('qlinearconv_8h_source.html',''); initR
 <div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>      <span class="keyword">static_assert</span>(KW&lt;=4);</div>
 <div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span>      <span class="keyword">static_assert</span>(INP_W%16==0);</div>
 <div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span>      <span class="keyword">static_assert</span>(OUT_W_PAD%16==0);</div>
-<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span>      <span class="keyword">static_assert</span>(STEP_H == 1 || STEP_H == 2);</div>
-<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span>      <span class="keyword">static_assert</span>(STEP_W == 1 || STEP_W == 2);</div>
+<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span>      <span class="keyword">static_assert</span>(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);</div>
+<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span>      <span class="keyword">static_assert</span>(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);</div>
 <div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span>            REGISTER_FUNCTION(QLinearConvHx4StreamScale32bit::filter);</div>
 <div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span>      REGISTER_PARAMETER(bias);</div>
 <div class="line"><a id="l00431" name="l00431"></a><span class="lineno">  431</span>        }</div>
@@ -458,7 +458,7 @@ $(document).ready(function(){initNavTree('qlinearconv_8h_source.html',''); initR
 <div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);</div>
 <div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> INP_SIZE = B*C*INP_H*INP_W;</div>
 <div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span> </div>
-<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;</div>
+<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);</div>
 <div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;</div>
 <div class="line"><a id="l00452" name="l00452"></a><span class="lineno">  452</span> </div>
 <div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[M];</div>
@@ -497,8 +497,8 @@ $(document).ready(function(){initNavTree('qlinearconv_8h_source.html',''); initR
 <div class="line"><a id="l00486" name="l00486"></a><span class="lineno">  486</span>      <span class="keyword">static_assert</span>(KW&lt;=4);</div>
 <div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span>      <span class="keyword">static_assert</span>(INP_W%16==0);</div>
 <div class="line"><a id="l00488" name="l00488"></a><span class="lineno">  488</span>      <span class="keyword">static_assert</span>(OUT_W_PAD%16==0);</div>
-<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span>      <span class="keyword">static_assert</span>(STEP_H == 1 || STEP_H == 2);</div>
-<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>      <span class="keyword">static_assert</span>(STEP_W == 1 || STEP_W == 2);</div>
+<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span>      <span class="keyword">static_assert</span>(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);</div>
+<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>      <span class="keyword">static_assert</span>(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);</div>
 <div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span>            REGISTER_FUNCTION(QLinearConvHx4PktStream::filter);</div>
 <div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>      REGISTER_PARAMETER(bias);</div>
 <div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span>        }</div>
@@ -617,7 +617,7 @@ $(document).ready(function(){initNavTree('qlinearconv_8h_source.html',''); initR
 <div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> INP_SIZE = B*C*INP_H*INP_W;</div>
 <div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> C_PER_M = C / GROUP;</div>
 <div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = (C_PER_M+15)/16*16;</div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LAST_C = (C_PER_M % 16) / 2;</div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LAST_C = (C_PER_M % 16 - 1) /2*2;</div>
 <div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span> </div>
 <div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>    <span class="keyword">alignas</span>(32) int32_t (&amp;bias)[M];</div>
 <div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>    <span class="keyword">alignas</span>(32) TTPARAM ckk_row[CKK_ROW_SIZE];</div>

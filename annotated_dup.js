@@ -44,6 +44,7 @@ var annotated_dup =
     [ "GemmReluMkknChunkGraph", "classGemmReluMkknChunkGraph.html", null ],
     [ "GemmReluMkknChunkNStreamGraph", "classGemmReluMkknChunkNStreamGraph.html", null ],
     [ "GemmReluMKKNStream", "classGemmReluMKKNStream.html", null ],
+    [ "GemmReluMKKNTwoAccsStream", "classGemmReluMKKNTwoAccsStream.html", null ],
     [ "GemmReluMknkChunkGraph", "classGemmReluMknkChunkGraph.html", null ],
     [ "GemmReluScalarMKKN", "classGemmReluScalarMKKN.html", null ],
     [ "GemmReluScalarMKNK", "classGemmReluScalarMKNK.html", null ],
@@ -125,6 +126,8 @@ var annotated_dup =
     [ "TransposeChunkHPktStreamGraph", "classTransposeChunkHPktStreamGraph.html", null ],
     [ "TransposeGraph", "classTransposeGraph.html", null ],
     [ "TransposeHChunkGraph", "classTransposeHChunkGraph.html", null ],
+    [ "TransposeScalarBCHW2BHWC", "classTransposeScalarBCHW2BHWC.html", null ],
     [ "TransposeScalarBHWC2BCHW", "classTransposeScalarBHWC2BCHW.html", null ],
+    [ "TransposeScalarBHWC2BCHWStream", "classTransposeScalarBHWC2BCHWStream.html", null ],
     [ "TransposeScalarPktStreamBHWC2BCHW", "classTransposeScalarPktStreamBHWC2BCHW.html", null ]
 ];

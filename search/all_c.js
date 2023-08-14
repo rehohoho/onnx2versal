@@ -5,6 +5,8 @@ var searchData=
   ['transposegraph_2',['TransposeGraph',['../classTransposeGraph.html',1,'']]],
   ['transposehchunkgraph_3',['TransposeHChunkGraph',['../classTransposeHChunkGraph.html',1,'']]],
   ['transposekernels_4',['TransposeKernels',['../group__TransposeKernels.html',1,'']]],
-  ['transposescalarbhwc2bchw_5',['TransposeScalarBHWC2BCHW',['../classTransposeScalarBHWC2BCHW.html',1,'']]],
-  ['transposescalarpktstreambhwc2bchw_6',['TransposeScalarPktStreamBHWC2BCHW',['../classTransposeScalarPktStreamBHWC2BCHW.html',1,'']]]
+  ['transposescalarbchw2bhwc_5',['TransposeScalarBCHW2BHWC',['../classTransposeScalarBCHW2BHWC.html',1,'']]],
+  ['transposescalarbhwc2bchw_6',['TransposeScalarBHWC2BCHW',['../classTransposeScalarBHWC2BCHW.html',1,'']]],
+  ['transposescalarbhwc2bchwstream_7',['TransposeScalarBHWC2BCHWStream',['../classTransposeScalarBHWC2BCHWStream.html',1,'']]],
+  ['transposescalarpktstreambhwc2bchw_8',['TransposeScalarPktStreamBHWC2BCHW',['../classTransposeScalarPktStreamBHWC2BCHW.html',1,'']]]
 ];

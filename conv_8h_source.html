@@ -171,7 +171,7 @@ $(document).ready(function(){initNavTree('conv_8h_source.html',''); initResizabl
 <div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (INP_H - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C*(KH*KW+3)/4*4;</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C*((KH*KW+3)/4*4);</div>
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;weights)[M*CKK_ROW_SIZE];</div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[M];</div>
@@ -312,7 +312,7 @@ $(document).ready(function(){initNavTree('conv_8h_source.html',''); initResizabl
 <div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (INP_H - KH) / STEP_H + 1;</div>
 <div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> C_PER_M = C / GROUP; <span class="comment">// each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)</span></div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);</div>
 <div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span> </div>
 <div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[M];</div>
 <div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> ckk_row[CKK_ROW_SIZE];</div>
@@ -347,7 +347,7 @@ $(document).ready(function(){initNavTree('conv_8h_source.html',''); initResizabl
 <div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span> </div>
 <div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (INP_H - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C*(KH*KW+3)/4*4;</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C*((KH*KW+3)/4*4);</div>
 <div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>    </div>
 <div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[M];</div>
 <div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> ckk_row[CKK_ROW_SIZE];</div>
@@ -386,7 +386,7 @@ $(document).ready(function(){initNavTree('conv_8h_source.html',''); initResizabl
 <div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (INP_H - KH) / STEP_H + 1;</div>
 <div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> C_PER_M = C / GROUP; <span class="comment">// each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)</span></div>
-<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;</div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);</div>
 <div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span> </div>
 <div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[M];</div>
 <div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> ckk_row[CKK_ROW_SIZE];</div>
@@ -495,7 +495,7 @@ $(document).ready(function(){initNavTree('conv_8h_source.html',''); initResizabl
 <div class="line"><a id="l00488" name="l00488"></a><span class="lineno">  488</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (INP_H - KH) / STEP_H + 1;</div>
 <div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> C_PER_M = C / GROUP; <span class="comment">// each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)</span></div>
-<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*(KH*KW+3)/4*4;</div>
+<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);</div>
 <div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> INP_SIZE = B*C*INP_H*INP_W;</div>
 <div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span> </div>
 <div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span>    <span class="keyword">alignas</span>(32) <span class="keywordtype">float</span> (&amp;bias)[M];</div>

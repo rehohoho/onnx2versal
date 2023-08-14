@@ -63,7 +63,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "add_8h_source.html",
-"softmax_8h_source.html"
+"qlinearpool_8h_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

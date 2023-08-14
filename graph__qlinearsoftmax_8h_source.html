@@ -126,26 +126,27 @@ $(document).ready(function(){initNavTree('graph__qlinearsoftmax_8h_source.html',
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      adf::source(k[0]) = <span class="stringliteral">&quot;qlinearsoftmax.cc&quot;</span>;</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;qlinearsoftmax.h&quot;</span>};</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>      <span class="keywordflow">if</span> (INP_W_PAD &gt; INP_W) {</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        pad.push_back(</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>          adf::kernel::create_object&lt;PAD&lt;TT, 1, INP_H, INP_W, INP_W_PAD, 0, 0, 0, INP_W_PAD-INP_W&gt;&gt;(x_zero));</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        adf::connect&lt;adf::stream, adf::window&lt;INP_H*INP_W_PAD&gt;&gt; (pad[0].out[0], k[0].in[0]);</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        adf::connect&lt;adf::window&lt;INP_H*INP_W_PAD&gt;&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>      }</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>      adf::connect&lt;adf::stream&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>      adf::samples_per_iteration(k[0].out[0]) = INP_H*INP_W_PAD;</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    }</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>};</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARSOFTMAX_GRAPH_H__</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>      adf::stack_size(k[0]) = 2048;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>      <span class="keywordflow">if</span> (INP_W_PAD &gt; INP_W) {</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        pad.push_back(</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>          adf::kernel::create_object&lt;PAD&lt;TT, 1, INP_H, INP_W, INP_W_PAD, 0, 0, 0, INP_W_PAD-INP_W&gt;&gt;(x_zero));</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        adf::connect&lt;adf::stream, adf::window&lt;INP_H*INP_W_PAD&gt;&gt; (pad[0].out[0], k[0].in[0]);</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        adf::connect&lt;adf::window&lt;INP_H*INP_W_PAD&gt;&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>      }</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>      adf::connect&lt;adf::stream&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>      adf::samples_per_iteration(k[0].out[0]) = INP_H*INP_W_PAD;</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    }</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>};</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARSOFTMAX_GRAPH_H__</span></div>
 <div class="ttc" id="aclassQLinearSoftmaxStreamGraph_html"><div class="ttname"><a href="classQLinearSoftmaxStreamGraph.html">QLinearSoftmaxStreamGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearsoftmax.h:37</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

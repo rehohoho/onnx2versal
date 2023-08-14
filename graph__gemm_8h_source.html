@@ -158,7 +158,7 @@ $(document).ready(function(){initNavTree('graph__gemm_8h_source.html',''); initR
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>      adf::source(k[0]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      adf::heap_size(k[0]) = 16384;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      adf::heap_size(k[0]) = 24576; <span class="comment">// assume KxN &gt; MxN</span></div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
 <div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      adf::connect&lt;adf::stream&gt; (pin[0], k[0].in[0]);</div>
 <div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>      adf::connect&lt;adf::stream&gt; (pin[1], k[0].in[1]);</div>
@@ -340,7 +340,7 @@ $(document).ready(function(){initNavTree('graph__gemm_8h_source.html',''); initR
 <div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>        adf::source(gemms[i]) = <span class="stringliteral">&quot;gemm.cc&quot;</span>;</div>
 <div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>        adf::headers(gemms[i]) = {<span class="stringliteral">&quot;gemm.h&quot;</span>};</div>
 <div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>        adf::runtime&lt;ratio&gt;(gemms[i]) = 0.6;</div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>        adf::heap_size(gemms[i]) = 16384;</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>        adf::heap_size(gemms[i]) = 24576;</div>
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span> </div>
 <div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        adf::connect&lt;adf::stream&gt; (pin[0], gemms[i].in[0]);</div>
 <div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>        adf::connect&lt;adf::stream&gt; (pin[1+i], gemms[i].in[1]);</div>
