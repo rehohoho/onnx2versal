@@ -59,13 +59,11 @@ class QgemmStreamGraph : public adf::graph {
       adf::source(k[0]) = "qgemm.cc";
       adf::headers(k[0]) = {"qgemm.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
-        adf::heap_size(k[0]) = K + 1024;
+      adf::heap_size(k[0]) = K + 1024;
 
       adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
       adf::location<adf::parameter>(k[0].param[0]) = tilePos;
       adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
-      adf::location<adf::parameter>(k[0].param[1]) = tilePos;
-      adf::location<adf::parameter>(k[0].param[1]) = adf::offset((K*N+31)/32*32);
 
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (k[0].out[0], pout[0]);

@@ -3,7 +3,8 @@ import math
 
 import numpy as np
 
-TILE_SIZE = 31712
+TILE_SIZE = 32768
+MAX_HEAP_SIZE = 31712
 MAX_PARAM_SIZE = 32768 // 2 # ping-pong buffer, fit input and output ping pongs
 PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
@@ -313,7 +314,7 @@ class ConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=4)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=4)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -345,7 +346,7 @@ class ConvOp(OpParser):
     self.pad_and_save_files(tin, tout)
     self.pick_graph()
     
-    kernel = "ConvReluScalarStream"
+    kernel = None
     if self.STEP_H in [1,2] and self.STEP_W in [1,2]:
       if self.KH == self.KW == 1 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
         kernel = "Conv1x1Out4ReluStream"
@@ -363,6 +364,12 @@ class ConvOp(OpParser):
         tw = pad_lastdim(tw, "Conv weights", get_vector_boundary(tw))
         kernel = "ConvHx8ReluStream"
     
+    if kernel is None:
+      kernel = "ConvReluScalarStream"
+      if self.graph == "ConvReluChunkHPktStreamGraph":
+        self.graph = "ConvReluChunkHStreamGraph"
+        self.split_kernel = "SplitFilterFloatStream"
+    
     self.gmioname_2_tensor[f"{self.name}_w"] = tw
     self.gmio_repeats = 1
     self.argname_2_tensor[f"{self.name}_b"] = tbias
@@ -370,11 +377,7 @@ class ConvOp(OpParser):
     if self.graph == "ConvReluStreamGraph":
       self.kernel_type = f"{self.graph}<{kernel},{self.get_conv_targs()}"
     else:
-      HCHUNK_OUT = (self.HCHUNK - self.KH) // self.STEP_H + 1
-      concat_w = HCHUNK_OUT * self.OUT_W_PAD
-      concat_block = self.OUT_H * self.OUT_W_PAD
-      concat_kernel = "ConcatFloatStream"
-      self.kernel_type = f"{self.graph}<{self.split_kernel},{kernel},{concat_kernel},{self.HCHUNK},{self.get_conv_targs()}"
+      self.kernel_type = f"{self.graph}<{self.split_kernel},{kernel},ConcatFloatStream,{self.HCHUNK},{self.get_conv_targs()}"
   
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
@@ -449,7 +452,7 @@ class GemmOp(OpParser):
     self.tensors = tin, tw, tbias, tout
     self.register()
 
-  def register(self, disable_N_pad = False):
+  def register(self):
     tin, tw, tbias, tout = self.tensors
     self.M, self.K = tin.shape
     _, self.N = tout.shape
@@ -459,14 +462,15 @@ class GemmOp(OpParser):
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     self.out_size = tout.size # host buffer sizes
+
+    tw = pad_lastdim(tw, "Gemm tw", 8)
+    tbias = pad_lastdim(tbias, "Gemm tbias", 8)
+    self.N = tw.shape[-1]
     
-    if tw.nbytes <= MAX_PARAM_SIZE * 8:
+    # window kernels
+    if tw.nbytes <= MAX_PARAM_SIZE or tw.nbytes <= MAX_PARAM_SIZE * 8 and MAX_PARAM_SIZE//(tw.nbytes//self.N) //8*8 > 0:
       
-      tw = pad_lastdim(tw, "Gemm tw", get_vector_boundary(tw))
-      tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
-      self.N = tw.shape[-1]
       self.M, self.repeat = factor_int(self.M, max(self.K, self.N) * self.dtype.itemsize, MAX_PARAM_SIZE, 0, force_split_chunksize=32)
-      
       self.argname_2_tensor[f"{self.name}_w"] = tw
       self.argname_2_tensor[f"{self.name}_b"] = tbias
 
@@ -479,25 +483,30 @@ class GemmOp(OpParser):
         concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
         self.kernel_type = f"GemmReluMkknChunkGraph<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       
+    # stream kernels
     else:
       
-      tw = pad_lastdim(tw, "Gemm tw", 8)
-      tbias = pad_lastdim(tbias, "Gemm tbias", get_vector_boundary(tbias))
-      self.N = tw.shape[-1]
       self.M, repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE, 0, force_split_chunksize=32)
       self.argname_2_tensor[f"{self.name}_b"] = tbias
       
-      if self.N > 64:
-        nchunk, nchunk_count = factor_int(self.N, 0, 1, 0, force_split_chunksize=self.N//8)
+      nchunk, nchunk_count = factor_int(self.N, 0, 1, 0, force_split_chunksize=8)
+
+      if (4*self.K + 3*nchunk) * 4 <= 24576:
+        kernel = "GemmReluMKKNStream"
+        self.gmio_repeats = (self.M // 4 + self.M % 4) * repeat
+      else:
+        kernel = "GemmReluMKKNTwoAccsStream"
+        self.gmio_repeats = (self.M // 2 + self.M % 2) * repeat
+      
+      if nchunk == self.N:
+        self.gmioname_2_tensor[f"{self.name}_w"] = tw.reshape(self.K, -1, 8).transpose(1,0,2)
+        self.gmio_repeats = (self.M // 2 + self.M % 2) * repeat
+        self.kernel_type = f"GemmReluStreamGraph<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+      else:
         tw = tw.reshape(self.K, nchunk_count, nchunk).transpose(1,0,2)
         for i in range(nchunk_count):
           self.gmioname_2_tensor[f"{self.name}_w{i}"] = tw[i].reshape(self.K, -1, 8).transpose(1,0,2)
-          self.gmio_repeats = (self.M // 4 + self.M % 4) * repeat
-        self.kernel_type = f"GemmReluMkknChunkNStreamGraph<GemmReluMKKNStream,ConcatFloatStream,{nchunk},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
-      else:
-        self.gmioname_2_tensor[f"{self.name}_w"] = tw.reshape(self.K, -1, 8).transpose(1,0,2)
-        self.gmio_repeats = (self.M // 4 + self.M % 4) * repeat
-        self.kernel_type = f"GemmReluStreamGraph<GemmReluMKKNStream,{self.M},{self.K},{self.N},{int(self.is_relu)}>"
+        self.kernel_type = f"GemmReluMkknChunkNStreamGraph<{kernel},ConcatFloatStream,{nchunk},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
@@ -668,10 +677,10 @@ class QGemmOp(OpParser):
       raise NotImplementedError(f"No QGemm implementation for input size {tin.nbytes} or output size {tout.nbytes}")
       
     kernel = "QgemmStream" if self.N%16==0 else "QgemmScalarStream"
-    if tw.nbytes > MAX_PARAM_SIZE * 8:
+    if tw.nbytes > TILE_SIZE * 8:
       raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}")
 
-    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, MAX_PARAM_SIZE, force_split_chunksize=16)
+    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, TILE_SIZE, force_split_chunksize=16)
     if chunkSize == self.N:
       self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
     else:
@@ -792,13 +801,13 @@ class QLinearConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=4)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=4)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
       self.graph = "QLinearConvStreamGraph"
       self.disable_last_file_output = True
-      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
+      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= MAX_HEAP_SIZE
     else:
       self.graph = "QLinearConvChunkHPktStreamGraph" if self.HCHUNK - overlap*2 >= 0 else "QLinearConvChunkHStreamGraph"
       self.split_kernel = "SplitFilterInt8PktStream" if self.HCHUNK - overlap*2 >= 0 else "SplitInt8"
@@ -826,7 +835,7 @@ class QLinearConvOp(OpParser):
       tw = pad_lastdim(tw.reshape(self.M,-1), "QLinearConvOp weights", get_vector_boundary(tw))
       kernel = "QLinearConv1x1PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConv1x1Stream"
 
-    elif self.KW <= 4 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
+    elif self.KW <= 4 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2,4] and self.STEP_W in [1,2,4]:
       tw = pad_lastdim(tw, "QLinearConvOp weights", 4)
       tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, -1), "QLinearConvOp weights", get_vector_boundary(tw))
       kernel = "QLinearConvHx4PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConvHx4Stream" # QLinearConvHx4StreamScale32bit
@@ -1035,8 +1044,8 @@ class QLinearSoftmaxOp(OpParser):
   def get_kernel_line(self) -> str:
     graph = "QLinearSoftmaxStreamGraph"
     kernel = "QLinearSoftmaxScalar"
-    # if self.INP_W_PAD % 16 == 0:
-    #   kernel = "QLinearSoftmaxSingleaxis" # accuracy option
+    if self.INP_W_PAD % 16 == 0:
+      kernel = "QLinearSoftmaxFloatmul" # accuracy option
     return f"{graph}<Pad2DStreamInt8,{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
   def get_computation_count(self):
@@ -1108,7 +1117,7 @@ class SoftmaxOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
     self.INP_W = tin.shape[-1]
 
-    tin = pad_lastdim(tin, "SoftmaxOp tin", get_vector_boundary(tin)) # files
+    tin = pad_lastdim(tin, "SoftmaxOp tin", 8) # files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
@@ -1117,15 +1126,16 @@ class SoftmaxOp(OpParser):
     self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
+
+    self.kernel = "SoftmaxScalar"
+    if self.INP_W_PAD % 8 == 0 and self.INP_H % 2 == 0:
+      self.kernel = "SoftmaxMultiaxis"
+    elif self.INP_W_PAD % 8 == 0:
+      self.kernel = "SoftmaxSingleaxis"
   
   def get_kernel_line(self) -> str:
     graph = "SoftmaxGraph"
-    kernel = "SoftmaxScalar"
-    if self.INP_W_PAD % 8 == 0 and self.INP_H % 2 == 0:
-      kernel = "SoftmaxMultiaxis"
-    elif self.INP_W_PAD % 8 == 0:
-      kernel = "SoftmaxSingleaxis"
-    return f"{graph}<{kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
+    return f"{graph}<{self.kernel},{self.INP_H},{self.INP_W},{self.INP_W_PAD}> {self.name};"
 
   def get_computation_count(self):
     return self.INP_H*self.INP_W_PAD * 12 # mac, 8x mul_square, add, mac, srs
@@ -1141,28 +1151,39 @@ class TransposeOp(OpParser):
     assert len(tensors) == 2
 
     attr_d = get_attribute_dict(attributes)
-    if attr_d.get("perm") != [0,3,1,2]: raise NotImplementedError(f"Transpose for {attr_d.get('perm')} not implemented yet.")
+    self.perm = attr_d.get("perm")
     
     tin, tout = tensors
-    self.B, self.H, self.W, self.C = tin.shape
-    assert tout.shape == (self.B, self.C, self.H, self.W)
+    if self.perm == [0,3,1,2]:
+      self.B, self.H, self.W, self.C = tin.shape
+      self.PAD_W = self.W
+      assert tout.shape == (self.B, self.C, self.H, self.W)
+    elif self.perm == [0,2,3,1]:
+      self.B, self.C, self.H, self.W = tin.shape
+      assert tout.shape == (self.B, self.H, self.W, self.C)
+      
+      tin = pad_lastdim(tin, "SoftmaxOp tin", get_vector_boundary(tin)) # files
+      self.PAD_W = tin.shape[-1]
+    else:
+      raise NotImplementedError(f"Transpose for {attr_d.get('perm')} not implemented yet.")
 
     self.tout = tout # reference copy to check against to compress graph
 
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
     
-    self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
     self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
-    kernel = "TransposeScalarBHWC2BCHW"
-    if self.B*self.H*self.W*self.C*self.dtype.itemsize > TILE_SIZE:
+    kernel = "TransposeScalarBHWC2BCHW" if self.perm == [0,3,1,2] else "TransposeScalarBCHW2BHWC"
+    if self.B*self.H*self.W*self.C*self.dtype.itemsize > TILE_SIZE and self.perm == [0,3,1,2] and self.dtype == "float32":
       HCHUNK, _ = factor_int(self.H, self.B*self.W*self.C*self.dtype.itemsize, TILE_SIZE)
-      return f"TransposeHChunkGraph<{kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
+      kernel = "TransposeScalarBHWC2BCHWStream"
+      concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
+      return f"TransposeHChunkGraph<{kernel},{concat_kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C},{self.PAD_W}> {self.name};"
     else:
-      return f"TransposeGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C}> {self.name};"
+      return f"TransposeGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C},{self.PAD_W}> {self.name};"
   
   def get_computation_count(self):
     return self.B*self.H*self.W*self.C

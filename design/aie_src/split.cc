@@ -1054,7 +1054,7 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
       writeHeader(out[0], 0, ID[0]);
       WRITE_OUT(0, FIRST_STRIDE, 0);
 
-      for (int i = 1; i < LCNT; i++) chess_flatten_loop {
+      for (int i = 1; i < LCNT; i++) {
         writeHeader(out[i&0x1], 0, ID[i]);
         WRITE_OUT_TWICE(1 - (i&0x1), i&0x1, OVERLAP);
         WRITE_OUT(i&0x1, STRIDE, 0);
