@@ -540,8 +540,9 @@ void QLinearConvScalarStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
  * stride4
  * acc0 += x0*z0  + x1*z1  x2*z2 + x3*z3
  * acc1 += x0*z4  + x1*z5  x2*z6 + x3*x7
- * acc2 += x0*z8  + x1*z9  x2*z10 + x3*z11
- * acc3 += x0*z12 + x1*z13 x2*z14 + x3*z15
+ * ...
+ * acc6 += x0*z24 + x1*z25 x2*z26 + x3*z27
+ * acc7 += x0*z28 + x1*z29 x2*z30 + x3*z31
  * 
  * xoffsets: 4b offset for every two lanes, e.g. 0 4 => 4*2=8, (0+4+1)*2=10 => 8,9, 10,11
  * zoffsets: 4b offset for every lane, e.g. offset=4, step=4 => 4*2=8 => 8,9, 14,15
@@ -613,7 +614,7 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
       acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
       for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
-        for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
 
           acc1 = acc_bias;
           
@@ -641,15 +642,11 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
 
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
           }
-          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+          in_ptr += -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP; // go channel -C_PER_M, right W_LOOP_IN_STEP
           ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
-          if (STEP_W == 4) {
-            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
-            int *tmpint = (int *) &tmp;
-            put_ms(0, tmpint[0]);
-          } else if (STEP_W == 2) {
+          if (STEP_W > 1) {
             v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
@@ -659,7 +656,7 @@ void QLinearConvHx4Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
           }
         } // W
         
-        in_ptr += INP_W*STEP_W - OUT_W_PAD*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
+        in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
@@ -733,7 +730,7 @@ void QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD,
       acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
       for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
-        for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
 
           acc1 = acc_bias;
           
@@ -761,7 +758,7 @@ void QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD,
             
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
           }
-          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+          in_ptr += -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP; // go channel -C_PER_M, right W_LOOP_IN_STEP
           ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           v8int32 accbuf1_1 = lsrs(ext_lo(acc1), 0);
@@ -770,11 +767,7 @@ void QLinearConvHx4StreamScale32bit<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD,
           auto aieacc1_2 = aie::mac(acc_shift, (aie::vector<int32_t,8>) accbuf1_2, scale);
           auto fat_acc1 = aie::concat(aieacc1_1, aieacc1_2);
 
-          if (STEP_W == 4) {
-            v16 tmp = fat_acc1.to_vector<TT>(scalebits);
-            int *tmpint = (int *) &tmp;
-            put_ms(0, tmpint[0]);
-          } else if (STEP_W == 2) {
+          if (STEP_W > 1) {
             v16 tmp = fat_acc1.to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
@@ -870,7 +863,7 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
       acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
       
       for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
-        for (int w = 0; w < OUT_W_PAD; w+=16/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
 
           acc1 = acc_bias;
           
@@ -898,15 +891,11 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
             
             in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
           }
-          in_ptr += -C_PER_M*INP_H*INP_W + 16; // go channel -C_PER_M, right 16
+          in_ptr += -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP; // go channel -C_PER_M, right W_LOOP_IN_STEP
           ckk_row_ptr -= CKK_ROW_SIZE/16;
           
           acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
-          if (STEP_W == 4) {
-            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
-            int *tmpint = (int *) &tmp;
-            put_ms(0, tmpint[0]);
-          } else if (STEP_W == 2) {
+          if (STEP_W > 1) {
             v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
             int *tmpint = (int *) &tmp;
             put_ms(0, tmpint[0]);
@@ -916,7 +905,7 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
           }
         } // W
         
-        in_ptr += -OUT_W_PAD*STEP_W + INP_W*STEP_H; // go left OUT_W_PAD*STEP_W, down STEP_H
+        in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
         chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
       } // H
       in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H

@@ -324,8 +324,12 @@ class QLinearConvHx4Stream {
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0xeca86420);
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP    = (STEP_W == 1) ? 16 : 8;
+    static constexpr int W_LOOP_IN_STEP = (STEP_W != 4) ? 16 : 32;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
@@ -386,8 +390,12 @@ class QLinearConvHx4StreamScale32bit {
     static constexpr int C_PER_M = C / GROUP;
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
 
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0xeca86420);
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP    = (STEP_W == 1) ? 16 : 8;
+    static constexpr int W_LOOP_IN_STEP = (STEP_W != 4) ? 16 : 32;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
@@ -447,8 +455,12 @@ class QLinearConvHx4PktStream {
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
 
-    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0x00006420);
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0xeca86420);
     static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP    = (STEP_W == 1) ? 16 : 8;
+    static constexpr int W_LOOP_IN_STEP = (STEP_W != 4) ? 16 : 32;
 
     alignas(32) int32_t (&bias)[M];
     alignas(32) TTPARAM ckk_row[CKK_ROW_SIZE];
