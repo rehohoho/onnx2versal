@@ -106,17 +106,17 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
 <td class="markdownTableBodyCenter">Visual Wake Words*   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">- <br  />
  2249859   </td><td class="markdownTableBodyCenter">- <br  />
- 3384   </td><td class="markdownTableBodyCenter"><br  />
+ 3384   </td><td class="markdownTableBodyCenter">- <br  />
  101/103/189/15/27   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter">80% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py">MobileNet</a>    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyCenter">Image Classification*   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">1028165 <br  />
  763915   </td><td class="markdownTableBodyCenter">3410 <br  />
- 7201   </td><td class="markdownTableBodyCenter">- <br  />
- 41/49/112/12/9   </td><td class="markdownTableBodyCenter">86.8% (Top 1)   </td><td class="markdownTableBodyCenter">85% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py">ResNet</a>    </td></tr>
+ 7201   </td><td class="markdownTableBodyCenter">98/110/160/2/9 <br  />
+ 116/127/214/16/9   </td><td class="markdownTableBodyCenter">86.8% (Top 1)   </td><td class="markdownTableBodyCenter">85% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py">ResNet</a>    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyCenter">Anomaly Detection*   </td><td class="markdownTableBodyCenter">fp32 <br  />
- uint8   </td><td class="markdownTableBodyCenter">25843356 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">4503198 <br  />
  422940   </td><td class="markdownTableBodyCenter">608 <br  />
  7603   </td><td class="markdownTableBodyCenter">55/97/208/20/2 <br  />
  147/159/202/0/2   </td><td class="markdownTableBodyCenter">0.880 (AUC)   </td><td class="markdownTableBodyCenter">0.85 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py">Deep AutoEncoder</a>    </td></tr>
@@ -135,9 +135,9 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyCenter">Image Classification**   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">- <br  />
- 308461   </td><td class="markdownTableBodyCenter">- <br  />
- 7355   </td><td class="markdownTableBodyCenter">- <br  />
-   </td><td class="markdownTableBodyCenter">84.1% (Top 1)   </td><td class="markdownTableBodyCenter">83.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ic/RN07/training/resnet_v1_eembc.py">CNN</a>   </td></tr>
+ 174992   </td><td class="markdownTableBodyCenter">- <br  />
+ 22258   </td><td class="markdownTableBodyCenter">- <br  />
+ 90/95/144/0/7   </td><td class="markdownTableBodyCenter">84.1% (Top 1)   </td><td class="markdownTableBodyCenter">83.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ic/RN07/training/resnet_v1_eembc.py">CNN</a>   </td></tr>
 </table>
 <p>*Models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark. **Models used are trained from hls4ml-finn repositories.</p>
 <ul>
