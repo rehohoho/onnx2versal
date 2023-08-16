@@ -110,9 +110,9 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
  101/103/189/15/27   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter">80% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py">MobileNet</a>    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyCenter">Image Classification*   </td><td class="markdownTableBodyCenter">fp32 <br  />
- uint8   </td><td class="markdownTableBodyCenter">1028165 <br  />
- 763915   </td><td class="markdownTableBodyCenter">3410 <br  />
- 7201   </td><td class="markdownTableBodyCenter">98/110/160/2/9 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">808574 <br  />
+ 492622   </td><td class="markdownTableBodyCenter">3410 <br  />
+ 7201   </td><td class="markdownTableBodyCenter">134/150/264/14/9 <br  />
  116/127/214/16/9   </td><td class="markdownTableBodyCenter">86.8% (Top 1)   </td><td class="markdownTableBodyCenter">85% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py">ResNet</a>    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyCenter">Anomaly Detection*   </td><td class="markdownTableBodyCenter">fp32 <br  />
@@ -139,11 +139,12 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
  22258   </td><td class="markdownTableBodyCenter">- <br  />
  90/95/144/0/7   </td><td class="markdownTableBodyCenter">84.1% (Top 1)   </td><td class="markdownTableBodyCenter">83.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ic/RN07/training/resnet_v1_eembc.py">CNN</a>   </td></tr>
 </table>
-<p>*Models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark. **Models used are trained from hls4ml-finn repositories.</p>
+<p>*Models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark. Quality targets are taken from <a href="https://github.com/mlcommons/tiny/tree/master/benchmark">MLPerf Tiny closed division benchmarks</a>. <br  />
+ **Models used are trained from hls4ml-finn repositories. Quality targets are taken from <a href="https://cds.cern.ch/record/2826586/files/2206.11791.pdf">Hls4ml MLPerf Tiny paper</a>.</p>
 <ul>
-<li>Latency is calculated based on AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator outputs.</li>
+<li>Latency is calculated based on AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator logs.</li>
 <li>Throughput is calculated based on output bandwidth over multiple iterations. Obtained by running <code>throughput.py</code> on aiesimulator output files.</li>
-<li>Accuracy is calculated by comparing argmaxed probabilities or finding mean squared anomaly scores then computing area under curve. Obtained by running <code>get_accuracy.py</code> on x86simulator outputs.</li>
+<li>Accuracy is calculated by comparing argmaxed probabilities or finding mean squared anomaly scores then computing area under curve. Obtained by running <code>get_accuracy.py</code> on x86simulator outputs over 1000 samples.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md26"></a>
 Procedure</h1>
