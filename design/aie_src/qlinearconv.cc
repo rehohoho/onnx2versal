@@ -1097,8 +1097,8 @@ QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_window<TT>* in,
-  input_stream<TTPARAM>* weights,
-  output_stream<TT>* out
+  input_stream<TTPARAM>* restrict weights,
+  output_stream<TT>* restrict out
 ) {
   PROFILE_HEADER2;
 
@@ -1116,11 +1116,8 @@ void QLinearConv1x1Stream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, S
   aie::accum<acc48,16> acc_bias;
   acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
 
-  v16w *ckk_row_ptr = (v16w *) ckk_row;
-  TT *in_ptr = (TT *) in->ptr;
-
-  int res_updi = 0;
-  v16int16 res = null_v16int16(); // for STEP_W == 2
+  v16w* restrict ckk_row_ptr = (v16w *) ckk_row;
+  TT* restrict in_ptr = (TT *) in->ptr;
 
   set_sat();
   set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
@@ -1216,8 +1213,8 @@ QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STE
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
 	input_pktstream* in_s,
-  input_stream<TTPARAM>* weights,
-  output_stream<TT>* out
+  input_stream<TTPARAM>* restrict weights,
+  output_stream<TT>* restrict out
 ) {
   PROFILE_HEADER2;
 
@@ -1235,12 +1232,9 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
   aie::accum<acc48,16> acc_bias;
   acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
 
-  v16w *ckk_row_ptr = (v16w *) ckk_row;
-  TT *in_ptr = (TT *) in;
+  v16w* restrict ckk_row_ptr = (v16w *) ckk_row;
+  TT* restrict in_ptr = (TT *) in;
   
-  int res_updi = 0;
-  v16int16 res = null_v16int16(); // for STEP_W == 2
-
   // fill window
   for (int bc = 0; bc < B*C; bc++) {
     get_ss(0); // discard header
@@ -1298,13 +1292,11 @@ void QLinearConv1x1PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
           if (STEP_W == 2) {
             v16int16 tmp = srs(acc1, scalebits);
             v8int16 tmphalf = aie::filter_even((aie::vector<int16_t,16>) tmp, 1);
-            if (res_updi == 1) {
-              res = upd_v(res, 1, tmphalf);
-              writeincr_v16(out, ((aie::vector<int16_t,16>) res).pack<TT>());
-            } else {
-              res = upd_v(res, 0, tmphalf);
-            }
-            res_updi = (res_updi + 1) & 0x1;
+            tmp = upd_v(tmp, 0, tmphalf);
+            aie::vector<TT,16> tmpout = ((aie::vector<int16_t,16>) tmp).pack<TT>();
+            int *tmpint = (int *) &(tmpout);
+            put_ms(0, tmpint[0]);
+            put_ms(0, tmpint[1]);
           } else {
             writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
           }

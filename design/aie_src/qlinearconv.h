@@ -570,7 +570,7 @@ class QLinearConvHx6x8bitStream {
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  * QLinearConv1x1Stream<26,32,28,32,1,1,1,1,8,1,1,1> total = 2697, with uint8 w_zero 3901
- * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> total = 2857, with uint8 w_zero 4326
+ * QLinearConv1x1Stream<26,32,28,16,2,2,1,1,8,1,1,1> total = 3489, with uint8 w_zero 4326
  */
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
 class QLinearConv1x1Stream {
