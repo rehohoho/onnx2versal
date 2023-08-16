@@ -314,7 +314,7 @@ class ConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=2)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=2*overlap)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
@@ -475,11 +475,11 @@ class GemmOp(OpParser):
       self.argname_2_tensor[f"{self.name}_b"] = tbias
 
       if tw.nbytes <= MAX_PARAM_SIZE:
-        kernel = "GemmReluMKKN" if self.K % 4 == 0 and self.N % 4 == 0 else "GemmReluScalarMKKN"
+        kernel = "GemmReluMKKN" if self.K % 4 == 0 and self.N % 8 == 0 else "GemmReluScalarMKKN"
         self.kernel_type = f"GemmReluGraph<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       else:
-        chunkSize = min(MAX_PARAM_SIZE//(tw.nbytes//self.N) //8*8, self.N)
-        kernel = "GemmReluMKKN" if self.K % 4 == 0 and chunkSize % 4 == 0 else "GemmReluScalarMKKN"
+        chunkSize = (self.N//MAX_CHUNKS +7) //8*8
+        kernel = "GemmReluMKKN" if self.K % 4 == 0 and chunkSize % 8 == 0 else "GemmReluScalarMKKN"
         concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
         self.kernel_type = f"GemmReluMkknChunkGraph<{kernel},{concat_kernel},{chunkSize},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       
@@ -489,7 +489,7 @@ class GemmOp(OpParser):
       self.M, repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE, 0, force_split_chunksize=32)
       self.argname_2_tensor[f"{self.name}_b"] = tbias
       
-      nchunk, nchunk_count = factor_int(self.N, 0, 1, 0, force_split_chunksize=8)
+      nchunk, nchunk_count = factor_int(self.N, 0, 1, 0, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 8))
 
       if (4*self.K + 3*nchunk) * 4 <= 24576:
         kernel = "GemmReluMKKNStream"
@@ -680,7 +680,7 @@ class QGemmOp(OpParser):
     if tw.nbytes > TILE_SIZE * 8:
       raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}")
 
-    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, TILE_SIZE, force_split_chunksize=16)
+    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, TILE_SIZE, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 16))
     if chunkSize == self.N:
       self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
     else:
@@ -801,7 +801,7 @@ class QLinearConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=2)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=2*overlap)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
