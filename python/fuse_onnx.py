@@ -3,6 +3,8 @@ Most fusion is done when parsing ONNX into AIEngine operators.
 The following is fused at ONNX level so quantized ONNX will have them fused as well.
 This is to prevent extra dequantize/quantize operations.
   - Matmul + BatchNormalization
+  - Matmul + Add
+  - Matmul + Add + Mul + Add
 """
 from typing import Mapping
 import argparse
@@ -82,6 +84,56 @@ class Fuser:
                          [mm_input_name, mm_weight_name, mm_weight_name+"_bias"],
                          mm.output)
         nodes.append(gemm)
+
+      elif node.op_type == "MatMul" and self.get_optype(i+1) == "Add" and self.get_optype(i+2) == "Mul" and self.get_optype(i+3) == "Add":
+        
+        mm = node
+        mm_input_name, mm_weight_name = mm.input
+        
+        add1 = self.nodes[i+1]
+        add1_input_name, add1_bias_name = add1.input
+
+        mul = self.nodes[i+2]
+        mul_input_name, mul_weight_name = mul.input
+
+        add2 = self.nodes[i+3]
+        add2_input_name, add2_bias_name = add2.input
+
+        mm_weight = numpy_helper.to_array(self.initializers[mm_weight_name])
+        add1_bias = numpy_helper.to_array(self.initializers[add1_bias_name])
+        mul_weight = numpy_helper.to_array(self.initializers[mul_weight_name])
+        add2_bias = numpy_helper.to_array(self.initializers[add2_bias_name])
+
+        # (x^T w + add1)^T mul + add2 = x^T (w . mul) + add1 . mul + add2
+        new_mm_weight = mm_weight * mul_weight
+        new_mm_bias = add1_bias * mul_weight + add2_bias
+        initializers[mm_weight_name] = numpy_helper.from_array(new_mm_weight, name=mm_weight_name)
+        initializers[add1_bias_name] = numpy_helper.from_array(new_mm_bias, name=add1_bias_name)
+
+        del initializers[mul_weight_name]
+        del initializers[add2_bias_name]
+
+        gemm = make_node("Gemm",
+                         [mm_input_name, mm_weight_name, add1_bias_name],
+                         add2.output)
+        nodes.append(gemm)
+        i += 3 # skip Add, Mul, Add
+
+      elif node.op_type == "MatMul" and self.get_optype(i+1) == "Add":
+        mm = node
+        mm_input_name, mm_weight_name = mm.input
+        
+        add = self.nodes[i+1]
+        add_input_name, add_bias_name = add.input
+
+        mm_weight = numpy_helper.to_array(self.initializers[mm_weight_name])
+        add_bias = numpy_helper.to_array(self.initializers[add_bias_name])
+
+        gemm = make_node("Gemm",
+                         [mm_input_name, mm_weight_name, add_bias_name],
+                         add.output)
+        nodes.append(gemm)
+        i += 1 # skip Add
 
       else:
         nodes.append(node)

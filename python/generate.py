@@ -11,7 +11,7 @@ from generator_cpp import CppGenerator
 from generator_xtg import XtgGenerator
 from generator_cfg import CfgGenerator
 from generator_host import HostGenerator
-from op_parsers import save_tensor, pad_lastdim
+from op_parsers import save_tensor, pad_lastdim, get_shape_str
 
 
 def generate_inter_graph(onnx_path: str,
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     single_input = single_input.reshape(-1, *(single_input.shape[-len(input_shape)+1:]))
     many_inputs = many_inputs.reshape(-1, *(many_inputs.shape[-len(input_shape)+1:]))
     # for tiny_ad
-    single_input = single_input[:14]
-    many_inputs = many_inputs[:14*args.ndata]
+    single_input = single_input[[0]]
+    many_inputs = many_inputs[:args.ndata]
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}
   ort_outs = ort_session.run(None, ort_inputs)
 
@@ -91,8 +91,12 @@ if __name__ == '__main__':
   many_inputs = pad_lastdim(many_inputs, "many inputs", inp_shape[-1])
   save_tensor(model_input_path, many_inputs)
 
-  out_filename = parser.get_output_filename(False)[0]
-  model_output_path = f"{args.data}/{out_filename}"
+  model_output_path = f"{args.data}/{parser.get_output_filename(False)[0]}"
+  output_path_chunks = model_output_path.split("_")
+  for i, chunk in enumerate(output_path_chunks):
+    if "shape" in chunk:
+      output_path_chunks[i] = get_shape_str(ort_outs[-1])
+  model_output_path = "_".join(output_path_chunks)
   save_tensor(model_output_path, ort_outs[-1])
 
   # Cleanup
