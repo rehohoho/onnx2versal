@@ -314,16 +314,20 @@ class ConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=2*overlap)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=2*overlap)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
     
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
       self.graph = "ConvReluStreamGraph"
       self.disable_last_file_output = True
-      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= 32768
+      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
     else:
-      self.graph = "ConvReluChunkHPktStreamGraph" if self.HCHUNK - overlap*2 >= 0 else "ConvReluChunkHStreamGraph"
-      self.split_kernel = "SplitFilterFloatPktStream" if self.HCHUNK - overlap*2 >= 0 else "SplitFilterFloatStream"
+      if self.HCHUNK - overlap*2 >= 0 and self.B * self.C * self.HCHUNK * PAD_W * self.dtype.itemsize <= MAX_HEAP_SIZE:
+        self.graph = "ConvReluChunkHPktStreamGraph"
+        self.split_kernel = "SplitFilterFloatPktStream"
+      else:
+        self.graph = "ConvReluChunkHStreamGraph"
+        self.split_kernel = "SplitFilterFloatStream"
     
       LCNT = (PAD_H - self.HCHUNK) // (self.HCHUNK - overlap) + 1
       if LCNT > 8:
@@ -347,22 +351,21 @@ class ConvOp(OpParser):
     self.pick_graph()
     
     kernel = None
-    if self.STEP_H in [1,2] and self.STEP_W in [1,2]:
-      if self.KH == self.KW == 1 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
-        kernel = "Conv1x1Out4ReluStream"
-        tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
-      elif self.KH == self.KW == 1 and self.GROUP == 1 and self.INP_W_PAD % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
-        kernel = "Conv1x1ReluPktStream" if self.graph == "ConvReluChunkHPktStreamGraph" else "Conv1x1ReluStream"
-        tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
-      elif self.KW <= 4 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
-        kernel = "ConvHx4Out4ReluStream"
-        tw = pad_lastdim(tw, "Conv weights", 4)
-      elif self.KW <= 4 and self.INP_W_PAD % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
-        kernel = "ConvHx4ReluPktStream" if self.graph == "ConvReluChunkHPktStreamGraph" else "ConvHx4ReluStream"
-        tw = pad_lastdim(tw, "Conv weights", 4)
-      elif self.KW <= 6 and self.INP_W_PAD % 4 == 0 and self.OUT_W_PAD % 8 == 0 and self.STEP_H == 1 and self.STEP_W == 1:
-        tw = pad_lastdim(tw, "Conv weights", get_vector_boundary(tw))
-        kernel = "ConvHx8ReluStream"
+    if self.KH == self.KW == 1 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
+      kernel = "Conv1x1Out4ReluStream"
+      tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
+    elif self.KH == self.KW == 1 and self.GROUP == 1 and self.INP_W_PAD % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2):
+      kernel = "Conv1x1ReluPktStream" if self.graph == "ConvReluChunkHPktStreamGraph" else "Conv1x1ReluStream"
+      tw = pad_lastdim(tw.reshape(self.M, -1), "Conv weights", get_vector_boundary(tw))
+    elif self.KW <= 4 and self.OUT_W_PAD == 4 and self.STEP_H == self.STEP_W == 1:
+      kernel = "ConvHx4Out4ReluStream"
+      tw = pad_lastdim(tw, "Conv weights", 4)
+    elif self.KW <= 4 and self.INP_W_PAD % 4 == 0 and (self.OUT_W_PAD % 8 == 0 and self.STEP_W == 1 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 2 or self.OUT_W_PAD % 4 == 0 and self.STEP_W == 4):
+      kernel = "ConvHx4ReluPktStream" if self.graph == "ConvReluChunkHPktStreamGraph" else "ConvHx4ReluStream"
+      tw = pad_lastdim(tw, "Conv weights", 4)
+    elif self.KW <= 6 and self.INP_W_PAD % 4 == 0 and self.OUT_W_PAD % 8 == 0 and self.STEP_H == 1 and self.STEP_W == 1:
+      tw = pad_lastdim(tw, "Conv weights", get_vector_boundary(tw))
+      kernel = "ConvHx8ReluStream"
     
     if kernel is None:
       kernel = "ConvReluScalarStream"
@@ -801,16 +804,20 @@ class QLinearConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, MAX_HEAP_SIZE, offset, force_split_chunksize=2*overlap)
+    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=2*overlap)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
     if self.HCHUNK >= PAD_H - (self.STEP_H-1):
       self.graph = "QLinearConvStreamGraph"
       self.disable_last_file_output = True
-      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= MAX_HEAP_SIZE
+      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
     else:
-      self.graph = "QLinearConvChunkHPktStreamGraph" if self.HCHUNK - overlap*2 >= 0 else "QLinearConvChunkHStreamGraph"
-      self.split_kernel = "SplitFilterInt8PktStream" if self.HCHUNK - overlap*2 >= 0 else "SplitInt8"
+      if self.HCHUNK - overlap*2 >= 0 and self.B * self.C * self.HCHUNK * PAD_W * self.dtype.itemsize <= MAX_HEAP_SIZE:
+        self.graph = "QLinearConvChunkHPktStreamGraph"
+        self.split_kernel = "SplitFilterInt8PktStream"
+      else:
+        self.graph = "QLinearConvChunkHStreamGraph"
+        self.split_kernel = "SplitInt8"
     
   def register_params(self, 
                       tensors: List[np.ndarray], 
