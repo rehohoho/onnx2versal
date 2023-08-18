@@ -444,13 +444,13 @@ void ConvHx8ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
 
 #define MAC_ROW(acc) \
   for (int i = 0; i < KW; i++) { \
-    acc = fpmac(acc, data, i, 0x76543210, *(v8float *) w_ptr, i, 0); \
+    acc = fpmac(acc, data, i, X_OFFSET, *(v8float *) w_ptr, i, 0); \
   }
 
 #define UPD_DATA \
   data = upd_w(data, 0, window_readincr_v8(in)); \
-  data = upd_v(data, 2, window_readincr_v4(in)); \
-  window_incr(in, INP_W - 12);
+  data = upd_w(data, 1, window_readincr_v8(in)); \
+  window_incr(in, INP_W - 16);
 
 // double acc require store in cache and write where VLIW underutilized
 template <int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, 
@@ -474,7 +474,7 @@ void ConvHx4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
       w_ptr -= CKK_ROW_SIZE;
       
       for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
-        for (int w = 0; w < OUT_W_PAD; w+=8/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
         
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           
@@ -486,15 +486,14 @@ void ConvHx4ReluStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, 
             }
             window_incr(in, INP_H*INP_W - KH*INP_W);
           } // C_PER_M
-          window_incr(in, -C_PER_M*INP_H*INP_W + 8);
+          window_incr(in, -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP);
           w_ptr -= CKK_ROW_SIZE;
 
           if (IS_RELU) {
             acc1 = fpmax(acc1, null_v8float(), 0, 0x76543210);
           }
 
-          if (STEP_W == 2) {
-            acc1 = fpshuffle(acc1, 0, 0x00006420);
+          if (STEP_W > 1) {
             writeincr_v4(out, ext_v(acc1, 0));
           } else {
             writeincr_v4(out, ext_v(acc1, 0));
@@ -789,12 +788,12 @@ void ConvHx4ReluPktStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
 
 #define MAC_ROW(acc) \
   for (int i = 0; i < KW; i++) { \
-    acc = fpmac(acc, data, i, 0x76543210, *(v8float *) w_ptr, i, 0); \
+    acc = fpmac(acc, data, i, X_OFFSET, *(v8float *) w_ptr, i, 0); \
   }
 
 #define UPD_DATA \
   data = upd_w(data, 0, *(v8float *) in_ptr); in_ptr += 8; \
-  data = upd_v(data, 2, *(v4float *) in_ptr); in_ptr += INP_W - 8;
+  data = upd_w(data, 1, *(v8float *) in_ptr); in_ptr += INP_W - 8;
   
   float* restrict w_ptr = (float *) ckk_row;
   float* restrict in_ptr = (float*) in;
@@ -819,7 +818,7 @@ void ConvHx4ReluPktStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
       w_ptr -= CKK_ROW_SIZE;
       
       for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
-        for (int w = 0; w < OUT_W_PAD; w+=8/STEP_W) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
         
           v8float acc1 = aie::broadcast<float, 8>(bias[m]);
           
@@ -831,15 +830,14 @@ void ConvHx4ReluPktStream<INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, 
             }
             in_ptr += INP_H*INP_W - KH*INP_W;
           } // C_PER_M
-          in_ptr += -C_PER_M*INP_H*INP_W + 8;
+          in_ptr += -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP;
           w_ptr -= CKK_ROW_SIZE;
 
           if (IS_RELU) {
             acc1 = fpmax(acc1, null_v8float(), 0, 0x76543210);
           }
 
-          if (STEP_W == 2) {
-            acc1 = fpshuffle(acc1, 0, 0x00006420);
+          if (STEP_W > 1) {
             put_wms(0, ext_v(acc1, 0));
           } else {
             put_wms(0, ext_v(acc1, 0));

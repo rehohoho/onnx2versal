@@ -284,6 +284,9 @@ class ConvHx4ReluStream {
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int C_PER_M = C / GROUP; // each m kernel of shape (1,C_PER_M,K,K) applied on input of shape (1,C_PER_M,H,W)
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);
+    static constexpr unsigned int X_OFFSET = (STEP_W == 1) ? 0x76543210 : ((STEP_W == 2) ? 0x00006420 : 0x0000c840);
+    static constexpr int W_LOOP_STEP       = (STEP_W == 1) ? 8 : 4;
+    static constexpr int W_LOOP_IN_STEP    = (STEP_W != 4) ? 8 : 16;
 
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[CKK_ROW_SIZE];
@@ -302,9 +305,9 @@ class ConvHx4ReluStream {
     static void registerKernelClass() {
       static_assert(KW<=4);
       static_assert(INP_W%4==0);
-      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2);
-      static_assert(STEP_H == 1 || STEP_H == 2);
-      static_assert(STEP_W == 1 || STEP_W == 2);
+      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2 || OUT_W_PAD%4==0 && STEP_W == 4);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
       REGISTER_FUNCTION(ConvHx4ReluStream::filter);
       REGISTER_PARAMETER(bias);
     }
@@ -324,6 +327,7 @@ class ConvHx4ReluStreamMultiRow {
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
     static constexpr int CKK_ROW_SIZE = C*((KH*KW+3)/4*4);
+    static constexpr unsigned int X_OFFSET = 0x76543210;
     
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[CKK_ROW_SIZE];
@@ -491,6 +495,10 @@ class ConvHx4ReluPktStream {
     static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+3)/4*4);
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
 
+    static constexpr unsigned int X_OFFSET = (STEP_W == 1) ? 0x76543210 : ((STEP_W == 2) ? 0x00006420 : 0x0000c840);
+    static constexpr int W_LOOP_STEP       = (STEP_W == 1) ? 8 : 4;
+    static constexpr int W_LOOP_IN_STEP    = (STEP_W != 4) ? 8 : 16;
+
     alignas(32) float (&bias)[M];
     alignas(32) float ckk_row[CKK_ROW_SIZE];
     alignas(32) float in[INP_SIZE];
@@ -509,9 +517,9 @@ class ConvHx4ReluPktStream {
     static void registerKernelClass() {
       static_assert(KW<=4);
       static_assert(INP_W%4==0);
-      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2);
-      static_assert(STEP_H == 1 || STEP_H == 2);
-      static_assert(STEP_W == 1 || STEP_W == 2);
+      static_assert(OUT_W_PAD%8==0 && STEP_W==1 || OUT_W_PAD%4==0 && STEP_W==2 || OUT_W_PAD%4==0 && STEP_W == 4);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
       REGISTER_FUNCTION(ConvHx4ReluPktStream::filter);
       REGISTER_PARAMETER(bias);
     }
