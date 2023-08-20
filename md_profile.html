@@ -92,16 +92,9 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
   <div class="headertitle"><div class="title">Profiling</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md25"></a></p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md25"></a> </p>
 <h2><a class="anchor" id="autotoc_md26"></a>
-Metrics</h2>
-<ul>
-<li>Latency is calculated based on cycle count from cycle-accurate aiesimulator through AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator logs.</li>
-<li>Throughput is calculated based on output bandwidth over multiple iterations. Obtained by running <code>throughput.py</code> on aiesimulator output files and assumes AI engine is clocked at 1GHz.</li>
-<li>Accuracy is calculated by comparing argmaxed probabilities or finding mean squared anomaly scores then computing area under curve. Obtained by running <code>get_accuracy.py</code> on x86simulator outputs over 1000 samples.</li>
-</ul>
-<h2><a class="anchor" id="autotoc_md27"></a>
-MLPerf Open Division (hls4ml models)</h2>
+Tiny MLPerf Open Division (hls4ml models)</h2>
 <p>Following models used are trained from hls4ml-finn repositories. Quality targets are taken from <a href="https://cds.cern.ch/record/2826586/files/2206.11791.pdf">Hls4ml MLPerf Tiny paper</a>.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -125,7 +118,7 @@ MLPerf Open Division (hls4ml models)</h2>
  22258   </td><td class="markdownTableBodyCenter">62/68/125/9/7 <br  />
  90/95/144/2/5   </td><td class="markdownTableBodyCenter">84.1% (Top 1)   </td><td class="markdownTableBodyCenter">83.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ic/RN07/training/resnet_v1_eembc.py">CNN</a>   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md28"></a>
+<h2><a class="anchor" id="autotoc_md27"></a>
 MLPerf Closed Division (MLPerf pretrained)</h2>
 <p>Following models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark. Quality targets are taken from <a href="https://github.com/mlcommons/tiny/tree/master/benchmark">MLPerf Tiny closed division benchmarks</a>.</p>
 <table class="markdownTable">
@@ -157,6 +150,13 @@ MLPerf Closed Division (MLPerf pretrained)</h2>
  968992   </td><td class="markdownTableBodyCenter">122/156/255/11/16<br  />
  138/143/199/2/0   </td><td class="markdownTableBodyCenter">0.880 (AUC)   </td><td class="markdownTableBodyCenter">0.85 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py">Deep AutoEncoder</a>   </td></tr>
 </table>
+<h2><a class="anchor" id="autotoc_md28"></a>
+Metrics</h2>
+<ul>
+<li>Latency is calculated based on cycle count from cycle-accurate aiesimulator through AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator logs.</li>
+<li>Throughput is calculated based on output bandwidth over multiple iterations. Obtained by running <code>throughput.py</code> on aiesimulator output files and assumes AI engine is clocked at 1GHz.</li>
+<li>Accuracy is calculated by comparing argmaxed probabilities or finding mean squared anomaly scores then computing area under curve. Obtained by running <code>get_accuracy.py</code> on x86simulator outputs over 1000 samples.</li>
+</ul>
 <h1><a class="anchor" id="autotoc_md29"></a>
 Procedure</h1>
 <p>1) Use pretrained models from MLPerf Tiny Benchmark or hls4ml models from links in table above. 2) Do ops fusion. 3) Do post-training quantization using ONNXRuntime 4) Generate AI Engine graph 5) Run on AIEsimulator for performance metrics, x86simulator for accuracy metrics</p>

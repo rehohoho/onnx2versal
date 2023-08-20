@@ -42,9 +42,9 @@ var NAVTREE =
     ] ],
     [ "Profiling", "md_profile.html", [
       [ "Procedure", "md_profile.html#autotoc_md29", [
-        [ "Metrics", "md_profile.html#autotoc_md26", null ],
-        [ "MLPerf Open Division (hls4ml models)", "md_profile.html#autotoc_md27", null ],
-        [ "MLPerf Closed Division (MLPerf pretrained)", "md_profile.html#autotoc_md28", null ],
+        [ "Tiny MLPerf Open Division (hls4ml models)", "md_profile.html#autotoc_md26", null ],
+        [ "MLPerf Closed Division (MLPerf pretrained)", "md_profile.html#autotoc_md27", null ],
+        [ "Metrics", "md_profile.html#autotoc_md28", null ],
         [ "Experiment Links", "md_profile.html#autotoc_md30", null ],
         [ "Replication", "md_profile.html#autotoc_md31", null ],
         [ "Result outputs", "md_profile.html#autotoc_md32", null ]
