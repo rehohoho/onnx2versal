@@ -92,70 +92,83 @@ $(document).ready(function(){initNavTree('md_profile.html',''); initResizable();
   <div class="headertitle"><div class="title">Profiling</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md25"></a> </p><table class="markdownTable">
+<div class="textblock"><p><a class="anchor" id="autotoc_md25"></a></p>
+<h2><a class="anchor" id="autotoc_md26"></a>
+Metrics</h2>
+<ul>
+<li>Latency is calculated based on cycle count from cycle-accurate aiesimulator through AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator logs.</li>
+<li>Throughput is calculated based on output bandwidth over multiple iterations. Obtained by running <code>throughput.py</code> on aiesimulator output files and assumes AI engine is clocked at 1GHz.</li>
+<li>Accuracy is calculated by comparing argmaxed probabilities or finding mean squared anomaly scores then computing area under curve. Obtained by running <code>get_accuracy.py</code> on x86simulator outputs over 1000 samples.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md27"></a>
+MLPerf Open Division (hls4ml models)</h2>
+<p>Following models used are trained from hls4ml-finn repositories. Quality targets are taken from <a href="https://cds.cern.ch/record/2826586/files/2206.11791.pdf">Hls4ml MLPerf Tiny paper</a>.</p>
+<table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadCenter">Use Case   </th><th class="markdownTableHeadCenter">Dtype   </th><th class="markdownTableHeadCenter">Latency (cycles or ns)   </th><th class="markdownTableHeadCenter">Throughput (samples/s)   </th><th class="markdownTableHeadCenter">Resource Utilization (Kernels/Buffers/Stream/PLIO/GMIO)   </th><th class="markdownTableHeadCenter">Accuracy (first 1k)   </th><th class="markdownTableHeadCenter">Quality Target<br  />
-(Closed&amp;#160;Division)   </th><th class="markdownTableHeadCenter">Model    </th></tr>
+<th class="markdownTableHeadCenter">Use Case   </th><th class="markdownTableHeadCenter">Dtype   </th><th class="markdownTableHeadCenter">Latency (cycles or ns)   </th><th class="markdownTableHeadCenter">Throughput (samples/s)   </th><th class="markdownTableHeadCenter">Resource Utilization (Kernels/Buffers/Stream/PLIO/GMIO)   </th><th class="markdownTableHeadCenter">Accuracy (first 1k)   </th><th class="markdownTableHeadCenter">Quality Target   </th><th class="markdownTableHeadCenter">Model    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyCenter">Keyword Spotting*   </td><td class="markdownTableBodyCenter">fp32 <br  />
- uint8   </td><td class="markdownTableBodyCenter">839599 <br  />
- 402772   </td><td class="markdownTableBodyCenter">4109 <br  />
- 8080   </td><td class="markdownTableBodyCenter">100/110/161/2/9 <br  />
- 108/119/166/2/9   </td><td class="markdownTableBodyCenter">91.1% (Top 1)   </td><td class="markdownTableBodyCenter">90% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/keyword_spotting/keras_model.py">DS-CNN</a>    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyCenter">Visual Wake Words*   </td><td class="markdownTableBodyCenter">fp32 <br  />
- uint8   </td><td class="markdownTableBodyCenter">- <br  />
- 2249859   </td><td class="markdownTableBodyCenter">- <br  />
- 3384   </td><td class="markdownTableBodyCenter">- <br  />
- 101/103/189/15/27   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter">80% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py">MobileNet</a>    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyCenter">Image Classification*   </td><td class="markdownTableBodyCenter">fp32 <br  />
- uint8   </td><td class="markdownTableBodyCenter">808574 <br  />
- 492622   </td><td class="markdownTableBodyCenter">3410 <br  />
- 7201   </td><td class="markdownTableBodyCenter">134/150/264/14/9 <br  />
- 116/127/214/16/9   </td><td class="markdownTableBodyCenter">86.8% (Top 1)   </td><td class="markdownTableBodyCenter">85% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py">ResNet</a>    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyCenter">Anomaly Detection*   </td><td class="markdownTableBodyCenter">fp32 <br  />
- uint8   </td><td class="markdownTableBodyCenter">28453 <br  />
- 4625   </td><td class="markdownTableBodyCenter">102944 <br  />
- 968992   </td><td class="markdownTableBodyCenter">122/156/255/11/16<br  />
- 138/143/199/2/0   </td><td class="markdownTableBodyCenter">0.880 (AUC)   </td><td class="markdownTableBodyCenter">0.85 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py">Deep AutoEncoder</a>    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyCenter">Keyword Spotting**   </td><td class="markdownTableBodyCenter">fp32 <br  />
+<td class="markdownTableBodyCenter">Keyword Spotting   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">35076 <br  />
  3159   </td><td class="markdownTableBodyCenter">75369 <br  />
  1157407   </td><td class="markdownTableBodyCenter">46/56/116/5/24 <br  />
  48/51/83/7/0   </td><td class="markdownTableBodyCenter">84.8% (Top 1)   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/kws/KWS-W3A3/training/model/models.py">MLP</a>    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyCenter">Anomaly Detection**   </td><td class="markdownTableBodyCenter">fp32 <br  />
+<td class="markdownTableBodyCenter">Anomaly Detection   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">3165 <br  />
  1014   </td><td class="markdownTableBodyCenter">3205128 <br  />
  7142857   </td><td class="markdownTableBodyCenter">44/58/128/7/0 <br  />
  46/48/76/2/0   </td><td class="markdownTableBodyCenter">0.830 (AUC)   </td><td class="markdownTableBodyCenter">0.83 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ad/AD08/training/keras_model.py">AutoEncoder</a>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyCenter">Image Classification**   </td><td class="markdownTableBodyCenter">fp32 <br  />
+<td class="markdownTableBodyCenter">Image Classification   </td><td class="markdownTableBodyCenter">fp32 <br  />
  uint8   </td><td class="markdownTableBodyCenter">739274 <br  />
  174992   </td><td class="markdownTableBodyCenter">4324 <br  />
  22258   </td><td class="markdownTableBodyCenter">62/68/125/9/7 <br  />
  90/95/144/2/5   </td><td class="markdownTableBodyCenter">84.1% (Top 1)   </td><td class="markdownTableBodyCenter">83.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ic/RN07/training/resnet_v1_eembc.py">CNN</a>   </td></tr>
 </table>
-<p>*Models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark. Quality target s are taken from <a href="https://github.com/mlcommons/tiny/tree/master/benchmark">MLPerf Tiny closed division benchmarks</a>. <br  />
- **Models used are trained from hls4ml-finn repositories. Quality targets are taken from <a href="https://cds.cern.ch/record/2826586/files/2206.11791.pdf">Hls4ml MLPerf Tiny paper</a>.</p>
-<ul>
-<li>Latency is calculated based on AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator logs.</li>
-<li>Throughput is calculated based on output bandwidth over multiple iterations. Obtained by running <code>throughput.py</code> on aiesimulator output files.</li>
-<li>Accuracy is calculated by comparing argmaxed probabilities or finding mean squared anomaly scores then computing area under curve. Obtained by running <code>get_accuracy.py</code> on x86simulator outputs over 1000 samples.</li>
-</ul>
-<h1><a class="anchor" id="autotoc_md26"></a>
+<h2><a class="anchor" id="autotoc_md28"></a>
+MLPerf Closed Division (MLPerf pretrained)</h2>
+<p>Following models used are pretrained models <em>directly</em> from MLPerf Tiny Benchmark. Quality targets are taken from <a href="https://github.com/mlcommons/tiny/tree/master/benchmark">MLPerf Tiny closed division benchmarks</a>.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadCenter">Use Case   </th><th class="markdownTableHeadCenter">Dtype   </th><th class="markdownTableHeadCenter">Latency (cycles or ns)   </th><th class="markdownTableHeadCenter">Throughput (samples/s)   </th><th class="markdownTableHeadCenter">Resource Utilization (Kernels/Buffers/Stream/PLIO/GMIO)   </th><th class="markdownTableHeadCenter">Accuracy (first 1k)   </th><th class="markdownTableHeadCenter">Quality Target<br  />
+(Closed&amp;#160;Division)   </th><th class="markdownTableHeadCenter">Model    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyCenter">Keyword Spotting   </td><td class="markdownTableBodyCenter">fp32 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">839599 <br  />
+ 402772   </td><td class="markdownTableBodyCenter">4109 <br  />
+ 8080   </td><td class="markdownTableBodyCenter">100/110/161/2/9 <br  />
+ 108/119/166/2/9   </td><td class="markdownTableBodyCenter">91.1% (Top 1)   </td><td class="markdownTableBodyCenter">90% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/keyword_spotting/keras_model.py">DS-CNN</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyCenter">Visual Wake Words   </td><td class="markdownTableBodyCenter">fp32 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">- <br  />
+ 2249859   </td><td class="markdownTableBodyCenter">- <br  />
+ 3384   </td><td class="markdownTableBodyCenter">- <br  />
+ 101/103/189/15/27   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter">80% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/visual_wake_words/vww_model.py">MobileNet</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyCenter">Image Classification   </td><td class="markdownTableBodyCenter">fp32 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">808574 <br  />
+ 492622   </td><td class="markdownTableBodyCenter">3410 <br  />
+ 7201   </td><td class="markdownTableBodyCenter">134/150/264/14/9 <br  />
+ 116/127/214/16/9   </td><td class="markdownTableBodyCenter">86.8% (Top 1)   </td><td class="markdownTableBodyCenter">85% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/image_classification/keras_model.py">ResNet</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyCenter">Anomaly Detection   </td><td class="markdownTableBodyCenter">fp32 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">28453 <br  />
+ 4625   </td><td class="markdownTableBodyCenter">102944 <br  />
+ 968992   </td><td class="markdownTableBodyCenter">122/156/255/11/16<br  />
+ 138/143/199/2/0   </td><td class="markdownTableBodyCenter">0.880 (AUC)   </td><td class="markdownTableBodyCenter">0.85 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/mlcommons/tiny/blob/master/benchmark/training/anomaly_detection/keras_model.py">Deep AutoEncoder</a>   </td></tr>
+</table>
+<h1><a class="anchor" id="autotoc_md29"></a>
 Procedure</h1>
-<p>1) Use pretrained models from MLPerf Tiny Benchmark 2) Do post-training quantization using ONNXRuntime 3) Generate AI Engine graph 4) Run on AIEsimulator for performance metrics, x86simulator for accuracy metrics</p>
+<p>1) Use pretrained models from MLPerf Tiny Benchmark or hls4ml models from links in table above. 2) Do ops fusion. 3) Do post-training quantization using ONNXRuntime 4) Generate AI Engine graph 5) Run on AIEsimulator for performance metrics, x86simulator for accuracy metrics</p>
+<h2><a class="anchor" id="autotoc_md30"></a>
+Experiment Links</h2>
 <p>The models, data and results for table above can be found below. Extract them in the root directory of this repo. <br  />
 </p><ul>
-<li>Models and data used: <code><a href="https://drive.google.com/file/d/1xTdA5xwMr3M7DTGJ3BQoC6lKG6iUJT2G/view?usp=sharing">https://drive.google.com/file/d/1xTdA5xwMr3M7DTGJ3BQoC6lKG6iUJT2G/view?usp=sharing</a></code></li>
-<li>Simulator results: <code><a href="https://drive.google.com/file/d/1OQNMryfzPzbp40_CbXxMu3EwbuD6Rml_/view?usp=sharing">https://drive.google.com/file/d/1OQNMryfzPzbp40_CbXxMu3EwbuD6Rml_/view?usp=sharing</a></code></li>
+<li><a href="https://drive.google.com/file/d/1xTdA5xwMr3M7DTGJ3BQoC6lKG6iUJT2G/view?usp=sharing">Models and data used</a></li>
+<li><a href="https://drive.google.com/file/d/1OQNMryfzPzbp40_CbXxMu3EwbuD6Rml_/view?usp=sharing">Simulator results</a></li>
 </ul>
-<h1><a class="anchor" id="autotoc_md27"></a>
-Replication</h1>
+<h2><a class="anchor" id="autotoc_md31"></a>
+Replication</h2>
 <p>See requirements at README.</p>
 <p>For float32 model's latency and throughput run aiesimulator </p><div class="fragment"><div class="line">GRAPH=tiny_kws</div>
 <div class="line">python fuse_onnx.py ../models/${GRAPH}.onnx ../models/${GRAPH}.onnx</div>
@@ -174,8 +187,8 @@ Replication</h1>
 <div class="line">TARGET=hw_emu DOUT=0 DLOG=0 GRAPH=${GRAPH} make graph clean_reports aiesim ITER_CNT=2 # throughput</div>
 <div class="line">python throughput.py reports_dir/$GRAPH/hw_emu/aiesimulator_output/k*</div>
 </div><!-- fragment --><p>For accuracy, run x86simulator </p><div class="fragment"><div class="line">TARGET=sw_emu EXTIO=0 DOUT=0 DLOG=0 GRAPH=${GRAPH} make graph clean_reports aiesim ITER_CNT=1000</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md28"></a>
-Result outputs</h1>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md32"></a>
+Result outputs</h2>
 <p>This codebase outputs start and ending cycles for each kernel used when running aiesimulator. At the end of each simulation, it does a <code>np.allclose</code> check against golden values from running the ONNX model with ONNXRuntime with absolute tolerance 1e-05, relative tolerance 1e-03. If <code>absolute(a - b) &lt;= (atol + rtol * absolute(b))</code> is element-wise True, the check returns OK. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

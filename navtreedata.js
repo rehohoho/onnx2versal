@@ -41,9 +41,14 @@ var NAVTREE =
       [ "Test system on hardware", "md_lenet__example.html#autotoc_md24", null ]
     ] ],
     [ "Profiling", "md_profile.html", [
-      [ "Procedure", "md_profile.html#autotoc_md26", null ],
-      [ "Replication", "md_profile.html#autotoc_md27", null ],
-      [ "Result outputs", "md_profile.html#autotoc_md28", null ]
+      [ "Procedure", "md_profile.html#autotoc_md29", [
+        [ "Metrics", "md_profile.html#autotoc_md26", null ],
+        [ "MLPerf Open Division (hls4ml models)", "md_profile.html#autotoc_md27", null ],
+        [ "MLPerf Closed Division (MLPerf pretrained)", "md_profile.html#autotoc_md28", null ],
+        [ "Experiment Links", "md_profile.html#autotoc_md30", null ],
+        [ "Replication", "md_profile.html#autotoc_md31", null ],
+        [ "Result outputs", "md_profile.html#autotoc_md32", null ]
+      ] ]
     ] ],
     [ "Modules", "modules.html", "modules" ],
     [ "Classes", "annotated.html", [
@@ -63,7 +68,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "add_8h_source.html",
-"qlinearpool_8h_source.html"
+"qgemm_8h_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
