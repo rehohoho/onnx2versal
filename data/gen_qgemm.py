@@ -29,6 +29,10 @@ tbias_shift = pad_lastdim(tbias_shift, "QGemm tbias_shift", get_vector_boundary(
 print("int8weights\n", tw.flatten().tolist(), "\n\n\n")
 print("int8bias\n", tbias_shift.flatten().tolist(), "\n\n\n")
 
+# stream weights
+tw_stream = tw.reshape(K, -1, 16).transpose(1,0,2)
+print("int8weights_stream\n", tw_stream.flatten().tolist(), "\n\n\n")
+
 tout = torch.nn.functional.linear(
   torch.Tensor(tin.astype(int) - tin_zero),
   torch.Tensor(tw.T.astype(int) - tw_zero), #NxK

@@ -35,7 +35,7 @@
  */
 template <template<typename, typename, int, int, int> class QGEMM, 
   typename TT, typename TTPARAM, int M, int K, int N>
-class QgemmStreamGraph : public adf::graph {
+class QgemmGraph : public adf::graph {
 
   private:
     adf::kernel k[1];
@@ -44,7 +44,7 @@ class QgemmStreamGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    QgemmStreamGraph(
+    QgemmGraph(
       std::vector<TTPARAM> weights,
       std::vector<int32_t> bias,
       float x_scale,
@@ -75,6 +75,57 @@ class QgemmStreamGraph : public adf::graph {
 };
 
 
+
+/**
+ * @brief Single instance graph that stores weights and biases
+ * 
+ * @connections
+ * @connect{pin[0], M*K}
+ * @connect{pin[1], A*K*N}, where A depends on kernel 
+ * @connect{pout[0], stream M*N}
+ * @endconnections
+ */
+template <template<typename, typename, int, int, int> class QGEMM, 
+  typename TT, typename TTPARAM, int M, int K, int N>
+class QgemmStreamGraph : public adf::graph {
+
+  private:
+    adf::kernel k[1];
+
+  public:
+    adf::port<input> pin[2];
+    adf::port<output> pout[1];
+
+    QgemmStreamGraph(
+      std::vector<int32_t> bias,
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      TT x_zero,
+      TTPARAM w_zero,
+      TT y_zero
+    ) { 
+      k[0] = adf::kernel::create_object<QGEMM<TT, TTPARAM, M, K, N>>(
+        bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
+      adf::source(k[0]) = "qgemm.cc";
+      adf::headers(k[0]) = {"qgemm.h"};
+      adf::runtime<ratio>(k[0]) = 0.6;
+      adf::heap_size(k[0]) = 24576; // assume KxN > MxN
+
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (pin[1], k[0].in[1]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      adf::samples_per_iteration(k[0].in[0]) = M*K;
+      adf::samples_per_iteration(k[0].out[0]) = M*N;
+
+      adf::location_constraint tilePos = adf::location<adf::kernel>(k[0]);
+      adf::location<adf::parameter>(k[0].param[0]) = tilePos;
+      adf::location<adf::parameter>(k[0].param[0]) = adf::offset(0);
+    }
+
+};
+
+
 /**
  * @brief Multiinstance graph for MxK times KxN that stores weights and biases
  * Requires KxN_RND weight, NCHUNK%8=0, N%4=0
@@ -87,7 +138,7 @@ template <
   template<typename, int, int, int, int> class CONCAT, 
   int NCHUNK, 
   typename TT, typename TTPARAM, int M, int K, int N>
-class QgemmChunkNStreamGraph : public adf::graph {
+class QgemmChunkNGraph : public adf::graph {
 
   private:
 
@@ -99,7 +150,7 @@ class QgemmChunkNStreamGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    QgemmChunkNStreamGraph(
+    QgemmChunkNGraph(
       std::vector<TTPARAM> weights,  // KxN
       std::vector<int32_t> bias,    // N
       float x_scale,

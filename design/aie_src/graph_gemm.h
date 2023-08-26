@@ -109,6 +109,7 @@ class GemmReluStreamGraph : public adf::graph {
       adf::connect<adf::stream> (pin[0], k[0].in[0]);
       adf::connect<adf::stream> (pin[1], k[0].in[1]);
       adf::connect<adf::window<M*N*4>> (k[0].out[0], pout[0]);
+      adf::samples_per_iteration(k[0].in[0]) = M*K;
     }
 
 };
