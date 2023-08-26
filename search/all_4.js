@@ -1,16 +1,7 @@
 var searchData=
 [
-  ['gemm_0',['Gemm',['../group__Gemm.html',1,'']]],
-  ['gemmkernels_1',['GemmKernels',['../group__GemmKernels.html',1,'']]],
-  ['gemmrelugraph_2',['GemmReluGraph',['../classGemmReluGraph.html',1,'']]],
-  ['gemmrelumkkn_3',['GemmReluMKKN',['../classGemmReluMKKN.html',1,'']]],
-  ['gemmrelumkknchunkgraph_4',['GemmReluMkknChunkGraph',['../classGemmReluMkknChunkGraph.html',1,'']]],
-  ['gemmrelumkknchunknstreamgraph_5',['GemmReluMkknChunkNStreamGraph',['../classGemmReluMkknChunkNStreamGraph.html',1,'']]],
-  ['gemmrelumkknstream_6',['GemmReluMKKNStream',['../classGemmReluMKKNStream.html',1,'']]],
-  ['gemmrelumkkntwoaccsstream_7',['GemmReluMKKNTwoAccsStream',['../classGemmReluMKKNTwoAccsStream.html',1,'']]],
-  ['gemmrelumknkchunkgraph_8',['GemmReluMknkChunkGraph',['../classGemmReluMknkChunkGraph.html',1,'']]],
-  ['gemmreluscalarmkkn_9',['GemmReluScalarMKKN',['../classGemmReluScalarMKKN.html',1,'']]],
-  ['gemmreluscalarmknk_10',['GemmReluScalarMKNK',['../classGemmReluScalarMKNK.html',1,'']]],
-  ['gemmreluscalarmknkstream_11',['GemmReluScalarMKNKStream',['../classGemmReluScalarMKNKStream.html',1,'']]],
-  ['gemmrelustreamgraph_12',['GemmReluStreamGraph',['../classGemmReluStreamGraph.html',1,'']]]
+  ['emulation_0',['Functional check: runs system software emulation',['../md_lenet__example.html#autotoc_md21',1,'']]],
+  ['emulation_20with_20qemu_1',['Functional/performance check: runs system in hardware emulation with QEMU',['../md_lenet__example.html#autotoc_md23',1,'']]],
+  ['example_2',['Lenet Example',['../md_lenet__example.html',1,'']]],
+  ['experiment_20links_3',['Experiment Links',['../md_profile.html#autotoc_md30',1,'']]]
 ];

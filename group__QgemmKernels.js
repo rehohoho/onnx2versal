@@ -1,7 +1,8 @@
 var group__QgemmKernels =
 [
-    [ "QgemmScalarStream< TT, TTPARAM, M, K, N >", "classQgemmScalarStream.html", null ],
-    [ "QgemmStream< TT, TTPARAM, M, K, N >", "classQgemmStream.html", [
-      [ "filter", "classQgemmStream.html#a35364e9954992fd6f8e790375c259ca8", null ]
-    ] ]
+    [ "QgemmScalar< TT, TTPARAM, M, K, N >", "classQgemmScalar.html", null ],
+    [ "Qgemm< TT, TTPARAM, M, K, N >", "classQgemm.html", [
+      [ "filter", "classQgemm.html#a275a98dd32325e074f04d2bc7c09ea26", null ]
+    ] ],
+    [ "QgemmStream< TT, TTPARAM, M, K, N >", "classQgemmStream.html", null ]
 ];

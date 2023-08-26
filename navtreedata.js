@@ -50,7 +50,7 @@ var NAVTREE =
         [ "Result outputs", "md_profile.html#autotoc_md32", null ]
       ] ]
     ] ],
-    [ "Modules", "modules.html", "modules" ],
+    [ "Topics", "topics.html", "topics" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
@@ -68,7 +68,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "add_8h_source.html",
-"qgemm_8h_source.html"
+"pool_8h_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
