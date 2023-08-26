@@ -5,11 +5,11 @@
 
 
 #define POOL_PROFILE_FOOTER(filter_name) \
-  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d>", \
-    filter_name, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW);
+  PROFILE_FOOTER2("%s<%d,%d,%d,%d,%d,%d,%d,%d,%d,%d>", \
+    filter_name, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W);
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
-void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>::filter(
   input_window<TT>* in,      // BHWC (1x24x24x6)
   output_window<TT>* out     // BPQC (1x12x12x6)
 ) {
@@ -35,9 +35,9 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
         for (int c = 0; c < C; c++)
           window_writeincr(out, arr[c]);
 
-        window_incr(in, C*(-KH*INP_W + KW)); // go up KH, go right KW (next pos)
+        window_incr(in, C*(-KH*INP_W + STEP_W)); // go up KH, go right STEP_W (next pos)
       }
-      window_incr(in, C*(-OUT_W*KW + KH*INP_W)); // go down KH, go left OUT_W*KW, account for padding
+      window_incr(in, C*(-OUT_W*KW + STEP_H*INP_W)); // go down STEP_H, go left OUT_W*KW, account for padding
     }
   }
 
@@ -45,8 +45,8 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
 }
 
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
-void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>::filter(
   input_window<TT>* in,      // BCHW (1x6x24x24)
   output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {
@@ -67,10 +67,10 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
             }
             window_incr(in, -KW+INP_W); // left KW, down 1
           }
-          window_incr(in, -KH*INP_W + KW); // up KH, right KW
+          window_incr(in, -KH*INP_W + STEP_W); // up KH, right STEP_W
           window_writeincr(out, c);
         } // W
-        window_incr(in, KH*INP_W - OUT_W*KW); // left OUT_W*KW, down KH
+        window_incr(in, -OUT_W*KW + STEP_H*INP_W); // left OUT_W*KW, down KH
       } // H
     } // C
   } // B
@@ -79,8 +79,8 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
 }
 
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
-void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>::filter(
   input_window<float>* in_window,      // BCHW (1x6x24x24)
   output_window<float>* out_window     // BCPQ (1x6x12x12)
 ) {
@@ -144,8 +144,8 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
  * 
  * 128 int16 max
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
-void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>::filter(
   input_window<int8_t>* in_window,      // BCHW (1x6x24x24)
   output_window<int8_t>* out_window     // BCPQ (1x6x12x12)
 ) {
@@ -200,8 +200,8 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
 }
 
 
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
-void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>::filter(
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+void AvgpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>::filter(
   input_window<TT>* in,      // BCHW (1x6x24x24)
   output_window<TT>* out     // BCPQ (1x6x12x12)
 ) {

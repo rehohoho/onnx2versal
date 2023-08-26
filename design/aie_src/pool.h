@@ -22,7 +22,7 @@
  * @brief Scalar implementation for BHWC maxpool,
  * MaxpoolScalarBHWC::filter<24,32,16,1,6> total = 7673
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 class MaxpoolScalarBHWC {
   public:
     void filter(
@@ -39,7 +39,7 @@ class MaxpoolScalarBHWC {
  * @brief Scalar implementation for BCHW maxpool,
  * MaxpoolScalarBCHW::filter<24,32,16,1,6> total = 11302
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 class MaxpoolScalarBCHW {
   public:
     void filter(
@@ -57,7 +57,7 @@ class MaxpoolScalarBCHW {
  * requires INP_W%8==0, OUT_W%4==0, KH==KW==2, TT==float, 
  * Maxpool2x2FloatBCHW::filter<24,32,16,1,6> total = 901
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 class Maxpool2x2FloatBCHW {
   public:
     void filter(
@@ -80,7 +80,7 @@ class Maxpool2x2FloatBCHW {
  * requires INP_W%16==0, OUT_W%8==0, KH==KW==2, TT==int8_t, 
  * Maxpool2x2Int8BCHW::filter<24,32,16,1,6> total = 324
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 class Maxpool2x2Int8BCHW {
     static constexpr int RUN_16CHUNK = INP_W % 32 != 0;
   public:
@@ -103,7 +103,7 @@ class Maxpool2x2Int8BCHW {
  * @brief Scalar implementation for BCHW avgpool,
  * AvgpoolScalarBCHW::filter<24,32,16,1,6> total = 15766
  */
-template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 class AvgpoolScalarBCHW {
   public:
     void filter(

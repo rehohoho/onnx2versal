@@ -23,6 +23,8 @@
  * @tparam C          input channels
  * @tparam KH         kernel height
  * @tparam KW         kernel width
+ * @tparam STEP_H     stride in the height dimension
+ * @tparam STEP_W     stride in the width dimension
  * 
  * @{
  */
@@ -35,8 +37,8 @@
  * @connect{pout[0], B*OUT_H*OUT_W*C*sizeof(TT)}
  * @endconnections
  */
-template <template<typename, int, int, int, int, int, int, int, int> class POOL,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+template <template<typename, int, int, int, int, int, int, int, int, int, int> class POOL,
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 class PoolGraph : public adf::graph {
 
   private:
@@ -48,7 +50,7 @@ class PoolGraph : public adf::graph {
     adf::port<output> pout[1];
 
     PoolGraph() { 
-      k[0] = adf::kernel::create_object<POOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW>>();
+      k[0] = adf::kernel::create_object<POOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>>();
       adf::source(k[0]) = "pool.cc";
       adf::headers(k[0]) = {"pool.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
@@ -62,10 +64,10 @@ class PoolGraph : public adf::graph {
 
 template <
   template<typename, int, int, int, int> class SPLIT,
-  template<typename, int, int, int, int, int, int, int, int> class POOL,
+  template<typename, int, int, int, int, int, int, int, int, int, int> class POOL,
   template<typename, int, int, int, int> class CONCAT, 
   int CCHUNK,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW>
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 class PoolChunkCGraph : public adf::graph {
 
   private:
@@ -86,7 +88,7 @@ class PoolChunkCGraph : public adf::graph {
       adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
 
       for (int i = 0; i < LCNT; i++) {
-        k[i] = adf::kernel::create_object<POOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, CCHUNK, KH, KW>>();
+        k[i] = adf::kernel::create_object<POOL<TT, INP_H, INP_W, OUT_H, OUT_W, B, CCHUNK, KH, KW, STEP_H, STEP_W>>();
         adf::source(k[i]) = "pool.cc";
         adf::headers(k[i]) = {"pool.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
