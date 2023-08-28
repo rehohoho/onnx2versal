@@ -9,11 +9,14 @@ np.random.seed(0)
 VECTOR_WORD_BOUNDARY = 16 # in bytes
 
 
+def print_cpp_vector(tensor: np.ndarray, name: str, dtype: str = "TT"):
+  print(f"\nstd::vector<{dtype}> {name} {{{', '.join(str(i) for i in tensor.flatten().tolist())}}};\n")
+
 INP_H = 26 # for 3x3 stride 2 to be not padded
 INP_W = 28
 B = 1
-M = 8
-C = 1 # loop dependency missed issue occurs at C=1
+M = 4
+C = 3 # note loop dependency missed issue occurs at C=1
 
 X_scale = 0.004
 W_scale = 0.003
@@ -32,15 +35,15 @@ save_tensor("qlinearconv_int8in_pad.txt", pad_lastdim(tin, "qlinearconv tin", ge
 K = 5
 
 tw_5x5 = np.arange(M*C*K*K).astype(np.int8).reshape(M,C,K,K)
-print("int8weights_5x5\n", tw_5x5.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tw_5x5, name="int8weights_5x5")
 
 tb_5x5 = tbias - tw_5x5.reshape(M,-1).sum(1) * X_zero_point
-print("int8bias_5x5\n", tb_5x5.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tb_5x5, name="int8bias_5x5", dtype="int32_t")
 
 tw_5x5 = pad_lastdim(tw_5x5, "tw_5x5", get_vector_boundary(tw_5x5))
 if K == 5:
   tw_5x5 = tw_5x5[..., [5,5,5,5,0,0,1,1,2,2,3,3,4,4,5,5]]
-print("int8weights_5x5_pad\n", tw_5x5.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tw_5x5, name="int8weights_5x5_pad")
 
 Y = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),
@@ -64,16 +67,19 @@ K = 3
 PAD = (16 - K*K%16) % 16
 
 tw_3x3 = np.arange(M*C*K*K).astype(np.int8).reshape(M,C,K,K)
-print("int8weights_3x3\n", tw_3x3.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tw_3x3, name="int8weights_3x3")
+
 tb_3x3 = tbias - tw_3x3.reshape(M,-1).sum(1) * X_zero_point
-print("int8bias_3x3\n", tb_3x3.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tb_3x3, name="int8bias_3x3", dtype="int32_t")
+
 tw_3x3_pad = pad_lastdim(tw_3x3.reshape(M,C,-1), "qlinearconv tw_3x3 int16int8", get_vector_boundary(tw_3x3))
-print("int8weights_3x3_pad\n", tw_3x3_pad.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tw_3x3_pad, name="int8weights_3x3_pad")
+
 tw_3x3_int16int8 = tw_3x3_pad[..., [0,1,2,9, 3,4,5,9, 6,7,8,9, 9,9,9,9]]
-print("int8weights_3x3_int16int8mac\n", tw_3x3_int16int8.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tw_3x3_int16int8, name="int8weights_3x3_int16int8mac")
+
 tw_3x3_int8int8 = pad_lastdim(tw_3x3, "qlinearconv tw_3x3 int8int8", get_vector_boundary(tw_3x3))
 tw_3x3_int8int8 = tw_3x3_int8int8[..., [15,15,15,15, 0,0,1,1, 2,2,15,15, 15,15,15,15]]
-print("int8weights_3x3_int8int8mac\n", tw_3x3_int8int8.flatten().tolist(), "\n\n\n")
 
 Y_3x3 = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),
@@ -94,11 +100,11 @@ save_tensor(f"qlinearconv_int8out_3x3_stride2_{get_shape_str(Y_3x3_stride2)}.txt
 
 # 1x1
 tw_1x1 = np.arange(M*C).astype(np.int8).reshape(M,C,1,1)
-print("int8weights_1x1\n", tw_1x1.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tw_1x1, name="int8weights_1x1")
 tb_1x1 = tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point
-print("int8bias_1x1\n", tb_1x1.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tb_1x1, name="int8bias_1x1")
 tw_1x1_pad = pad_lastdim(tw_1x1.reshape(M,-1), "qlinearconv tw_1x1", get_vector_boundary(tw_1x1))
-print("int8weights_1x1_pad\n", tw_1x1_pad.flatten().tolist(), "\n\n\n")
+print_cpp_vector(tw_1x1_pad, name="int8weights_1x1_pad")
 
 Y_1x1 = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),

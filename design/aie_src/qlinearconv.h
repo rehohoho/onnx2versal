@@ -506,6 +506,165 @@ class QLinearConvHx4PktStream {
 };
 
 
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConvHx4_0 {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0xeca86420);
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP    = (STEP_W == 1) ? 16 : 8;
+    static constexpr int W_LOOP_IN_STEP = (STEP_W != 4) ? 16 : 32;
+
+    alignas(32) TTPARAM (&weights)[M*CKK_ROW_SIZE];
+    alignas(32) int32_t (&bias)[M];
+    alignas(32) TT in[INP_SIZE];
+    TTPARAM w_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConvHx4_0 (
+      TTPARAM (&w)[M*CKK_ROW_SIZE],
+      int32_t (&b)[M],
+      TTPARAM w_zero
+    ): weights(w), bias(b), w_zero(w_zero) {}
+
+		void filter(
+			input_pktstream* in_s,
+			output_stream<acc48>* cout
+		);
+
+		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
+      static_assert(KW<=4);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
+			REGISTER_FUNCTION(QLinearConvHx4_0::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConvHx4_1 {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0xeca86420);
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP    = (STEP_W == 1) ? 16 : 8;
+    static constexpr int W_LOOP_IN_STEP = (STEP_W != 4) ? 16 : 32;
+
+    alignas(32) TTPARAM (&weights)[M*CKK_ROW_SIZE];
+    alignas(32) TT in[INP_SIZE];
+    TTPARAM w_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConvHx4_1 (
+      TTPARAM (&w)[M*CKK_ROW_SIZE],
+      TTPARAM w_zero
+    ): weights(w), w_zero(w_zero) {}
+    
+		void filter(
+			input_pktstream* in_s,
+			input_stream<acc48>* cin,
+			output_stream<acc48>* cout
+		);
+
+		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
+      static_assert(KW<=4);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
+			REGISTER_FUNCTION(QLinearConvHx4_1::filter);
+      REGISTER_PARAMETER(weights);
+		}
+};
+
+
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConvHx4_2 {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : ((STEP_W == 2) ? 0x76543210 : 0xeca86420);
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP    = (STEP_W == 1) ? 16 : 8;
+    static constexpr int W_LOOP_IN_STEP = (STEP_W != 4) ? 16 : 32;
+
+    alignas(32) TTPARAM (&weights)[M*CKK_ROW_SIZE];
+    alignas(32) TT in[INP_SIZE];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    TT x_zero;
+    TTPARAM w_zero;
+    TT y_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConvHx4_2 (
+      TTPARAM (&w)[M*CKK_ROW_SIZE],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      TT x_zero,
+      TTPARAM w_zero,
+      TT y_zero
+    );
+
+		void filter(
+			input_pktstream* in_s,
+			input_stream<acc48>* cin,
+			output_stream<TT>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
+      static_assert(KW<=4);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2 || STEP_H == 4);
+      static_assert(STEP_W == 1 || STEP_W == 2 || STEP_W == 4);
+			REGISTER_FUNCTION(QLinearConvHx4_2::filter);
+      REGISTER_PARAMETER(weights);
+		}
+};
+
+
 /**
  * @brief Vector implementation for Hx4 QLinearConv using int8xint8 MACs, 
  * requires data to be arranged in [a,b,c,d,e,f,g,h,i] -> [a,b,c,0, d,e,f,0, g,h,i,0, 0,0,0,0], 

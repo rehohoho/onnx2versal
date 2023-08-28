@@ -917,6 +917,312 @@ void QLinearConvHx4PktStream<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H
 
   CONV_PROFILE_FOOTER("QLinearConvHx4PktStream");
 }
+
+
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConvHx4_0<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+	input_pktstream* in_s,
+  output_stream<acc48>* cout
+) {
+  PROFILE_HEADER2;
+  
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  using v16w = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v16int8, v16uint8>::type;
+  
+  v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  for (int i = 0; i < KW; i++)
+    wzero = upd_elem(wzero, i, w_zero);
+  v32 data = aie::zeros<TT,32>();
+
+  v16acc48 acc1 = undef_v16acc48();
+  aie::accum<acc48,16> acc_bias;
+
+  v16w *w_ptr = (v16w *) weights;
+  TT *in_ptr = (TT *) in;
+
+  // fill window
+  get_ss(0); // discard header
+  for (int bc = 0; bc < B*C; bc++) chess_prepare_for_pipelining chess_loop_range(B*C,) {
+    for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
+      *(v16 *) in_ptr = get_wss_tt<TT>(0); in_ptr+=16;
+    }
+  }
+  in_ptr = (TT *) in;
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  // BHWM
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
+
+      acc_bias.from_vector(aie::broadcast<int32_t, 16>(bias[m]), 0);
+      
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
+
+          acc1 = acc_bias;
+          
+          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) { // computes 2x16 partial products over 3x3 kernel
+            
+            for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+              wvec = upd_w(wvec, 0, unpack(*w_ptr)); w_ptr++;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 12);
+            }
+            
+            if ((KH & 0x3) != 0) {
+              wvec = upd_w(wvec, 0, unpack(*w_ptr)); w_ptr++;
+              for (int p = 0; p < (KH & 0x3); p++) {
+                data = *(v32 *) in_ptr; in_ptr += INP_W;
+                MAC_ROW(acc1, p*4);
+              }
+            }
+            
+            in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
+          }
+          in_ptr += -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP; // go channel -C_PER_M, right W_LOOP_IN_STEP
+          w_ptr -= CKK_ROW_SIZE/16;
+
+          writeincr_v8(cout, ext_lo(acc1));
+          writeincr_v8(cout, ext_hi(acc1));
+        } // W
+        
+        in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      w_ptr += CKK_ROW_SIZE/16;
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
+    } // M
+  } // B
+
+  CONV_PROFILE_FOOTER("QLinearConvHx4_0");
+}
+
+
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConvHx4_1<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+	input_pktstream* in_s,
+  input_stream<acc48>* cin,
+  output_stream<acc48>* cout
+) {
+  PROFILE_HEADER2;
+  
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  using v16w = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v16int8, v16uint8>::type;
+  
+  v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  for (int i = 0; i < KW; i++)
+    wzero = upd_elem(wzero, i, w_zero);
+  v32 data = aie::zeros<TT,32>();
+
+  v16acc48 acc1 = undef_v16acc48();
+
+  v16w *w_ptr = (v16w *) weights;
+  TT *in_ptr = (TT *) in;
+
+  // fill window
+  get_ss(0); // discard header
+  for (int bc = 0; bc < B*C; bc++) chess_prepare_for_pipelining chess_loop_range(B*C,) {
+    for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
+      *(v16 *) in_ptr = get_wss_tt<TT>(0); in_ptr+=16;
+    }
+  }
+  in_ptr = (TT *) in;
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  // BHWM
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
+
+      for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
+
+          aie::accum<acc48,8> _acc1 = readincr_v8(cin);
+          aie::accum<acc48,8> _acc2 = readincr_v8(cin);
+          acc1 = aie::concat(_acc1, _acc2);
+          
+          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) { // computes 2x16 partial products over 3x3 kernel
+            
+            for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+              wvec = upd_w(wvec, 0, unpack(*w_ptr)); w_ptr++;
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 12);
+            }
+            
+            if ((KH & 0x3) != 0) {
+              wvec = upd_w(wvec, 0, unpack(*w_ptr)); w_ptr++;
+              for (int p = 0; p < (KH & 0x3); p++) {
+                data = *(v32 *) in_ptr; in_ptr += INP_W;
+                MAC_ROW(acc1, p*4);
+              }
+            }
+            
+            in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
+          }
+          in_ptr += -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP; // go channel -C_PER_M, right W_LOOP_IN_STEP
+          w_ptr -= CKK_ROW_SIZE/16;
+
+          writeincr_v8(cout, ext_lo(acc1));
+          writeincr_v8(cout, ext_hi(acc1));
+        } // W
+        
+        in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      w_ptr += CKK_ROW_SIZE/16;
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
+    } // M
+  } // B
+
+  CONV_PROFILE_FOOTER("QLinearConvHx4_1");
+}
+
+
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+QLinearConvHx4_2<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::QLinearConvHx4_2(
+  TTPARAM (&w)[M*CKK_ROW_SIZE],
+  float x_scale,
+  float w_scale,
+  float y_scale,
+  TT x_zero,
+  TTPARAM w_zero,
+  TT y_zero
+):
+  weights(w), 
+  x_scale(x_scale), w_scale(w_scale), y_scale(y_scale), 
+  x_zero(x_zero), w_zero(w_zero), y_zero(y_zero)
+{ 
+  if ((std::is_same<TTPARAM,int8_t>::value)) assert(w_zero == 0);
+  // -1 due to rounding, -1 to fit in 16b
+  scalebits = 15 - log(x_scale*w_scale/y_scale) / log(2);
+  assert(scalebits <= 28); // KH*KW*int8*int8*scale <= acc48, for KH=KW=3
+  scale = float2fix(x_scale*w_scale/y_scale, scalebits);
+}
+
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+void QLinearConvHx4_2<TT, TTPARAM, INP_H, INP_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>::filter(
+	input_pktstream* in_s,
+  input_stream<acc48>* cin,
+  output_stream<TT>* out
+) {
+  PROFILE_HEADER2;
+  
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  using v16w = typename std::conditional<(std::is_same<TTPARAM, int8_t>::value), v16int8, v16uint8>::type;
+  
+  v32int16 wvec = null_v32int16();
+  v32int16 wzero = null_v32int16();
+  for (int i = 0; i < KW; i++)
+    wzero = upd_elem(wzero, i, w_zero);
+  v32 data = aie::zeros<TT,32>();
+
+  v16acc48 acc1 = undef_v16acc48();
+  aie::accum<acc48,16> acc_shift;
+  acc_shift.from_vector(aie::broadcast<int16_t, 16>(y_zero), scalebits);
+
+  v16w *w_ptr = (v16w *) weights;
+  TT *in_ptr = (TT *) in;
+
+  // fill window
+  get_ss(0); // discard header
+  for (int bc = 0; bc < B*C; bc++) chess_prepare_for_pipelining chess_loop_range(B*C,) {
+    for (int hw = 0; hw < INP_H*INP_W; hw+=16) {
+      *(v16 *) in_ptr = get_wss_tt<TT>(0); in_ptr+=16;
+    }
+  }
+  in_ptr = (TT *) in;
+  
+  set_sat();
+  set_rnd(rnd_sym_inf); // c++: round halfway towards infinity, away from zero
+
+  // BHWM
+  for (int b = 0; b < B; b++) chess_prepare_for_pipelining chess_loop_range(B,) {
+    for (int m = 0; m < M; m++) chess_prepare_for_pipelining chess_loop_range(M,) { 
+
+     for (int h = 0; h < OUT_H; h++) chess_prepare_for_pipelining chess_loop_range(OUT_H,) {
+        for (int w = 0; w < OUT_W_PAD; w+=W_LOOP_STEP) {
+
+          aie::accum<acc48,8> _acc1 = readincr_v8(cin);
+          aie::accum<acc48,8> _acc2 = readincr_v8(cin);
+          acc1 = aie::concat(_acc1, _acc2);
+          
+          for (int c = 0; c < C_PER_M; c++) chess_prepare_for_pipelining chess_loop_range(C_PER_M,) { // computes 2x16 partial products over 3x3 kernel
+            
+            for (int p = 0; p <= KH-4; p+=4) chess_flatten_loop {
+              print_vec<short, short>((short *) &wvec, 16);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 0);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 4);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 8);
+              data = *(v32 *) in_ptr; in_ptr += INP_W;
+              MAC_ROW(acc1, 12);
+            }
+            
+            if ((KH & 0x3) != 0) {
+              wvec = upd_w(wvec, 0, unpack(*w_ptr)); w_ptr++;
+              for (int p = 0; p < (KH & 0x3); p++) {
+                data = *(v32 *) in_ptr; in_ptr += INP_W;
+                MAC_ROW(acc1, p*4);
+              }
+            }
+            
+            in_ptr += INP_H*INP_W -KH*INP_W; // channel+1, up KH
+          }
+          in_ptr += -C_PER_M*INP_H*INP_W + W_LOOP_IN_STEP; // go channel -C_PER_M, right W_LOOP_IN_STEP
+          w_ptr -= CKK_ROW_SIZE/16;
+          
+          acc1 = aie::mac(acc_shift, (aie::vector<int32_t,16>) lsrs(acc1, 0), scale);
+          if (STEP_W > 1) {
+            v16 tmp = ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits);
+            int *tmpint = (int *) &tmp;
+            put_ms(0, tmpint[0]);
+            put_ms(0, tmpint[1]);
+          } else {
+            writeincr_v16(out, ((aie::accum<acc48,16>) acc1).to_vector<TT>(scalebits));
+          }
+        } // W
+        
+        in_ptr += INP_W*STEP_H - OUT_W_PAD*STEP_W; // go left OUT_W_PAD*STEP_W, down STEP_H
+        chess_separator_scheduler(); // uncomment if compiler cannot detect out dependency
+      } // H
+      in_ptr -= INP_W*OUT_H*STEP_H; // go up OUT_H*STEP_H
+      w_ptr += CKK_ROW_SIZE/16;
+      if ((m % (M/GROUP)) == (M/GROUP - 1)) {
+        in_ptr += C_PER_M*INP_H*INP_W;
+      }
+    } // M
+  } // B
+
+  CONV_PROFILE_FOOTER("QLinearConvHx4_2");
+}
 #undef MAC_ROW
 
 

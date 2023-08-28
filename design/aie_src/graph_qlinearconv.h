@@ -56,8 +56,9 @@ void set_heap_size(adf::kernel k) {
  * @tparam TT           input/output dtype, int8_t or uint8_t only
  * @tparam TTPARAM      weight dtype, int8_t or uint8_t only
  * @tparam INP_H        input height
- * @tparam INP_W        input width
- * @tparam OUT_W        output width, unable to infer due to width padding
+ * @tparam INP_W        input width to use
+ * @tparam INP_W_PAD    input width, padded to vector boundary
+ * @tparam OUT_W        output width to use, unable to infer due to width padding
  * @tparam OUT_W_PAD    output width, padded to vector boundary
  * @tparam STEP_H       stride in height dimension
  * @tparam STEP_W       stride in width dimension
@@ -245,7 +246,6 @@ class QLinearConvStreamGraph : public adf::graph {
  * @endconnections
  */
 template <
-  template<typename, int, int, int, int> class SPLIT,
   template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
@@ -261,7 +261,7 @@ class QLinearConvChunkHGraph : public adf::graph {
     std::vector<adf::kernel> pad;
 
     static constexpr int OVERLAP = KH-STEP_H;
-    typedef SplitGraph<SPLIT, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W> mSplitGraph;
+    typedef SplitGraph<SplitInt8, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W> mSplitGraph;
     mSplitGraph split_graph;
     static constexpr int LCNT = mSplitGraph::LCNT;
 
@@ -366,7 +366,6 @@ class QLinearConvChunkHGraph : public adf::graph {
  * @endconnections
  */
 template <
-  template<typename, int, int, int, int> class SPLIT,
   template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
@@ -509,7 +508,6 @@ class QLinearConvChunkHStreamGraph : public adf::graph {
  * @endconnections
  */
 template <
-  template<typename, int, int, int, int> class SPLIT,
   template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV, 
   template<typename, int, int, int, int> class CONCAT, 
   int HCHUNK,
@@ -525,7 +523,7 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
     std::vector<adf::kernel> pad;
 
     static constexpr int OVERLAP = KH-STEP_H;
-    typedef SplitFilterPktStreamGraph<SPLIT, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W> mSplitGraph;
+    typedef SplitFilterPktStreamGraph<SplitFilterInt8PktStream, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W> mSplitGraph;
     mSplitGraph split_graph;
 
     static constexpr int LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;
@@ -601,6 +599,115 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
         adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
         adf::location<adf::parameter>(k[i*2+1].param[0]) = cTilePos;
         adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
+      }
+    }
+
+};
+
+
+/**
+ * @brief Multiinstance graph that stores weights and biases, 
+ * chunks BCHW by C dimension, maximum 8 chunks
+ * 
+ * @connections
+ * @connect{pin[0], stream B*C*INP_W*INP_W_PAD}
+ * @connect{pout[0], B*M*OUT_H*OUT_W_PAD}
+ * @endconnections
+ */
+template <
+  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV0, 
+  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV1, 
+  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV2, 
+  template<typename, int, int, int, int> class CONCAT, 
+  int CCHUNK,
+  typename TT, typename TTPARAM, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
+  int B, int C, int M, int KH, int KW, int GROUP, 
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
+class QLinearConvChunkCGraph : public adf::graph {
+
+  private:
+    static constexpr int PAD_H = INP_H + H0 + H1;
+    static constexpr int PAD_W = INP_W + W0 + W1;
+
+    std::vector<adf::kernel> pad;
+
+    typedef SplitFilterPktStreamGraph<SplitFilterInt8PktStream, TT, B, C*PAD_H*PAD_W, CCHUNK*PAD_H*PAD_W, 0> mSplitGraph;
+    mSplitGraph split_graph;
+
+    static constexpr int OUT_H = (PAD_H - KH) / STEP_H + 1;
+    
+  public:
+    static constexpr int LCNT = C / CCHUNK;
+    adf::kernel k[LCNT];
+
+    adf::port<adf::input> pin[1];
+    adf::port<adf::output> pout[1];
+
+    QLinearConvChunkCGraph(
+      std::vector<TTPARAM> weights,
+      std::vector<int32_t> bias,
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      TT x_zero,
+      TTPARAM w_zero,
+      TT y_zero
+    ) {
+      static_assert(LCNT >= 3);
+      static_assert(C % CCHUNK == 0);
+      static_assert(B*CCHUNK*PAD_H*PAD_W <= TILE_BYTES);
+      assert(weights.size() / LCNT <= TILE_BYTES); // weight size may vary based on padding done for given kernel
+
+      for (int i = 0; i < LCNT; i++) {
+        std::vector<TTPARAM> wChunk; // build wChunk
+        wChunk.reserve(weights.size() / LCNT);
+        for (int m = 0; m < M; m++) {
+          wChunk.insert(wChunk.end(), 
+            weights.begin() + m*weights.size()/M + i*weights.size()/M/LCNT, 
+            weights.begin() + m*weights.size()/M + (i+1)*weights.size()/M/LCNT);
+        }
+
+        if (i == 0) {
+          k[i] = adf::kernel::create_object<QLINEARCONV0<TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, CCHUNK, M, KH, KW, GROUP>>(
+            wChunk, bias, w_zero);
+        } else if (i == LCNT-1) {
+          k[i] = adf::kernel::create_object<QLINEARCONV2<TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, CCHUNK, M, KH, KW, GROUP>>(
+            wChunk, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
+          adf::connect<adf::cascade> (k[i-1].out[0], k[i].in[1]);
+          adf::connect<adf::stream>  (k[i].out[0], pout[0]);
+        } else {
+          k[i] = adf::kernel::create_object<QLINEARCONV1<TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, CCHUNK, M, KH, KW, GROUP>>(
+            wChunk, w_zero);
+          adf::connect<adf::cascade> (k[i-1].out[0], k[i].in[1]);
+        }
+        
+        adf::source(k[i]) = "qlinearconv.cc";
+        adf::headers(k[i]) = {"qlinearconv.h"};
+        adf::runtime<ratio>(k[i]) = 0.6;
+
+        adf::connect<adf::pktstream> (split_graph.pout[i], k[i].in[0]);
+
+        if (i != 0) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1});
+        }
+        adf::location<adf::stack>(k[i]) = adf::location<adf::kernel>(k[i]);
+      }
+
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DStreamInt8<TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>(x_zero));
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.6;
+
+        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
+        
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
+        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
+        // split and pad can't be placed on same tile due to stream co-placement constraints
+      } else {
+        adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
       }
     }
 
