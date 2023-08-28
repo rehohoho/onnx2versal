@@ -684,13 +684,15 @@ class QLinearConvChunkCGraph : public adf::graph {
         adf::source(k[i]) = "qlinearconv.cc";
         adf::headers(k[i]) = {"qlinearconv.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
+        adf::single_buffer(k[i].in[0]);
 
-        adf::connect<adf::pktstream> (split_graph.pout[i], k[i].in[0]);
+        adf::connect<adf::window<B*CCHUNK*PAD_H*PAD_W>> (split_graph.pout[i], k[i].in[0]);
 
         if (i != 0) {
           adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1});
         }
-        adf::location<adf::stack>(k[i]) = adf::location<adf::kernel>(k[i]);
+        adf::location<adf::buffer>(k[i].in[0]) = adf::location<adf::kernel>(k[i]);
+        adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0)};
       }
 
       if (H0+H1+W0+W1 != 0) {

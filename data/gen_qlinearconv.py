@@ -9,7 +9,7 @@ np.random.seed(0)
 VECTOR_WORD_BOUNDARY = 16 # in bytes
 
 
-def print_cpp_vector(tensor: np.ndarray, name: str, dtype: str = "TT"):
+def print_cpp_vector(tensor: np.ndarray, name: str, dtype: str = "TTPARAM"):
   print(f"\nstd::vector<{dtype}> {name} {{{', '.join(str(i) for i in tensor.flatten().tolist())}}};\n")
 
 INP_H = 26 # for 3x3 stride 2 to be not padded
@@ -80,6 +80,7 @@ print_cpp_vector(tw_3x3_int16int8, name="int8weights_3x3_int16int8mac")
 
 tw_3x3_int8int8 = pad_lastdim(tw_3x3, "qlinearconv tw_3x3 int8int8", get_vector_boundary(tw_3x3))
 tw_3x3_int8int8 = tw_3x3_int8int8[..., [15,15,15,15, 0,0,1,1, 2,2,15,15, 15,15,15,15]]
+print_cpp_vector(tw_3x3_int8int8, name="int8weights_3x3_int8int8mac")
 
 Y_3x3 = torch.nn.functional.conv2d(
   torch.Tensor(tin.astype(int) - X_zero_point),
@@ -102,7 +103,7 @@ save_tensor(f"qlinearconv_int8out_3x3_stride2_{get_shape_str(Y_3x3_stride2)}.txt
 tw_1x1 = np.arange(M*C).astype(np.int8).reshape(M,C,1,1)
 print_cpp_vector(tw_1x1, name="int8weights_1x1")
 tb_1x1 = tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point
-print_cpp_vector(tb_1x1, name="int8bias_1x1")
+print_cpp_vector(tb_1x1, name="int8bias_1x1", dtype="int32_t")
 tw_1x1_pad = pad_lastdim(tw_1x1.reshape(M,-1), "qlinearconv tw_1x1", get_vector_boundary(tw_1x1))
 print_cpp_vector(tw_1x1_pad, name="int8weights_1x1_pad")
 
