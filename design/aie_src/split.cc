@@ -984,9 +984,9 @@ void SplitFilterInt8StreamTwice<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 
 template <typename TT, int H, int INP_W, int OUT_W, int OVERLAP>
 void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
-	input_stream<TT>* in,
-  output_pktstream* out0,
-  output_pktstream* out1
+	input_stream<TT>* restrict in,
+  output_pktstream* restrict out0,
+  output_pktstream* restrict out1
 ) {
   PROFILE_HEADER2;
 
@@ -1007,11 +1007,7 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 #define WRITE_OUT(outidx, count, tlast) \
   for (int w = 0; w < count-16; w+=16) { \
     tmp = readincr_v16(in); \
-    a = (int *) &tmp; \
-    put_ms(outidx, a[0]); \
-    put_ms(outidx, a[1]); \
-    put_ms(outidx, a[2]); \
-    put_ms(outidx, a[3]); \
+    put_wms(outidx, *(v16int8 *) &tmp); \
   } \
   tmp = readincr_v16(in); \
   a = (int *) &tmp; \
@@ -1020,18 +1016,12 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
   put_ms(outidx, a[2]); \
   writeincr(out[outidx], a[3], tlast);
 
+// put_wms tlast does not work
 #define WRITE_OUT_TWICE(outidx0, outidx1, count) \
   for (int w = 0; w < count-16; w+=16) { \
-    auto tmp = readincr_v16(in); \
-    a = (int *) &tmp; \
-    put_ms(outidx0, a[0]); \
-    put_ms(outidx0, a[1]); \
-    put_ms(outidx0, a[2]); \
-    put_ms(outidx0, a[3]); \
-    put_ms(outidx1, a[0]); \
-    put_ms(outidx1, a[1]); \
-    put_ms(outidx1, a[2]); \
-    put_ms(outidx1, a[3]); \
+    tmp = readincr_v16(in); \
+    put_wms(outidx0, *(v16int8 *) &tmp); \
+    put_wms(outidx1, *(v16int8 *) &tmp); \
   } \
   auto tmp = readincr_v16(in); \
   a = (int *) &tmp; \
@@ -1039,10 +1029,8 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
   put_ms(outidx0, a[1]); \
   put_ms(outidx0, a[2]); \
   writeincr(out[outidx0], a[3], true); \
-  put_ms(outidx1, a[0]); \
-  put_ms(outidx1, a[1]); \
-  put_ms(outidx1, a[2]); \
-  put_ms(outidx1, a[3]);
+  put_wms(outidx1, *(v16int8 *) &tmp);
+
 
 #define READ_IN(count) \
   for (int w = 0; w < count; w+=16) \
@@ -1067,7 +1055,7 @@ void SplitFilterInt8PktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
   } else {
     for (int h = 0; h < H; h++) chess_prepare_for_pipelining chess_loop_range(H,) {
 
-      for (int i = 0; i < LCNT-1; i++) chess_flatten_loop {
+      for (int i = 0; i < LCNT-1; i++) {
         writeHeader(out[i&0x1], 0, ID[i]);
         WRITE_OUT(i&0x1, OUT_W, 1);
         READ_IN(-OVERLAP);
