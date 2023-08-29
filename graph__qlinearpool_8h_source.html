@@ -109,7 +109,7 @@ $(document).ready(function(){initNavTree('graph__qlinearpool_8h_source.html','')
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARPOOL,</div>
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>  <span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_H, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW&gt;</div>
 <div class="foldopen" id="foldopen00040" data-start="{" data-end="};">
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="classQLinearPoolStreamGraph.html">   40</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearPoolStreamGraph.html">QLinearPoolStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="classQLinearPoolGraph.html">   40</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearPoolGraph.html">QLinearPoolGraph</a> : <span class="keyword">public</span> adf::graph {</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    adf::kernel k[1];</div>
@@ -119,7 +119,7 @@ $(document).ready(function(){initNavTree('graph__qlinearpool_8h_source.html','')
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    adf::port&lt;input&gt; pin[1];</div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    adf::port&lt;output&gt; pout[1];</div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_class" href="classQLinearPoolStreamGraph.html">QLinearPoolStreamGraph</a>(</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_class" href="classQLinearPoolGraph.html">QLinearPoolGraph</a>(</div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>      <span class="keywordtype">float</span> in_scale,</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      <span class="keywordtype">float</span> out_scale,</div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>      int8_t in_zero,</div>
@@ -148,7 +148,7 @@ $(document).ready(function(){initNavTree('graph__qlinearpool_8h_source.html','')
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>  <span class="keywordtype">int</span> CCHUNK, </div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>  <span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_H, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW&gt;</div>
 <div class="foldopen" id="foldopen00085" data-start="{" data-end="};">
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classQLinearPoolChunkCStreamGraph.html">   85</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearPoolChunkCStreamGraph.html">QLinearPoolChunkCStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classQLinearPoolChunkCGraph.html">   85</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearPoolChunkCGraph.html">QLinearPoolChunkCGraph</a> : <span class="keyword">public</span> adf::graph {</div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = C/CCHUNK;</div>
@@ -162,7 +162,7 @@ $(document).ready(function(){initNavTree('graph__qlinearpool_8h_source.html','')
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    adf::port&lt;input&gt; pin[1];</div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    adf::port&lt;output&gt; pout[1];</div>
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <a class="code hl_class" href="classQLinearPoolChunkCStreamGraph.html">QLinearPoolChunkCStreamGraph</a>(</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <a class="code hl_class" href="classQLinearPoolChunkCGraph.html">QLinearPoolChunkCGraph</a>(</div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>      <span class="keywordtype">float</span> in_scale,</div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>      <span class="keywordtype">float</span> out_scale,</div>
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>      int8_t in_zero,</div>
@@ -211,9 +211,45 @@ $(document).ready(function(){initNavTree('graph__qlinearpool_8h_source.html','')
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
 <div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>};</div>
 </div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARPOOL_GRAPH_H__</span></div>
-<div class="ttc" id="aclassQLinearPoolChunkCStreamGraph_html"><div class="ttname"><a href="classQLinearPoolChunkCStreamGraph.html">QLinearPoolChunkCStreamGraph</a></div><div class="ttdoc">Multi instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearpool.h:85</div></div>
-<div class="ttc" id="aclassQLinearPoolStreamGraph_html"><div class="ttname"><a href="classQLinearPoolStreamGraph.html">QLinearPoolStreamGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearpool.h:40</div></div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="keyword">template</span> &lt;<span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARPOOL,</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>  <span class="keyword">typename</span> TT, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> OUT_H, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW&gt;</div>
+<div class="foldopen" id="foldopen00159" data-start="{" data-end="};">
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno"><a class="line" href="classQLinearPoolStreamGraph.html">  159</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearPoolStreamGraph.html">QLinearPoolStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span> </div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    adf::kernel k[1];</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    std::string id;</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span> </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    adf::port&lt;input&gt; pin[1];</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span> </div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    <a class="code hl_class" href="classQLinearPoolStreamGraph.html">QLinearPoolStreamGraph</a>(</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>      <span class="keywordtype">float</span> in_scale,</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>      <span class="keywordtype">float</span> out_scale,</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>      int8_t in_zero,</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>      int8_t out_zero</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    ) { </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>      k[0] = adf::kernel::create_object&lt;QLINEARPOOL&lt;TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW&gt;&gt;(</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        in_scale, out_scale, in_zero, out_zero);</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>      adf::source(k[0]) = <span class="stringliteral">&quot;qlinearpool.cc&quot;</span>;</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;qlinearpool.h&quot;</span>};</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>      </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>      adf::connect&lt;adf::stream&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>      adf::connect&lt;adf::stream&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span> </div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>      adf::samples_per_iteration(k[0].out[0]) = B*C*OUT_H*OUT_W;</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    }</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>};</div>
+</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARPOOL_GRAPH_H__</span></div>
+<div class="ttc" id="aclassQLinearPoolChunkCGraph_html"><div class="ttname"><a href="classQLinearPoolChunkCGraph.html">QLinearPoolChunkCGraph</a></div><div class="ttdoc">Multi instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearpool.h:85</div></div>
+<div class="ttc" id="aclassQLinearPoolGraph_html"><div class="ttname"><a href="classQLinearPoolGraph.html">QLinearPoolGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearpool.h:40</div></div>
+<div class="ttc" id="aclassQLinearPoolStreamGraph_html"><div class="ttname"><a href="classQLinearPoolStreamGraph.html">QLinearPoolStreamGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_qlinearpool.h:159</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

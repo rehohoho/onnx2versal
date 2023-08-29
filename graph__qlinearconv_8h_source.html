@@ -142,154 +142,153 @@ $(document).ready(function(){initNavTree('graph__qlinearconv_8h_source.html','')
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>}</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keyword">template</span> &lt;</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>PAD,</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W,</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP,</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
-<div class="foldopen" id="foldopen00093" data-start="{" data-end="};">
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="classQLinearConvGraph.html">   93</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvGraph.html">QLinearConvGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    adf::kernel k[1];</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    std::vector&lt;adf::kernel&gt; pad;</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    adf::port&lt;input&gt; pin[1];</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    adf::port&lt;output&gt; pout[1];</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <a class="code hl_class" href="classQLinearConvGraph.html">QLinearConvGraph</a>(</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>      std::vector&lt;TTPARAM&gt; weights,</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      std::vector&lt;int32_t&gt; bias,</div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      <span class="keywordtype">float</span> x_scale,</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>      <span class="keywordtype">float</span> w_scale,</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>      TT x_zero,</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>      TTPARAM w_zero,</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>      TT y_zero</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    ) { </div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>      <span class="keyword">static_assert</span>(B*C*PAD_H*PAD_W &lt;= MAX_PARAM_BYTES);</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>      assert(weights.size() &lt;= MAX_PARAM_BYTES);</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      <span class="keyword">static_assert</span>(B*M*OUT_H*OUT_W_PAD &lt;= MAX_PARAM_BYTES);</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>      k[0] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>      adf::source(k[0]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>        pad.push_back(</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>          adf::kernel::create_object&lt;PAD&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;&gt;(x_zero));</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span> </div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        adf::connect&lt;adf::stream, adf::window&lt;B*C*PAD_H*PAD_W&gt;&gt; (pad[0].out[0], k[0].in[0]);</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>        adf::connect&lt;adf::window&lt;B*C*INP_H*INP_W_PAD&gt;&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>      }</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span> </div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>      adf::connect&lt;adf::window&lt;B*M*OUT_H*OUT_W_PAD&gt;&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>      adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(k[0]);</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = tilePos;</div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = adf::offset(0);</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = tilePos;</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    }</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>};</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="keyword">template</span> &lt;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>PAD,</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W,</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP,</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
+<div class="foldopen" id="foldopen00094" data-start="{" data-end="};">
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno"><a class="line" href="classQLinearConvGraph.html">   94</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvGraph.html">QLinearConvGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    adf::kernel k[1];</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    std::vector&lt;adf::kernel&gt; pad;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    adf::port&lt;input&gt; pin[1];</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <a class="code hl_class" href="classQLinearConvGraph.html">QLinearConvGraph</a>(</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      std::vector&lt;TTPARAM&gt; weights,</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      std::vector&lt;int32_t&gt; bias,</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>      <span class="keywordtype">float</span> x_scale,</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>      <span class="keywordtype">float</span> w_scale,</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>      <span class="keywordtype">float</span> y_scale,</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>      TT x_zero,</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>      TTPARAM w_zero,</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>      TT y_zero</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    ) { </div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>      <span class="keyword">static_assert</span>(B*C*PAD_H*PAD_W &lt;= MAX_PARAM_BYTES);</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      assert(weights.size() &lt;= MAX_PARAM_BYTES);</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      <span class="keyword">static_assert</span>(B*M*OUT_H*OUT_W_PAD &lt;= MAX_PARAM_BYTES);</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>      </div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>      k[0] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>      adf::source(k[0]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>        pad.push_back(</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>          adf::kernel::create_object&lt;PAD&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;&gt;(x_zero));</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>        adf::connect&lt;adf::stream, adf::window&lt;B*C*PAD_H*PAD_W&gt;&gt; (pad[0].out[0], k[0].in[0]);</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>        adf::connect&lt;adf::window&lt;B*C*INP_H*INP_W_PAD&gt;&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>      }</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span> </div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>      adf::connect&lt;adf::window&lt;B*M*OUT_H*OUT_W_PAD&gt;&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span> </div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>      adf::location_constraint tilePos = adf::location&lt;adf::kernel&gt;(k[0]);</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = tilePos;</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>      adf::location&lt;adf::parameter&gt;(k[0].param[0]) = adf::offset(0);</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>      adf::location&lt;adf::parameter&gt;(k[0].param[1]) = tilePos;</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    }</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>};</div>
 </div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span> </div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="keyword">template</span> &lt;</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>PAD,</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W, </div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP, </div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
-<div class="foldopen" id="foldopen00165" data-start="{" data-end="};">
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno"><a class="line" href="classQLinearConvStreamGraph.html">  165</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    adf::kernel k[1];</div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    std::vector&lt;adf::kernel&gt; pad;</div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span> </div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    adf::port&lt;input&gt; pin[2];</div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>    adf::port&lt;output&gt; pout[1];</div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span> </div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    <a class="code hl_class" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a>(</div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>      std::vector&lt;int32_t&gt; bias,</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>      <span class="keywordtype">float</span> x_scale,</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>      <span class="keywordtype">float</span> w_scale,</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>      TT x_zero,</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>      TTPARAM w_zero,</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>      TT y_zero</div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    ) { </div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>      <span class="keyword">static_assert</span>(B*C*PAD_H*PAD_W &lt;= TILE_BYTES);</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>      </div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>      k[0] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>        bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>      adf::source(k[0]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>      <span class="keywordflow">if</span> (B*C*PAD_H*PAD_W &gt; MAX_PARAM_BYTES)</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>        adf::single_buffer(k[0].in[0]);</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>      </div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>      set_heap_size&lt;QLINEARCONV,TT,TTPARAM,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP&gt;(k[0]);</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        pad.push_back(</div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>          adf::kernel::create_object&lt;PAD&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;&gt;(x_zero));</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span> </div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>        adf::connect&lt;adf::stream, adf::window&lt;B*C*PAD_H*PAD_W&gt;&gt; (pad[0].out[0], k[0].in[0]);</div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>        adf::location&lt;adf::kernel&gt;(pad[0]) = adf::location&lt;adf::kernel&gt;(k[0]) + </div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>          adf::relative_offset({.col_offset=0, .row_offset=1});</div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>        </div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>        adf::location_constraint padTile = adf::location&lt;adf::kernel&gt;(pad[0]);</div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>        adf::location&lt;adf::stack&gt;(pad[0]) = padTile;</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>        adf::location&lt;adf::stack&gt;(k[0]) = padTile;</div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>        adf::location&lt;adf::parameter&gt;(k[0].param[0]) = padTile;</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>        adf::connect&lt;adf::window&lt;B*C*INP_H*INP_W_PAD&gt;&gt; (pin[0], k[0].in[0]);</div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>      }</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>      </div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      adf::connect&lt;adf::stream&gt; (pin[1], k[0].in[1]); <span class="comment">// variable samples per iteration based on kernel</span></div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>      adf::connect&lt;adf::stream&gt; (k[0].out[0], pout[0]);</div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>      adf::samples_per_iteration(k[0].out[0]) = B*M*OUT_H*OUT_W_PAD;</div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>      </div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>      <span class="keywordflow">if</span> (B*C*PAD_H*PAD_W &gt; MAX_PARAM_BYTES) {</div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>        adf::location&lt;adf::buffer&gt;(k[0].in[0]) = {adf::offset(0)};</div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>        adf::location&lt;adf::buffer&gt;(k[0].in[0]) = {adf::offset(0), adf::offset(16384)};</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>      }  </div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    }</div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span> </div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>};</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="keyword">template</span> &lt;</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>PAD,</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W, </div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP, </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
+<div class="foldopen" id="foldopen00166" data-start="{" data-end="};">
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno"><a class="line" href="classQLinearConvStreamGraph.html">  166</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    adf::kernel k[1];</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    std::vector&lt;adf::kernel&gt; pad;</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>    adf::port&lt;input&gt; pin[2];</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    adf::port&lt;output&gt; pout[1];</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span> </div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    <a class="code hl_class" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a>(</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>      std::vector&lt;int32_t&gt; bias,</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>      <span class="keywordtype">float</span> x_scale,</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>      <span class="keywordtype">float</span> w_scale,</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>      <span class="keywordtype">float</span> y_scale,</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>      TT x_zero,</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>      TTPARAM w_zero,</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>      TT y_zero</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    ) { </div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>      <span class="keyword">static_assert</span>(B*C*PAD_H*PAD_W &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>      </div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>      k[0] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>        bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>      adf::source(k[0]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>      adf::headers(k[0]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>      adf::runtime&lt;ratio&gt;(k[0]) = 0.6;</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>      <span class="keywordflow">if</span> (B*C*PAD_H*PAD_W &gt; MAX_PARAM_BYTES)</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>        adf::single_buffer(k[0].in[0]);</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>      </div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>      set_heap_size&lt;QLINEARCONV,TT,TTPARAM,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP&gt;(k[0]);</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span> </div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        pad.push_back(</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>          adf::kernel::create_object&lt;PAD&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;&gt;(x_zero));</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span> </div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>        adf::connect&lt;adf::stream, adf::window&lt;B*C*PAD_H*PAD_W&gt;&gt; (pad[0].out[0], k[0].in[0]);</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span> </div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span> </div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>        adf::location&lt;adf::kernel&gt;(pad[0]) = adf::location&lt;adf::kernel&gt;(k[0]) + </div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>          adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>        </div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>        adf::location_constraint padTile = adf::location&lt;adf::kernel&gt;(pad[0]);</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>        adf::location&lt;adf::stack&gt;(pad[0]) = padTile;</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>        adf::location&lt;adf::stack&gt;(k[0]) = padTile;</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>        adf::location&lt;adf::parameter&gt;(k[0].param[0]) = padTile;</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>        adf::connect&lt;adf::window&lt;B*C*INP_H*INP_W_PAD&gt;&gt; (pin[0], k[0].in[0]);</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>      }</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      </div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>      adf::connect&lt;adf::stream&gt; (pin[1], k[0].in[1]); <span class="comment">// variable samples per iteration based on kernel</span></div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>      adf::connect&lt;adf::stream&gt; (k[0].out[0], pout[0]);</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>      adf::samples_per_iteration(k[0].out[0]) = B*M*OUT_H*OUT_W_PAD;</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>      </div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>      <span class="keywordflow">if</span> (B*C*PAD_H*PAD_W &gt; MAX_PARAM_BYTES) {</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>        adf::location&lt;adf::buffer&gt;(k[0].in[0]) = {adf::offset(0)};</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>        adf::location&lt;adf::buffer&gt;(k[0].in[0]) = {adf::offset(0), adf::offset(16384)};</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>      }  </div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    }</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span> </div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>};</div>
 </div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span> </div>
 <div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span> </div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="keyword">template</span> &lt;</div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>SPLIT,</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span> </div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="keyword">template</span> &lt;</div>
 <div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
 <div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
 <div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>  <span class="keywordtype">int</span> HCHUNK,</div>
@@ -306,7 +305,7 @@ $(document).ready(function(){initNavTree('graph__qlinearconv_8h_source.html','')
 <div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>    std::vector&lt;adf::kernel&gt; pad;</div>
 <div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span> </div>
 <div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OVERLAP = KH-STEP_H;</div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    <span class="keyword">typedef</span> <a class="code hl_class" href="classSplitGraph.html">SplitGraph&lt;SPLIT, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;</a> <a class="code hl_class" href="classSplitGraph.html">mSplitGraph</a>;</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    <span class="keyword">typedef</span> <a class="code hl_class" href="classSplitGraph.html">SplitGraph&lt;SplitInt8, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;</a> <a class="code hl_class" href="classSplitGraph.html">mSplitGraph</a>;</div>
 <div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>    <a class="code hl_class" href="classSplitGraph.html">mSplitGraph</a> split_graph;</div>
 <div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = mSplitGraph::LCNT;</div>
 <div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span> </div>
@@ -403,253 +402,356 @@ $(document).ready(function(){initNavTree('graph__qlinearconv_8h_source.html','')
 <div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span> </div>
 <div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span> </div>
 <div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span><span class="keyword">template</span> &lt;</div>
-<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>SPLIT,</div>
-<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
-<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
-<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>  <span class="keywordtype">int</span> HCHUNK,</div>
-<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W,</div>
-<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP, </div>
-<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
-<div class="foldopen" id="foldopen00376" data-start="{" data-end="};">
-<div class="line"><a id="l00376" name="l00376"></a><span class="lineno"><a class="line" href="classQLinearConvChunkHStreamGraph.html">  376</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvChunkHStreamGraph.html">QLinearConvChunkHStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span> </div>
-<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
-<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
-<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span> </div>
-<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span>    std::vector&lt;adf::kernel&gt; pad;</div>
-<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span> </div>
-<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OVERLAP = KH-STEP_H;</div>
-<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;</div>
-<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>    adf::kernel split[(LCNT+1)/2];</div>
-<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>    adf::kernel k[LCNT];</div>
-<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span> </div>
-<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> HCHUNK_OUT = (HCHUNK - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span>    ConcatStreamGraph&lt;CONCAT, TT, LCNT, B*M, HCHUNK_OUT*OUT_W_PAD, OUT_H*OUT_W_PAD&gt; concat_graph;</div>
-<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>    </div>
-<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span>    adf::port&lt;adf::input&gt; pin[2];</div>
-<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>    adf::port&lt;adf::output&gt; pout[1];</div>
-<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span> </div>
-<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span>    <a class="code hl_class" href="classQLinearConvChunkHStreamGraph.html">QLinearConvChunkHStreamGraph</a>(</div>
-<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>      std::vector&lt;int32_t&gt; bias,</div>
-<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>      <span class="keywordtype">float</span> x_scale,</div>
-<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span>      <span class="keywordtype">float</span> w_scale,</div>
-<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>      TT x_zero,</div>
-<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span>      TTPARAM w_zero,</div>
-<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span>      TT y_zero</div>
-<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>    ) {</div>
-<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>      <span class="keyword">static_assert</span>((HCHUNK % STEP_H) == (KH % STEP_H));</div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>      <span class="keyword">static_assert</span>(B*C*HCHUNK*PAD_W &lt;= TILE_BYTES);</div>
-<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span> </div>
-<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT/2; i++) {</div>
-<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>        split[i] = adf::kernel::create_object&lt;SplitFilterInt8StreamTwice&lt;TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;&gt;(i*2);</div>
-<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>        adf::source(split[i]) = <span class="stringliteral">&quot;split.cc&quot;</span>;</div>
-<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>        adf::headers(split[i]) = {<span class="stringliteral">&quot;split.h&quot;</span>};</div>
-<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span>        adf::runtime&lt;ratio&gt;(split[i]) = 0.6;</div>
-<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span> </div>
-<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;</div>
-<div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;</div>
-<div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span>        adf::samples_per_iteration(split[i].out[1]) = B*C*HCHUNK*PAD_W;</div>
-<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>      }</div>
-<div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span>      <span class="keywordflow">if</span> ((LCNT &amp; 0x1) == 1) {</div>
-<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span>        <span class="keywordtype">int</span> i = (LCNT+1)/2 - 1;</div>
-<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>        split[i] = adf::kernel::create_object&lt;SplitFilterInt8Stream&lt;TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;&gt;(LCNT-1);</div>
-<div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span>        adf::source(split[i]) = <span class="stringliteral">&quot;split.cc&quot;</span>;</div>
-<div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span>        adf::headers(split[i]) = {<span class="stringliteral">&quot;split.h&quot;</span>};</div>
-<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>        adf::runtime&lt;ratio&gt;(split[i]) = 0.6;</div>
-<div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span> </div>
-<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span>        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;</div>
-<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span>        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;</div>
-<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span>      }</div>
-<div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span> </div>
-<div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
-<div class="line"><a id="l00431" name="l00431"></a><span class="lineno">  431</span>        k[i] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
-<div class="line"><a id="l00432" name="l00432"></a><span class="lineno">  432</span>          bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
-<div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span>        adf::source(k[i]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
-<div class="line"><a id="l00434" name="l00434"></a><span class="lineno">  434</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
-<div class="line"><a id="l00435" name="l00435"></a><span class="lineno">  435</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
-<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span>        <span class="keywordflow">if</span> (B*C*HCHUNK*PAD_W &gt; MAX_PARAM_BYTES)</div>
-<div class="line"><a id="l00437" name="l00437"></a><span class="lineno">  437</span>          adf::single_buffer(k[i].in[0]);</div>
-<div class="line"><a id="l00438" name="l00438"></a><span class="lineno">  438</span> </div>
-<div class="line"><a id="l00439" name="l00439"></a><span class="lineno">  439</span>        set_heap_size&lt;QLINEARCONV,TT,TTPARAM,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP&gt;(k[i]);</div>
-<div class="line"><a id="l00440" name="l00440"></a><span class="lineno">  440</span> </div>
-<div class="line"><a id="l00441" name="l00441"></a><span class="lineno">  441</span>        adf::connect&lt;adf::window&lt;B*C*HCHUNK*PAD_W&gt;&gt; (split[i/2].out[i&amp;0x1], k[i].in[0]);</div>
-<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span>        adf::connect&lt;adf::stream&gt;                   (pin[1], k[i].in[1]);</div>
-<div class="line"><a id="l00443" name="l00443"></a><span class="lineno">  443</span>        adf::connect&lt;adf::stream&gt;                   (k[i].out[0], concat_graph.pin[i]);</div>
-<div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span> </div>
-<div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span>        <span class="keywordflow">if</span> ((i &amp; 0x1) != 0) {</div>
-<div class="line"><a id="l00446" name="l00446"></a><span class="lineno">  446</span>          adf::location&lt;adf::kernel&gt;(k[i]) =</div>
-<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>            adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=0});</div>
-<div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>          adf::location&lt;adf::kernel&gt;(split[i/2]) = </div>
-<div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>            adf::location&lt;adf::kernel&gt;(k[i]) + adf::relative_offset({.col_offset=0, .row_offset=-1});</div>
-<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>          </div>
-<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span>          adf::location_constraint sTilePos = adf::location&lt;adf::kernel&gt;(split[i/2]);</div>
-<div class="line"><a id="l00452" name="l00452"></a><span class="lineno">  452</span>          adf::location&lt;adf::stack&gt;(split[i/2]) = sTilePos;</div>
-<div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>          adf::location&lt;adf::stack&gt;(k[i]) = sTilePos;</div>
-<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span>          adf::location&lt;adf::parameter&gt;(k[i].param[0]) = sTilePos;</div>
-<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span>          adf::location&lt;adf::parameter&gt;(k[i].param[0]) = adf::offset(0);</div>
-<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span>        }</div>
-<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span>        </div>
-<div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span>        adf::location_constraint kTilePos = adf::location&lt;adf::kernel&gt;(k[i]);</div>
-<div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span>        adf::location&lt;adf::buffer&gt;(k[i].in[0]) = kTilePos; <span class="comment">// may bust tiles adjacent to split</span></div>
-<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span>        <span class="keywordflow">if</span> (B*C*HCHUNK*PAD_W &gt; MAX_PARAM_BYTES) {</div>
-<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span>          adf::location&lt;adf::buffer&gt;(k[i].in[0]) = {adf::offset(0)};</div>
-<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>          adf::location&lt;adf::buffer&gt;(k[i].in[0]) = {adf::offset(0), adf::offset(16384)};</div>
-<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span>        }        </div>
-<div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span>      }</div>
-<div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
-<div class="line"><a id="l00467" name="l00467"></a><span class="lineno">  467</span> </div>
-<div class="line"><a id="l00468" name="l00468"></a><span class="lineno">  468</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
-<div class="line"><a id="l00469" name="l00469"></a><span class="lineno">  469</span>        pad.push_back(</div>
-<div class="line"><a id="l00470" name="l00470"></a><span class="lineno">  470</span>          adf::kernel::create_object&lt;<a class="code hl_class" href="classPad2DStreamInt8.html">Pad2DStreamInt8&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;</a>&gt;(x_zero));</div>
-<div class="line"><a id="l00471" name="l00471"></a><span class="lineno">  471</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
-<div class="line"><a id="l00472" name="l00472"></a><span class="lineno">  472</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
-<div class="line"><a id="l00473" name="l00473"></a><span class="lineno">  473</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
-<div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span> </div>
-<div class="line"><a id="l00475" name="l00475"></a><span class="lineno">  475</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
-<div class="line"><a id="l00476" name="l00476"></a><span class="lineno">  476</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (LCNT+1)/2; i++)</div>
-<div class="line"><a id="l00477" name="l00477"></a><span class="lineno">  477</span>          adf::connect&lt;adf::stream&gt; (pad[0].out[0], split[i].in[0]);</div>
-<div class="line"><a id="l00478" name="l00478"></a><span class="lineno">  478</span>        </div>
-<div class="line"><a id="l00479" name="l00479"></a><span class="lineno">  479</span>        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;</div>
-<div class="line"><a id="l00480" name="l00480"></a><span class="lineno">  480</span>        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;</div>
-<div class="line"><a id="l00481" name="l00481"></a><span class="lineno">  481</span>        <span class="comment">// split and pad can&#39;t be placed on same tile due to stream co-placement constraints</span></div>
-<div class="line"><a id="l00482" name="l00482"></a><span class="lineno">  482</span>      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00483" name="l00483"></a><span class="lineno">  483</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (LCNT+1)/2; i++)</div>
-<div class="line"><a id="l00484" name="l00484"></a><span class="lineno">  484</span>          adf::connect&lt;adf::stream&gt; (pin[0], split[i].in[0]);</div>
-<div class="line"><a id="l00485" name="l00485"></a><span class="lineno">  485</span>      }</div>
-<div class="line"><a id="l00486" name="l00486"></a><span class="lineno">  486</span> </div>
-<div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; concat_graph.k1.size(); i++) {</div>
-<div class="line"><a id="l00488" name="l00488"></a><span class="lineno">  488</span>        adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]) = </div>
-<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span>          adf::location&lt;adf::kernel&gt;(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
-<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>        </div>
-<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span>        adf::location_constraint cTilePos = adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]);</div>
-<div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>        adf::location&lt;adf::parameter&gt;(k[i*2].param[0]) = cTilePos;</div>
-<div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span>        adf::location&lt;adf::parameter&gt;(k[i*2].param[0]) = adf::offset(0);</div>
-<div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span>        adf::location&lt;adf::stack&gt;(k[i*2]) = cTilePos;</div>
-<div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span>        adf::location&lt;adf::stack&gt;(concat_graph.k1[i]) = cTilePos;</div>
-<div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span>      }</div>
-<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span>    }</div>
-<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span> </div>
-<div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span>};</div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
+<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
+<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>  <span class="keywordtype">int</span> HCHUNK,</div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W,</div>
+<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP, </div>
+<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
+<div class="foldopen" id="foldopen00375" data-start="{" data-end="};">
+<div class="line"><a id="l00375" name="l00375"></a><span class="lineno"><a class="line" href="classQLinearConvChunkHStreamGraph.html">  375</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvChunkHStreamGraph.html">QLinearConvChunkHStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span> </div>
+<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
+<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span> </div>
+<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span>    std::vector&lt;adf::kernel&gt; pad;</div>
+<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span> </div>
+<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OVERLAP = KH-STEP_H;</div>
+<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;</div>
+<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span>    adf::kernel split[(LCNT+1)/2];</div>
+<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>    adf::kernel k[LCNT];</div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span> </div>
+<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> HCHUNK_OUT = (HCHUNK - KH) / STEP_H + 1;</div>
+<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
+<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span>    ConcatStreamGraph&lt;CONCAT, TT, LCNT, B*M, HCHUNK_OUT*OUT_W_PAD, OUT_H*OUT_W_PAD&gt; concat_graph;</div>
+<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span>    </div>
+<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span>    adf::port&lt;adf::input&gt; pin[2];</div>
+<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span>    adf::port&lt;adf::output&gt; pout[1];</div>
+<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span> </div>
+<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>    <a class="code hl_class" href="classQLinearConvChunkHStreamGraph.html">QLinearConvChunkHStreamGraph</a>(</div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span>      std::vector&lt;int32_t&gt; bias,</div>
+<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>      <span class="keywordtype">float</span> x_scale,</div>
+<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>      <span class="keywordtype">float</span> w_scale,</div>
+<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span>      <span class="keywordtype">float</span> y_scale,</div>
+<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span>      TT x_zero,</div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>      TTPARAM w_zero,</div>
+<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span>      TT y_zero</div>
+<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span>    ) {</div>
+<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>      <span class="keyword">static_assert</span>((HCHUNK % STEP_H) == (KH % STEP_H));</div>
+<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>      <span class="keyword">static_assert</span>(B*C*HCHUNK*PAD_W &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span> </div>
+<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT/2; i++) {</div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>        split[i] = adf::kernel::create_object&lt;SplitFilterInt8StreamTwice&lt;TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;&gt;(i*2);</div>
+<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>        adf::source(split[i]) = <span class="stringliteral">&quot;split.cc&quot;</span>;</div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>        adf::headers(split[i]) = {<span class="stringliteral">&quot;split.h&quot;</span>};</div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>        adf::runtime&lt;ratio&gt;(split[i]) = 0.6;</div>
+<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span> </div>
+<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span>        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;</div>
+<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;</div>
+<div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>        adf::samples_per_iteration(split[i].out[1]) = B*C*HCHUNK*PAD_W;</div>
+<div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span>      }</div>
+<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>      <span class="keywordflow">if</span> ((LCNT &amp; 0x1) == 1) {</div>
+<div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span>        <span class="keywordtype">int</span> i = (LCNT+1)/2 - 1;</div>
+<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span>        split[i] = adf::kernel::create_object&lt;SplitFilterInt8Stream&lt;TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;&gt;(LCNT-1);</div>
+<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>        adf::source(split[i]) = <span class="stringliteral">&quot;split.cc&quot;</span>;</div>
+<div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span>        adf::headers(split[i]) = {<span class="stringliteral">&quot;split.h&quot;</span>};</div>
+<div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span>        adf::runtime&lt;ratio&gt;(split[i]) = 0.6;</div>
+<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span> </div>
+<div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span>        adf::samples_per_iteration(split[i].in[0]) = B*C*PAD_H*PAD_W;</div>
+<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span>        adf::samples_per_iteration(split[i].out[0]) = B*C*HCHUNK*PAD_W;</div>
+<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span>      }</div>
+<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span> </div>
+<div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
+<div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span>        k[i] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
+<div class="line"><a id="l00431" name="l00431"></a><span class="lineno">  431</span>          bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
+<div class="line"><a id="l00432" name="l00432"></a><span class="lineno">  432</span>        adf::source(k[i]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
+<div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
+<div class="line"><a id="l00434" name="l00434"></a><span class="lineno">  434</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
+<div class="line"><a id="l00435" name="l00435"></a><span class="lineno">  435</span>        <span class="keywordflow">if</span> (B*C*HCHUNK*PAD_W &gt; MAX_PARAM_BYTES)</div>
+<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span>          adf::single_buffer(k[i].in[0]);</div>
+<div class="line"><a id="l00437" name="l00437"></a><span class="lineno">  437</span> </div>
+<div class="line"><a id="l00438" name="l00438"></a><span class="lineno">  438</span>        set_heap_size&lt;QLINEARCONV,TT,TTPARAM,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP&gt;(k[i]);</div>
+<div class="line"><a id="l00439" name="l00439"></a><span class="lineno">  439</span> </div>
+<div class="line"><a id="l00440" name="l00440"></a><span class="lineno">  440</span>        adf::connect&lt;adf::window&lt;B*C*HCHUNK*PAD_W&gt;&gt; (split[i/2].out[i&amp;0x1], k[i].in[0]);</div>
+<div class="line"><a id="l00441" name="l00441"></a><span class="lineno">  441</span>        adf::connect&lt;adf::stream&gt;                   (pin[1], k[i].in[1]);</div>
+<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span>        adf::connect&lt;adf::stream&gt;                   (k[i].out[0], concat_graph.pin[i]);</div>
+<div class="line"><a id="l00443" name="l00443"></a><span class="lineno">  443</span> </div>
+<div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span>        <span class="keywordflow">if</span> ((i &amp; 0x1) != 0) {</div>
+<div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span>          adf::location&lt;adf::kernel&gt;(k[i]) =</div>
+<div class="line"><a id="l00446" name="l00446"></a><span class="lineno">  446</span>            adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=0});</div>
+<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>          adf::location&lt;adf::kernel&gt;(split[i/2]) = </div>
+<div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>            adf::location&lt;adf::kernel&gt;(k[i]) + adf::relative_offset({.col_offset=0, .row_offset=-1});</div>
+<div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>          </div>
+<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>          adf::location_constraint sTilePos = adf::location&lt;adf::kernel&gt;(split[i/2]);</div>
+<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span>          adf::location&lt;adf::stack&gt;(split[i/2]) = sTilePos;</div>
+<div class="line"><a id="l00452" name="l00452"></a><span class="lineno">  452</span>          adf::location&lt;adf::stack&gt;(k[i]) = sTilePos;</div>
+<div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>          adf::location&lt;adf::parameter&gt;(k[i].param[0]) = sTilePos;</div>
+<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span>          adf::location&lt;adf::parameter&gt;(k[i].param[0]) = adf::offset(0);</div>
+<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span>        }</div>
+<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span>        </div>
+<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span>        adf::location_constraint kTilePos = adf::location&lt;adf::kernel&gt;(k[i]);</div>
+<div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span>        adf::location&lt;adf::buffer&gt;(k[i].in[0]) = kTilePos; <span class="comment">// may bust tiles adjacent to split</span></div>
+<div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span>        <span class="keywordflow">if</span> (B*C*HCHUNK*PAD_W &gt; MAX_PARAM_BYTES) {</div>
+<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span>          adf::location&lt;adf::buffer&gt;(k[i].in[0]) = {adf::offset(0)};</div>
+<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>          adf::location&lt;adf::buffer&gt;(k[i].in[0]) = {adf::offset(0), adf::offset(16384)};</div>
+<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>        }        </div>
+<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span>      }</div>
+<div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
+<div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span> </div>
+<div class="line"><a id="l00467" name="l00467"></a><span class="lineno">  467</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
+<div class="line"><a id="l00468" name="l00468"></a><span class="lineno">  468</span>        pad.push_back(</div>
+<div class="line"><a id="l00469" name="l00469"></a><span class="lineno">  469</span>          adf::kernel::create_object&lt;<a class="code hl_class" href="classPad2DStreamInt8.html">Pad2DStreamInt8&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;</a>&gt;(x_zero));</div>
+<div class="line"><a id="l00470" name="l00470"></a><span class="lineno">  470</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
+<div class="line"><a id="l00471" name="l00471"></a><span class="lineno">  471</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
+<div class="line"><a id="l00472" name="l00472"></a><span class="lineno">  472</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
+<div class="line"><a id="l00473" name="l00473"></a><span class="lineno">  473</span> </div>
+<div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
+<div class="line"><a id="l00475" name="l00475"></a><span class="lineno">  475</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (LCNT+1)/2; i++)</div>
+<div class="line"><a id="l00476" name="l00476"></a><span class="lineno">  476</span>          adf::connect&lt;adf::stream&gt; (pad[0].out[0], split[i].in[0]);</div>
+<div class="line"><a id="l00477" name="l00477"></a><span class="lineno">  477</span>        </div>
+<div class="line"><a id="l00478" name="l00478"></a><span class="lineno">  478</span>        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;</div>
+<div class="line"><a id="l00479" name="l00479"></a><span class="lineno">  479</span>        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;</div>
+<div class="line"><a id="l00480" name="l00480"></a><span class="lineno">  480</span>        <span class="comment">// split and pad can&#39;t be placed on same tile due to stream co-placement constraints</span></div>
+<div class="line"><a id="l00481" name="l00481"></a><span class="lineno">  481</span>      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00482" name="l00482"></a><span class="lineno">  482</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (LCNT+1)/2; i++)</div>
+<div class="line"><a id="l00483" name="l00483"></a><span class="lineno">  483</span>          adf::connect&lt;adf::stream&gt; (pin[0], split[i].in[0]);</div>
+<div class="line"><a id="l00484" name="l00484"></a><span class="lineno">  484</span>      }</div>
+<div class="line"><a id="l00485" name="l00485"></a><span class="lineno">  485</span> </div>
+<div class="line"><a id="l00486" name="l00486"></a><span class="lineno">  486</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; concat_graph.k1.size(); i++) {</div>
+<div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span>        adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]) = </div>
+<div class="line"><a id="l00488" name="l00488"></a><span class="lineno">  488</span>          adf::location&lt;adf::kernel&gt;(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span>        </div>
+<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>        adf::location_constraint cTilePos = adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]);</div>
+<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span>        adf::location&lt;adf::parameter&gt;(k[i*2].param[0]) = cTilePos;</div>
+<div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>        adf::location&lt;adf::parameter&gt;(k[i*2].param[0]) = adf::offset(0);</div>
+<div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span>        adf::location&lt;adf::stack&gt;(k[i*2]) = cTilePos;</div>
+<div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span>        adf::location&lt;adf::stack&gt;(concat_graph.k1[i]) = cTilePos;</div>
+<div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span>      }</div>
+<div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span>    }</div>
+<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span> </div>
+<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span>};</div>
 </div>
+<div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span> </div>
 <div class="line"><a id="l00500" name="l00500"></a><span class="lineno">  500</span> </div>
-<div class="line"><a id="l00501" name="l00501"></a><span class="lineno">  501</span> </div>
-<div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span><span class="keyword">template</span> &lt;</div>
-<div class="line"><a id="l00512" name="l00512"></a><span class="lineno">  512</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>SPLIT,</div>
-<div class="line"><a id="l00513" name="l00513"></a><span class="lineno">  513</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
-<div class="line"><a id="l00514" name="l00514"></a><span class="lineno">  514</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
-<div class="line"><a id="l00515" name="l00515"></a><span class="lineno">  515</span>  <span class="keywordtype">int</span> HCHUNK,</div>
-<div class="line"><a id="l00516" name="l00516"></a><span class="lineno">  516</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W,</div>
-<div class="line"><a id="l00517" name="l00517"></a><span class="lineno">  517</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP, </div>
-<div class="line"><a id="l00518" name="l00518"></a><span class="lineno">  518</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
-<div class="foldopen" id="foldopen00519" data-start="{" data-end="};">
-<div class="line"><a id="l00519" name="l00519"></a><span class="lineno"><a class="line" href="classQLinearConvChunkHPktStreamGraph.html">  519</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvChunkHPktStreamGraph.html">QLinearConvChunkHPktStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
-<div class="line"><a id="l00520" name="l00520"></a><span class="lineno">  520</span> </div>
-<div class="line"><a id="l00521" name="l00521"></a><span class="lineno">  521</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00522" name="l00522"></a><span class="lineno">  522</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
-<div class="line"><a id="l00523" name="l00523"></a><span class="lineno">  523</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
+<div class="line"><a id="l00510" name="l00510"></a><span class="lineno">  510</span><span class="keyword">template</span> &lt;</div>
+<div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV, </div>
+<div class="line"><a id="l00512" name="l00512"></a><span class="lineno">  512</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
+<div class="line"><a id="l00513" name="l00513"></a><span class="lineno">  513</span>  <span class="keywordtype">int</span> HCHUNK,</div>
+<div class="line"><a id="l00514" name="l00514"></a><span class="lineno">  514</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W,</div>
+<div class="line"><a id="l00515" name="l00515"></a><span class="lineno">  515</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP, </div>
+<div class="line"><a id="l00516" name="l00516"></a><span class="lineno">  516</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
+<div class="foldopen" id="foldopen00517" data-start="{" data-end="};">
+<div class="line"><a id="l00517" name="l00517"></a><span class="lineno"><a class="line" href="classQLinearConvChunkHPktStreamGraph.html">  517</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvChunkHPktStreamGraph.html">QLinearConvChunkHPktStreamGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00518" name="l00518"></a><span class="lineno">  518</span> </div>
+<div class="line"><a id="l00519" name="l00519"></a><span class="lineno">  519</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00520" name="l00520"></a><span class="lineno">  520</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
+<div class="line"><a id="l00521" name="l00521"></a><span class="lineno">  521</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
+<div class="line"><a id="l00522" name="l00522"></a><span class="lineno">  522</span> </div>
+<div class="line"><a id="l00523" name="l00523"></a><span class="lineno">  523</span>    std::vector&lt;adf::kernel&gt; pad;</div>
 <div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span> </div>
-<div class="line"><a id="l00525" name="l00525"></a><span class="lineno">  525</span>    std::vector&lt;adf::kernel&gt; pad;</div>
-<div class="line"><a id="l00526" name="l00526"></a><span class="lineno">  526</span> </div>
-<div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OVERLAP = KH-STEP_H;</div>
-<div class="line"><a id="l00528" name="l00528"></a><span class="lineno">  528</span>    <span class="keyword">typedef</span> <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph&lt;SPLIT, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;</a> <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">mSplitGraph</a>;</div>
-<div class="line"><a id="l00529" name="l00529"></a><span class="lineno">  529</span>    <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">mSplitGraph</a> split_graph;</div>
-<div class="line"><a id="l00530" name="l00530"></a><span class="lineno">  530</span> </div>
-<div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;</div>
-<div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span>    adf::kernel k[LCNT];</div>
-<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span> </div>
-<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> HCHUNK_OUT = (HCHUNK - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
-<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>    ConcatStreamGraph&lt;CONCAT, TT, LCNT, B*M, HCHUNK_OUT*OUT_W_PAD, OUT_H*OUT_W_PAD&gt; concat_graph;</div>
-<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>    </div>
-<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span>    adf::port&lt;adf::input&gt; pin[2];</div>
-<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>    adf::port&lt;adf::output&gt; pout[1];</div>
-<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span> </div>
-<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>    <a class="code hl_class" href="classQLinearConvChunkHPktStreamGraph.html">QLinearConvChunkHPktStreamGraph</a>(</div>
-<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span>      std::vector&lt;int32_t&gt; bias,</div>
-<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span>      <span class="keywordtype">float</span> x_scale,</div>
-<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span>      <span class="keywordtype">float</span> w_scale,</div>
-<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span>      <span class="keywordtype">float</span> y_scale,</div>
-<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>      TT x_zero,</div>
-<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>      TTPARAM w_zero,</div>
-<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>      TT y_zero</div>
-<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>    ) {</div>
-<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>      <span class="keyword">static_assert</span>((HCHUNK % STEP_H) == (KH % STEP_H));</div>
-<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>      <span class="keyword">static_assert</span>(B*C*HCHUNK*PAD_W &lt;= TILE_BYTES);</div>
-<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span> </div>
-<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
-<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>        k[i] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
-<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>          bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
-<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>        adf::source(k[i]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
-<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
-<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
+<div class="line"><a id="l00525" name="l00525"></a><span class="lineno">  525</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OVERLAP = KH-STEP_H;</div>
+<div class="line"><a id="l00526" name="l00526"></a><span class="lineno">  526</span>    <span class="keyword">typedef</span> <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph&lt;SplitFilterInt8PktStream, TT, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W&gt;</a> <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">mSplitGraph</a>;</div>
+<div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span>    <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">mSplitGraph</a> split_graph;</div>
+<div class="line"><a id="l00528" name="l00528"></a><span class="lineno">  528</span> </div>
+<div class="line"><a id="l00529" name="l00529"></a><span class="lineno">  529</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;</div>
+<div class="line"><a id="l00530" name="l00530"></a><span class="lineno">  530</span>    adf::kernel k[LCNT];</div>
+<div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span> </div>
+<div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> HCHUNK_OUT = (HCHUNK - KH) / STEP_H + 1;</div>
+<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
+<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>    ConcatStreamGraph&lt;CONCAT, TT, LCNT, B*M, HCHUNK_OUT*OUT_W_PAD, OUT_H*OUT_W_PAD&gt; concat_graph;</div>
+<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>    </div>
+<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>    adf::port&lt;adf::input&gt; pin[2];</div>
+<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>    adf::port&lt;adf::output&gt; pout[1];</div>
+<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span> </div>
+<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>    <a class="code hl_class" href="classQLinearConvChunkHPktStreamGraph.html">QLinearConvChunkHPktStreamGraph</a>(</div>
+<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>      std::vector&lt;int32_t&gt; bias,</div>
+<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>      <span class="keywordtype">float</span> x_scale,</div>
+<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span>      <span class="keywordtype">float</span> w_scale,</div>
+<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span>      <span class="keywordtype">float</span> y_scale,</div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span>      TT x_zero,</div>
+<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span>      TTPARAM w_zero,</div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>      TT y_zero</div>
+<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>    ) {</div>
+<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>      <span class="keyword">static_assert</span>((HCHUNK % STEP_H) == (KH % STEP_H));</div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>      <span class="keyword">static_assert</span>(B*C*HCHUNK*PAD_W &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span> </div>
+<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>        k[i] = adf::kernel::create_object&lt;QLINEARCONV&lt;TT, TTPARAM, HCHUNK, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP&gt;&gt;(</div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>          bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
+<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>        adf::source(k[i]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
+<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
+<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span> </div>
+<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span>        set_heap_size&lt;QLINEARCONV,TT,TTPARAM,HCHUNK,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP&gt;(k[i]);</div>
 <div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span> </div>
-<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>        set_heap_size&lt;QLINEARCONV,TT,TTPARAM,HCHUNK,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP&gt;(k[i]);</div>
-<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span> </div>
-<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>        adf::connect&lt;adf::pktstream&gt; (split_graph.pout[i], k[i].in[0]);</div>
-<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>        adf::connect&lt;adf::stream&gt;    (pin[1], k[i].in[1]);</div>
-<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>        adf::connect&lt;adf::stream&gt;    (k[i].out[0], concat_graph.pin[i]);</div>
+<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>        adf::connect&lt;adf::pktstream&gt; (split_graph.pout[i], k[i].in[0]);</div>
+<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>        adf::connect&lt;adf::stream&gt;    (pin[1], k[i].in[1]);</div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>        adf::connect&lt;adf::stream&gt;    (k[i].out[0], concat_graph.pin[i]);</div>
+<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span> </div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>        adf::samples_per_iteration(k[i].out[0]) = B*M*HCHUNK_OUT*OUT_W_PAD;</div>
 <div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span> </div>
-<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>        adf::samples_per_iteration(k[i].out[0]) = B*M*HCHUNK_OUT*OUT_W_PAD;</div>
-<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span> </div>
-<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>        <span class="keywordflow">if</span> ((i&amp;0x1) == 1) {</div>
-<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>        }</div>
-<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>        <span class="keywordflow">if</span> (i == 2) {</div>
-<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});</div>
-<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>        }</div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>        adf::location&lt;adf::stack&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i]);</div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>      }</div>
+<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>        <span class="keywordflow">if</span> ((i&amp;0x1) == 1) {</div>
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>        }</div>
+<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>        <span class="keywordflow">if</span> (i == 2) {</div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});</div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>        }</div>
+<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>        adf::location&lt;adf::stack&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i]);</div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>      }</div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span> </div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
 <div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span> </div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span> </div>
-<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>        pad.push_back(</div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>          adf::kernel::create_object&lt;<a class="code hl_class" href="classPad2DStreamInt8.html">Pad2DStreamInt8&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;</a>&gt;(x_zero));</div>
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
-<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
-<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span> </div>
-<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>        adf::connect&lt;adf::stream&gt; (pad[0].out[0], split_graph.pin[0]);</div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>        </div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;</div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;</div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>        <span class="comment">// split and pad can&#39;t be placed on same tile due to stream co-placement constraints</span></div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>        adf::connect&lt;adf::stream&gt; (pin[0], split_graph.pin[0]);</div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>      }</div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span> </div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; concat_graph.k1.size(); i++) {</div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>        adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]) = </div>
-<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>          adf::location&lt;adf::kernel&gt;(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
-<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>        </div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>        adf::location_constraint cTilePos = adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]);</div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>        adf::location&lt;adf::parameter&gt;(k[i*2+1].param[0]) = cTilePos;</div>
-<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>        adf::location&lt;adf::stack&gt;(concat_graph.k1[i]) = cTilePos;</div>
-<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>      }</div>
-<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>    }</div>
-<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span> </div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>};</div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>        pad.push_back(</div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>          adf::kernel::create_object&lt;<a class="code hl_class" href="classPad2DStreamInt8.html">Pad2DStreamInt8&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;</a>&gt;(x_zero));</div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span> </div>
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>        adf::connect&lt;adf::stream&gt; (pad[0].out[0], split_graph.pin[0]);</div>
+<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>        </div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;</div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;</div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>        <span class="comment">// split and pad can&#39;t be placed on same tile due to stream co-placement constraints</span></div>
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>        adf::connect&lt;adf::stream&gt; (pin[0], split_graph.pin[0]);</div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>      }</div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span> </div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; concat_graph.k1.size(); i++) {</div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>        adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]) = </div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>          adf::location&lt;adf::kernel&gt;(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>        </div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>        adf::location_constraint cTilePos = adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]);</div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>        adf::location&lt;adf::parameter&gt;(k[i*2+1].param[0]) = cTilePos;</div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>        adf::location&lt;adf::stack&gt;(concat_graph.k1[i]) = cTilePos;</div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>      }</div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>    }</div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span> </div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>};</div>
 </div>
-<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARCONV_GRAPH_H__</span></div>
-<div class="ttc" id="aclassPad2DStreamInt8_html"><div class="ttname"><a href="classPad2DStreamInt8.html">Pad2DStreamInt8</a></div><div class="ttdoc">Vector implementation for Int8 Pad2D Pad2DStreamInt8&lt;a,2,30,30,32,1,1,1,1&gt; total = 1933.</div><div class="ttdef"><b>Definition</b> pad.h:51</div></div>
-<div class="ttc" id="aclassQLinearConv1x1PktStream_html"><div class="ttname"><a href="classQLinearConv1x1PktStream.html">QLinearConv1x1PktStream</a></div><div class="ttdoc">Vector implementation for 1x1 QLinearConv, requires data to be reshaped from (M,C,...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:635</div></div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span> </div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span> </div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="keyword">template</span> &lt;</div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV0, </div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV1, </div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>QLINEARCONV2, </div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>  <span class="keyword">template</span>&lt;<span class="keyword">typename</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>&gt; <span class="keyword">class </span>CONCAT, </div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>  <span class="keywordtype">int</span> CCHUNK,</div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>  <span class="keyword">typename</span> TT, <span class="keyword">typename</span> TTPARAM, <span class="keywordtype">int</span> INP_H, <span class="keywordtype">int</span> INP_W, <span class="keywordtype">int</span> INP_W_PAD, <span class="keywordtype">int</span> OUT_W, <span class="keywordtype">int</span> OUT_W_PAD, <span class="keywordtype">int</span> STEP_H, <span class="keywordtype">int</span> STEP_W,</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>  <span class="keywordtype">int</span> B, <span class="keywordtype">int</span> C, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> KH, <span class="keywordtype">int</span> KW, <span class="keywordtype">int</span> GROUP, </div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>  <span class="keywordtype">int</span> H0 = 0, <span class="keywordtype">int</span> H1 = 0, <span class="keywordtype">int</span> W0 = 0, <span class="keywordtype">int</span> W1 = 0&gt;</div>
+<div class="foldopen" id="foldopen00626" data-start="{" data-end="};">
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno"><a class="line" href="classQLinearConvChunkCGraph.html">  626</a></span><span class="keyword">class </span><a class="code hl_class" href="classQLinearConvChunkCGraph.html">QLinearConvChunkCGraph</a> : <span class="keyword">public</span> adf::graph {</div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span> </div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_H = INP_H + H0 + H1;</div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> PAD_W = INP_W + W0 + W1;</div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span> </div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>    std::vector&lt;adf::kernel&gt; pad;</div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span> </div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>    <span class="keyword">typedef</span> <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph&lt;SplitFilterInt8PktStream, TT, B, C*PAD_H*PAD_W, CCHUNK*PAD_H*PAD_W, 0&gt;</a> <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">mSplitGraph</a>;</div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>    <a class="code hl_class" href="classSplitFilterPktStreamGraph.html">mSplitGraph</a> split_graph;</div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span> </div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> OUT_H = (PAD_H - KH) / STEP_H + 1;</div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>    </div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">int</span> LCNT = C / CCHUNK;</div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>    adf::kernel k[LCNT];</div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span> </div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>    adf::port&lt;adf::input&gt; pin[1];</div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>    adf::port&lt;adf::output&gt; pout[1];</div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span> </div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>    <a class="code hl_class" href="classQLinearConvChunkCGraph.html">QLinearConvChunkCGraph</a>(</div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>      std::vector&lt;TTPARAM&gt; weights,</div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>      std::vector&lt;int32_t&gt; bias,</div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>      <span class="keywordtype">float</span> x_scale,</div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>      <span class="keywordtype">float</span> w_scale,</div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>      <span class="keywordtype">float</span> y_scale,</div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>      TT x_zero,</div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>      TTPARAM w_zero,</div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>      TT y_zero</div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>    ) {</div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>      <span class="keyword">static_assert</span>(LCNT &gt;= 3);</div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span>      <span class="keyword">static_assert</span>(C % CCHUNK == 0);</div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span>      <span class="keyword">static_assert</span>(B*CCHUNK*PAD_H*PAD_W &lt;= TILE_BYTES);</div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span>      assert(weights.size() / LCNT &lt;= TILE_BYTES); <span class="comment">// weight size may vary based on padding done for given kernel</span></div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span> </div>
+<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>        std::vector&lt;TTPARAM&gt; wChunk; <span class="comment">// build wChunk</span></div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span>        wChunk.reserve(weights.size() / LCNT);</div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> m = 0; m &lt; M; m++) {</div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>          wChunk.insert(wChunk.end(), </div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span>            weights.begin() + m*weights.size()/M + i*weights.size()/M/LCNT, </div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span>            weights.begin() + m*weights.size()/M + (i+1)*weights.size()/M/LCNT);</div>
+<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span>        }</div>
+<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span> </div>
+<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span>        <span class="keywordflow">if</span> (i == 0) {</div>
+<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span>          k[i] = adf::kernel::create_object&lt;QLINEARCONV0&lt;TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, CCHUNK, M, KH, KW, GROUP&gt;&gt;(</div>
+<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span>            wChunk, bias, w_zero);</div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (i == LCNT-1) {</div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span>          k[i] = adf::kernel::create_object&lt;QLINEARCONV2&lt;TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, CCHUNK, M, KH, KW, GROUP&gt;&gt;(</div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span>            wChunk, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);</div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>          adf::connect&lt;adf::cascade&gt; (k[i-1].out[0], k[i].in[1]);</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>          adf::connect&lt;adf::stream&gt;  (k[i].out[0], pout[0]);</div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>          k[i] = adf::kernel::create_object&lt;QLINEARCONV1&lt;TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, CCHUNK, M, KH, KW, GROUP&gt;&gt;(</div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>            wChunk, w_zero);</div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>          adf::connect&lt;adf::cascade&gt; (k[i-1].out[0], k[i].in[1]);</div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span>        }</div>
+<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span>        </div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>        adf::source(k[i]) = <span class="stringliteral">&quot;qlinearconv.cc&quot;</span>;</div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span>        adf::headers(k[i]) = {<span class="stringliteral">&quot;qlinearconv.h&quot;</span>};</div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>        adf::runtime&lt;ratio&gt;(k[i]) = 0.6;</div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>        adf::single_buffer(k[i].in[0]);</div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span> </div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>        adf::connect&lt;adf::window&lt;B*CCHUNK*PAD_H*PAD_W&gt;&gt; (split_graph.pout[i], k[i].in[0]);</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span> </div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>        <span class="keywordflow">if</span> (i != 0) {</div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=1});</div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>        }</div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>        adf::location&lt;adf::buffer&gt;(k[i].in[0]) = adf::location&lt;adf::kernel&gt;(k[i]);</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>        adf::location&lt;adf::buffer&gt;(k[i].in[0]) = {adf::offset(0)};</div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>      }</div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span> </div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>      <span class="keywordflow">if</span> (H0+H1+W0+W1 != 0) {</div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>        pad.push_back(</div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>          adf::kernel::create_object&lt;<a class="code hl_class" href="classPad2DStreamInt8.html">Pad2DStreamInt8&lt;TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1&gt;</a>&gt;(x_zero));</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>        adf::source(pad[0]) = <span class="stringliteral">&quot;pad.cc&quot;</span>;</div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>        adf::headers(pad[0]) = {<span class="stringliteral">&quot;pad.h&quot;</span>};</div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>        adf::runtime&lt;ratio&gt;(pad[0]) = 0.6;</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span> </div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>        adf::connect&lt;adf::stream&gt; (pin[0], pad[0].in[0]);</div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>        adf::connect&lt;adf::stream&gt; (pad[0].out[0], split_graph.pin[0]);</div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>        </div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>        <span class="comment">// split and pad can&#39;t be placed on same tile due to stream co-placement constraints</span></div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>        adf::connect&lt;adf::stream&gt; (pin[0], split_graph.pin[0]);</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>      }</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>    }</div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span> </div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>};</div>
+</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span><span class="preprocessor">#endif </span><span class="comment">// __QLINEARCONV_GRAPH_H__</span></div>
+<div class="ttc" id="aclassPad2DStreamInt8_html"><div class="ttname"><a href="classPad2DStreamInt8.html">Pad2DStreamInt8</a></div><div class="ttdoc">Vector implementation for Int8 Pad2D Pad2DStreamInt8&lt;a,2,30,30,32,1,1,1,1&gt; total = 1885 for v64int16.</div><div class="ttdef"><b>Definition</b> pad.h:51</div></div>
+<div class="ttc" id="aclassQLinearConv1x1PktStream_html"><div class="ttname"><a href="classQLinearConv1x1PktStream.html">QLinearConv1x1PktStream</a></div><div class="ttdoc">Vector implementation for 1x1 QLinearConv, requires data to be reshaped from (M,C,...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:780</div></div>
+<div class="ttc" id="aclassQLinearConvChunkCGraph_html"><div class="ttname"><a href="classQLinearConvChunkCGraph.html">QLinearConvChunkCGraph</a></div><div class="ttdoc">Multiinstance graph that stores weights and biases, chunks BCHW by C dimension, maximum 8 chunks.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:626</div></div>
 <div class="ttc" id="aclassQLinearConvChunkHGraph_html"><div class="ttname"><a href="classQLinearConvChunkHGraph.html">QLinearConvChunkHGraph</a></div><div class="ttdoc">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:255</div></div>
-<div class="ttc" id="aclassQLinearConvChunkHPktStreamGraph_html"><div class="ttname"><a href="classQLinearConvChunkHPktStreamGraph.html">QLinearConvChunkHPktStreamGraph</a></div><div class="ttdoc">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:519</div></div>
-<div class="ttc" id="aclassQLinearConvChunkHStreamGraph_html"><div class="ttname"><a href="classQLinearConvChunkHStreamGraph.html">QLinearConvChunkHStreamGraph</a></div><div class="ttdoc">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:376</div></div>
-<div class="ttc" id="aclassQLinearConvGraph_html"><div class="ttname"><a href="classQLinearConvGraph.html">QLinearConvGraph</a></div><div class="ttdoc">Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:93</div></div>
+<div class="ttc" id="aclassQLinearConvChunkHPktStreamGraph_html"><div class="ttname"><a href="classQLinearConvChunkHPktStreamGraph.html">QLinearConvChunkHPktStreamGraph</a></div><div class="ttdoc">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:517</div></div>
+<div class="ttc" id="aclassQLinearConvChunkHStreamGraph_html"><div class="ttname"><a href="classQLinearConvChunkHStreamGraph.html">QLinearConvChunkHStreamGraph</a></div><div class="ttdoc">Multiinstance graph that stores weights and biases, chunks BCHW by H dimension, maximum 8 chunks.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:375</div></div>
+<div class="ttc" id="aclassQLinearConvGraph_html"><div class="ttname"><a href="classQLinearConvGraph.html">QLinearConvGraph</a></div><div class="ttdoc">Single instance graph that stores weights and biases Max size = 16384 and 4096 bytes respectively.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:94</div></div>
 <div class="ttc" id="aclassQLinearConvHx4PktStream_html"><div class="ttname"><a href="classQLinearConvHx4PktStream.html">QLinearConvHx4PktStream</a></div><div class="ttdoc">Vector implementation for Hx4 QLinearConv, padding with y_zero, requires data to be arranged in (M,...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:450</div></div>
 <div class="ttc" id="aclassQLinearConvHx4StreamScale32bit_html"><div class="ttname"><a href="classQLinearConvHx4StreamScale32bit.html">QLinearConvHx4StreamScale32bit</a></div><div class="ttdoc">Vector implementation for Hx4 QLinearConv using 32bit scale for precision, requires data to be arrang...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:386</div></div>
 <div class="ttc" id="aclassQLinearConvHx4Stream_html"><div class="ttname"><a href="classQLinearConvHx4Stream.html">QLinearConvHx4Stream</a></div><div class="ttdoc">Vector implementation for Hx4 QLinearConv, requires data to be arranged in [a,b,c,...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:320</div></div>
-<div class="ttc" id="aclassQLinearConvHx6x8bitStream_html"><div class="ttname"><a href="classQLinearConvHx6x8bitStream.html">QLinearConvHx6x8bitStream</a></div><div class="ttdoc">Vector implementation for Hx4 QLinearConv using int8xint8 MACs, requires data to be arranged in [a,...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:517</div></div>
+<div class="ttc" id="aclassQLinearConvHx6x8bitStream_html"><div class="ttname"><a href="classQLinearConvHx6x8bitStream.html">QLinearConvHx6x8bitStream</a></div><div class="ttdoc">Vector implementation for Hx4 QLinearConv using int8xint8 MACs, requires data to be arranged in [a,...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:662</div></div>
 <div class="ttc" id="aclassQLinearConvScalarStream_html"><div class="ttname"><a href="classQLinearConvScalarStream.html">QLinearConvScalarStream</a></div><div class="ttdoc">Scalar implementation streaming weights, requires weights stream to be padded from MxCxKxK to MxCx16,...</div><div class="ttdef"><b>Definition</b> qlinearconv.h:266</div></div>
-<div class="ttc" id="aclassQLinearConvStreamGraph_html"><div class="ttname"><a href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a></div><div class="ttdoc">Single instance graph that streams weights and biases, significantly slower.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:165</div></div>
+<div class="ttc" id="aclassQLinearConvStreamGraph_html"><div class="ttname"><a href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a></div><div class="ttdoc">Single instance graph that streams weights and biases, significantly slower.</div><div class="ttdef"><b>Definition</b> graph_qlinearconv.h:166</div></div>
 <div class="ttc" id="aclassSplitFilterPktStreamGraph_html"><div class="ttname"><a href="classSplitFilterPktStreamGraph.html">SplitFilterPktStreamGraph</a></div><div class="ttdoc">Graph wrapper for two stream split.</div><div class="ttdef"><b>Definition</b> graph_split.h:185</div></div>
 <div class="ttc" id="aclassSplitGraph_html"><div class="ttname"><a href="classSplitGraph.html">SplitGraph</a></div><div class="ttdoc">Graph wrapper for arbitrary split kernel implementation and lanes.</div><div class="ttdef"><b>Definition</b> graph_split.h:37</div></div>
 </div><!-- fragment --></div><!-- contents -->

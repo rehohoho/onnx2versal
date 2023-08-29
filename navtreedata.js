@@ -68,7 +68,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "add_8h_source.html",
-"pool_8h_source.html"
+"md_profile.html#autotoc_md30"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

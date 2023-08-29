@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearPoolChunkCGraph&lt; SPLIT, QLINEARPOOL, CONCAT, CCHUNK, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classPad2DStreamInt8.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQLinearPoolChunkCGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -91,42 +91,48 @@ $(document).ready(function(){initNavTree('classPad2DStreamInt8.html',''); initRe
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classPad2DStreamInt8-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="classQLinearPoolChunkCGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QLinearPoolChunkCGraph&lt; SPLIT, QLINEARPOOL, CONCAT, CCHUNK, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearPool2D.html">QLinearPool2D</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for Int8 Pad2D Pad2DStreamInt8&lt;a,2,30,30,32,1,1,1,1&gt; total = 1885 for v64int16.  
-</p>
+<p>Multi instance graph.  
+ <a href="classQLinearPoolChunkCGraph.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="pad_8h_source.html">pad.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="graph__qlinearpool_8h_source.html">graph_qlinearpool.h</a>&gt;</code></p>
+
+<p>Inherits adf::graph.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a39467aa5a590947c70fec8ea33dee937" id="r_a39467aa5a590947c70fec8ea33dee937"><td class="memItemLeft" align="right" valign="top"><a id="a39467aa5a590947c70fec8ea33dee937" name="a39467aa5a590947c70fec8ea33dee937"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Pad2DStreamInt8</b> (TT pad_value=0)</td></tr>
-<tr class="separator:a39467aa5a590947c70fec8ea33dee937"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53f0fdd8bf41a3e097a618d317270da5" id="r_a53f0fdd8bf41a3e097a618d317270da5"><td class="memItemLeft" align="right" valign="top"><a id="a53f0fdd8bf41a3e097a618d317270da5" name="a53f0fdd8bf41a3e097a618d317270da5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a53f0fdd8bf41a3e097a618d317270da5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afae3a971e5b01117ab6eaab259b916be" id="r_afae3a971e5b01117ab6eaab259b916be"><td class="memItemLeft" align="right" valign="top"><a id="afae3a971e5b01117ab6eaab259b916be" name="afae3a971e5b01117ab6eaab259b916be"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearPoolChunkCGraph</b> (float in_scale, float out_scale, int8_t in_zero, int8_t out_zero)</td></tr>
+<tr class="separator:afae3a971e5b01117ab6eaab259b916be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a9ac14c0b6b8b883b6bf904788c3a054d" id="r_a9ac14c0b6b8b883b6bf904788c3a054d"><td class="memItemLeft" align="right" valign="top"><a id="a9ac14c0b6b8b883b6bf904788c3a054d" name="a9ac14c0b6b8b883b6bf904788c3a054d"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a9ac14c0b6b8b883b6bf904788c3a054d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:abaf90e3e699dc8f3a37da609011ea55c" id="r_abaf90e3e699dc8f3a37da609011ea55c"><td class="memItemLeft" align="right" valign="top"><a id="abaf90e3e699dc8f3a37da609011ea55c" name="abaf90e3e699dc8f3a37da609011ea55c"></a>
+adf::port&lt; input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1]</td></tr>
+<tr class="separator:abaf90e3e699dc8f3a37da609011ea55c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdedeef7df3bbf0bb1fcd6ac79363c20" id="r_acdedeef7df3bbf0bb1fcd6ac79363c20"><td class="memItemLeft" align="right" valign="top"><a id="acdedeef7df3bbf0bb1fcd6ac79363c20" name="acdedeef7df3bbf0bb1fcd6ac79363c20"></a>
+adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
+<tr class="separator:acdedeef7df3bbf0bb1fcd6ac79363c20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following files:<ul>
-<li>design/aie_src/<a class="el" href="pad_8h_source.html">pad.h</a></li>
-<li>design/aie_src/<b>pad.cc</b></li>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int &gt; class SPLIT, template&lt; typename, int, int, int, int, int, int, int, int &gt; class QLINEARPOOL, template&lt; typename, int, int, int, int &gt; class CONCAT, int CCHUNK, typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW&gt;<br />
+class QLinearPoolChunkCGraph&lt; SPLIT, QLINEARPOOL, CONCAT, CCHUNK, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW &gt;</div><p>&lt;dl class= </p>
+<p>&lt;td class= </p>
+<p>&lt;td class= </p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
+<li>design/aie_src/<a class="el" href="graph__qlinearpool_8h_source.html">graph_qlinearpool.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classPad2DStreamInt8.html">Pad2DStreamInt8</a></li>
+    <li class="navelem"><a class="el" href="classQLinearPoolChunkCGraph.html">QLinearPoolChunkCGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

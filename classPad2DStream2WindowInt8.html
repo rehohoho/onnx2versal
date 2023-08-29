@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: Pad2DStream2WindowInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classPad2DStreamInt8.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classPad2DStream2WindowInt8.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -92,30 +92,30 @@ $(document).ready(function(){initNavTree('classPad2DStreamInt8.html',''); initRe
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classPad2DStreamInt8-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Pad2DStreamInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
+<a href="classPad2DStream2WindowInt8-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">Pad2DStream2WindowInt8&lt; TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Pad.html">Pad</a> &raquo; <a class="el" href="group__PadKernels.html">PadKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for Int8 Pad2D Pad2DStreamInt8&lt;a,2,30,30,32,1,1,1,1&gt; total = 1885 for v64int16.  
+<p>Vector implementation for Pad2D using input stream and output window Pad2DStream2WindowInt8&lt;a,2,30,30,32,1,1,1,1&gt; start = 32390,end = 39864,total = 7474 * 2.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="pad_8h_source.html">pad.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a39467aa5a590947c70fec8ea33dee937" id="r_a39467aa5a590947c70fec8ea33dee937"><td class="memItemLeft" align="right" valign="top"><a id="a39467aa5a590947c70fec8ea33dee937" name="a39467aa5a590947c70fec8ea33dee937"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Pad2DStreamInt8</b> (TT pad_value=0)</td></tr>
-<tr class="separator:a39467aa5a590947c70fec8ea33dee937"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53f0fdd8bf41a3e097a618d317270da5" id="r_a53f0fdd8bf41a3e097a618d317270da5"><td class="memItemLeft" align="right" valign="top"><a id="a53f0fdd8bf41a3e097a618d317270da5" name="a53f0fdd8bf41a3e097a618d317270da5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
-<tr class="separator:a53f0fdd8bf41a3e097a618d317270da5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13027a92eda73dc58d1f7ed85d7e2f62" id="r_a13027a92eda73dc58d1f7ed85d7e2f62"><td class="memItemLeft" align="right" valign="top"><a id="a13027a92eda73dc58d1f7ed85d7e2f62" name="a13027a92eda73dc58d1f7ed85d7e2f62"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Pad2DStream2WindowInt8</b> (TT pad_value=0)</td></tr>
+<tr class="separator:a13027a92eda73dc58d1f7ed85d7e2f62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a109cad19681cd87146371e69443efc98" id="r_a109cad19681cd87146371e69443efc98"><td class="memItemLeft" align="right" valign="top"><a id="a109cad19681cd87146371e69443efc98" name="a109cad19681cd87146371e69443efc98"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *in, output_window&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a109cad19681cd87146371e69443efc98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a9ac14c0b6b8b883b6bf904788c3a054d" id="r_a9ac14c0b6b8b883b6bf904788c3a054d"><td class="memItemLeft" align="right" valign="top"><a id="a9ac14c0b6b8b883b6bf904788c3a054d" name="a9ac14c0b6b8b883b6bf904788c3a054d"></a>
+<tr class="memitem:a3e102cbeb0bae0b4911060a81c855b2f" id="r_a3e102cbeb0bae0b4911060a81c855b2f"><td class="memItemLeft" align="right" valign="top"><a id="a3e102cbeb0bae0b4911060a81c855b2f" name="a3e102cbeb0bae0b4911060a81c855b2f"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
-<tr class="separator:a9ac14c0b6b8b883b6bf904788c3a054d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a3e102cbeb0bae0b4911060a81c855b2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>design/aie_src/<a class="el" href="pad_8h_source.html">pad.h</a></li>
@@ -126,7 +126,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernel
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classPad2DStreamInt8.html">Pad2DStreamInt8</a></li>
+    <li class="navelem"><a class="el" href="classPad2DStream2WindowInt8.html">Pad2DStream2WindowInt8</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
