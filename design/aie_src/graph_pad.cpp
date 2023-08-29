@@ -55,6 +55,33 @@ class Pad2DWindowGraphTest : public adf::graph {
 };
 
 
+template <template<typename, int, int, int, int, int, int, int, int> class PAD, 
+  typename TT, int B, int INP_H, int INP_W, int INP_W_PAD, int H0, int H1, int W0, int W1>
+class Pad2DStream2WindowGraphTest : public adf::graph {
+
+  private:
+    Pad2DStream2WindowGraph<PAD, TT, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> g;
+    static constexpr int OUT_H = INP_H + H0 + H1;
+    static constexpr int OUT_W = INP_W + W0 + W1;
+
+  public:
+    adf::input_plio plin[1];
+    adf::output_plio plout[1];
+
+    Pad2DStream2WindowGraphTest(
+      const std::string& id,
+      const std::string& INP_TXT,
+      const std::string& OUT_TXT = "pad_out.txt"
+    ) { 
+      plin[0] = adf::input_plio::create("plin0_pad_"+id+"_input", PLIO64_ARG(INP_TXT));
+      plout[0] = adf::output_plio::create("plout0_pad_"+id+"_output", PLIO64_ARG(OUT_TXT));
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::window<OUT_H*OUT_W*sizeof(TT)>> (g.pout[0], plout[0].in[0]);
+    }
+
+};
+
+
 // instance to be compiled and used in host within xclbin
 const int B = 2;
 const int INP_H = 30;
@@ -77,6 +104,9 @@ Pad2DWindowGraphTest<Pad2DWindowScalar, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, 
 Pad2DStreamGraphTest<Pad2DStreamInt8, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> pad2DStreamInt8(
   "pad2DStreamInt8", "pad_2d_int8in_shape2x30x32.txt", "pad_2d_int8out_shape2x32x32_Pad2DStreamInt8.txt");
 
+// Pad2DStream2WindowGraphTest<Pad2DStream2WindowInt8, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> pad2DStream2WindowInt8(
+//   "pad2DStream2WindowInt8", "pad_2d_int8in_shape2x30x32.txt", "pad_2d_int8out_shape2x32x32_Pad2DStream2WindowInt8.txt");
+
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
@@ -97,6 +127,10 @@ int main(int argc, char ** argv) {
   adfCheck(pad2DStreamInt8.init(), "init pad2DStreamInt8");
   adfCheck(pad2DStreamInt8.run(ITER_CNT), "run pad2DStreamInt8");
 	adfCheck(pad2DStreamInt8.end(), "end pad2DStreamInt8");
+
+  adfCheck(pad2DStream2WindowInt8.init(), "init pad2DStream2WindowInt8");
+  adfCheck(pad2DStream2WindowInt8.run(ITER_CNT), "run pad2DStream2WindowInt8");
+	adfCheck(pad2DStream2WindowInt8.end(), "end pad2DStream2WindowInt8");
   return 0;
 }
 #endif
