@@ -37,7 +37,7 @@ void MaxpoolScalarBHWC<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STE
 
         window_incr(in, C*(-KH*INP_W + STEP_W)); // go up KH, go right STEP_W (next pos)
       }
-      window_incr(in, C*(-OUT_W*KW + STEP_H*INP_W)); // go down STEP_H, go left OUT_W*KW, account for padding
+      window_incr(in, C*(-OUT_W*STEP_W + STEP_H*INP_W)); // go down STEP_H, go left OUT_W*STEP_W, account for padding
     }
   }
 
@@ -70,8 +70,9 @@ void MaxpoolScalarBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STE
           window_incr(in, -KH*INP_W + STEP_W); // up KH, right STEP_W
           window_writeincr(out, c);
         } // W
-        window_incr(in, -OUT_W*KW + STEP_H*INP_W); // left OUT_W*KW, down KH
+        window_incr(in, -OUT_W*STEP_W + STEP_H*INP_W); // left OUT_W*STEP_W, down STEP_H
       } // H
+      window_incr(in, (INP_H - OUT_H*STEP_H)*INP_W);
     } // C
   } // B
 
