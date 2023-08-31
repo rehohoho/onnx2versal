@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 TILE_SIZE = 32768
-MAX_HEAP_SIZE = 31712
+MAX_HEAP_SIZE = 31712 - 1024
 MAX_PARAM_SIZE = 32768 // 2 # ping-pong buffer, fit input and output ping pongs
 PLIO_WIDTH = 64 // 8 # in bytes
 VECTOR_WORD_BOUNDARY = 16 # in bytes
@@ -521,6 +521,33 @@ class GemmOp(OpParser):
     return [self.M, self.K]
 
 
+class IdentityOp(OpParser):
+  include_file: str = "graph_identity.h"
+
+  def register_params(self, tensors: List[np.ndarray]):
+    assert len(tensors) == 2
+    tin, tout = tensors
+    assert tin.shape == tout.shape
+
+    self.tout = tout # reference copy to check against to compress graph
+
+    tin = pad_lastdim(tin, "Identity tin", get_vector_boundary(tin)) #files
+    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
+    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tin
+    
+    self.N = tin.size
+    self.dtype = tout.dtype
+    self.out_size = tout.size # host buffer sizes
+
+  def get_kernel_line(self) -> str:
+    graph = "IdentityGraph"
+    # self.N, n_repeats = factor_int(self.N, self.dtype.itemsize, TILE_SIZE, 0, force_split_chunksize=32)
+    return f"{graph}<{dtype_to_cstr(self.dtype)},{self.N}> {self.name};"
+  
+  def get_computation_count(self):
+    return 0
+
+
 class MacOp(OpParser):
   include_file: str = "graph_mac.h"
 
@@ -574,14 +601,23 @@ class PoolOp(OpParser):
     super().__init__(name)
     self.reduction_mode = reduction_mode
   
+  def get_graph_targs(self):
+    pad_kernel = "Pad2DStreamInt8" if self.dtype in ["uint8", "int8"] else "Pad2DStreamFloat"
+    return f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W_PAD}," + \
+        f"{self.B},{self.C},{self.KH},{self.KW},{self.STEP_H},{self.STEP_W}," + \
+        f"{pad_kernel},{self.H0},{self.H1},{self.W0},{self.W1}"
+  
   def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 2
     
     attr_d = get_attribute_dict(attributes)
-    if attr_d.get("strides") != attr_d.get("kernel_shape"): raise ValueError(f"Attribute error, strides {attr_d['strides']} not equal to kernel {attr_d['kernel_shape']}")
     kernel_shape = attr_d.get("kernel_shape")
-    if len(kernel_shape) != 2: raise NotImplementedError(f"Pool for kernel shape {kernel_shape} not supported. Only Pool2D supported.")
+    if len(kernel_shape) != 2: 
+      raise NotImplementedError(f"Pool for kernel shape {kernel_shape} not supported. Only Pool2D supported.")
+    
     self.KH, self.KW = kernel_shape
+    self.H0, self.W0, self.H1, self.W1 = attr_d.get("pads", [0, 0, 0, 0])
+    self.STEP_H, self.STEP_W = attr_d.get("strides", [self.KH, self.KW])
     
     tin, tout = tensors
     self.B, self.C, self.INP_H, self.INP_W = tin.shape
@@ -590,23 +626,31 @@ class PoolOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
     
-    vector_boundary = 8 if self.OUT_W > 4 else 4
+    if tin.dtype in ["int8", "uint8"]:
+      vector_boundary = get_vector_boundary(tin)
+    else:
+      vector_boundary = 8 if self.OUT_W > 4 else 4
     tin = pad_lastdim(tin, "PoolOp tin", vector_boundary) #files
     self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
-    tout = pad_lastdim(tout, "QLinearPoolOp tout", vector_boundary)
+    tout = pad_lastdim(tout, "PoolOp tout", vector_boundary)
     
-    self.INP_W, self.OUT_W_PAD = tin.shape[-1], tout.shape[-1]
+    self.INP_W_PAD, self.OUT_W_PAD = tin.shape[-1], tout.shape[-1]
     self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
+    PAD_H = self.INP_H + self.H0 + self.H1
+    PAD_W = max(self.INP_W + self.W0 + self.W1, self.INP_W_PAD)
+    PAD_W = (PAD_W + 15)//16*16
+    self.W1 = PAD_W - self.INP_W - self.W0
+
     if self.reduction_mode == "max":
       kernel = "MaxpoolScalarBCHW"
-      if self.INP_W//self.OUT_W == 2 and self.INP_W % 8 == 0 and self.OUT_W_PAD % 4 == 0 and self.KH == self.KW == 2 and self.dtype == "float32":
+      if self.INP_W_PAD//self.OUT_W == 2 and self.INP_W_PAD % 8 == 0 and self.OUT_W_PAD % 4 == 0 and self.KH == self.KW == 2 and self.dtype == "float32":
         kernel = "Maxpool2x2FloatBCHW"
         self.OUT_W = self.OUT_W_PAD
-      elif self.INP_W//self.OUT_W == 2 and self.INP_W % 16 == 0 and self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 2 and self.dtype == "int8":
+      elif self.INP_W_PAD//self.OUT_W == 2 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 2 and self.dtype == "int8":
         kernel = "Maxpool2x2Int8BCHW"
         self.OUT_W = self.OUT_W_PAD
     elif self.reduction_mode == "avg":
@@ -614,17 +658,18 @@ class PoolOp(OpParser):
     else:
       raise NotImplementedError(f"Pool for reduction mode {self.reduction_mode} not implemented.")
     
-    if self.B*self.C*self.INP_H*self.INP_W*self.dtype.itemsize <= MAX_PARAM_SIZE:
-      return f"PoolGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+    if self.B*self.C*PAD_H*PAD_W*self.dtype.itemsize <= MAX_PARAM_SIZE:
+      return f"PoolGraph<{kernel},{self.get_graph_targs()}> {self.name};"
     else:
+      if self.B*self.C*PAD_H*PAD_W*self.dtype.itemsize > MAX_CHUNKS * MAX_PARAM_SIZE:
+        self.C, _ = factor_int(self.C, self.INP_H * self.INP_W_PAD * self.dtype.itemsize, MAX_PARAM_SIZE * MAX_CHUNKS, 0, force_split_chunksize=32)
       split_kernel = "SplitScalar" if self.dtype == "float32" else "SplitInt8"
       concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
-      CCHUNK, _ = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
-      return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
-        f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+      CCHUNK, _ = factor_int(self.C, self.B*PAD_H*PAD_W*self.dtype.itemsize, MAX_PARAM_SIZE)
+      return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK},{self.get_graph_targs()}> {self.name};"
     
     def get_computation_count(self):
-      return self.B * self.C * self.INP_H * self.INP_W
+      return self.B * self.C * self.INP_H * self.INP_W_PAD
 
 
 class QGemmOp(OpParser):
@@ -667,7 +712,30 @@ class QGemmOp(OpParser):
     # must pad both dims due to second mac for -wzero
     tw = np.pad(tw, ((0, self.K-tw.shape[0]), (0, self.N-tw.shape[1])), "constant", constant_values=tw_zero)
     tbias = pad_lastdim(tbias, "QGemm bias", vector_size)
-    self.argname_2_tensor[f"{self.name}_w"] = tw
+
+    if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE:
+      raise NotImplementedError(f"No QGemm implementation for input size {tin.nbytes} or output size {tout.nbytes}")
+      
+    kernel = "Qgemm" if self.N%16==0 else "QgemmScalar"
+    if tw.nbytes > TILE_SIZE * 8 and self.M == 1: # stream weights
+      kernel = "QgemmStream"
+      self.gmioname_2_tensor[f"{self.name}_w"] = tw.reshape(self.K, -1, 16).transpose(1,0,2)
+      self.gmio_repeats = self.M
+      self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"
+      
+    elif tw.nbytes <= TILE_SIZE: # weights on tile
+      self.argname_2_tensor[f"{self.name}_w"] = tw
+
+      chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, TILE_SIZE, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 16))
+      if chunkSize == self.N:
+        self.kernel_type = f"QgemmGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
+      else:
+        concat = "ConcatInt8Stream"
+        self.kernel_type = f"QgemmChunkNGraph<{kernel},{concat},{chunkSize},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.dtype)},{self.M},{self.K},{self.N}>"
+    
+    else:
+      raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}, with M={self.M}")
+    
     self.argname_2_tensor[f"{self.name}_b"] = tbias
     self.argname_2_tensor[f"{self.name}_xscale"] = tin_scale
     self.argname_2_tensor[f"{self.name}_wscale"] = tw_scale
@@ -675,20 +743,6 @@ class QGemmOp(OpParser):
     self.argname_2_tensor[f"{self.name}_xzero"] = tin_zero
     self.argname_2_tensor[f"{self.name}_wzero"] = tw_zero
     self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
-
-    if tin.nbytes > MAX_PARAM_SIZE or tout.nbytes > MAX_PARAM_SIZE:
-      raise NotImplementedError(f"No QGemm implementation for input size {tin.nbytes} or output size {tout.nbytes}")
-      
-    kernel = "QgemmStream" if self.N%16==0 else "QgemmScalarStream"
-    if tw.nbytes > TILE_SIZE * 8:
-      raise NotImplementedError(f"No QGemm implementation for weight size {tw.nbytes}")
-
-    chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, TILE_SIZE, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 16))
-    if chunkSize == self.N:
-      self.kernel_type = f"QgemmStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
-    else:
-      concat = "ConcatInt8Stream"
-      self.kernel_type = f"QgemmChunkNStreamGraph<{kernel},{concat},{chunkSize},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.dtype)},{self.M},{self.K},{self.N}>"
     
   def get_kernel_line(self) -> str:
     return f"{self.kernel_type} {self.name};"
@@ -724,6 +778,8 @@ class QLinearAddOp(OpParser):
     self.argname_2_tensor[f"{self.name}_inB_zero"] = tb_zero
     self.argname_2_tensor[f"{self.name}_out_zero"] = tout_zero
 
+    ta = pad_lastdim(ta, "QLinearAddOp tin", get_vector_boundary(ta), value=ta_zero) #files
+    tb = pad_lastdim(tb, "QLinearAddOp tin", get_vector_boundary(tb), value=tb_zero)
     self.filename_2_tensor[f"{self.name}_inA_{get_shape_str(ta)}.txt"] = ta
     self.filename_2_tensor[f"{self.name}_inB_{get_shape_str(tb)}.txt"] = tb
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
@@ -738,7 +794,7 @@ class QLinearAddOp(OpParser):
 
   def get_connect_line(self, last_port: str, i: int = 0) -> str:
     print(f"WARNING: Using reconvergent Op {__class__}, make sure to allocate sufficient fifo. Allocated {self.W/4}")
-    if i == 0:
+    if i > 0:
       return f"adf::connect<> {self.name}_s{i} ({last_port}, {self.name}.pin[{i}]);\n" + \
           f"adf::fifo_depth({self.name}_s{i}) = {self.W//4};"
     return super().get_connect_line(last_port, i)
@@ -801,23 +857,30 @@ class QLinearConvOp(OpParser):
     self.W1 = PAD_W - self.INP_W - self.W0
 
     self.pad_kernel = "Pad2DStreamInt8" if self.INP_W_PAD % 16 == 0 else "Pad2DWindowScalar"
+    
+    # option 1: chunk by image height
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
-    overlap = self.KH - self.STEP_H
+    overlap = self.KH - 1
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, _ = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=2*overlap)
+    HCHUNK, hchunk_count = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=2*overlap)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
-    if self.HCHUNK >= PAD_H - (self.STEP_H-1):
-      self.graph = "QLinearConvStreamGraph"
-      self.disable_last_file_output = True
-      assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
-    else:
-      if self.HCHUNK - overlap*2 >= 0 and self.B * self.C * self.HCHUNK * PAD_W * self.dtype.itemsize <= MAX_HEAP_SIZE:
-        self.graph = "QLinearConvChunkHPktStreamGraph"
-        self.split_kernel = "SplitFilterInt8PktStream"
+    if True or hchunk_count <= MAX_CHUNKS and self.HCHUNK > overlap:
+      if True or self.HCHUNK >= PAD_H - (self.STEP_H-1):
+        self.graph = "QLinearConvStreamGraph"
+        self.disable_last_file_output = True
+        # assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
       else:
-        self.graph = "QLinearConvChunkHStreamGraph"
-        self.split_kernel = "SplitInt8"
+        if self.HCHUNK - overlap*2 >= 0 and self.B*self.C*self.HCHUNK*PAD_W*self.dtype.itemsize <= MAX_HEAP_SIZE:
+          self.graph = "QLinearConvChunkHPktStreamGraph"
+        else:
+          self.graph = "QLinearConvChunkHStreamGraph"
+    
+    # option 2: chunk by image channels
+    else:
+      print(f"Warning: Unable to chunk {self.name}'s input vector size {self.B*self.C*PAD_H*PAD_W} heightwise.")
+      self.CCHUNK, _ = factor_int(self.C, (self.B*PAD_H*PAD_W + self.KH*self.KW) * self.dtype.itemsize, MAX_HEAP_SIZE, 0, force_split_chunksize=1)
+      self.graph = "QLinearConvChunkCGraph" if self.B*self.CCHUNK*PAD_H*PAD_W <= TILE_SIZE and self.M*self.CCHUNK*self.KH*self.KW <= TILE_SIZE else "QLinearConvChunkCStreamGraph"
     
   def register_params(self, 
                       tensors: List[np.ndarray], 
@@ -840,31 +903,50 @@ class QLinearConvOp(OpParser):
     kernel = "QLinearConvScalarStream"
     if self.KH == self.KW == 1 and self.GROUP == 1 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
       tw = pad_lastdim(tw.reshape(self.M,-1), "QLinearConvOp weights", get_vector_boundary(tw))
-      kernel = "QLinearConv1x1PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConv1x1Stream"
+      if self.graph == "QLinearConvChunkCGraph":
+        kernel = "QLinearConv1x1_0,QLinearConv1x1_1,QLinearConv1x1_2"
+        tw = pad_lastdim(tw.reshape(self.M, -1, self.CCHUNK), "QLinearConvOp weights", get_vector_boundary(tw)) # if self.CCHUNK < 16
+        self.argname_2_tensor[f"{self.name}_w"] = tw
+      elif self.graph == "QLinearConvChunkCStreamGraph":
+        raise NotImplementedError()
+      else:
+        kernel = "QLinearConv1x1PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConv1x1Stream"
+        self.gmioname_2_tensor[f"{self.name}_w"] = tw
 
     elif self.KW <= 4 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2,4] and self.STEP_W in [1,2,4]:
       tw = pad_lastdim(tw, "QLinearConvOp weights", 4)
       tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, -1), "QLinearConvOp weights", get_vector_boundary(tw))
-      kernel = "QLinearConvHx4PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConvHx4Stream" # QLinearConvHx4StreamScale32bit
+      if self.graph == "QLinearConvChunkCGraph":
+        kernel = "QLinearConvHx4_0,QLinearConvHx4_1,QLinearConvHx4_2"
+        self.argname_2_tensor[f"{self.name}_w"] = tw
+      elif self.graph == "QLinearConvChunkCStreamGraph":
+        kernel = "QLinearConvHx4Stream_0,QLinearConvHx4Stream_1,QLinearConvHx4Stream_2"
+        for i in range(self.CCHUNK):
+          self.gmioname_2_tensor[f"{self.name}_w{i}"] = tw[:, i*self.CCHUNK : (i+1)*self.CCHUNK, ...]
+      else:
+        kernel = "QLinearConvHx4PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConvHx4Stream" # QLinearConvHx4StreamScale32bit
+        self.gmioname_2_tensor[f"{self.name}_w"] = tw
     
     elif not (self.tw_dtype == self.dtype == "uint8") and self.KW <= 6 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H == 1 and self.STEP_W == 1 and tw.size//self.KW*16 <= 65536 and self.graph != "QLinearConvChunkHPktStreamGraph":
       tw = pad_lastdim(tw, "QLinearConvOp weights", get_vector_boundary(tw))
       tw = tw[..., [15,15,15,15, 0,0,1,1, 2,2,3,3, 4,4,5,5]]
       kernel = "QLinearConvHx6x8bitStream"
+      self.gmioname_2_tensor[f"{self.name}_w"] = tw
     
     else:
       tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, -1), "QLinearConvOp weights", get_vector_boundary(tw))
       if self.graph == "QLinearConvChunkHPktStreamGraph":
         self.graph = "QLinearConvChunkHStreamGraph"
-        self.split_kernel = "SplitInt8"
+      self.gmioname_2_tensor[f"{self.name}_w"] = tw
 
-    self.gmioname_2_tensor[f"{self.name}_w"] = tw
     self.gmio_repeats = 1
   
     if self.graph == "QLinearConvStreamGraph":
       self.kernel_type = f"{self.graph}<{self.pad_kernel},{kernel},{self.get_graph_targs()}"
     elif self.graph in ["QLinearConvChunkHStreamGraph", "QLinearConvChunkHPktStreamGraph"]:
-      self.kernel_type = f"{self.graph}<{self.split_kernel},{kernel},ConcatInt8Stream,{self.HCHUNK},{self.get_graph_targs()}"
+      self.kernel_type = f"{self.graph}<{kernel},ConcatInt8Stream,{self.HCHUNK},{self.get_graph_targs()}"
+    elif self.graph in ["QLinearConvChunkCStreamGraph", "QLinearConvChunkCGraph"]:
+      self.kernel_type = f"{self.graph}<{kernel},ConcatInt8Stream,{self.CCHUNK},{self.get_graph_targs()}"
     else:
       raise NotImplementedError(f"QLinearConv Graph {self.graph} not implemented.")
     
@@ -944,20 +1026,26 @@ class QLinearMacOp(OpParser):
 class QLinearPoolOp(OpParser):
   include_file: str = "graph_qlinearpool.h"
 
-  def __init__(self, name: str, reduction_mode: str = "max"):
+  def __init__(self, name: str, reduction_mode: str = "max", is_global: bool = False):
     super().__init__(name)
     self.reduction_mode = reduction_mode
+    self.is_global = is_global
   
   def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 6
     
-    attr_d = get_attribute_dict(attributes)
-    if attr_d.get("strides") != attr_d.get("kernel_shape"): raise ValueError(f"Attribute error, strides {attr_d['strides']} not equal to kernel {attr_d['kernel_shape']}")
-    kernel_shape = attr_d.get("kernel_shape")
-    if len(kernel_shape) != 2: raise NotImplementedError(f"Pool for kernel shape {kernel_shape} not supported. Only Pool2D supported.")
-    self.KH, self.KW = kernel_shape
-    
     tin, tin_scale, tin_zero, tout_scale, tout_zero, tout = tensors
+
+    if self.is_global:
+      self.KH, self.KW = tin.shape[2:]
+    else:
+      attr_d = get_attribute_dict(attributes)
+      if attr_d.get("strides") != attr_d.get("kernel_shape"): 
+        raise ValueError(f"Attribute error, strides {attr_d['strides']} not equal to kernel {attr_d['kernel_shape']}")
+      kernel_shape = attr_d.get("kernel_shape")
+      if len(kernel_shape) != 2: 
+        raise NotImplementedError(f"Pool for kernel shape {kernel_shape} not supported. Only Pool2D supported.")
+      self.KH, self.KW = kernel_shape
 
     self.B, self.C, self.INP_H, self.INP_W = tin.shape
     _, _, self.OUT_H, self.OUT_W = tout.shape
@@ -984,18 +1072,25 @@ class QLinearPoolOp(OpParser):
     self.out_size = tout.size # host buffer sizes
   
   def get_kernel_line(self) -> str:
+    if self.is_global:
+      if self.reduction_mode == "avg":
+        kernel = "QLinearGlobalAvgpoolScalarBCHW"
+        if self.C % 16 != 0 or self.KW > 16:
+          raise NotImplementedError(f"QLinearGlobalAvgpoolScalarBCHW requires C%16==0 and KW<=16, but got C={self.C}, KW={self.KW}")
+      return f"QLinearPoolStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+    
     if self.reduction_mode == "avg":
       kernel = "QLinearAvgpoolScalarBCHW"
     else:
       raise NotImplementedError(f"Pool for reduction mode {self.reduction_mode} not implemented.")
     
     if self.B*self.C*self.INP_H*self.INP_W*self.dtype.itemsize <= MAX_PARAM_SIZE:
-      return f"QLinearPoolStreamGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
+      return f"QLinearPoolGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
     else:
       split_kernel = "SplitScalar" if self.dtype == "float32" else "SplitInt8"
       concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
       CCHUNK, _ = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
-      return f"QLinearPoolChunkCStreamGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
+      return f"QLinearPoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
         f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
     
   def disable_output_pad(self):
@@ -1092,7 +1187,8 @@ class QuantizeLinearOp(OpParser):
     if not (self.INP_W % 4 == 0 and self.OUT_W % 16 == 0):
       raise NotImplementedError(f"Expect INP_W%4==0, OUT_W%16==0, but got INP_W {self.INP_W}, OUT_W {self.OUT_W}")
 
-    self.HCHUNK, _ = factor_int(self.INP_H, self.INP_W*4, TILE_SIZE, 0, force_split_chunksize=1)
+    # streaming kernels, no window limit
+    self.HCHUNK, _ = factor_int(self.INP_H, 0, 1, 0, force_split_chunksize=1)
     if self.HCHUNK == self.INP_H:
       return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
     return f"QuantizeLinearChunkHPktStreamGraph<QuantizeLinearFmulStream,{self.HCHUNK},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"

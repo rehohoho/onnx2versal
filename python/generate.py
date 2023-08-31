@@ -52,7 +52,6 @@ if __name__ == '__main__':
   if single_input.ndim > len(input_shape):
     single_input = single_input.reshape(-1, *(single_input.shape[-len(input_shape)+1:]))
     many_inputs = many_inputs.reshape(-1, *(many_inputs.shape[-len(input_shape)+1:]))
-    # for tiny_ad
     single_input = single_input[[0]]
     many_inputs = many_inputs[:args.ndata]
   ort_inputs = {ort_session.get_inputs()[0].name: single_input}

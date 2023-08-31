@@ -7,10 +7,11 @@ from onnx import numpy_helper
 from google.protobuf.json_format import MessageToJson, MessageToDict
 
 from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
-  AddOp, ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, MacOp, PoolOp, QGemmOp, \
+  AddOp, ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, IdentityOp, MacOp, PoolOp, QGemmOp, \
   QLinearAddOp, QLinearConvOp, QLinearMacOp, QLinearPoolOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp, \
   TransposeOp
 
+SKIPPABLE_NODES = ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape", "Flatten"]
 
 class Parser:
 
@@ -104,7 +105,28 @@ class Parser:
     while i < len(self.nodes):
       node = self.nodes[i]
 
-      if node.op_type == "Add":
+      if node.op_type in SKIPPABLE_NODES:
+        if len(self.op_list) == 0:
+          print(f"Adding output output {node.output[0]} output")
+          self.nodeout_2_adfport[node.output[0]] = "plin[0].out[0]"
+        elif len(node.output[0]) != 0 and np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
+          print(f"Found matching output {node.output[0]} and {op.name} output")
+          self.nodeout_2_adfport[node.output[0]] = f"{op.name}.pout[0]"
+          self.op_list[-1].disable_output_pad()
+        else:
+          print(f"WARNING: {node.op_type} not implemented, skipping...")
+      
+      elif node.op_type == "DequantizeLinear" and self.get_optype(i+1) in SKIPPABLE_NODES and self.get_optype(i+2) == "QuantizeLinear":
+        node_output = self.nodes[i+2].output[0]
+        if np.all(self.get_tensor(node_output).flatten() == self.op_list[-1].tout.flatten()):
+          print(f"Found matching output {node_output} and {op.name} output")
+          self.nodeout_2_adfport[node_output] = f"{op.name}.pout[0]"
+          self.op_list[-1].disable_output_pad()
+        else:
+          raise ValueError(f"Dequantize-{self.get_optype(i+1)}-Quantize yield different result, not skippable.")
+        i += 2
+      
+      elif node.op_type == "Add":
         is_relu = self.get_optype(i+1) == "Relu"
         op = AddOp(f"k{i:03d}add", is_relu)
         
@@ -210,8 +232,15 @@ class Parser:
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
       
+      elif node.op_type == "QLinearGlobalAveragePool":
+        op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg", is_global=True)
+        op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
+        op.save_txt(self.data_path)
+        self.op_list.append(op)
+        self.register_port([node.input[0]], [node.output[0]], op)
+
       elif node.op_type == "QLinearAveragePool":
-        op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg")
+        op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg", is_global=True)
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
         self.op_list.append(op)
@@ -252,17 +281,6 @@ class Parser:
         op.save_txt(self.data_path)
         self.op_list.append(op)
         self.register_port([node.input[0]], [node.output[0]], op)
-
-      elif node.op_type in ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape", "Flatten"]:
-        if len(self.op_list) == 0:
-          print(f"Adding output output {node.output[0]} output")
-          self.nodeout_2_adfport[node.output[0]] = "plin[0].out[0]"
-        elif len(node.output[0]) != 0 and np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
-          print(f"Found matching output {node.output[0]} and {op.name} output")
-          self.nodeout_2_adfport[node.output[0]] = f"{op.name}.pout[0]"
-          self.op_list[-1].disable_output_pad()
-        else:
-          print(f"WARNING: {node.op_type} not implemented, skipping...")
       
       elif node.op_type == "MatMul":
         if self.get_optype(i+1) != "Add": # lookahead
