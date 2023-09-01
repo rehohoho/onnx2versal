@@ -2,11 +2,11 @@
 #include "graph_utils.h"
 
 
-template <template<int> class IDENTITY, int N>
+template <typename TT, int N>
 class IdentityGraphTest : public adf::graph {
 
   private:
-    IdentityGraph<IDENTITY, N> g;
+    IdentityGraph<TT, N> g;
 
   public:
     adf::input_plio plin[1];
@@ -19,14 +19,14 @@ class IdentityGraphTest : public adf::graph {
     ) { 
       plin[0] = adf::input_plio::create("plin0_iden"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_iden"+id+"_output", PLIO64_ARG(OUT_TXT));
-      adf::connect<adf::window<N*4>> (plin[0].out[0], g.pin[0]);
-      adf::connect<adf::window<N*4>> (g.pout[0], plout[0].in[0]);
+      adf::connect<adf::stream> (plin[0].out[0], g.pin[0]);
+      adf::connect<adf::stream> (g.pout[0], plout[0].in[0]);
     }
 };
 
 
 // instance to be compiled and used in host within xclbin
-IdentityGraphTest<IdentityScalar, 64> fpscalar(
+IdentityGraphTest<float_t, 128> fpscalar(
   "fpscalar", "concat_fpin.txt", "concat_fpin.txt");
 
 #ifdef __X86SIM__

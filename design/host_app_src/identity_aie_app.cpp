@@ -15,7 +15,7 @@
 #define INPUT_FILENAME  "../../../data/concat_fpin.txt"
 #define INPUT_LINES     4
 #define GOLDEN_FILENAME "../../../data/concat_fpin.txt"
-#define OUTPUT_FILENAME "iden_fpout_IdentityScalar.txt"
+#define OUTPUT_FILENAME "iden_fpout_Identity.txt"
 #define OUTPUT_LINES    4
 #define V_PER_LINE      2
 

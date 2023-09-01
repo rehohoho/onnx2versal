@@ -3,7 +3,7 @@
 
 #include <adf.h>
 #include "identity.h"
-
+#include "graph_utils.h"
 
 /**
  * @defgroup Identity
@@ -20,11 +20,11 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], N*4}
- * @connect{pout[0], N*4}
+ * @connect{pin[0], stream N*sizeof(TT)}
+ * @connect{pout[0], stream N*sizeof(TT)}
  * @endconnections
  */
-template <template<int> class IDENTITY, int N>
+template <typename TT, int N>
 class IdentityGraph : public adf::graph {
 
   private:
@@ -35,13 +35,14 @@ class IdentityGraph : public adf::graph {
     adf::port<output> pout[1];
 
     IdentityGraph() { 
-      k[0] = adf::kernel::create_object<IDENTITY<N>>();
+      k[0] = adf::kernel::create_object<Identity<TT, N>>();
       adf::source(k[0]) = "identity.cc";
       adf::headers(k[0]) = {"identity.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
 
-      adf::connect<adf::window<N*4>> (pin[0], k[0].in[0]);
-      adf::connect<adf::window<N*4>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (pin[0], k[0].in[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
+      adf::samples_per_iteration(k[0].out[0]) = N;
     }
 
 };

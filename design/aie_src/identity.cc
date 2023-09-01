@@ -2,15 +2,17 @@
 #include "kernel_utils.h"
 
 
-template <int N>
-void IdentityScalar<N>::filter(
-	input_window<float>* in,
-  output_window<float>* out
+template <typename TT, int N>
+void Identity<TT, N>::filter(
+	input_stream<TT>* restrict in,
+  output_stream<TT>* restrict out
 ) {
-  PROFILE_HEADER(printf("Running IdentityScalar<%d>\n", N));
+  PROFILE_HEADER(printf("Running Identity<%d>\n", N));
 
-  for (int i = 0; i < N; i++)
-    window_writeincr(out, window_readincr(in));
+  static constexpr int NSTEP = 16 / sizeof(TT);
+
+  for (int n = 0; n < N; n += NSTEP)
+    put_wms(0, get_wss(0));
 
   PROFILE_FOOTER;
 }

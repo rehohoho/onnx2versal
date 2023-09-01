@@ -12,17 +12,17 @@
 
 /**
  * @brief Scalar implementation,
- * IdentityScalar<8> total = 35
+ * Identity<8> total = 35
  */
-template <int N>
-class IdentityScalar {
+template <typename TT, int N>
+class Identity {
   public:
     void filter(
-      input_window<float>* in,
-      output_window<float>* out
+      input_stream<TT>* in,
+      output_stream<TT>* out
     );
     static void registerKernelClass() {
-      REGISTER_FUNCTION(IdentityScalar::filter);
+      REGISTER_FUNCTION(Identity::filter);
     }
 };
 /** @}*/
