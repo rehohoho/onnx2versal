@@ -78,7 +78,7 @@ if __name__ == '__main__':
   ort_outs = ort_session.run(None, ort_inputs)
   
   # save inputs
-  inp_shape = parser.op_list[0].get_input_shape()
+  inp_shape = list(parser.modelin_2_tensor.values())[0].shape
   
   model_input_path = f"{args.data}/{parser.get_input_filename(True)[0]}"
   single_input = single_input.reshape(1, *inp_shape[:-1], -1)

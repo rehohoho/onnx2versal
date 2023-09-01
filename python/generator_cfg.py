@@ -1,4 +1,5 @@
 from parser import Parser
+from op_parsers import InputOp
 
 
 class CfgGenerator:
@@ -9,11 +10,11 @@ class CfgGenerator:
   
   def get_cfg_input_kernels(self) -> str:
     mm2s_names = {}
-    for i, tensor in enumerate(self.p.modelin_2_tensor.values()):
+    for id, _, tensor in self.p.get_input_id_name_tensor():
       dtype = tensor.dtype
       if dtype not in mm2s_names:
         mm2s_names[dtype] = []
-      mm2s_names[dtype].append(f"{dtype}_mm2s_{i}")
+      mm2s_names[dtype].append(f"{dtype}_mm2s_{id}")
     
     header = ""
     for dtype, typed_mm2s_names in mm2s_names.items():
@@ -24,14 +25,11 @@ class CfgGenerator:
   
   def get_cfg_output_kernels(self, is_dout: bool) -> str:
     s2mm_names = {}
-    ops = list(self.p.modelout_2_op.values())
-    if is_dout:
-      ops += [op for op in self.p.op_list if op not in self.p.modelout_2_op.values()]
-    for i, op in enumerate(ops):
+    for id, op in self.p.get_output_id_op(include_optional_output=is_dout):
       dtype = str(op.dtype)
       if dtype not in s2mm_names: 
         s2mm_names[dtype] = []
-      s2mm_names[dtype].append(f"{dtype}_s2mm_{i}")
+      s2mm_names[dtype].append(f"{dtype}_s2mm_{id}")
 
     header = ""
     for dtype, typed_s2mm_names in s2mm_names.items():
@@ -42,18 +40,15 @@ class CfgGenerator:
   
   def get_cfg_input_scs(self) -> str:
     in_scs = [
-      f"stream_connect={tensor.dtype}_mm2s_{i}.s:ai_engine_0.plin{i}_{self.p.graph_name}_{inp_name}"
-      for i, (inp_name, tensor) in enumerate(self.p.modelin_2_tensor.items())
+      f"stream_connect={tensor.dtype}_mm2s_{id}.s:ai_engine_0.plin{id}_{self.p.graph_name}_{input_name}"
+      for id, input_name, tensor in self.p.get_input_id_name_tensor()
     ]
     return "\n".join(in_scs)
 
   def get_cfg_output_scs(self, is_dout: bool) -> str:
-    ops = list(self.p.modelout_2_op.values())
-    if is_dout:
-      ops += [op for op in self.p.op_list if op not in self.p.modelout_2_op.values()]
     out_scs = [
-      f"stream_connect=ai_engine_0.plout{i}_{self.p.graph_name}_{op.name}:{op.dtype}_s2mm_{i}.s"
-      for i, op in enumerate(ops)
+      f"stream_connect=ai_engine_0.plout{id}_{self.p.graph_name}_{op.name}:{op.dtype}_s2mm_{id}.s"
+      for id, op in self.p.get_output_id_op(include_optional_output=is_dout)
     ]
     return "\n".join(out_scs)  
   

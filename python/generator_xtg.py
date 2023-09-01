@@ -9,36 +9,25 @@ class XtgGenerator:
   
   def get_xtg_masters(self, is_dout: bool) -> str:
     masters = []
-    for i, inp_name in enumerate(self.p.modelin_2_tensor):
-      plin_name = f"plin{i}_{self.p.graph_name}_{inp_name}"
-      out_filename = self.p.get_filename(inp_name, is_dout)
+    for i, input_name, tensor in self.p.get_input_id_name_tensor():
+      plin_name = f"plin{i}_{self.p.graph_name}_{input_name}"
+      out_filename = self.p.get_filename(input_name, is_dout)
       masters.append(
         f'("{plin_name}", f"{{args.input_dir}}/{out_filename}", 64, ' + \
-        f'"{str(self.p.modelin_2_tensor[inp_name].dtype)}")'
+        f'"{str(self.p.modelin_2_tensor[input_name].dtype)}")'
       )
     return "    " + ",\n".join(masters).replace("\n", "\n    ")
   
   def get_xtg_slaves(self, is_dout: bool) -> str:
     slaves = []
-    for _, op in self.p.modelout_2_op.items():
-      size = op.out_size if is_dout else op.out_size * self.p.data_count
-      for i, op in enumerate(self.p.modelout_2_op.values()):
-        plout_name = f"plout{i}_{self.p.graph_name}_{op.name}"
-        out_filename = self.p.get_filename(op.get_output_filename(), is_dout)
-        slaves.append(
-          f'("{plout_name}", f"{{args.output_dir}}/{out_filename}", ' + \
-          f'64, "{str(op.dtype)}", {size})'
-        )
-
-    if is_dout:
-      i = len(self.p.modelout_2_op)
-      for op in self.p.op_list:
-        if op in self.p.modelout_2_op.values(): continue
-        plout_name = f"plout{i}_{self.p.graph_name}_{op.name}"
-        slaves.append(
-          f'("{plout_name}", f"{{args.output_dir}}/{op.get_output_filename()}", ' + \
-          f'64, "{str(op.dtype)}", {op.out_size})')
-        i += 1
+    for i, op in self.p.get_output_id_op(include_optional_output=is_dout):
+      iter_cnt = 1 if is_dout else self.p.data_count
+      plout_name = f"plout{i}_{self.p.graph_name}_{op.name}"
+      out_filename = self.p.get_filename(op.get_output_filename(), is_dout)
+      slaves.append(
+        f'("{plout_name}", f"{{args.output_dir}}/{out_filename}", ' + \
+        f'64, "{str(op.dtype)}", {op.out_size}*{iter_cnt})'
+      )
     return "    " + ",\n".join(slaves).replace("\n", "\n    ")
   
   def generate_xtg_python_str(self, is_dout: bool):

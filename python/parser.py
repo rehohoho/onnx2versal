@@ -1,4 +1,5 @@
 from typing import List, Mapping, Any
+from collections import OrderedDict
 import os
 
 import numpy as np
@@ -7,7 +8,7 @@ from onnx import numpy_helper
 from google.protobuf.json_format import MessageToJson, MessageToDict
 
 from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
-  AddOp, ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, IdentityOp, MacOp, PoolOp, QGemmOp, \
+  AddOp, ArgmaxOp, ConvOp, DequantizeLinearOp, GemmOp, IdentityOp, InputOp, MacOp, PoolOp, QGemmOp, \
   QLinearAddOp, QLinearConvOp, QLinearMacOp, QLinearPoolOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp, \
   TransposeOp
 
@@ -26,8 +27,7 @@ class Parser:
     self.data_path = data_path
     self.data_count = data_count
 
-    self.op_list: List[OpParser] = []
-    self.nodeout_2_adfport: Mapping[str, str] = {}
+    self.onnxname_2_op: Mapping[str, OpParser] = OrderedDict()
     self.adf_connects: List[str] = []
     
     model = onnx.load(onnx_path)
@@ -41,7 +41,7 @@ class Parser:
     # register model input, node output and model outputs
     self.modelin_2_tensor = {i.name: t for i, t in zip(model.graph.input, input_tensors)}
     for i, model_input in enumerate(model.graph.input):
-      self.nodeout_2_adfport[model_input.name] = f"plin[{i}].out[0]"
+      self.onnxname_2_op[model_input.name] = InputOp(model_input.name, i)
     self.modelout_2_op = {i.name: None for i in model.graph.output}
 
     # store I/O tensors and model parameters
@@ -49,6 +49,8 @@ class Parser:
     self.initializers: Mapping[str, np.ndarray] = {
       init.name: init for init in model.graph.initializer}
     self.output_tensors: Mapping[str, np.ndarray] = output_tensors
+
+    self.gmiobuf_2_size = {}
   
   def get_optype(self, i: int):
     if i >= len(self.nodes):
@@ -84,18 +86,40 @@ class Parser:
   def get_output_filename(self, is_dout: bool) -> List[str]:
     output_filenames = [op.get_output_filename() for op in self.modelout_2_op.values()]
     return [self.get_filename(fn, is_dout) for fn in output_filenames]
+  
+  def get_input_id_name_tensor(self):
+    for i, (name, tensor) in enumerate(self.modelin_2_tensor.items()):
+      yield i, name, tensor
+
+  def get_output_id_op(self, include_output: bool = True, include_optional_output: bool = False):
+    i = 0
+    ops = []
+    if include_output:
+      for op in self.modelout_2_op.values():
+        ops.append((i, op))
+        i += 1
+    if include_optional_output:
+      for op in self.onnxname_2_op.values():
+        if op not in self.modelout_2_op.values():
+          ops.append((i, op))
+          i += 1
+    for i, op in ops:
+      if isinstance(op, InputOp): continue # skip input node
+      yield i, op
 
   def register_port(self, 
                     onnx_innames: List[str], 
                     onnx_outnames: List[str], 
                     op: OpParser):
     for i, input_name in enumerate(onnx_innames):
-      self.adf_connects.append(op.get_connect_line(self.nodeout_2_adfport[input_name], i))
+      in_port = self.onnxname_2_op[input_name].get_adf_port_name()
+      self.adf_connects.append(op.get_connect_line(in_port, i))
+    
     gmio_connects = op.get_gmio_connect_line(len(onnx_innames))
     if gmio_connects != "":
       self.adf_connects.append(gmio_connects)
+    
     for i, output_name in enumerate(onnx_outnames):
-      self.nodeout_2_adfport[output_name] = f"{op.name}.pout[{i}]"
       if output_name in self.modelout_2_op:
         self.modelout_2_op[output_name] = op
 
@@ -106,22 +130,22 @@ class Parser:
       node = self.nodes[i]
 
       if node.op_type in SKIPPABLE_NODES:
-        if len(self.op_list) == 0:
-          print(f"Adding output output {node.output[0]} output")
-          self.nodeout_2_adfport[node.output[0]] = "plin[0].out[0]"
-        elif len(node.output[0]) != 0 and np.all(self.get_tensor(node.output[0]).flatten() == self.op_list[-1].tout.flatten()):
-          print(f"Found matching output {node.output[0]} and {op.name} output")
-          self.nodeout_2_adfport[node.output[0]] = f"{op.name}.pout[0]"
-          self.op_list[-1].disable_output_pad()
+        last_op = next(reversed(self.onnxname_2_op))
+        node_output_name = node.output[0]
+        if len(node_output_name) != 0 and np.all(self.get_tensor(node_output_name).flatten() == last_op.tout.flatten()):
+          print(f"Found matching output {node_output_name} and {op.name} output")
+          self.onnxname_2_op[node_output_name] = next(reversed(self.onnxname_2_op))
+          last_op.disable_output_pad()
         else:
           print(f"WARNING: {node.op_type} not implemented, skipping...")
       
       elif node.op_type == "DequantizeLinear" and self.get_optype(i+1) in SKIPPABLE_NODES and self.get_optype(i+2) == "QuantizeLinear":
-        node_output = self.nodes[i+2].output[0]
-        if np.all(self.get_tensor(node_output).flatten() == self.op_list[-1].tout.flatten()):
-          print(f"Found matching output {node_output} and {op.name} output")
-          self.nodeout_2_adfport[node_output] = f"{op.name}.pout[0]"
-          self.op_list[-1].disable_output_pad()
+        last_op = next(reversed(self.onnxname_2_op))
+        node_output_name = self.nodes[i+2].output[0]
+        if np.all(self.get_tensor(node_output_name).flatten() == last_op.tout.flatten()):
+          print(f"Found matching output {node_output_name} and {op.name} output")
+          self.onnxname_2_op[node_output_name] = next(reversed(self.onnxname_2_op))
+          last_op.disable_output_pad()
         else:
           raise ValueError(f"Dequantize-{self.get_optype(i+1)}-Quantize yield different result, not skippable.")
         i += 2
@@ -137,14 +161,14 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[onnx_out_name] = op
         self.register_port(node.input, [onnx_out_name], op)
       
       elif node.op_type == "AveragePool":
         op = PoolOp(f"k{i:03d}pool", reduction_mode="avg")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[onnx_out_name] = op
         self.register_port(node.input, [onnx_out_name], op)
       
       elif node.op_type == "Conv":
@@ -158,14 +182,14 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[onnx_out_name] = op
         self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "MaxPool":
         op = PoolOp(f"k{i:03d}pool", reduction_mode="max")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "Mul":
@@ -186,7 +210,7 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)])
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[onnx_out_name] = op
         self.register_port([node.input[0]], [onnx_out_name], op)
 
       elif node.op_type == "Gemm":
@@ -201,17 +225,17 @@ class Parser:
         op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)], 
                            node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[onnx_out_name] = op
         self.register_port([node.input[0]], [onnx_out_name], op)
         
       elif node.op_type == "QuantizeLinear":
         op = QuantizeLinearOp(f"k{i:03d}quantizelinear")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
 
-      elif node.op_type == "QLinearAdd":
+      elif node.op_type == "QLinearAdd": # reconvergent op
         is_relu = self.get_optype(i+1) == "Relu"
         op = QLinearAddOp(f"k{i:03d}qlinearadd", is_relu)
         
@@ -222,28 +246,39 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
-        self.op_list.append(op)
-        self.register_port([node.input[0], node.input[3]], [onnx_out_name], op)
+        
+        self.onnxname_2_op[onnx_out_name] = op
+        self.register_port([node.input[0]], [onnx_out_name], op)
+        
+        # external caching
+        buf_name = op.name + "_i_buf"
+        self.gmiobuf_2_size[buf_name] = dtype_to_cstr(op.dtype), op.out_size
+        skip_op = self.onnxname_2_op[node.input[3]]
+        skip_op.attach_gmio_out(buf_name)
+        self.adf_connects.append(skip_op.get_gmioout_connect_line())
+        
+        op.attach_gmio_in(buf_name)
+        self.adf_connects.append(op.get_gmioin_connect_line(pin_idx=1))
 
       elif node.op_type == "QLinearConv":
         op = QLinearConvOp(f"k{i:03d}qlinearconv")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "QLinearGlobalAveragePool":
         op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg", is_global=True)
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
 
       elif node.op_type == "QLinearAveragePool":
         op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg", is_global=True)
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
         
       elif node.op_type == "QGemm":
@@ -251,7 +286,7 @@ class Parser:
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)],
                            node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "QLinearMul":
@@ -272,14 +307,14 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *add_node_inputs, onnx_out_name)])
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[onnx_out_name] = op
         self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "DequantizeLinear":
         op = DequantizeLinearOp(f"k{i:03d}dequantizeLinear")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "MatMul":
@@ -300,28 +335,28 @@ class Parser:
         op.register_params([self.get_tensor(tname) for tname in (*node.input, bias_name, onnx_out_name)],
                            node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[onnx_out_name] = op
         self.register_port([node.input[0]], [onnx_out_name], op)
       
       elif node.op_type == "Softmax":
         op = SoftmaxOp(f"k{i:03d}softmax")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "QLinearSoftmax":
         op = QLinearSoftmaxOp(f"k{i:03d}qlinearsoftmax")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
       
       elif node.op_type == "Transpose":
         op = TransposeOp(f"k{i:03d}transpose")
         op.register_params([self.get_tensor(tname) for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.op_list.append(op)
+        self.onnxname_2_op[node.output[0]] = op
         self.register_port([node.input[0]], [node.output[0]], op)
       
       else:
@@ -343,6 +378,9 @@ class Parser:
             save_tensor(out_path, tensor)
         
       i += 1
+      if next(reversed(self.onnxname_2_op.values())).name == "k011qlinearadd":
+        self.modelout_2_op = {"output": self.onnxname_2_op[next(reversed(self.onnxname_2_op))]}
+        break
       
-    self.op_list[0].disable_input_pad()
-    self.op_list[-1].disable_output_pad()
+    self.onnxname_2_op[next(iter(self.onnxname_2_op))].disable_input_pad()
+    self.onnxname_2_op[next(reversed(self.onnxname_2_op))].disable_output_pad()

@@ -1,4 +1,4 @@
-from typing import List, Mapping, Any
+from typing import List, Mapping, Any, Optional
 import math
 
 import numpy as np
@@ -113,20 +113,27 @@ def factor_int(n: int,
 
 
 class OpParser:
-  include_file: str
+  include_file: Optional[str] = None
 
   def __init__(self, name: str):
     self.name = name
     self.argname_2_tensor = {}   # used as args in .cpp
-    self.gmioname_2_tensor = {}  # used as gmio in .cpp
+    self.gmioname_2_tensor = {}  # used for gmio inputs in .cpp
+    self.gmioin_2_bufname = {}   # used for gmio caches
+    self.gmioout_2_bufname = {}  # used for gmio caches
     self.filename_2_tensor = {}  # output txt
 
     self.tout = None             # reference copy to compare with
     self.gmio_repeats = 0
     self.disable_last_file_output = False # stream is broadcasted to different number of buffers not supported
   
+  def get_adf_port_name(self) -> str:
+    return f"{self.name}.pout[0]"
+
   def get_include_line(self) -> str:
-    return f'#include "{self.include_file}"'
+    if self.include_file:
+      return f'#include "{self.include_file}"'
+    return ""
   
   def get_arg_line(self) -> str:
     return ",\n".join(
@@ -163,6 +170,18 @@ class OpParser:
   def get_gmio_connect_line(self, i: int = 0) -> str:
     return "\n".join(f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+i}]);"
         for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor))
+
+  def attach_gmio_in(self, buf_name: str) -> None:
+    self.gmioin_2_bufname[f"{self.name}_i"] = buf_name
+
+  def attach_gmio_out(self, buf_name: str) -> None:
+    self.gmioout_2_bufname[f"{self.name}_o"] = buf_name
+  
+  def get_gmioin_connect_line(self, pin_idx: int) -> str:
+    return f"adf::connect<> (gmio_{self.name}_i.out[0], {self.name}.pin[{pin_idx}]);"
+  
+  def get_gmioout_connect_line(self) -> str:
+    return f"adf::connect<> ({self.name}.pout[0], gmio_{self.name}_o.in[0]);"
 
   def get_input_filename(self) -> str:
     if len(self.filename_2_tensor) == 0:
@@ -202,6 +221,16 @@ class OpParser:
   
   def get_output_bandwidth_bits(self):
     return 0
+
+
+class InputOp(OpParser):
+  
+  def __init__(self, name: str, idx: int):
+    super().__init__(name)
+    self.idx = idx
+
+  def get_adf_port_name(self) -> str:
+    return f"plin[{self.idx}].out[0]"
 
 
 class AddOp(OpParser):
@@ -778,11 +807,12 @@ class QLinearAddOp(OpParser):
     self.argname_2_tensor[f"{self.name}_inB_zero"] = tb_zero
     self.argname_2_tensor[f"{self.name}_out_zero"] = tout_zero
 
-    ta = pad_lastdim(ta, "QLinearAddOp tin", get_vector_boundary(ta), value=ta_zero) #files
-    tb = pad_lastdim(tb, "QLinearAddOp tin", get_vector_boundary(tb), value=tb_zero)
+    ta = pad_lastdim(ta, "QLinearAddOp ta", get_vector_boundary(ta), value=ta_zero) #files
+    tb = pad_lastdim(tb, "QLinearAddOp tb", get_vector_boundary(tb), value=tb_zero)
     self.filename_2_tensor[f"{self.name}_inA_{get_shape_str(ta)}.txt"] = ta
     self.filename_2_tensor[f"{self.name}_inB_{get_shape_str(tb)}.txt"] = tb
     self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    tout = pad_lastdim(tout, "QLinearAddOp tout", get_vector_boundary(tout), value=tout_zero)
     
     self.W = ta.size
     self.out_size = tout.size # host buffer sizes

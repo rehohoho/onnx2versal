@@ -12,13 +12,58 @@ class CppGenerator:
     gmio_cpys = []
     gmio_xfers = []
     gmio_frees = []
+
+    gmio_buf_allocs = []
+    gmio_buf_xfers = []
     
-    for op in p.op_list:
+    includes = []
+    kernels = []
+    plins = []
+    gmios = []
+    args = []
+    inits = []
+    plindefs = []
+    gmiodefs = []
+    optional_plouts = []
+    weights = []
+
+    plins += [f"adf::input_plio plin[{len(self.p.modelin_2_tensor)}];"]
+    optional_args = []
+
+    for id, input_name, tensor in self.p.get_input_id_name_tensor():
+      args.append(f"const std::string& {input_name}")
+      plindefs.append(f'plin[{id}] = adf::input_plio::create("plin{id}_"+id+"_{input_name}", PLIO64_ARG({input_name}));')
+    
+    for id, op in self.p.get_output_id_op():
+      args.append(f"const std::string& {op.name}_out")
+    
+    for i, (onnx_name, op) in enumerate(p.onnxname_2_op.items()):
+      if i == 0: # skip input node
+        continue
+      
+      includes.append(op.get_include_line())
+      kernels.append(op.get_kernel_line())
+      args.append(op.get_arg_line())
+      inits.append(op.get_initlist_line())
+      weights.append(op.get_weight_line())
+
+      if op not in self.p.modelout_2_op.values():
+        optional_args.append(f"const std::string& {op.name}_out = std::string()")
+        optional_plouts.append(
+          f'SET_OPT_PLOUT({op.name}_out, adf::connect<> ({op.get_adf_port_name()}, a.in[0]), "{op.name}");'  
+        )
+
       for gmio_name, tensor in op.gmioname_2_tensor.items():
         ctype = dtype_to_cstr(tensor.dtype)
         size = tensor.size
         repeats = op.gmio_repeats
-        
+
+        gmios.append(
+          f"adf::input_gmio  gmio_{gmio_name};"
+        )
+        gmiodefs.append(
+          f'gmio_{gmio_name} = adf::input_gmio::create("gmio_"+id+"_{gmio_name}", 64, 500);'
+        )
         gmio_allocs.append(
           f"{ctype}* {gmio_name}_buf = ({ctype} *) adf::GMIO::malloc({repeats}*{size}*ITER_CNT*sizeof({ctype}));"
         )
@@ -32,53 +77,49 @@ class CppGenerator:
         gmio_frees.append(
           f"adf::GMIO::free({gmio_name}_buf);"
         )
+      
+      for gmio_name, bufname in op.gmioin_2_bufname.items():
+        gmio_buf_dtype, gmio_buf_size = p.gmiobuf_2_size[bufname]
+        gmios.append(f"adf::input_gmio  gmio_{gmio_name};")
+        gmiodefs.append(f'gmio_{gmio_name} = adf::input_gmio::create("gmio_"+id+"_{gmio_name}", 64, 500);')
+        gmio_buf_xfers.append(
+          f"{p.graph_name}.gmio_{gmio_name}.gm2aie_nb({bufname}, 1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
+        )
+      
+      for gmio_name, bufname in op.gmioout_2_bufname.items():
+        gmio_buf_dtype, gmio_buf_size = p.gmiobuf_2_size[bufname]
+        gmios.append(f"adf::output_gmio gmio_{gmio_name};")
+        gmiodefs.append(f'gmio_{gmio_name} = adf::output_gmio::create("gmio_"+id+"_{gmio_name}", 64, 500);')
+        gmio_buf_xfers.append(
+          f"{p.graph_name}.gmio_{gmio_name}.aie2gm({bufname}, 1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
+        )
     
+    for gmio_buf_name, (gmio_buf_dtype, gmio_buf_size) in p.gmiobuf_2_size.items():
+      gmio_buf_allocs.append(
+        f"{gmio_buf_dtype}* {gmio_buf_name} = ({gmio_buf_dtype} *) adf::GMIO::malloc(1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
+      )
+    
+    args += optional_args
+    
+    self.includes = "\n".join(set(includes))
+    self.kernels = "    " + "\n".join(kernels).replace("\n", "\n    ")
+    self.plins = "    " + "\n".join(plins).replace("\n", "\n    ")
+    self.gmios = "    " + "\n".join(gmios).replace("\n", "\n    ")
+    self.args = "      " + ",\n".join(i for i in args if i != "").replace("\n", "\n      ")
+    self.initlists = "      " + ",\n".join(i for i in inits if i != "").replace("\n", "\n      ")
+    self.plindefs = "      " + "\n".join(plindefs).replace("\n", "\n      ")
+    self.gmiodefs = "      " + "\n".join(gmiodefs).replace("\n", "\n      ")
+    self.optional_plouts = "      " + "\n".join(optional_plouts).replace("\n", "\n      ")
+    self.weights = "\n".join(i for i in weights if i != "")
+
     self.gmio_allocs = "  " + "\n".join(gmio_allocs).replace("\n", "\n  ")
+    self.gmio_buf_allocs = "  " + "\n".join(gmio_buf_allocs).replace("\n", "\n  ")
     self.gmio_cpys = "  " + "\n".join(gmio_cpys).replace("\n", "\n  ")
     self.gmio_xfers = "  " + "\n".join(gmio_xfers).replace("\n", "\n  ")
+    self.gmio_buf_xfers = "  " + "\n".join(gmio_buf_xfers).replace("\n", "\n  ")
     self.gmio_frees = "  " + "\n".join(gmio_frees).replace("\n", "\n  ")
   
-  def get_includes(self) -> str:
-    include_list = set(i.get_include_line() for i in self.p.op_list)
-    return "\n".join(include_list)
-  
-  def get_kernels(self) -> str:
-    return "    " + "\n".join(i.get_kernel_line() for i in self.p.op_list).replace("\n", "\n    ")
-
-  def get_input_ports(self) -> str:
-    plins = [f"adf::input_plio plin[{len(self.p.modelin_2_tensor)}];"]
-    for op in self.p.op_list:
-      plins += [f"adf::input_gmio gmio_{gmio_name};"
-                for gmio_name in op.gmioname_2_tensor]
-    return "    " + "\n".join(plins).replace("\n", "\n    ")
-
-  def get_args(self) -> str:
-    args = [f"const std::string& {inp_name}" for inp_name in self.p.modelin_2_tensor]
-    args += [f"const std::string& {op.name}_out" for op in self.p.modelout_2_op.values()]
-    args += [op.get_arg_line() for op in self.p.op_list]
-    args += [f"const std::string& {op.name}_out = std::string()" for op in self.p.op_list 
-             if op not in self.p.modelout_2_op.values()]
-    args = [i for i in args if i != ""]
-    return "      " + ",\n".join(args).replace("\n", "\n      ")
-  
-  def get_initlist(self) -> str:
-    initlists = [i.get_initlist_line() for i in self.p.op_list]
-    initlists = [i for i in initlists if i != ""]
-    return "      " + ",\n".join(initlists).replace("\n", "\n      ")
-  
-  def get_input_port_defs(self) -> str:
-    plins = [
-      f'plin[{i}] = adf::input_plio::create("plin{i}_"+id+"_{inp_name}", PLIO64_ARG({inp_name}));'
-      for i, inp_name in enumerate(self.p.modelin_2_tensor)
-    ]
-    for op in self.p.op_list:
-      for gmio_name in op.gmioname_2_tensor:
-        plins.append(
-          f'gmio_{gmio_name} = adf::input_gmio::create("gmio_"+id+"_{gmio_name}", 64, 500);'
-        )
-    return "      " + "\n".join(plins).replace("\n", "\n      ")
-  
-  def get_output_port_defs(self) -> str:
+  def get_output_plindefs(self) -> str:
     plouts = [
       f'adf::output_plio a = adf::output_plio::create("plout0_"+id+"_{op.name}", PLIO64_ARG({op.name}_out));\n' + \
       f"plout.push_back(a);\n" + \
@@ -87,30 +128,19 @@ class CppGenerator:
     ]
     return "      " + "\n".join(plouts).replace("\n", "\n      ")
   
-  def get_optional_plouts(self) -> str:
-    optplouts = [
-      f'SET_OPT_PLOUT({op.name}_out, adf::connect<> ({op.name}.pout[0], a.in[0]), "{op.name}");'
-      for op in self.p.op_list if op not in self.p.modelout_2_op.values()]
-    return "      " + "\n".join(optplouts).replace("\n", "\n      ")
-  
   def get_interkernel_connects(self) -> str:
     return "      " + "\n".join(self.p.adf_connects).replace("\n", "\n      ")
-  
-  def get_weights(self) -> str:
-    weights = [i.get_weight_line() for i in self.p.op_list]
-    weights = [i for i in weights if i != ""]
-    return "\n".join(weights)
   
   def get_callargs(self, is_dout: bool) -> str:
     args = [f'"{fn}"' for fn in self.p.get_input_filename(is_dout)]
     args += [f'"{fn}"' for fn in self.p.get_output_filename(is_dout)]
-    args += [op.get_callarg_line() for op in self.p.op_list]
+    args += [op.get_callarg_line() for op in self.p.onnxname_2_op.values()]
     
     if is_dout:
       optargs = []
-      for i, op in enumerate(self.p.op_list):
-        if op not in self.p.modelout_2_op.values():
-          fn = f'"{op.get_output_filename()}"' if not self.p.op_list[i+1].disable_last_file_output else "std::string()"
+      for i, op in enumerate(self.p.onnxname_2_op.values()):
+        if op not in self.p.modelout_2_op.values() and i != 0: # skip input node
+          fn = f'"{op.get_output_filename()}"'
           optargs.append(fn)
       args += optargs
     args = [i for i in args if i != ""]
@@ -119,30 +149,32 @@ class CppGenerator:
   def generate_cpp_graph_str(self):
     return f""" 
 #include <adf.h>
-{self.get_includes()}
+{self.includes}
 #include "graph_utils.h"
 
 
 class {self.p.graph_name.capitalize()} : public adf::graph {{
 
   private:
-{self.get_kernels()}
+{self.kernels}
 
   public:
-{self.get_input_ports()}
+{self.plins}
+{self.gmios}
     std::vector<adf::output_plio> plout; // intermediate outputs optional
 
     {self.p.graph_name.capitalize()}(
       const std::string& id,
-{self.get_args()}
+{self.args}
     ): 
-{self.get_initlist()}
+{self.initlists}
     {{ 
       // mandatory input
-{self.get_input_port_defs()}
+{self.plindefs}
+{self.gmiodefs}
 
       // mandatory output
-{self.get_output_port_defs()}
+{self.get_output_plindefs()}
 
 #define SET_OPT_PLOUT(TXT_PATH, STMT, PLOUT_NAME) \\
       if (!TXT_PATH.empty()) {{ \\
@@ -151,7 +183,7 @@ class {self.p.graph_name.capitalize()} : public adf::graph {{
         STMT; plout.push_back(a);}} 
 
       // optional output
-{self.get_optional_plouts()}
+{self.optional_plouts}
 
       // interkernel
 {self.get_interkernel_connects()}
@@ -159,7 +191,7 @@ class {self.p.graph_name.capitalize()} : public adf::graph {{
     }}
 }};
 
-{self.get_weights()}
+{self.weights}
 
 // Unable to map 8 or more outputs on hardware since <= 8 cascade lines
 #ifdef __OUTPUT_INTER__
@@ -179,12 +211,14 @@ class {self.p.graph_name.capitalize()} : public adf::graph {{
 int main(int argc, char ** argv) {{
 
 {self.gmio_allocs}
+{self.gmio_buf_allocs}
 {self.gmio_cpys}
   
   adfCheck({self.p.graph_name}.init(), "init {self.p.graph_name}");
   
 {self.gmio_xfers}
   adfCheck({self.p.graph_name}.run(ITER_CNT), "run {self.p.graph_name}");
+{self.gmio_buf_xfers}
   
   adfCheck({self.p.graph_name}.end(), "end {self.p.graph_name}");
 {self.gmio_frees}
