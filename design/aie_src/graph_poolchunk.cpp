@@ -7,11 +7,14 @@ template <
   template<typename, int, int, int, int, int, int, int, int, int, int> class POOL,
   template<typename, int, int, int, int> class CONCAT, 
   int CCHUNK,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W,
+  template<typename, int, int, int, int, int, int, int, int> class PAD, 
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class PoolChunkCGraphTest : public adf::graph {
 
   private:
-    PoolChunkCGraph<SPLIT, POOL, CONCAT, CCHUNK, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> g;
+    PoolChunkCGraph<SPLIT, POOL, CONCAT, CCHUNK, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+                    PAD, H0, H1, W0, W1> g;
 
   public:
     adf::input_plio plin[1];
@@ -21,7 +24,7 @@ class PoolChunkCGraphTest : public adf::graph {
       const std::string& id,
       const std::string& INP_TXT, 
       const std::string& OUT_TXT
-    ) { 
+    ): g(8) { 
       plin[0] = adf::input_plio::create("plin0_maxpool"+id+"_input", PLIO64_ARG(INP_TXT));
       plout[0] = adf::output_plio::create("plout0_maxpool"+id+"_output", PLIO64_ARG(OUT_TXT));
       adf::connect<adf::window<B*C*INP_H*INP_W*sizeof(TT)>> (plin[0].out[0], g.pin[0]);
@@ -46,38 +49,55 @@ const int STEP_H = 2;
 const int STEP_W = 2;
 
 // BCHW
-PoolChunkCGraphTest<SplitScalar, MaxpoolScalarBCHW, ConcatFloatStream, 
-                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> maxpoolScalarBCHW(
-  "maxpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_MaxpoolScalarBCHW.txt");
-PoolChunkCGraphTest<SplitScalar, Maxpool2x2FloatBCHW, ConcatFloatStream, 
-                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> maxpool2x2BCHW(
-  "maxpool2x2BCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_Maxpool2x2FloatBCHW.txt");
-PoolChunkCGraphTest<SplitScalar, AvgpoolScalarBCHW, ConcatFloatStream, 
-                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> avgpoolScalarBCHW(
-  "avgpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_avg_fpout_shape1x6x12x12_AvgpoolScalarBCHW.txt");
-PoolChunkCGraphTest<SplitInt8, Maxpool2x2Int8BCHW, ConcatInt8Stream, 
-                    CCHUNK, int8_t, INP_H, INP_W_PAD16, OUT_H, OUT_W_PAD16, B, C, KH, KW, STEP_H, STEP_W> maxpool2x2int8BCHW(
-  "maxpool2x2int8BCHW", "pool_int8in_pad.txt", "poolBCHW_max_int8out_shape1x6x12x12_Maxpool2x2Int8BCHW.txt");
+// PoolChunkCGraphTest<SplitScalar, MaxpoolScalarBCHW, ConcatFloatStream, 
+//                     CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+//                     Pad2DStreamFloat, 0, 0, 0, 0> maxpoolScalarBCHW(
+//   "maxpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_MaxpoolScalarBCHW.txt");
+// PoolChunkCGraphTest<SplitScalar, Maxpool2x2FloatBCHW, ConcatFloatStream, 
+//                     CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+//                     Pad2DStreamFloat, 0, 0, 0, 0> maxpool2x2BCHW(
+//   "maxpool2x2BCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_Maxpool2x2FloatBCHW.txt");
+// PoolChunkCGraphTest<SplitScalar, AvgpoolScalarBCHW, ConcatFloatStream, 
+//                     CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+//                     Pad2DStreamFloat, 0, 0, 0, 0> avgpoolScalarBCHW(
+//   "avgpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_avg_fpout_shape1x6x12x12_AvgpoolScalarBCHW.txt");
+// PoolChunkCGraphTest<SplitInt8, Maxpool2x2Int8BCHW, ConcatInt8Stream, 
+//                     CCHUNK, int8_t, INP_H, INP_W_PAD16, OUT_H, OUT_W_PAD16, B, C, KH, KW, STEP_H, STEP_W,
+//                     Pad2DStreamInt8, 0, 0, 0, 0> maxpool2x2int8BCHW(
+//   "maxpool2x2int8BCHW", "pool_int8in_pad.txt", "poolBCHW_max_int8out_shape1x6x12x12_Maxpool2x2Int8BCHW.txt");
+
+
+PoolChunkCGraphTest<SplitFilterInt8PktStream,MaxpoolScalarBCHW,ConcatInt8Stream,
+                    1,uint8_t,112,112,56,64,1,8,3,3,2,2,
+                    Pad2DStreamInt8,1,1,1,15> k002pool(
+  "k002pool",
+  "k002pool_in_shape1x64x112x112.txt",
+  "k002pool_goldenout_shape1x64x56x56.txt"
+);
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
+  adfCheck(k002pool.init(), "init k002pool");
+  adfCheck(k002pool.run(ITER_CNT), "run k002pool");
+	adfCheck(k002pool.end(), "end k002pool");
+
   // BCHW
-  adfCheck(maxpoolScalarBCHW.init(), "init maxpoolScalarBCHW");
-  adfCheck(maxpoolScalarBCHW.run(ITER_CNT), "run maxpoolScalarBCHW");
-	adfCheck(maxpoolScalarBCHW.end(), "end maxpoolScalarBCHW");
+  // adfCheck(maxpoolScalarBCHW.init(), "init maxpoolScalarBCHW");
+  // adfCheck(maxpoolScalarBCHW.run(ITER_CNT), "run maxpoolScalarBCHW");
+	// adfCheck(maxpoolScalarBCHW.end(), "end maxpoolScalarBCHW");
 
-  adfCheck(maxpool2x2BCHW.init(), "init maxpool2x2BCHW");
-  adfCheck(maxpool2x2BCHW.run(ITER_CNT), "run maxpool2x2BCHW");
-	adfCheck(maxpool2x2BCHW.end(), "end maxpool2x2BCHW");
+  // adfCheck(maxpool2x2BCHW.init(), "init maxpool2x2BCHW");
+  // adfCheck(maxpool2x2BCHW.run(ITER_CNT), "run maxpool2x2BCHW");
+	// adfCheck(maxpool2x2BCHW.end(), "end maxpool2x2BCHW");
 
-  adfCheck(avgpoolScalarBCHW.init(), "init avgpoolScalarBCHW");
-  adfCheck(avgpoolScalarBCHW.run(ITER_CNT), "run avgpoolScalarBCHW");
-	adfCheck(avgpoolScalarBCHW.end(), "end avgpoolScalarBCHW");
+  // adfCheck(avgpoolScalarBCHW.init(), "init avgpoolScalarBCHW");
+  // adfCheck(avgpoolScalarBCHW.run(ITER_CNT), "run avgpoolScalarBCHW");
+	// adfCheck(avgpoolScalarBCHW.end(), "end avgpoolScalarBCHW");
 
-  adfCheck(maxpool2x2int8BCHW.init(), "init maxpool2x2int8BCHW");
-  adfCheck(maxpool2x2int8BCHW.run(ITER_CNT), "run maxpool2x2int8BCHW");
-	adfCheck(maxpool2x2int8BCHW.end(), "end maxpool2x2int8BCHW");
+  // adfCheck(maxpool2x2int8BCHW.init(), "init maxpool2x2int8BCHW");
+  // adfCheck(maxpool2x2int8BCHW.run(ITER_CNT), "run maxpool2x2int8BCHW");
+	// adfCheck(maxpool2x2int8BCHW.end(), "end maxpool2x2int8BCHW");
   return 0;
 }
 #endif

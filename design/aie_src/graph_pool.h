@@ -62,7 +62,7 @@ class PoolGraph : public adf::graph {
       adf::headers(k[0]) = {"pool.h"};
       adf::runtime<ratio>(k[0]) = 0.6;
       
-      adf::connect<adf::window<B*OUT_H*OUT_W*C*sizeof(TT)>> (k[0].out[0], pout[0]);
+      adf::connect<adf::stream> (k[0].out[0], pout[0]);
       
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
@@ -98,7 +98,7 @@ class PoolChunkCGraph : public adf::graph {
     static constexpr int PAD_H = INP_H + H0 + H1;
     static constexpr int PAD_W = INP_W + W0 + W1;
 
-    typedef SplitGraph<SPLIT, TT, B, C*PAD_H*PAD_W, CCHUNK*PAD_H*PAD_W, 0> mSplitGraph;
+    typedef SplitFilterPktStreamGraph<SPLIT, TT, B, C*PAD_H*PAD_W, CCHUNK*PAD_H*PAD_W, 0> mSplitGraph;
     mSplitGraph split_graph;
     static constexpr int LCNT = mSplitGraph::LCNT;
     ConcatStreamGraph<CONCAT, TT, LCNT, B, CCHUNK*OUT_H*OUT_W, C*OUT_H*OUT_W> concat_graph;
@@ -111,7 +111,9 @@ class PoolChunkCGraph : public adf::graph {
     adf::port<input> pin[1];
     adf::port<output> pout[1];
 
-    PoolChunkCGraph() { 
+    PoolChunkCGraph(
+      int repeat_cnt = 1
+    ) { 
       static_assert(LCNT <= 8);
 
       for (int i = 0; i < LCNT; i++) {
@@ -119,9 +121,15 @@ class PoolChunkCGraph : public adf::graph {
         adf::source(k[i]) = "pool.cc";
         adf::headers(k[i]) = {"pool.h"};
         adf::runtime<ratio>(k[i]) = 0.6;
+        adf::repetition_count(k[i]) = repeat_cnt;
         
         adf::connect<adf::window<B*CCHUNK*PAD_H*PAD_W*sizeof(TT)>> (split_graph.pout[i], k[i].in[0]);
-        adf::connect<adf::window<B*CCHUNK*OUT_H*OUT_W*sizeof(TT)>> (k[i].out[0], concat_graph.pin[i]);
+        adf::connect<adf::stream> (k[i].out[0], concat_graph.pin[i]);
+
+        if (i >= 1) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.row_offset=1});
+        }
+        adf::location<adf::buffer>(k[i].in[0]) = adf::location<adf::kernel>(k[i]);
       }
 
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
@@ -132,6 +140,7 @@ class PoolChunkCGraph : public adf::graph {
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
+        adf::repetition_count(pad[0]) = repeat_cnt;
 
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
@@ -140,6 +149,15 @@ class PoolChunkCGraph : public adf::graph {
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
       } else {
         adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
+      }
+
+      for (int i = 0; i < concat_graph.k1.size(); i++) {
+        adf::location<adf::kernel>(concat_graph.k1[i]) = 
+          adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        
+        adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
+        adf::location<adf::stack>(k[i*2]) = cTilePos;
+        adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
       }
     }
 
