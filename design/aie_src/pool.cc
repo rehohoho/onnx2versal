@@ -147,18 +147,18 @@ void Maxpool2x2FloatBCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, S
  */
 template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
 void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>::filter(
-  input_window<int8_t>* in_window,      // BCHW (1x6x24x24)
-  output_window<int8_t>* out_window     // BCPQ (1x6x12x12)
+  input_window<TT>* in_window,      // BCHW (1x6x24x24)
+  output_window<TT>* out_window     // BCPQ (1x6x12x12)
 ) {
   PROFILE_HEADER2;
 
-  const int8_t min = std::numeric_limits<int8_t>::lowest();
-  int8_t *out_ptr = (int8_t *) out_window->ptr;
+  using v16 = typename std::conditional<(std::is_same<TT, int8_t>::value), v16int8, v16uint8>::type;
+  const TT min = std::numeric_limits<TT>::lowest();
+  TT *out_ptr = (TT *) out_window->ptr;
 
-  v16int8 *in0 = (v16int8 *) in_window->ptr + 0 * INP_W/16;
-  v16int8 *in1 = (v16int8 *) in_window->ptr + 1 * INP_W/16;
+  v16 *in0 = (v16 *) in_window->ptr + 0 * INP_W/16;
+  v16 *in1 = (v16 *) in_window->ptr + 1 * INP_W/16;
   v64int16 v = null_v64int16();
-  aie::vector<int16_t, 8> tmp = null_v8int16();
 
   for (int b = 0; b < B; b++) {
     for (int c = 0; c < C; c++) {
@@ -171,13 +171,13 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, ST
           v = upd_w(v, 2, unpack(*in1)); in1++;
           v = upd_w(v, 3, unpack(*in1)); in1++;
           
-          // first 32 against next 32: 0 1 2 3 ... 28 29 30 31 x 32 33 34 35 ... 60 61 62 63
+          // against row+1: 0 1 2 3 ... 28 29 30 31 x 32 33 34 35 ... 60 61 62 63
           res = max32(v, 0, 0x06040200, 0x0e0c0a08, 0x3210, 32, 0x06040200, 0x0e0c0a08, 0x3210);
+          // against col+1: 0 2 4 6 ... 24 26 28 30 x 1 3 5 7 ... 25 27 29 31, (shuffle first for 16-bit addressing)
           res = shuffle32(res, 0, 0x06040200, 0x0e0c0a08, 0x3120); // 0213 4657 ... 28302931
-          // alternate adjacent lanes: 0 1 4 5 ... 24 25 28 29 x 2 3 6 7 ... 26 27 30 31
-          res = max32(res, 0, 0x1c181410, 0x00000000, 0x3210, 0, 0x1d191511, 0x00000000, 0x3210);
+          res = max32(res, 0, 0x1c181410, 0x00000000, 0x3210, 0, 0x1d191511, 0x00000000, 0x3210); // 0 1 4 5 ... 24 25 28 29 x 2 3 6 7 ... 26 27 30 31
 
-          window_writeincr(out_window, pack(ext_w(res,0)));
+          window_writeincr(out_window, ((aie::vector<int16_t,32>) res).extract<16>(0).pack<TT>());
         } // W
 
         if (RUN_16CHUNK) {  // computes 1x8 cells with 2x16 cells, handle last 16
@@ -188,7 +188,11 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, ST
           res = shuffle32(res, 0, 0x06040200, 0x0e0c0a08, 0x3120);
           res = max32(res, 0, 0x1c181410, 0x00000000, 0x3210, 0, 0x1d191511, 0x00000000, 0x3210);
 
-          window_writeincr(out_window, pack(ext_w(res,0)));
+          // against col+1: 0 2 4 6 ... 24 26 28 30 x 1 3 5 7 ... 25 27 29 31, (shuffle first for 16-bit addressing)
+          res = shuffle32(res, 0, 0x06040200, 0x0e0c0a08, 0x3120); // 0213 4657 ... 28302931
+          res = max32(res, 0, 0x1c181410, 0x00000000, 0x3210, 0, 0x1d191511, 0x00000000, 0x3210); // 0 1 4 5 ... 24 25 28 29 x 2 3 6 7 ... 26 27 30 31
+
+          window_writeincr(out_window, ((aie::vector<int16_t,32>) res).extract<16>(0).pack<TT>());
         } // W
         
         in0 += 2*INP_W/16 - (INP_W+15)/16; // account for padding
@@ -198,6 +202,57 @@ void Maxpool2x2Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, ST
   } // B
 
   POOL_PROFILE_FOOTER("Maxpool2x2Int8BCHW");
+}
+
+
+template <typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+void Maxpool3x3Int8BCHW<TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W>::filter(
+  input_window<TT>* in_window,      // BCHW (1x6x24x24)
+  output_window<TT>* out_window     // BCPQ (1x6x12x12)
+) {
+  PROFILE_HEADER2;
+
+  using v32 = typename std::conditional<(std::is_same<TT, int8_t>::value), v32int8, v32uint8>::type;
+  const TT min = std::numeric_limits<TT>::lowest();
+
+  TT *in = (TT *) in_window->ptr;
+  v32int16 res = undef_v32int16();
+
+  for (int b = 0; b < B; b++) {
+    for (int c = 0; c < C; c++) {
+      for (int h = 0; h < OUT_H; h++) {
+        for (int w = 0; w < OUT_W; w+=16) {  // computes 1x16 cells with 3x32 cells, stop at 16 left since INP_W%16=0
+
+          res = unpack(*(v32 *) in); in += INP_W;
+          res = max32(res, 0, 0x06040200, 0x0e0c0a08, 0x3210, unpack(*(v32 *) in), 0, 0x06040200, 0x0e0c0a08, 0x3210); in += INP_W;   // row+1
+          res = max32(res, 0, 0x06040200, 0x0e0c0a08, 0x3210, unpack(*(v32 *) in), 0, 0x06040200, 0x0e0c0a08, 0x3210); in += 32-2*INP_W; // row+2
+          
+          // against col+1: 0 2 4 6 ... 24 26 28 30 x 1 3 5 7 ... 25 27 29 31, (shuffle first for 16-bit addressing)
+          res = shuffle32(res, 0, 0x06040200, 0x0e0c0a08, 0x3120); // 0213 4657 ... 28302931
+          res = max32(res, 0, 0x1c181410, 0x1c181410, 0x3210, 0, 0x1d191511, 0x1c181410, 0x3210); // idx 0145 -> orig 0246 x idx 2367 -> orig 1357
+          
+          // against col+2: 2 4 6 8 ... 26 28 30 32 x 16-long result
+          res = upd_w(res, 1, aie::shuffle_down((aie::vector<int16_t,16>) ext_w(res, 1), 1));
+
+          aie::vector<TT,16> last_pool_v = aie::broadcast<TT,16>(min); // handle 33rd element for 3x3 kernel
+          TT *last_pool_ptr = (TT *) &last_pool_v;
+          *last_pool_ptr = *in; last_pool_ptr++;
+          *last_pool_ptr = *(in + INP_W); last_pool_ptr++;
+          *last_pool_ptr =  *(in + 2*INP_W);
+          TT last_pool = aie::reduce_max(last_pool_v);
+          res = upd_elem(res, 31, last_pool);
+          res = max32(res, 0, 0x06040200, 0x00000000, 0x3210, 0, 0x0e0c0a08, 0x00000000, 0x3210);
+
+          window_writeincr(out_window, ((aie::vector<int16_t,32>) res).extract<16>(0).pack<TT>());
+        } // W
+        
+        in += INP_W;
+      } // H
+      in += (INP_H - OUT_H*STEP_H) * INP_W;
+    } // C
+  } // B
+
+  POOL_PROFILE_FOOTER("Maxpool3x3Int8BCHW");
 }
 
 

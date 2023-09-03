@@ -7,11 +7,14 @@ template <
   template<typename, int, int, int, int, int, int, int, int, int, int> class POOL,
   template<typename, int, int, int, int> class CONCAT, 
   int CCHUNK,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W>
+  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W,
+  template<typename, int, int, int, int, int, int, int, int> class PAD, 
+  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class PoolChunkCGraphTest : public adf::graph {
 
   private:
-    PoolChunkCGraph<SPLIT, POOL, CONCAT, CCHUNK, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> g;
+    PoolChunkCGraph<SPLIT, POOL, CONCAT, CCHUNK, TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+                    PAD, H0, H1, W0, W1> g;
 
   public:
     adf::input_plio plin[1];
@@ -47,16 +50,20 @@ const int STEP_W = 2;
 
 // BCHW
 PoolChunkCGraphTest<SplitScalar, MaxpoolScalarBCHW, ConcatFloatStream, 
-                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> maxpoolScalarBCHW(
+                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+                    Pad2DStreamFloat, 0, 0, 0, 0> maxpoolScalarBCHW(
   "maxpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_MaxpoolScalarBCHW.txt");
 PoolChunkCGraphTest<SplitScalar, Maxpool2x2FloatBCHW, ConcatFloatStream, 
-                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> maxpool2x2BCHW(
+                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+                    Pad2DStreamFloat, 0, 0, 0, 0> maxpool2x2BCHW(
   "maxpool2x2BCHW", "pool_fpin.txt", "poolBCHW_max_fpout_shape1x6x12x12_Maxpool2x2FloatBCHW.txt");
 PoolChunkCGraphTest<SplitScalar, AvgpoolScalarBCHW, ConcatFloatStream, 
-                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W> avgpoolScalarBCHW(
+                    CCHUNK, float, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W,
+                    Pad2DStreamFloat, 0, 0, 0, 0> avgpoolScalarBCHW(
   "avgpoolScalarBCHW", "pool_fpin.txt", "poolBCHW_avg_fpout_shape1x6x12x12_AvgpoolScalarBCHW.txt");
 PoolChunkCGraphTest<SplitInt8, Maxpool2x2Int8BCHW, ConcatInt8Stream, 
-                    CCHUNK, int8_t, INP_H, INP_W_PAD16, OUT_H, OUT_W_PAD16, B, C, KH, KW, STEP_H, STEP_W> maxpool2x2int8BCHW(
+                    CCHUNK, int8_t, INP_H, INP_W_PAD16, OUT_H, OUT_W_PAD16, B, C, KH, KW, STEP_H, STEP_W,
+                    Pad2DStreamInt8, 0, 0, 0, 0> maxpool2x2int8BCHW(
   "maxpool2x2int8BCHW", "pool_int8in_pad.txt", "poolBCHW_max_int8out_shape1x6x12x12_Maxpool2x2Int8BCHW.txt");
 
 
