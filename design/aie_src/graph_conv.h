@@ -382,7 +382,7 @@ class ConvReluChunkHGraph : public adf::graph {
 
     std::vector<adf::kernel> pad;
 
-    static constexpr int OVERLAP = KH-STEP_H;
+    static constexpr int OVERLAP = KH-1;
     typedef SplitGraph<SPLIT, float_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W> mSplitGraph;
     mSplitGraph split_graph;
     static constexpr int LCNT = mSplitGraph::LCNT;
@@ -495,7 +495,7 @@ class ConvReluChunkHStreamGraph : public adf::graph {
 
     std::vector<adf::kernel> pad;
 
-    static constexpr int OVERLAP = KH-STEP_H;
+    static constexpr int OVERLAP = KH-1;
     static constexpr int LCNT = (PAD_H - HCHUNK) / (HCHUNK - OVERLAP) + 1;
     adf::kernel split[(LCNT+1)/2];
     adf::kernel k[LCNT];
@@ -628,7 +628,7 @@ class ConvReluChunkHPktStreamGraph : public adf::graph {
 
     std::vector<adf::kernel> pad;
 
-    static constexpr int OVERLAP = KH-STEP_H;
+    static constexpr int OVERLAP = KH-1;
     typedef SplitFilterPktStreamGraph<SPLIT, float_t, B*C, PAD_H*PAD_W, HCHUNK*PAD_W, OVERLAP*PAD_W> mSplitGraph;
     mSplitGraph split_graph;
 

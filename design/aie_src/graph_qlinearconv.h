@@ -45,7 +45,7 @@ void set_heap_size(adf::kernel k) {
     QLinearConvHx4Stream_2<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
-    QLinearConv1x1PktStream<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
+    QLinearConv1x1StreamInputPackets<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
     QLinearConvHx8PktStream<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
@@ -606,6 +606,7 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
       }
 
+      // location constraints
       for (int i = 0; i < LCNT; i++) {
         if ((i&0x1) == 1)
           adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});

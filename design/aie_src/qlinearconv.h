@@ -1068,13 +1068,76 @@ class QLinearConv1x1Stream {
 
 
 /**
- * @brief Vector implementation for 1x1 QLinearConv, 
+ * @brief Vector implementation for 1x1 QLinearConv, stores weights
  * requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, 
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
  * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
  */
 template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
-class QLinearConv1x1PktStream {
+class QLinearConv1x1InputPackets {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = (C_PER_M+15)/16*16;
+    static constexpr int LAST_C = (C_PER_M % 16 - 1) /2*2;
+
+    alignas(32) TTPARAM (&weights)[M*CKK_ROW_SIZE];
+    alignas(32) int32_t (&bias)[M];
+    alignas(32) TT in[INP_SIZE];
+
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    TT x_zero;
+    TTPARAM w_zero;
+    TT y_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConv1x1InputPackets (
+      TTPARAM (&w)[M*CKK_ROW_SIZE],
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      TT x_zero,
+      TTPARAM w_zero,
+      TT y_zero
+    );
+
+		void filter(
+			input_pktstream* in_s,
+			output_stream<TT>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
+      static_assert(KH==1);
+      static_assert(KW==1);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+			REGISTER_FUNCTION(QLinearConv1x1InputPackets::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
+ * @brief Vector implementation for 1x1 QLinearConv, streams weights
+ * requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, 
+ * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
+ * requires KH==KW==1, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ */
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConv1x1StreamInputPackets {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
@@ -1099,7 +1162,7 @@ class QLinearConv1x1PktStream {
     int16_t scale;
 	
   public:
-    QLinearConv1x1PktStream (
+    QLinearConv1x1StreamInputPackets (
       int32_t (&b)[M],
       float x_scale,
       float w_scale,
@@ -1123,7 +1186,7 @@ class QLinearConv1x1PktStream {
       static_assert(OUT_W_PAD%16==0);
       static_assert(STEP_H == 1 || STEP_H == 2);
       static_assert(STEP_W == 1 || STEP_W == 2);
-			REGISTER_FUNCTION(QLinearConv1x1PktStream::filter);
+			REGISTER_FUNCTION(QLinearConv1x1StreamInputPackets::filter);
       REGISTER_PARAMETER(bias);
 		}
 };
