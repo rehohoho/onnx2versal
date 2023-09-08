@@ -45,8 +45,10 @@ void set_heap_size(adf::kernel k) {
     QLinearConvHx4Stream_2<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
-    QLinearConv1x1PktStream<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
-    
+    QLinearConv1x1PktStream<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
+    (std::is_same<
+    QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
+    QLinearConvHx8PktStream<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value)
   ) {
     adf::heap_size(k) = 31712; // caches CKK weights, input window
   }
@@ -263,9 +265,7 @@ class QLinearConvStreamGraph : public adf::graph {
       TTPARAM w_zero,
       TT y_zero
     ) { 
-      static_assert(B*C*PAD_H*PAD_W <= MAX_PARAM_BYTES);
-      assert(weights.size() <= MAX_PARAM_BYTES);
-      static_assert(B*M*OUT_H*OUT_W_PAD <= MAX_PARAM_BYTES);
+      static_assert(B*C*PAD_H*PAD_W <= TILE_BYTES);
 
       k[0] = adf::kernel::create_object<QLINEARCONV<TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP>>(
         weights, bias, x_scale, w_scale, y_scale, x_zero, w_zero, y_zero);
@@ -497,13 +497,7 @@ class QLinearConvChunkHStreamGraph : public adf::graph {
           adf::location<adf::parameter>(k[i].param[0]) = adf::offset(0);
         }
         
-        adf::location_constraint kTilePos = adf::location<adf::kernel>(k[i]);
-        adf::location<adf::buffer>(k[i].in[0]) = kTilePos; // may bust tiles adjacent to split
-        if (B*C*HCHUNK*PAD_W > MAX_PARAM_BYTES) {
-          adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0)};
-        } else {
-          adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0), adf::offset(16384)};
-        }        
+        adf::location_constraint kTilePos = adf::location<adf::kernel>(k[i]);   
       }
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
 
@@ -591,14 +585,6 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
         adf::connect<adf::pktstream> (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::stream> (k[i].out[0], concat_graph.pin[i]);
         adf::samples_per_iteration(k[i].out[0]) = B*M*HCHUNK_OUT*OUT_W_PAD;
-
-        if ((i&0x1) == 1) {
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
-        }
-        if (i == 2) {
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});
-        }
-        adf::location<adf::stack>(k[i]) = adf::location<adf::kernel>(k[i]);
       }
 
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
@@ -620,14 +606,31 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
       }
 
-      for (int i = 0; i < concat_graph.k1.size(); i++) {
-        adf::location<adf::kernel>(concat_graph.k1[i]) = 
-          adf::location<adf::kernel>(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
-        
-        adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
-        adf::location<adf::parameter>(k[i*2+1].param[0]) = cTilePos;
-        adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
+      for (int i = 0; i < LCNT; i++) {
+        if ((i&0x1) == 1)
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        if (i == 4)
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=-1, .row_offset=2});
+        if (i == 2 || i == 6)
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-2]) + adf::relative_offset({.col_offset=1, .row_offset=0});
+        adf::location<adf::stack>(k[i]) = adf::location<adf::kernel>(k[i]);
       }
+
+      for (int i = 0; i < concat_graph.k1.size(); i++) {
+        adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
+        adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
+
+        if (i < 2) {
+          adf::location<adf::kernel>(concat_graph.k1[i]) = 
+            adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=-1});
+          adf::location<adf::parameter>(k[i*2].param[0]) = cTilePos;
+        } else {
+          adf::location<adf::kernel>(concat_graph.k1[i]) = 
+            adf::location<adf::kernel>(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+          adf::location<adf::parameter>(k[i*2+1].param[0]) = cTilePos;
+        }
+      }
+      adf::location<adf::kernel>(split_graph.k[0]) = adf::location<adf::kernel>(k[1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
     }
 
     QLinearConvChunkHPktStreamGraph(

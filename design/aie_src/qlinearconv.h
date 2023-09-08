@@ -876,6 +876,134 @@ class QLinearConvHx6x8bitStream {
 
 
 /**
+ * @brief Vector implementation for Hx8 QLinearConv, 
+ * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
+ * requires KW<=8, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ */
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConvHx8 {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int C_PER_M = C / GROUP;
+    static constexpr int CKK_ROW_SIZE = C_PER_M*((KH*KW+15)/16*16);
+
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP = (STEP_W == 1) ? 16 : 8;
+
+    alignas(32) TTPARAM (&weights)[M*CKK_ROW_SIZE];
+    alignas(32) int32_t (&bias)[M];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    TT x_zero;
+    TTPARAM w_zero;
+    TT y_zero;
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConvHx8 (
+      TTPARAM (&w)[M*CKK_ROW_SIZE],
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      TT x_zero,
+      TTPARAM w_zero,
+      TT y_zero
+    );
+
+		void filter(
+			input_window<TT>* in,
+			output_stream<TT>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
+      static_assert(KW<=8);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+			REGISTER_FUNCTION(QLinearConvHx8::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
+ * @brief Vector implementation for Hx8 QLinearConv, 
+ * requires bias to be shifted, i.e. tbias - tw.reshape(M,-1).sum(1) * X_zero_point, 
+ * requires KW<=8, INP_W%16=0, OUT_W_PAD%16=0, STEP_H==1|2, STEP_W==1|2, 
+ */
+template <typename TT, typename TTPARAM, int INP_H, int INP_W, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP>
+class QLinearConvHx8PktStream {
+  
+  private:
+    static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
+    static constexpr int CKK_ROW_SIZE = C*((KH*KW+15)/16*16);
+    static constexpr int INP_SIZE = B*C*INP_H*INP_W;
+
+    static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;
+    static constexpr unsigned int MAC_ZSQUARE = (STEP_W == 1) ? 0x2110 : 0x3210;
+    
+    // v32 data limits strides 2, 4 to compute 8 values, note KW <= 4
+    static constexpr int W_LOOP_STEP = (STEP_W == 1) ? 16 : 8;
+
+    alignas(32) TTPARAM (&weights)[M*CKK_ROW_SIZE];
+    alignas(32) int32_t (&bias)[M];
+    float x_scale;
+    float w_scale;
+    float y_scale;
+    TT x_zero;
+    TTPARAM w_zero;
+    TT y_zero;
+    alignas(32) TT in[INP_SIZE];
+
+    // precomputation
+    int scalebits;
+    int16_t scale;
+	
+  public:
+    QLinearConvHx8PktStream (
+      TTPARAM (&w)[M*CKK_ROW_SIZE],
+      int32_t (&b)[M],
+      float x_scale,
+      float w_scale,
+      float y_scale,
+      TT x_zero,
+      TTPARAM w_zero,
+      TT y_zero
+    );
+
+		void filter(
+			input_pktstream* in,
+			output_stream<TT>* out
+		);
+
+		static void registerKernelClass() {
+      static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
+      static_assert(KW<=8);
+      static_assert(INP_W%16==0);
+      static_assert(OUT_W_PAD%16==0);
+      static_assert(STEP_H == 1 || STEP_H == 2);
+      static_assert(STEP_W == 1 || STEP_W == 2);
+      static_assert(GROUP == 1);
+			REGISTER_FUNCTION(QLinearConvHx8PktStream::filter);
+      REGISTER_PARAMETER(weights);
+      REGISTER_PARAMETER(bias);
+		}
+};
+
+
+/**
  * @brief Vector implementation for 1x1 QLinearConv, 
  * requires data to be reshaped from (M,C,1,1) to (M,C') where C' is padded to next multiple of 16, 
  * requires bias to be shifted, i.e. tbias - tw_1x1.reshape(M,-1).sum(1) * X_zero_point, 
