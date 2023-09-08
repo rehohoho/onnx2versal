@@ -125,11 +125,6 @@ class PoolChunkCGraph : public adf::graph {
         
         adf::connect<adf::window<B*CCHUNK*PAD_H*PAD_W*sizeof(TT)>> (split_graph.pout[i], k[i].in[0]);
         adf::connect<adf::window<B*CCHUNK*OUT_H*OUT_W*sizeof(TT)>> (k[i].out[0], concat_graph.pin[i]);
-
-        if (i >= 1) {
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.row_offset=1});
-        }
-        adf::location<adf::buffer>(k[i].in[0]) = adf::location<adf::kernel>(k[i]);
       }
 
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
@@ -151,12 +146,31 @@ class PoolChunkCGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
       }
 
+      // location constraints
+      for (int i = 0; i < LCNT; i++) {
+        if ((i&0x3) == 1) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=1});
+        } else if ((i&0x3) == 3) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=-1, .row_offset=1});
+        } else if ((i&0x3) == 2) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1, .row_offset=0});
+        } else if (i != 0) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=-1, .row_offset=0});
+        }
+        adf::location<adf::buffer>(k[i].in[0]) = adf::location<adf::kernel>(k[i]);
+      }
+
       for (int i = 0; i < concat_graph.k1.size(); i++) {
         adf::location<adf::kernel>(concat_graph.k1[i]) = 
-          adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+          adf::location<adf::kernel>(k[2*i]) + adf::relative_offset({.col_offset=0, .row_offset=1});
         
         adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
+        adf::location<adf::buffer>(k[i*2].out[0]) = cTilePos;
+        adf::location<adf::buffer>(k[i*2].out[0]) = {adf::offset(0), adf::offset(8192)};
         adf::location<adf::stack>(k[i*2]) = cTilePos;
+        adf::location<adf::buffer>(k[i*2+1].out[0]) = cTilePos;
+        adf::location<adf::buffer>(k[i*2+1].out[0]) = {adf::offset(16384), adf::offset(24576)};
+        adf::location<adf::stack>(k[i*2+1]) = cTilePos;
         adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
       }
     }

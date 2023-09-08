@@ -144,22 +144,31 @@ class QuantizeLinearChunkHPktStreamGraph : public adf::graph {
 
         adf::samples_per_iteration(k[i].in[0]) = HCHUNK*INP_W;
         adf::samples_per_iteration(k[i].out[0]) = HCHUNK*OUT_W;
+      }
 
-        if ((i&0x1) == 1) {
+      for (int i = 0; i < LCNT; i++) {
+        if ((i&0x1) == 1)
           adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
-        }
-        if (i == 2) {
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});
-        }
+        if (i == 4)
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=-1, .row_offset=2});
+        if (i == 2 || i == 6)
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-2]) + adf::relative_offset({.col_offset=1, .row_offset=0});
         adf::location<adf::stack>(k[i]) = adf::location<adf::kernel>(k[i]);
       }
 
       for (int i = 0; i < concat_graph.k1.size(); i++) {
-        adf::location<adf::kernel>(concat_graph.k1[i]) = 
-          adf::location<adf::kernel>(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
-        adf::location<adf::stack>(concat_graph.k1[i]) = adf::location<adf::kernel>(concat_graph.k1[i]);
-      }
+        adf::location_constraint cTilePos = adf::location<adf::kernel>(concat_graph.k1[i]);
+        adf::location<adf::stack>(concat_graph.k1[i]) = cTilePos;
 
+        if (i < 2) {
+          adf::location<adf::kernel>(concat_graph.k1[i]) = 
+            adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=-1});
+        } else {
+          adf::location<adf::kernel>(concat_graph.k1[i]) = 
+            adf::location<adf::kernel>(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+        }
+      }
+      adf::location<adf::kernel>(split_graph.k[0]) = adf::location<adf::kernel>(k[1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
       adf::connect<adf::stream> (concat_graph.pout[0], pout[0]);
     }
 
