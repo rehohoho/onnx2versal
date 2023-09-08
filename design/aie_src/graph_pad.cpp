@@ -101,11 +101,11 @@ Pad2DWindowGraphTest<Pad2DWindowScalar, float_t, B, INP_H, INP_W, INP_W_PAD, H0,
 // int8
 Pad2DWindowGraphTest<Pad2DWindowScalar, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> pad2DWindow_int8(
   "pad2DWindow_int8", "pad_2d_int8in_shape2x30x32.txt", "pad_2d_int8out_shape2x32x32_Pad2DWindowScalar.txt");
-Pad2DStreamGraphTest<Pad2DStreamInt8, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> pad2DStreamInt8(
+Pad2DStreamGraphTest<Pad2DStreamInt8_2, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> pad2DStreamInt8(
   "pad2DStreamInt8", "pad_2d_int8in_shape2x30x32.txt", "pad_2d_int8out_shape2x32x32_Pad2DStreamInt8.txt");
 
-// Pad2DStream2WindowGraphTest<Pad2DStream2WindowInt8, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> pad2DStream2WindowInt8(
-//   "pad2DStream2WindowInt8", "pad_2d_int8in_shape2x30x32.txt", "pad_2d_int8out_shape2x32x32_Pad2DStream2WindowInt8.txt");
+Pad2DStream2WindowGraphTest<Pad2DStream2WindowInt8, int8_t, B, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1> pad2DStream2WindowInt8(
+  "pad2DStream2WindowInt8", "pad_2d_int8in_shape2x30x32.txt", "pad_2d_int8out_shape2x32x32_Pad2DStream2WindowInt8.txt");
 
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
