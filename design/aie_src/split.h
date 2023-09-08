@@ -439,8 +439,8 @@ class SplitFilterInt8PktStream {
 		static void registerKernelClass() {
 			static_assert((std::is_same<TT, int8_t>::value) || (std::is_same<TT, uint8_t>::value));
 			static_assert(OVERLAP % 16 == 0);
-			static_assert((OVERLAP < 0) || (STRIDE % 16 == 0 && STRIDE >= 0));
-			static_assert((OVERLAP < 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));
+			static_assert((OVERLAP <= 0) || (STRIDE % 16 == 0 && STRIDE >= 0));
+			static_assert((OVERLAP <= 0) || LCNT*OUT_W - OVERLAP*(LCNT-1) <= INP_W);
 			static_assert((OVERLAP > 0) || (OUT_W % 16 == 0));
 			static_assert((OVERLAP > 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) <= INP_W));
 			REGISTER_FUNCTION(SplitFilterInt8PktStream::filter);
