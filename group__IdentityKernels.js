@@ -1,4 +1,4 @@
 var group__IdentityKernels =
 [
-    [ "IdentityScalar< N >", "classIdentityScalar.html", null ]
+    [ "Identity< TT, N >", "classIdentity.html", null ]
 ];

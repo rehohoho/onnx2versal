@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['identitygraph_0',['IdentityGraph',['../classIdentityGraph.html',1,'']]],
-  ['identityscalar_1',['IdentityScalar',['../classIdentityScalar.html',1,'']]]
+  ['identity_0',['Identity',['../classIdentity.html',1,'']]],
+  ['identitygraph_1',['IdentityGraph',['../classIdentityGraph.html',1,'']]]
 ];

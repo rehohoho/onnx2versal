@@ -97,15 +97,15 @@ $(document).ready(function(){initNavTree('classMaxpool2x2Int8BCHW.html',''); ini
 </div><!--header-->
 <div class="contents">
 
-<p>Vector implementation for int8 BCHW maxpool with 2x2 kernel, requires INP_W%16==0, OUT_W%8==0, KH==KW==2, TT==int8_t, <a class="el" href="classMaxpool2x2Int8BCHW.html#ab3f99c64f08bc4bf2d623eee08e0d7f9">Maxpool2x2Int8BCHW::filter&lt;24,32,16,1,6&gt;</a> total = 324.  
+<p>Vector implementation for int8 BCHW maxpool with 2x2 kernel, requires INP_W%16==0, OUT_W%8==0, KH==KW==2, TT==int8_t or uint8_t, <a class="el" href="classMaxpool2x2Int8BCHW.html#aba4fb70e6b3248422a38e613a2437de5">Maxpool2x2Int8BCHW::filter&lt;24,32,16,1,6&gt;</a> total = 324.  
 </p>
 
 <p><code>#include &lt;<a class="el" href="pool_8h_source.html">pool.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab3f99c64f08bc4bf2d623eee08e0d7f9" id="r_ab3f99c64f08bc4bf2d623eee08e0d7f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2Int8BCHW.html#ab3f99c64f08bc4bf2d623eee08e0d7f9">filter</a> (input_window&lt; int8_t &gt; *in_window, output_window&lt; int8_t &gt; *out_window)</td></tr>
-<tr class="separator:ab3f99c64f08bc4bf2d623eee08e0d7f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba4fb70e6b3248422a38e613a2437de5" id="r_aba4fb70e6b3248422a38e613a2437de5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMaxpool2x2Int8BCHW.html#aba4fb70e6b3248422a38e613a2437de5">filter</a> (input_window&lt; TT &gt; *in_window, output_window&lt; TT &gt; *out_window)</td></tr>
+<tr class="separator:aba4fb70e6b3248422a38e613a2437de5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -114,8 +114,8 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernel
 <tr class="separator:a045afa10f5f247c62a332168515b3d34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ab3f99c64f08bc4bf2d623eee08e0d7f9" name="ab3f99c64f08bc4bf2d623eee08e0d7f9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3f99c64f08bc4bf2d623eee08e0d7f9">&#9670;&#160;</a></span>filter()</h2>
+<a id="aba4fb70e6b3248422a38e613a2437de5" name="aba4fb70e6b3248422a38e613a2437de5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba4fb70e6b3248422a38e613a2437de5">&#9670;&#160;</a></span>filter()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -125,13 +125,13 @@ template&lt;typename TT , int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int
         <tr>
           <td class="memname">void <a class="el" href="classMaxpool2x2Int8BCHW.html">Maxpool2x2Int8BCHW</a>&lt; TT, INP_H, INP_W, OUT_H, OUT_W, B, C, KH, KW, STEP_H, STEP_W &gt;::filter </td>
           <td>(</td>
-          <td class="paramtype">input_window&lt; int8_t &gt; *&#160;</td>
+          <td class="paramtype">input_window&lt; TT &gt; *&#160;</td>
           <td class="paramname"><em>in_window</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">output_window&lt; int8_t &gt; *&#160;</td>
+          <td class="paramtype">output_window&lt; TT &gt; *&#160;</td>
           <td class="paramname"><em>out_window</em>&#160;</td>
         </tr>
         <tr>

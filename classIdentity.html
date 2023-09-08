@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: Identity</title>
+<title>onnx2versal: Identity&lt; TT, N &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('group__Identity.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classIdentity.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -90,48 +90,40 @@ $(document).ready(function(){initNavTree('group__Identity.html',''); initResizab
 
 <div class="header">
   <div class="summary">
-<a href="#groups">Modules</a> &#124;
-<a href="#nested-classes">Classes</a>  </div>
-  <div class="headertitle"><div class="title">Identity</div></div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="classIdentity-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">Identity&lt; TT, N &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__Identity.html">Identity</a> &raquo; <a class="el" href="group__IdentityKernels.html">IdentityKernels</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="classIdentity.html" title="Scalar implementation, Identity&lt;8&gt; total = 35.">Identity</a> function, output=input.  
-<a href="#details">More...</a></p>
-<div class="dynheader">
-Collaboration diagram for Identity:</div>
-<div class="dyncontent">
-<div class="center"><img src="group__Identity.png" border="0" usemap="#agroup____Identity" alt=""/></div>
-<map name="agroup____Identity" id="agroup____Identity">
-<area shape="rect" title="Identity function, output=input." alt="" coords="5,5,69,31"/>
-<area shape="rect" href="group__IdentityKernels.html" title=" " alt="" coords="117,5,224,31"/>
-</map>
-</div>
+<p>Scalar implementation, Identity&lt;8&gt; total = 35.  
+</p>
+
+<p><code>#include &lt;<a class="el" href="identity_8h_source.html">identity.h</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="groups" name="groups"></a>
-Modules</h2></td></tr>
-<tr class="memitem:group__IdentityKernels" id="r_group__IdentityKernels"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__IdentityKernels.html">IdentityKernels</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a59a5f5434c857ff2dd87811f095d0f4d" id="r_a59a5f5434c857ff2dd87811f095d0f4d"><td class="memItemLeft" align="right" valign="top"><a id="a59a5f5434c857ff2dd87811f095d0f4d" name="a59a5f5434c857ff2dd87811f095d0f4d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>filter</b> (input_stream&lt; TT &gt; *in, output_stream&lt; TT &gt; *out)</td></tr>
+<tr class="separator:a59a5f5434c857ff2dd87811f095d0f4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIdentityGraph.html">IdentityGraph&lt; TT, N &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Single instance graph.  <a href="classIdentityGraph.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a405aff6794ce15f097aa960b977416c0" id="r_a405aff6794ce15f097aa960b977416c0"><td class="memItemLeft" align="right" valign="top"><a id="a405aff6794ce15f097aa960b977416c0" name="a405aff6794ce15f097aa960b977416c0"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>registerKernelClass</b> ()</td></tr>
+<tr class="separator:a405aff6794ce15f097aa960b977416c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<dl class="tparams"><dt>Template Parameters</dt><dd>
-  <table class="tparams">
-    <tr><td class="paramname">IDENTITY</td><td><a class="el" href="classIdentity.html" title="Scalar implementation, Identity&lt;8&gt; total = 35.">Identity</a> Kernel </td></tr>
-    <tr><td class="paramname">N</td><td>size of input and output </td></tr>
-  </table>
-  </dd>
-</dl>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li>design/aie_src/<a class="el" href="identity_8h_source.html">identity.h</a></li>
+<li>design/aie_src/<b>identity.cc</b></li>
+</ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
+    <li class="navelem"><a class="el" href="classIdentity.html">Identity</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

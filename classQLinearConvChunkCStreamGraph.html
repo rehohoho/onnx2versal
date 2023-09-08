@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: QLinearConvStreamGraph&lt; PAD, QLINEARCONV, TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt; Class Template Reference</title>
+<title>onnx2versal: QLinearConvChunkCStreamGraph&lt; QLINEARCONV0, QLINEARCONV1, QLINEARCONV2, CONCAT, CCHUNK, TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('classQLinearConvStreamGraph.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classQLinearConvChunkCStreamGraph.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -93,13 +93,13 @@ $(document).ready(function(){initNavTree('classQLinearConvStreamGraph.html','');
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
-<a href="classQLinearConvStreamGraph-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">QLinearConvStreamGraph&lt; PAD, QLINEARCONV, TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
+<a href="classQLinearConvChunkCStreamGraph-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">QLinearConvChunkCStreamGraph&lt; QLINEARCONV0, QLINEARCONV1, QLINEARCONV2, CONCAT, CCHUNK, TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt; Class Template Reference<div class="ingroups"><a class="el" href="group__QLinearConv.html">QLinearConv</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Single instance graph that streams weights and biases, significantly slower.  
- <a href="classQLinearConvStreamGraph.html#details">More...</a></p>
+<p>Multiinstance graph that stores weights and biases, chunks BCHW by C dimension, maximum 8 chunks.  
+ <a href="classQLinearConvChunkCStreamGraph.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="graph__qlinearconv_8h_source.html">graph_qlinearconv.h</a>&gt;</code></p>
 
@@ -107,35 +107,31 @@ $(document).ready(function(){initNavTree('classQLinearConvStreamGraph.html','');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac2b829ad592cb1f509a7e632f88f2084" id="r_ac2b829ad592cb1f509a7e632f88f2084"><td class="memItemLeft" align="right" valign="top"><a id="ac2b829ad592cb1f509a7e632f88f2084" name="ac2b829ad592cb1f509a7e632f88f2084"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init_helper</b> (TT x_zero)</td></tr>
-<tr class="separator:ac2b829ad592cb1f509a7e632f88f2084"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1413f5154ebd2569c9fccc359e10a8f6" id="r_a1413f5154ebd2569c9fccc359e10a8f6"><td class="memItemLeft" align="right" valign="top"><a id="a1413f5154ebd2569c9fccc359e10a8f6" name="a1413f5154ebd2569c9fccc359e10a8f6"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvStreamGraph</b> (std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
-<tr class="separator:a1413f5154ebd2569c9fccc359e10a8f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a75f20973ff10eafc57b0360b5a93ea" id="r_a6a75f20973ff10eafc57b0360b5a93ea"><td class="memItemLeft" align="right" valign="top"><a id="a6a75f20973ff10eafc57b0360b5a93ea" name="a6a75f20973ff10eafc57b0360b5a93ea"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvStreamGraph</b> (std::vector&lt; TTPARAM &gt; weights, std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
-<tr class="separator:a6a75f20973ff10eafc57b0360b5a93ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66390fd6421dc7be36f0027734f8039d" id="r_a66390fd6421dc7be36f0027734f8039d"><td class="memItemLeft" align="right" valign="top"><a id="a66390fd6421dc7be36f0027734f8039d" name="a66390fd6421dc7be36f0027734f8039d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>QLinearConvChunkCStreamGraph</b> (std::vector&lt; int32_t &gt; bias, float x_scale, float w_scale, float y_scale, TT x_zero, TTPARAM w_zero, TT y_zero)</td></tr>
+<tr class="separator:a66390fd6421dc7be36f0027734f8039d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a868cbae43f26435f9f485bd384d504d4" id="r_a868cbae43f26435f9f485bd384d504d4"><td class="memItemLeft" align="right" valign="top"><a id="a868cbae43f26435f9f485bd384d504d4" name="a868cbae43f26435f9f485bd384d504d4"></a>
-adf::vector&lt; adf::port&lt; input &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b></td></tr>
-<tr class="separator:a868cbae43f26435f9f485bd384d504d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b2661d87af7817b9b5fa29dcfd151fd" id="r_a2b2661d87af7817b9b5fa29dcfd151fd"><td class="memItemLeft" align="right" valign="top"><a id="a2b2661d87af7817b9b5fa29dcfd151fd" name="a2b2661d87af7817b9b5fa29dcfd151fd"></a>
-adf::port&lt; output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
-<tr class="separator:a2b2661d87af7817b9b5fa29dcfd151fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa802fc6669a23cb56329f430b9dcb9aa" id="r_aa802fc6669a23cb56329f430b9dcb9aa"><td class="memItemLeft" align="right" valign="top"><a id="aa802fc6669a23cb56329f430b9dcb9aa" name="aa802fc6669a23cb56329f430b9dcb9aa"></a>
+adf::kernel&#160;</td><td class="memItemRight" valign="bottom"><b>k</b> [LCNT]</td></tr>
+<tr class="separator:aa802fc6669a23cb56329f430b9dcb9aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30ac1e334ce27594092d9d6894ee7372" id="r_a30ac1e334ce27594092d9d6894ee7372"><td class="memItemLeft" align="right" valign="top"><a id="a30ac1e334ce27594092d9d6894ee7372" name="a30ac1e334ce27594092d9d6894ee7372"></a>
+adf::port&lt; adf::input &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pin</b> [1+LCNT]</td></tr>
+<tr class="separator:a30ac1e334ce27594092d9d6894ee7372"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b4d2883c2b220e05ad6e4a8d705c2b5" id="r_a9b4d2883c2b220e05ad6e4a8d705c2b5"><td class="memItemLeft" align="right" valign="top"><a id="a9b4d2883c2b220e05ad6e4a8d705c2b5" name="a9b4d2883c2b220e05ad6e4a8d705c2b5"></a>
+adf::port&lt; adf::output &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pout</b> [1]</td></tr>
+<tr class="separator:a9b4d2883c2b220e05ad6e4a8d705c2b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a2ca4ed96f489e651d6ad05911190ebf3" id="r_a2ca4ed96f489e651d6ad05911190ebf3"><td class="memItemLeft" align="right" valign="top"><a id="a2ca4ed96f489e651d6ad05911190ebf3" name="a2ca4ed96f489e651d6ad05911190ebf3"></a>
-static constexpr int&#160;</td><td class="memItemRight" valign="bottom"><b>OUT_H</b> = (PAD_H - KH) / STEP_H + 1</td></tr>
-<tr class="separator:a2ca4ed96f489e651d6ad05911190ebf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7d37e4bce8be615ebcf22e7c6f929f6" id="r_ab7d37e4bce8be615ebcf22e7c6f929f6"><td class="memItemLeft" align="right" valign="top"><a id="ab7d37e4bce8be615ebcf22e7c6f929f6" name="ab7d37e4bce8be615ebcf22e7c6f929f6"></a>
+static constexpr int&#160;</td><td class="memItemRight" valign="bottom"><b>LCNT</b> = C / CCHUNK</td></tr>
+<tr class="separator:ab7d37e4bce8be615ebcf22e7c6f929f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, int, int, int, int, int, int, int, int &gt; class PAD, template&lt; typename, typename, int, int, int, int, int, int, int, int, int, int, int, int &gt; class QLINEARCONV, typename TT, typename TTPARAM, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
-class QLinearConvStreamGraph&lt; PAD, QLINEARCONV, TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
-<p>&lt;td class= </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;template&lt; typename, typename, int, int, int, int, int, int, int, int, int, int, int, int &gt; class QLINEARCONV0, template&lt; typename, typename, int, int, int, int, int, int, int, int, int, int, int, int &gt; class QLINEARCONV1, template&lt; typename, typename, int, int, int, int, int, int, int, int, int, int, int, int &gt; class QLINEARCONV2, template&lt; typename, int, int, int, int &gt; class CONCAT, int CCHUNK, typename TT, typename TTPARAM, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W, int B, int C, int M, int KH, int KW, int GROUP, int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0&gt;<br />
+class QLinearConvChunkCStreamGraph&lt; QLINEARCONV0, QLINEARCONV1, QLINEARCONV2, CONCAT, CCHUNK, TT, TTPARAM, INP_H, INP_W, INP_W_PAD, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, H0, H1, W0, W1 &gt;</div><p>&lt;dl class= </p>
 <p>&lt;td class= </p>
 <p>&lt;td class= </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
@@ -146,7 +142,7 @@ class QLinearConvStreamGraph&lt; PAD, QLINEARCONV, TT, TTPARAM, INP_H, INP_W, IN
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="classQLinearConvStreamGraph.html">QLinearConvStreamGraph</a></li>
+    <li class="navelem"><a class="el" href="classQLinearConvChunkCStreamGraph.html">QLinearConvChunkCStreamGraph</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
