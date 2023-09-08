@@ -15,11 +15,11 @@ QLinearAddInt8<TT, W, IS_RELU>::QLinearAddInt8 (
   TT b_zero,
   TT c_zero
 ): a_scale(a_scale), b_scale(b_scale), c_scale(c_scale), a_zero(a_zero), b_zero(b_zero), c_zero(c_zero) {
-  float invc = inv(c_scale);
-  bitshift = 15 - log(max(a_scale, b_scale) * invc) / log(2);
-  ascale = float2fix(a_scale * invc, bitshift);
-  bscale = float2fix(b_scale * invc, bitshift);
-  shiftv = float2fix((-a_zero*a_scale -b_zero*b_scale) * invc + c_zero, bitshift);
+  float tmp = a_scale > b_scale ? a_scale : b_scale;
+  bitshift = 15 - log(tmp / c_scale) / log(2);
+  ascale = float2fix(a_scale / c_scale, bitshift);
+  bscale = float2fix(b_scale / c_scale, bitshift);
+  shiftv = float2fix((-a_zero*a_scale -b_zero*b_scale) / c_scale + c_zero, bitshift);
   // printf("bitshift %d ascale %d bscale %d shiftv %d\n", bitshift, ascale, bscale, shiftv);
 };
 
