@@ -207,28 +207,37 @@ $(document).ready(function(){initNavTree('graph__quantize__linear_8h_source.html
 <div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>        adf::samples_per_iteration(k[i].in[0]) = HCHUNK*INP_W;</div>
 <div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>        adf::samples_per_iteration(k[i].out[0]) = HCHUNK*OUT_W;</div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        <span class="keywordflow">if</span> ((i&amp;0x1) == 1) {</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>        }</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>        <span class="keywordflow">if</span> (i == 2) {</div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});</div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>        }</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>        adf::location&lt;adf::stack&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i]);</div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>      }</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; concat_graph.k1.size(); i++) {</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>        adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]) = </div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>          adf::location&lt;adf::kernel&gt;(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        adf::location&lt;adf::stack&gt;(concat_graph.k1[i]) = adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]);</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>      }</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>      }</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; LCNT; i++) {</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>        <span class="keywordflow">if</span> ((i&amp;0x1) == 1)</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>        <span class="keywordflow">if</span> (i == 4)</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-1]) + adf::relative_offset({.col_offset=-1, .row_offset=2});</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>        <span class="keywordflow">if</span> (i == 2 || i == 6)</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>          adf::location&lt;adf::kernel&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i-2]) + adf::relative_offset({.col_offset=1, .row_offset=0});</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        adf::location&lt;adf::stack&gt;(k[i]) = adf::location&lt;adf::kernel&gt;(k[i]);</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>      }</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; concat_graph.k1.size(); i++) {</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        adf::location_constraint cTilePos = adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]);</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>        adf::location&lt;adf::stack&gt;(concat_graph.k1[i]) = cTilePos;</div>
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span> </div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    }</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span> </div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>};</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>        <span class="keywordflow">if</span> (i &lt; 2) {</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>          adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]) = </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>            adf::location&lt;adf::kernel&gt;(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=-1});</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>          adf::location&lt;adf::kernel&gt;(concat_graph.k1[i]) = </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>            adf::location&lt;adf::kernel&gt;(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>        }</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>      }</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>      adf::location&lt;adf::kernel&gt;(split_graph.k[0]) = adf::location&lt;adf::kernel&gt;(k[1]) + adf::relative_offset({.col_offset=0, .row_offset=1});</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>      adf::connect&lt;adf::stream&gt; (concat_graph.pout[0], pout[0]);</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    }</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>};</div>
 </div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="preprocessor">#endif </span><span class="comment">// __QUANTIZE_LINEAR_GRAPH_H__</span></div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span><span class="preprocessor">#endif </span><span class="comment">// __QUANTIZE_LINEAR_GRAPH_H__</span></div>
 <div class="ttc" id="aclassQuantizeLinearChunkHPktStreamGraph_html"><div class="ttname"><a href="classQuantizeLinearChunkHPktStreamGraph.html">QuantizeLinearChunkHPktStreamGraph</a></div><div class="ttdoc">Multi instance pktstream graph.</div><div class="ttdef"><b>Definition</b> graph_quantize_linear.h:112</div></div>
 <div class="ttc" id="aclassQuantizeLinearGraph_html"><div class="ttname"><a href="classQuantizeLinearGraph.html">QuantizeLinearGraph</a></div><div class="ttdoc">Single instance graph.</div><div class="ttdef"><b>Definition</b> graph_quantize_linear.h:36</div></div>
 <div class="ttc" id="aclassQuantizeLinearStreamGraph_html"><div class="ttname"><a href="classQuantizeLinearStreamGraph.html">QuantizeLinearStreamGraph</a></div><div class="ttdoc">Single instance stream graph.</div><div class="ttdef"><b>Definition</b> graph_quantize_linear.h:73</div></div>
