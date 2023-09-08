@@ -362,10 +362,10 @@ class ConvOp(OpParser):
       if LCNT > 8:
         raise NotImplementedError(F"ConvReluChunkHStreamGraph of LCNT {LCNT} not implemented. Maximum LCNT = 8.")
       
-      if (self.KH - self.STEP_H) // 2 > 0:
-        assert (self.INP_H+self.H0+self.H1-self.HCHUNK) % (self.HCHUNK - (self.KH - self.STEP_H)) == 0
+      if overlap // 2 > 0:
+        assert (self.INP_H+self.H0+self.H1-self.HCHUNK) % (self.HCHUNK - overlap) == 0
       else:
-        assert self.OUT_H % ((self.HCHUNK - (self.KH - self.STEP_H)) // self.STEP_H) == 0
+        assert self.OUT_H % ((self.HCHUNK - overlap) // self.STEP_H) == 0
   
   def register_params(self, tensors: List[np.ndarray], attributes: List[Any]):
     assert len(tensors) == 4
@@ -682,6 +682,8 @@ class PoolOp(OpParser):
       elif self.INP_W_PAD//self.OUT_W == 2 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 8 == 0 and self.KH == self.KW == 2 and self.dtype == "int8":
         kernel = "Maxpool2x2Int8BCHW"
         self.OUT_W = self.OUT_W_PAD
+      elif self.KH == self.KW == 3 and self.STEP_H == self.STEP_W == 2 and self.dtype in ["int8", "uint8"]:
+        kernel = "Maxpool3x3Int8BCHW"
     elif self.reduction_mode == "avg":
       kernel = "AvgpoolScalarBCHW"
     else:
@@ -692,7 +694,7 @@ class PoolOp(OpParser):
     else:
       if self.B*self.C*PAD_H*PAD_W*self.dtype.itemsize > MAX_CHUNKS * MAX_PARAM_SIZE:
         self.C, _ = factor_int(self.C, self.INP_H * self.INP_W_PAD * self.dtype.itemsize, MAX_PARAM_SIZE * MAX_CHUNKS, 0, force_split_chunksize=32)
-      split_kernel = "SplitScalar" if self.dtype == "float32" else "SplitInt8"
+      split_kernel = "SplitFilterFloatPktStream" if self.dtype == "float32" else "SplitFilterInt8PktStream"
       concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
       CCHUNK, _ = factor_int(self.C, self.B*PAD_H*PAD_W*self.dtype.itemsize, MAX_PARAM_SIZE)
       return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK},{self.get_graph_targs()}> {self.name};"
@@ -890,16 +892,16 @@ class QLinearConvOp(OpParser):
     
     # option 1: chunk by image height
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
-    overlap = self.KH - 1
+    overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
     HCHUNK, hchunk_count = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=2*overlap)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
-    if True or hchunk_count <= MAX_CHUNKS and self.HCHUNK > overlap:
-      if True or self.HCHUNK >= PAD_H - (self.STEP_H-1):
+    if hchunk_count <= MAX_CHUNKS and self.HCHUNK > overlap:
+      if self.HCHUNK >= PAD_H - (self.STEP_H-1):
         self.graph = "QLinearConvStreamGraph"
         self.disable_last_file_output = True
-        # assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
+        assert self.B * self.C * PAD_H * PAD_W * self.dtype.itemsize <= TILE_SIZE
       else:
         if self.HCHUNK - overlap*2 >= 0 and self.B*self.C*self.HCHUNK*PAD_W*self.dtype.itemsize <= MAX_HEAP_SIZE:
           self.graph = "QLinearConvChunkHPktStreamGraph"
@@ -939,8 +941,15 @@ class QLinearConvOp(OpParser):
         self.argname_2_tensor[f"{self.name}_w"] = tw
       elif self.graph == "QLinearConvChunkCStreamGraph":
         raise NotImplementedError()
+      elif self.graph == "QLinearConvChunkHPktStreamGraph":
+        if tw.size <= TILE_SIZE:
+          kernel = "QLinearConv1x1InputPackets"
+          self.argname_2_tensor[f"{self.name}_w"] = tw
+        else:
+          kernel = "QLinearConv1x1StreamInputPackets"
+          self.gmioname_2_tensor[f"{self.name}_w"] = tw
       else:
-        kernel = "QLinearConv1x1PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConv1x1Stream"
+        kernel = "QLinearConv1x1Stream"
         self.gmioname_2_tensor[f"{self.name}_w"] = tw
 
     elif self.KW <= 4 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2,4] and self.STEP_W in [1,2,4]:
@@ -962,6 +971,15 @@ class QLinearConvOp(OpParser):
       tw = tw[..., [15,15,15,15, 0,0,1,1, 2,2,3,3, 4,4,5,5]]
       kernel = "QLinearConvHx6x8bitStream"
       self.gmioname_2_tensor[f"{self.name}_w"] = tw
+    
+    elif self.KW <= 8 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
+      tw = pad_lastdim(tw, "QLinearConvOp weights", 8)
+      tw = pad_lastdim(tw.reshape(self.M, self.C, -1), "QLinearConvOp weights", get_vector_boundary(tw))
+      if tw.size <= TILE_SIZE:
+        kernel = "QLinearConvHx8PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConvHx8"
+        self.argname_2_tensor[f"{self.name}_w"] = tw
+      else:
+        raise NotImplementedError()
     
     else:
       tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, -1), "QLinearConvOp weights", get_vector_boundary(tw))

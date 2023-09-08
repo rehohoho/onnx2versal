@@ -130,21 +130,23 @@ class Parser:
       node = self.nodes[i]
 
       if node.op_type in SKIPPABLE_NODES:
-        last_op = next(reversed(self.onnxname_2_op))
+        last_op = next(reversed(self.onnxname_2_op.values()))
         node_output_name = node.output[0]
         if len(node_output_name) != 0 and np.all(self.get_tensor(node_output_name).flatten() == last_op.tout.flatten()):
           print(f"Found matching output {node_output_name} and {op.name} output")
-          self.onnxname_2_op[node_output_name] = next(reversed(self.onnxname_2_op))
+          del self.onnxname_2_op[next(reversed(self.onnxname_2_op))]
+          self.onnxname_2_op[node_output_name] = last_op
           last_op.disable_output_pad()
         else:
           print(f"WARNING: {node.op_type} not implemented, skipping...")
       
       elif node.op_type == "DequantizeLinear" and self.get_optype(i+1) in SKIPPABLE_NODES and self.get_optype(i+2) == "QuantizeLinear":
-        last_op = next(reversed(self.onnxname_2_op))
+        last_op = next(reversed(self.onnxname_2_op.values()))
         node_output_name = self.nodes[i+2].output[0]
         if np.all(self.get_tensor(node_output_name).flatten() == last_op.tout.flatten()):
           print(f"Found matching output {node_output_name} and {op.name} output")
-          self.onnxname_2_op[node_output_name] = next(reversed(self.onnxname_2_op))
+          del self.onnxname_2_op[next(reversed(self.onnxname_2_op))]
+          self.onnxname_2_op[node_output_name] = last_op
           last_op.disable_output_pad()
         else:
           raise ValueError(f"Dequantize-{self.get_optype(i+1)}-Quantize yield different result, not skippable.")
