@@ -723,8 +723,41 @@ class QLinearConvChunkCGraph : public adf::graph {
     static constexpr int LCNT = C / CCHUNK;
     adf::kernel k[LCNT];
 
-    adf::port<adf::input> pin[1];
+    std::vector<adf::port<adf::input>> pin;
     adf::port<adf::output> pout[1];
+
+    void init_helper(TT x_zero) {
+      static_assert(LCNT >= 3);
+      static_assert(C % CCHUNK == 0);
+      static_assert(B*CCHUNK*PAD_H*PAD_W <= TILE_BYTES);
+
+      for (int i = 0; i < LCNT; i++) {
+        adf::source(k[i]) = "qlinearconv.cc";
+        adf::headers(k[i]) = {"qlinearconv.h"};
+        adf::runtime<ratio>(k[i]) = 0.6;
+
+        if (i != 0) {
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1});
+        }
+      }
+
+      if (H0+H1+W0+W1 != 0) {
+        pad.push_back(
+          adf::kernel::create_object<Pad2DStreamInt8<TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>(x_zero));
+        adf::source(pad[0]) = "pad.cc";
+        adf::headers(pad[0]) = {"pad.h"};
+        adf::runtime<ratio>(pad[0]) = 0.6;
+
+        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
+        adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
+        
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
+        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
+        // split and pad can't be placed on same tile due to stream co-placement constraints
+      } else {
+        adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
+      }
+    }
 
     QLinearConvChunkCGraph(
       std::vector<TTPARAM> weights,
@@ -736,10 +769,10 @@ class QLinearConvChunkCGraph : public adf::graph {
       TTPARAM w_zero,
       TT y_zero
     ) {
-      static_assert(LCNT >= 3);
-      static_assert(C % CCHUNK == 0);
-      static_assert(B*CCHUNK*PAD_H*PAD_W <= TILE_BYTES);
       assert(weights.size() / LCNT <= TILE_BYTES); // weight size may vary based on padding done for given kernel
+
+      adf::port<adf::input> pin0;
+      pin.push_back(pin0);
 
       for (int i = 0; i < LCNT; i++) {
         std::vector<TTPARAM> wChunk; // build wChunk
@@ -763,81 +796,18 @@ class QLinearConvChunkCGraph : public adf::graph {
             wChunk, w_zero);
           adf::connect<adf::cascade> (k[i-1].out[0], k[i].in[1]);
         }
-        
-        adf::source(k[i]) = "qlinearconv.cc";
-        adf::headers(k[i]) = {"qlinearconv.h"};
-        adf::runtime<ratio>(k[i]) = 0.6;
-        adf::single_buffer(k[i].in[0]);
 
+        adf::single_buffer(k[i].in[0]);
         adf::connect<adf::window<B*CCHUNK*PAD_H*PAD_W>> (split_graph.pout[i], k[i].in[0]);
 
-        if (i != 0) {
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1});
-        }
         adf::location<adf::buffer>(k[i].in[0]) = adf::location<adf::kernel>(k[i]);
         adf::location<adf::buffer>(k[i].in[0]) = {adf::offset(0)};
       }
 
-      if (H0+H1+W0+W1 != 0) {
-        pad.push_back(
-          adf::kernel::create_object<Pad2DStreamInt8<TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>(x_zero));
-        adf::source(pad[0]) = "pad.cc";
-        adf::headers(pad[0]) = {"pad.h"};
-        adf::runtime<ratio>(pad[0]) = 0.6;
-
-        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
-        adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
-        
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
-        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
-        // split and pad can't be placed on same tile due to stream co-placement constraints
-      } else {
-        adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
-      }
+      init_helper(x_zero);
     }
 
-};
-
-
-/**
- * @brief Multiinstance graph that stores weights and biases, 
- * chunks BCHW by C dimension, maximum 8 chunks
- * 
- * @connections
- * @connect{pin[0], stream B*C*INP_W*INP_W_PAD}
- * @connect{pout[0], B*M*OUT_H*OUT_W_PAD}
- * @endconnections
- */
-template <
-  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV0, 
-  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV1, 
-  template<typename, typename, int, int, int, int, int, int, int, int, int, int, int, int> class QLINEARCONV2, 
-  template<typename, int, int, int, int> class CONCAT, 
-  int CCHUNK,
-  typename TT, typename TTPARAM, int INP_H, int INP_W, int INP_W_PAD, int OUT_W, int OUT_W_PAD, int STEP_H, int STEP_W,
-  int B, int C, int M, int KH, int KW, int GROUP, 
-  int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
-class QLinearConvChunkCStreamGraph : public adf::graph {
-
-  private:
-    static constexpr int PAD_H = INP_H + H0 + H1;
-    static constexpr int PAD_W = INP_W + W0 + W1;
-
-    std::vector<adf::kernel> pad;
-
-    typedef SplitFilterPktStreamGraph<SplitFilterInt8PktStream, TT, B, C*PAD_H*PAD_W, CCHUNK*PAD_H*PAD_W, 0> mSplitGraph;
-    mSplitGraph split_graph;
-
-    static constexpr int OUT_H = (PAD_H - KH) / STEP_H + 1;
-    
-  public:
-    static constexpr int LCNT = C / CCHUNK;
-    adf::kernel k[LCNT];
-
-    adf::port<adf::input> pin[1+LCNT];
-    adf::port<adf::output> pout[1];
-
-    QLinearConvChunkCStreamGraph(
+    QLinearConvChunkCGraph(
       std::vector<int32_t> bias,
       float x_scale,
       float w_scale,
@@ -846,11 +816,10 @@ class QLinearConvChunkCStreamGraph : public adf::graph {
       TTPARAM w_zero,
       TT y_zero
     ) {
-      static_assert(LCNT >= 3);
-      static_assert(C % CCHUNK == 0);
-      static_assert(B*CCHUNK*PAD_H*PAD_W <= TILE_BYTES);
-
       for (int i = 0; i < LCNT; i++) {
+
+        adf::port<adf::input> pin0;
+        pin.push_back(pin0);
 
         if (i == 0) {
           k[i] = adf::kernel::create_object<QLINEARCONV0<TT, TTPARAM, PAD_H, PAD_W, OUT_W, OUT_W_PAD, STEP_H, STEP_W, B, CCHUNK, M, KH, KW, GROUP>>(
@@ -868,35 +837,12 @@ class QLinearConvChunkCStreamGraph : public adf::graph {
           adf::connect<adf::cascade> (k[i-1].out[0], k[i].in[2]);
           set_heap_size<QLINEARCONV1,TT,TTPARAM,PAD_H,PAD_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,CCHUNK,M,KH,KW,GROUP>(k[0]);
         }
+
         adf::connect<adf::stream>    (pin[1+i], k[i].in[1]);
-        
-        adf::source(k[i]) = "qlinearconv.cc";
-        adf::headers(k[i]) = {"qlinearconv.h"};
-        adf::runtime<ratio>(k[i]) = 0.6;
-
         adf::connect<adf::pktstream> (split_graph.pout[i], k[i].in[0]);
-
-        if (i != 0) {
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1});
-        }
       }
 
-      if (H0+H1+W0+W1 != 0) {
-        pad.push_back(
-          adf::kernel::create_object<Pad2DStreamInt8<TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>(x_zero));
-        adf::source(pad[0]) = "pad.cc";
-        adf::headers(pad[0]) = {"pad.h"};
-        adf::runtime<ratio>(pad[0]) = 0.6;
-
-        adf::connect<adf::stream> (pin[0], pad[0].in[0]);
-        adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
-        
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
-        adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
-        // split and pad can't be placed on same tile due to stream co-placement constraints
-      } else {
-        adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
-      }
+      init_helper(x_zero);
     }
 
 };
