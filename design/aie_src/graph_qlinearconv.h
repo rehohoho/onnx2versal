@@ -45,6 +45,9 @@ void set_heap_size(adf::kernel k) {
     QLinearConvHx4Stream_2<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
+    QLinearConv1x1InputPackets<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
+    (std::is_same<
+    QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
     QLinearConv1x1StreamInputPackets<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>>::value) ||
     (std::is_same<
     QLINEARCONV<TT,TTPARAM,INP_H,INP_W,OUT_W,OUT_W_PAD,STEP_H,STEP_W,B,C,M,KH,KW,GROUP>, 
@@ -609,7 +612,7 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
       // location constraints
       for (int i = 0; i < LCNT; i++) {
         if ((i&0x1) == 1)
-          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+          adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=0, .row_offset=2});
         if (i == 4)
           adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=-1, .row_offset=2});
         if (i == 2 || i == 6)
@@ -623,11 +626,11 @@ class QLinearConvChunkHPktStreamGraph : public adf::graph {
 
         if (i < 2) {
           adf::location<adf::kernel>(concat_graph.k1[i]) = 
-            adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=-1});
+            adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
           adf::location<adf::parameter>(k[i*2].param[0]) = cTilePos;
         } else {
           adf::location<adf::kernel>(concat_graph.k1[i]) = 
-            adf::location<adf::kernel>(k[i*2+1]) + adf::relative_offset({.col_offset=0, .row_offset=1});
+            adf::location<adf::kernel>(k[i*2]) + adf::relative_offset({.col_offset=0, .row_offset=1});
           adf::location<adf::parameter>(k[i*2+1].param[0]) = cTilePos;
         }
       }
@@ -876,7 +879,6 @@ class QLinearConvChunkCStreamGraph : public adf::graph {
         if (i != 0) {
           adf::location<adf::kernel>(k[i]) = adf::location<adf::kernel>(k[i-1]) + adf::relative_offset({.col_offset=1});
         }
-        adf::location<adf::stack>(k[i]) = adf::location<adf::kernel>(k[i]);
       }
 
       if (H0+H1+W0+W1 != 0) {
