@@ -1,3 +1,5 @@
+from typing import List
+
 from op_parsers import dtype_to_cstr
 from parser import Parser
 
@@ -5,8 +7,9 @@ from parser import Parser
 class CppGenerator:
 
   def __init__(self,
-               p: Parser):
-    self.p = p
+               parser: Parser):
+    self.parser = parser
+    self.g = parser.graphs[0]
 
     gmio_allocs = []
     gmio_cpys = []
@@ -27,17 +30,17 @@ class CppGenerator:
     optional_plouts = []
     weights = []
 
-    plins += [f"adf::input_plio plin[{len(self.p.modelin_2_tensor)}];"]
+    plins += [f"adf::input_plio plin[{self.g.input_count}];"]
     optional_args = []
 
-    for id, input_name, tensor in self.p.get_input_id_name_tensor():
-      args.append(f"const std::string& {input_name}")
-      plindefs.append(f'plin[{id}] = adf::input_plio::create("plin{id}_"+id+"_{input_name}", PLIO64_ARG({input_name}));')
+    for op in self.g.in_ops:
+      args.append(f"const std::string& {op.name}")
+      plindefs.append(f'plin[{op.id}] = adf::input_plio::create("plin{op.id}_"+id+"_{op.name}", PLIO64_ARG({op.name}));')
     
-    for id, op in self.p.get_output_id_op():
+    for op in self.g.out_ops:
       args.append(f"const std::string& {op.name}_out")
     
-    for i, (onnx_name, op) in enumerate(p.onnxname_2_op.items()):
+    for i, (_, op) in enumerate(self.g.onnxname_2_op.items()):
       if i == 0: # skip input node
         continue
       
@@ -47,7 +50,7 @@ class CppGenerator:
       inits.append(op.get_initlist_line())
       weights.append(op.get_weight_line())
 
-      if op not in self.p.modelout_2_op.values():
+      if not op.is_output:
         optional_args.append(f"const std::string& {op.name}_out = std::string()")
         optional_plouts.append(
           f'SET_OPT_PLOUT({op.name}_out, adf::connect<> ({op.get_adf_port_name()}, a.in[0]), "{op.name}");'  
@@ -72,29 +75,29 @@ class CppGenerator:
           f"  memcpy({gmio_name}_buf + i*{size}, {gmio_name}.data(), {size}*sizeof({ctype}));"
         )
         gmio_xfers.append(
-          f"{p.graph_name}.gmio_{gmio_name}.gm2aie_nb({gmio_name}_buf, {repeats}*{size}*ITER_CNT*sizeof({ctype}));"
+          f"{self.g.name}.gmio_{gmio_name}.gm2aie_nb({gmio_name}_buf, {repeats}*{size}*ITER_CNT*sizeof({ctype}));"
         )
         gmio_frees.append(
           f"adf::GMIO::free({gmio_name}_buf);"
         )
       
       for gmio_name, bufname in op.gmioin_2_bufname.items():
-        gmio_buf_dtype, gmio_buf_size = p.gmiobuf_2_size[bufname]
+        gmio_buf_dtype, gmio_buf_size = self.g.gmiobuf_2_size[bufname]
         gmios.append(f"adf::input_gmio  gmio_{gmio_name};")
         gmiodefs.append(f'gmio_{gmio_name} = adf::input_gmio::create("gmio_"+id+"_{gmio_name}", 64, 500);')
         gmio_buf_xfers.append(
-          f"{p.graph_name}.gmio_{gmio_name}.gm2aie_nb({bufname}, 1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
+          f"{self.g.name}.gmio_{gmio_name}.gm2aie_nb({bufname}, 1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
         )
       
       for gmio_name, bufname in op.gmioout_2_bufname.items():
-        gmio_buf_dtype, gmio_buf_size = p.gmiobuf_2_size[bufname]
+        gmio_buf_dtype, gmio_buf_size = self.g.gmiobuf_2_size[bufname]
         gmios.append(f"adf::output_gmio gmio_{gmio_name};")
         gmiodefs.append(f'gmio_{gmio_name} = adf::output_gmio::create("gmio_"+id+"_{gmio_name}", 64, 500);')
         gmio_buf_xfers.append(
-          f"{p.graph_name}.gmio_{gmio_name}.aie2gm({bufname}, 1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
+          f"{self.g.name}.gmio_{gmio_name}.aie2gm({bufname}, 1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
         )
     
-    for gmio_buf_name, (gmio_buf_dtype, gmio_buf_size) in p.gmiobuf_2_size.items():
+    for gmio_buf_name, (gmio_buf_dtype, gmio_buf_size) in self.g.gmiobuf_2_size.items():
       gmio_buf_allocs.append(
         f"{gmio_buf_dtype}* {gmio_buf_name} = ({gmio_buf_dtype} *) adf::GMIO::malloc(1*{gmio_buf_size}*ITER_CNT*sizeof({gmio_buf_dtype}));"
       )
@@ -124,26 +127,30 @@ class CppGenerator:
       f'adf::output_plio a = adf::output_plio::create("plout0_"+id+"_{op.name}", PLIO64_ARG({op.name}_out));\n' + \
       f"plout.push_back(a);\n" + \
       f"adf::connect<> ({op.name}.pout[0], a.in[0]);"
-      for op in self.p.modelout_2_op.values()
+      for op in self.g.out_ops
     ]
     return "      " + "\n".join(plouts).replace("\n", "\n      ")
   
   def get_interkernel_connects(self) -> str:
-    return "      " + "\n".join(self.p.adf_connects).replace("\n", "\n      ")
+    return "      " + "\n".join(self.g.adf_connects).replace("\n", "\n      ")
   
-  def get_callargs(self, is_dout: bool) -> str:
-    args = [f'"{fn}"' for fn in self.p.get_input_filename(is_dout)]
-    args += [f'"{fn}"' for fn in self.p.get_output_filename(is_dout)]
-    args += [op.get_callarg_line() for op in self.p.onnxname_2_op.values()]
+  def get_callargs(self, is_e2e: bool) -> str:
+    args = []
     
-    if is_dout:
-      optargs = []
-      for i, op in enumerate(self.p.onnxname_2_op.values()):
-        if op not in self.p.modelout_2_op.values() and i != 0: # skip input node
-          fn = f'"{op.get_output_filename()}"'
-          optargs.append(fn)
-      args += optargs
+    for op in self.g.in_ops: # input filenames
+      args += [fn for fn in op.get_input_filenames()]
+    for op in self.g.out_ops: # output filenames
+      args += [fn for fn in op.get_output_filenames()]
+    
+    args = [f'"{self.parser.parse_filename(fn, is_e2e=is_e2e)}"' for fn in args] # parse filenames 
+    
+    args += [op.get_callarg_line() for op in self.g.onnxname_2_op.values()]
     args = [i for i in args if i != ""]
+    
+    if not is_e2e:
+      for op in self.g.optout_ops: # intermediate output filenames
+        args += [f'"{self.parser.parse_filename(fn, is_e2e=is_e2e)}"' for fn in op.get_output_filenames()]
+    
     return "  " + ",\n".join(args).replace("\n", "\n  ")
   
   def generate_cpp_graph_str(self):
@@ -153,7 +160,7 @@ class CppGenerator:
 #include "graph_utils.h"
 
 
-class {self.p.graph_name.capitalize()} : public adf::graph {{
+class {self.g.name.capitalize()} : public adf::graph {{
 
   private:
 {self.kernels}
@@ -163,7 +170,7 @@ class {self.p.graph_name.capitalize()} : public adf::graph {{
 {self.gmios}
     std::vector<adf::output_plio> plout; // intermediate outputs optional
 
-    {self.p.graph_name.capitalize()}(
+    {self.g.name.capitalize()}(
       const std::string& id,
 {self.args}
     ): 
@@ -195,14 +202,14 @@ class {self.p.graph_name.capitalize()} : public adf::graph {{
 
 // Unable to map 8 or more outputs on hardware since <= 8 cascade lines
 #ifdef __OUTPUT_INTER__
-{self.p.graph_name.capitalize()} {self.p.graph_name} (
-  "{self.p.graph_name}",
-{self.get_callargs(is_dout=True)}
+{self.g.name.capitalize()} {self.g.name} (
+  "{self.g.name}",
+{self.get_callargs(is_e2e=False)}
 );
 #else
-{self.p.graph_name.capitalize()} {self.p.graph_name} (
-  "{self.p.graph_name}",
-{self.get_callargs(is_dout=False)}
+{self.g.name.capitalize()} {self.g.name} (
+  "{self.g.name}",
+{self.get_callargs(is_e2e=True)}
 );
 #endif
 
@@ -214,13 +221,13 @@ int main(int argc, char ** argv) {{
 {self.gmio_buf_allocs}
 {self.gmio_cpys}
   
-  adfCheck({self.p.graph_name}.init(), "init {self.p.graph_name}");
+  adfCheck({self.g.name}.init(), "init {self.g.name}");
   
 {self.gmio_xfers}
-  adfCheck({self.p.graph_name}.run(ITER_CNT), "run {self.p.graph_name}");
+  adfCheck({self.g.name}.run(ITER_CNT), "run {self.g.name}");
 {self.gmio_buf_xfers}
   
-  adfCheck({self.p.graph_name}.end(), "end {self.p.graph_name}");
+  adfCheck({self.g.name}.end(), "end {self.g.name}");
 {self.gmio_frees}
   return 0;
 }}
@@ -228,5 +235,5 @@ int main(int argc, char ** argv) {{
 """
   
   def generate_cpp_graph(self):
-    with open(f"../design/aie_src/graph_{self.p.graph_name}.cpp", "w") as f:
+    with open(f"../design/aie_src/graph_{self.g.name}.cpp", "w") as f:
       f.write(self.generate_cpp_graph_str())

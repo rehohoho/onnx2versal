@@ -1,4 +1,4 @@
-from op_parsers import dtype_to_cstr, InputOp
+from op_parsers import dtype_to_cstr
 from parser import Parser
 
 
@@ -6,120 +6,135 @@ class HostGenerator:
 
   def __init__(self,
                parser: Parser):
-    self.p = parser
+    self.parser = parser
+    self.g = parser.graphs[0]
 
   def get_host_datafiles(self) -> str:
     outfiles = ["#ifdef __OUTPUT_INTER__"]
-    outfiles += [
-      f'#define INPUT{id}_FILENAME "{self.p.get_filename(input_name)}"'
-      for id, input_name, tensor in self.p.get_input_id_name_tensor()
-    ]
-    outfiles += [f'#define OUTPUT{i}_FILENAME "{fn}"' for i, fn in enumerate(self.p.get_output_filename(True))]
+    for op in self.g.in_ops:
+      outfiles += [
+         f'#define INPUT{op.id}_FILENAME "{self.parser.parse_filename(fn, is_e2e=False)}"'
+         for fn in op.get_input_filenames()
+      ]
+    for op in self.g.out_ops:
+      outfiles += [
+         f'#define OUTPUT{op.id}_FILENAME "{self.parser.parse_filename(fn, is_e2e=False)}"'
+         for fn in op.get_output_filenames()
+      ]
     outfiles += ["#else"]
-    outfiles += [f'#define INPUT{i}_FILENAME "{fn}"' for i, fn in enumerate(self.p.get_input_filename(False))]
-    outfiles += [f'#define OUTPUT{i}_FILENAME "{fn}"' for i, fn in enumerate(self.p.get_output_filename(False))]
+    for op in self.g.in_ops:
+      outfiles += [
+         f'#define INPUT{op.id}_FILENAME "{self.parser.parse_filename(fn, is_e2e=True)}"'
+         for fn in op.get_input_filenames()
+      ]
+    for op in self.g.out_ops:
+      outfiles += [
+         f'#define OUTPUT{op.id}_FILENAME "{self.parser.parse_filename(fn, is_e2e=True)}"'
+         for fn in op.get_output_filenames()
+      ]
     outfiles += ["#endif"]
     
-    n_outs = len(self.p.modelout_2_op)
-    outfiles += [
-      f'#define INTER{n_outs+id}_FILENAME "{op.get_output_filename()}"'
-      for id, op in self.p.get_output_id_op(include_output=False, include_optional_output=True)
-    ]
+    n_outs = self.g.output_count
+    for op in self.g.optout_ops:
+      outfiles += [
+         f'#define INTER{n_outs+op.id}_FILENAME "{fn}"'
+         for fn in op.get_output_filenames()
+      ]
     return "\n".join(outfiles)
   
   def get_host_input_inits(self) -> str:
     inp_inits = []
     inp_initsyncs = ["", "#ifdef __IS_SW_EMU__"]
     
-    for id, input_name, tensor in self.p.get_input_id_name_tensor():
-      size = tensor.size
-      dtype = tensor.dtype
+    for op in self.g.in_ops:
+      size = op.tensor.size
+      dtype = op.tensor.dtype
       ctype = dtype_to_cstr(dtype)
-      inp_inits.append(f"""xrtBufferHandle in{id}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{size}*sizeof({ctype}), 0, 0);
-auto in{id}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(in{id}_bohdl));
-printf("Input{id} memory virtual addr 0x%p\\n", in{id}_bomapped);
-read_arr_from_file(data_dir+INPUT{id}_FILENAME, in{id}_bomapped, iter_cnt*{size});
+      inp_inits.append(f"""xrtBufferHandle in{op.id}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{size}*sizeof({ctype}), 0, 0);
+auto in{op.id}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(in{op.id}_bohdl));
+printf("Input{op.id} memory virtual addr 0x%p\\n", in{op.id}_bomapped);
+read_arr_from_file(data_dir+INPUT{op.id}_FILENAME, in{op.id}_bomapped, iter_cnt*{size});
 
-xrtKernelHandle in{id}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{dtype}_mm2s:{{{dtype}_mm2s_{id}}}");
-xrtRunHandle in{id}_rhdl = xrtRunOpen(in{id}_khdl); 
-xrtRunSetArg(in{id}_rhdl, 0, in{id}_bohdl);
-xrtRunSetArg(in{id}_rhdl, 2, iter_cnt*{size});
-xrtRunStart(in{id}_rhdl);""")
+xrtKernelHandle in{op.id}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{dtype}_mm2s:{{{dtype}_mm2s_{op.id}}}");
+xrtRunHandle in{op.id}_rhdl = xrtRunOpen(in{op.id}_khdl); 
+xrtRunSetArg(in{op.id}_rhdl, 0, in{op.id}_bohdl);
+xrtRunSetArg(in{op.id}_rhdl, 2, iter_cnt*{size});
+xrtRunStart(in{op.id}_rhdl);""")
       inp_initsyncs.append(
-        f"xrtBOSync(in{id}_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, iter_cnt*{size}*sizeof({ctype}), 0);"
+        f"xrtBOSync(in{op.id}_bohdl, XCL_BO_SYNC_BO_TO_DEVICE, iter_cnt*{size}*sizeof({ctype}), 0);"
       )
     
     inp_initsyncs.append("#endif")
     return "   " + "\n".join(inp_inits+inp_initsyncs).replace("\n", "\n   ")
   
   def get_host_input_closes(self) -> str:
-    inp_closes = [f"""auto in{id}_state = xrtRunWait(in{id}_rhdl);    
-printf("mm2s completed with status (%d)\\n", in{id}_state);
-xrtRunClose(in{id}_rhdl);
-xrtKernelClose(in{id}_khdl);
-xrtBOFree(in{id}_bohdl);"""
-      for id, input_name, tensor in self.p.get_input_id_name_tensor()
+    inp_closes = [f"""auto in{op.id}_state = xrtRunWait(in{op.id}_rhdl);    
+printf("mm2s completed with status (%d)\\n", in{op.id}_state);
+xrtRunClose(in{op.id}_rhdl);
+xrtKernelClose(in{op.id}_khdl);
+xrtBOFree(in{op.id}_bohdl);"""
+      for op in self.g.in_ops
     ]
     return "   " + "\n".join(inp_closes).replace("\n", "\n   ")
   
   def get_host_output_inits(self) -> str:
     out_inits = []
-    for id, op in self.p.get_output_id_op():
+    for op in self.g.out_ops:
       ctype = dtype_to_cstr(op.dtype)
-      out_inits.append(f"""xrtBufferHandle out{id}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({ctype}), 0, 0);
-auto out{id}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(out{id}_bohdl));
-printf("Output{id} memory virtual addr 0x%p\\n", out{id}_bomapped);
+      out_inits.append(f"""xrtBufferHandle out{op.id}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({ctype}), 0, 0);
+auto out{op.id}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(out{op.id}_bohdl));
+printf("Output{op.id} memory virtual addr 0x%p\\n", out{op.id}_bomapped);
 
-xrtKernelHandle out{id}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{op.dtype}_s2mm:{{{op.dtype}_s2mm_{id}}}");
-xrtRunHandle out{id}_rhdl = xrtRunOpen(out{id}_khdl); 
-xrtRunSetArg(out{id}_rhdl, 0, out{id}_bohdl);
-xrtRunSetArg(out{id}_rhdl, 2, iter_cnt*{op.out_size});
-xrtRunStart(out{id}_rhdl);""")
+xrtKernelHandle out{op.id}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{op.dtype}_s2mm:{{{op.dtype}_s2mm_{op.id}}}");
+xrtRunHandle out{op.id}_rhdl = xrtRunOpen(out{op.id}_khdl); 
+xrtRunSetArg(out{op.id}_rhdl, 0, out{op.id}_bohdl);
+xrtRunSetArg(out{op.id}_rhdl, 2, iter_cnt*{op.out_size});
+xrtRunStart(out{op.id}_rhdl);""")
     return "   " + "\n".join(out_inits).replace("\n", "\n   ")
 
   def get_host_output_closes(self) -> str:
     out_closes = [
-    f"""auto out{id}_state = xrtRunWait(out{id}_rhdl);
-printf("s2mm completed with status (%d)\\n", out{id}_state);
-xrtRunClose(out{id}_rhdl);
-xrtKernelClose(out{id}_khdl);
+    f"""auto out{op.id}_state = xrtRunWait(out{op.id}_rhdl);
+printf("s2mm completed with status (%d)\\n", out{op.id}_state);
+xrtRunClose(out{op.id}_rhdl);
+xrtKernelClose(out{op.id}_khdl);
 #ifdef __IS_SW_EMU__
-xrtBOSync(out{id}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);
+xrtBOSync(out{op.id}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);
 #endif
-write_arr_to_file(out_dir+OUTPUT{id}_FILENAME, out{id}_bomapped, iter_cnt*{op.out_size});
-xrtBOFree(out{id}_bohdl);"""
-      for id, op in self.p.get_output_id_op()
+write_arr_to_file(out_dir+OUTPUT{op.id}_FILENAME, out{op.id}_bomapped, iter_cnt*{op.out_size});
+xrtBOFree(out{op.id}_bohdl);"""
+      for op in self.g.out_ops
     ]
     return "   " + "\n".join(out_closes).replace("\n", "\n   ")
 
   def get_host_optout_inits(self) -> str:
     optout_inits = []
-    for id, op in self.p.get_output_id_op(include_output=False, include_optional_output=True):
+    for op in self.g.optout_ops:
       ctype = dtype_to_cstr(op.dtype)
       optout_inits.append(f"""
-xrtBufferHandle inter{id}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({ctype}), 0, 0);
-auto inter{id}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(inter{id}_bohdl));
-printf("Inter{id} memory virtual addr 0x%p\\n", inter{id}_bomapped);
-xrtKernelHandle inter{id}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{op.dtype}_s2mm:{{{op.dtype}_s2mm_{id}}}");
-xrtRunHandle inter{id}_rhdl = xrtRunOpen(inter{id}_khdl);
-xrtRunSetArg(inter{id}_rhdl, 0, inter{id}_bohdl);
-xrtRunSetArg(inter{id}_rhdl, 2, iter_cnt*{op.out_size});
-xrtRunStart(inter{id}_rhdl);""")
+xrtBufferHandle inter{op.id}_bohdl = xrtBOAlloc(dhdl, iter_cnt*{op.out_size}*sizeof({ctype}), 0, 0);
+auto inter{op.id}_bomapped = reinterpret_cast<{ctype}*>(xrtBOMap(inter{op.id}_bohdl));
+printf("Inter{op.id} memory virtual addr 0x%p\\n", inter{op.id}_bomapped);
+xrtKernelHandle inter{op.id}_khdl = xrtPLKernelOpen(dhdl, top->m_header.uuid, "{op.dtype}_s2mm:{{{op.dtype}_s2mm_{op.id}}}");
+xrtRunHandle inter{op.id}_rhdl = xrtRunOpen(inter{op.id}_khdl);
+xrtRunSetArg(inter{op.id}_rhdl, 0, inter{op.id}_bohdl);
+xrtRunSetArg(inter{op.id}_rhdl, 2, iter_cnt*{op.out_size});
+xrtRunStart(inter{op.id}_rhdl);""")
     return "   " + "\n".join(optout_inits).replace("\n", "\n   ")
   
   def get_host_optout_closes(self) -> str:
     optout_closes = []
     optout_syncs = ["#ifdef __IS_SW_EMU__"]
     optout_writes = []
-    for id, op in self.p.get_output_id_op(include_output=False, include_optional_output=True):
-      optout_closes.append(f"""auto inter{id}_state = xrtRunWait(inter{id}_rhdl);
-printf("inter{id} completed with status (%d)\\n", inter{id}_state);
-xrtRunClose(inter{id}_rhdl);
-xrtKernelClose(inter{id}_khdl);""")
+    for op in self.g.optout_ops:
+      optout_closes.append(f"""auto inter{op.id}_state = xrtRunWait(inter{op.id}_rhdl);
+printf("inter{op.id} completed with status (%d)\\n", inter{op.id}_state);
+xrtRunClose(inter{op.id}_rhdl);
+xrtKernelClose(inter{op.id}_khdl);""")
       optout_syncs.append(
-        f"xrtBOSync(inter{id}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);")
-      optout_writes.append(f"""write_arr_to_file(out_dir+INTER{id}_FILENAME, inter{id}_bomapped, iter_cnt*{op.out_size});
-xrtBOFree(inter{id}_bohdl);""")
+        f"xrtBOSync(inter{op.id}_bohdl, XCL_BO_SYNC_BO_FROM_DEVICE, iter_cnt*{op.out_size}*sizeof({dtype_to_cstr(op.dtype)}), 0);")
+      optout_writes.append(f"""write_arr_to_file(out_dir+INTER{op.id}_FILENAME, inter{op.id}_bomapped, iter_cnt*{op.out_size});
+xrtBOFree(inter{op.id}_bohdl);""")
     optout_syncs.append("#endif")
     return "   " + "\n".join(optout_closes + optout_syncs + optout_writes).replace("\n", "\n   ")
 
@@ -128,7 +143,7 @@ xrtBOFree(inter{id}_bohdl);""")
 #include <fstream>
 #include <type_traits>
 
-#include "graph_{self.p.graph_name}.cpp"
+#include "graph_{self.g.name}.cpp"
 
 #include "experimental/xrt_aie.h"
 #include "experimental/xrt_kernel.h"
@@ -249,14 +264,14 @@ int main(int argc, char ** argv) {{
    // Graph execution for AIE
    adf::registerXRT(dhdl, top->m_header.uuid);
    try {{
-      adfCheck({self.p.graph_name}.init(), "init {self.p.graph_name}");
+      adfCheck({self.g.name}.init(), "init {self.g.name}");
 #ifdef __IS_SW_EMU__
-      adfCheck({self.p.graph_name}.run(iter_cnt), "run {self.p.graph_name}");
-      adfCheck({self.p.graph_name}.wait(), "wait {self.p.graph_name}");
+      adfCheck({self.g.name}.run(iter_cnt), "run {self.g.name}");
+      adfCheck({self.g.name}.wait(), "wait {self.g.name}");
 #else
-      get_graph_throughput_by_port({self.p.graph_name}, "plout[0]", {self.p.graph_name}.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
+      get_graph_throughput_by_port({self.g.name}, "plout[0]", {self.g.name}.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
 #endif
-      adfCheck({self.p.graph_name}.end(), "end {self.p.graph_name}");
+      adfCheck({self.g.name}.end(), "end {self.g.name}");
    }}
    catch (const std::system_error& ex) {{
       xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);
@@ -288,5 +303,5 @@ int main(int argc, char ** argv) {{
 """
 
   def generate_host_cpp(self) -> str:
-    with open(f"../design/host_app_src/{self.p.graph_name}_aie_app.cpp", "w") as f:
+    with open(f"../design/host_app_src/{self.g.name}_aie_app.cpp", "w") as f:
       f.write(self.generate_host_cpp_str())

@@ -1,3 +1,7 @@
+"""
+Assumes one input node, easily extendable to many
+"""
+
 import argparse
 import os
 
@@ -12,6 +16,15 @@ from generator_xtg import XtgGenerator
 from generator_cfg import CfgGenerator
 from generator_host import HostGenerator
 from op_parsers import save_tensor, pad_lastdim, get_shape_str
+
+
+def get_e2efile_path(path: str, tensor: np.ndarray):
+  path, ext = os.path.splitext(path)
+  path = path.split("_")
+  for i, chunk in enumerate(path):
+    if "shape" in chunk:
+      path[i] = get_shape_str(tensor)
+  return "_".join(path) + ext
 
 
 def generate_inter_graph(onnx_path: str,
@@ -78,25 +91,20 @@ if __name__ == '__main__':
   ort_outs = ort_session.run(None, ort_inputs)
   
   # save inputs
-  inp_shape = list(parser.modelin_2_tensor.values())[0].shape
-  
-  model_input_path = f"{args.data}/{parser.get_input_filename(True)[0]}"
-  single_input = single_input.reshape(1, *inp_shape[:-1], -1)
-  single_input = pad_lastdim(single_input, "single input", inp_shape[-1])
-  save_tensor(model_input_path, single_input)
+  for op in parser.g.in_ops:
+    input_shape = op.tensor.shape
+    input_path = f"{args.data}/{op.get_input_filenames()[0]}"
+    input_path = get_e2efile_path(input_path, many_inputs)
+    many_inputs = many_inputs.reshape(args.ndata, *input_shape[:-1], -1)
+    many_inputs = pad_lastdim(many_inputs, "many inputs", input_shape[-1])
+    save_tensor(input_path, many_inputs)
 
-  model_input_path = f"{args.data}/{parser.get_input_filename(False)[0]}"
-  many_inputs = many_inputs.reshape(args.ndata, *inp_shape[:-1], -1)
-  many_inputs = pad_lastdim(many_inputs, "many inputs", inp_shape[-1])
-  save_tensor(model_input_path, many_inputs)
-
-  model_output_path = f"{args.data}/{parser.get_output_filename(False)[0]}"
-  output_path_chunks = model_output_path.split("_")
-  for i, chunk in enumerate(output_path_chunks):
-    if "shape" in chunk:
-      output_path_chunks[i] = get_shape_str(ort_outs[-1])
-  model_output_path = "_".join(output_path_chunks)
-  save_tensor(model_output_path, ort_outs[-1])
+  # save outputs
+  for op in parser.g.out_ops:
+    for output_filename in op.get_output_filenames(): # can have multiple output per op
+      output_path = f"{args.data}/{parser.parse_filename(output_filename, is_e2e=True)}"
+      output_path = get_e2efile_path(output_path, ort_outs[-1])
+      save_tensor(output_path, ort_outs[-1])
 
   # Cleanup
   os.remove(onnx_inter_path)

@@ -19,7 +19,7 @@ aiesimulator_output/
 
 # external data
 data/MNIST
-data/k*_goldenout*.txt
+data/k*_out*.txt
 data/k*_in*.txt
 data/k*_w*.txt
 data/k*_b*.txt
@@ -44,14 +44,18 @@ models/
 design/aie_src/graph_lenet_mnist*.cpp
 design/aie_src/graph_hls4ml*.cpp
 design/aie_src/graph_tiny*.cpp
+design/aie_src/graph_imagenet1k*.cpp
 design/host_app_src/lenet_mnist*
 design/host_app_src/hls4ml*
 design/host_app_src/tiny*
+design/host_app_src/imagenet1k*
 design/system_configs/lenet_mnist*
 design/system_configs/hls4ml*
 design/system_configs/tiny*
+design/system_configs/imagenet1k*
 design/trafficgen/xtg_lenet_mnist*
 design/trafficgen/xtg_hls4ml*
 design/trafficgen/xtg_tiny*
+design/trafficgen/xtg_imagenet1k*
 
 out*/

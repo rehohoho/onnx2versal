@@ -121,11 +121,15 @@ class OpParser:
     self.gmioname_2_tensor = {}  # used for gmio inputs in .cpp
     self.gmioin_2_bufname = {}   # used for gmio caches
     self.gmioout_2_bufname = {}  # used for gmio caches
-    self.filename_2_tensor = {}  # output txt
+    self.input_filenames_2_tensor = {} # output txt
+    self.output_filenames_2_tensor = {}
 
     self.tout = None             # reference copy to compare with
     self.gmio_repeats = 0
     self.disable_last_file_output = False # stream is broadcasted to different number of buffers not supported
+
+    self.id = -1
+    self.is_output = False
   
   def get_adf_port_name(self) -> str:
     return f"{self.name}.pout[0]"
@@ -183,19 +187,27 @@ class OpParser:
   def get_gmioout_connect_line(self) -> str:
     return f"adf::connect<> ({self.name}.pout[0], gmio_{self.name}_o.in[0]);"
 
-  def get_input_filename(self) -> str:
-    if len(self.filename_2_tensor) == 0:
-      raise ValueError(f"No input filename for {self.name}.")
-    return list(self.filename_2_tensor.keys())[0]
+  def register_input_file(self, tensor: np.ndarray):
+    self.input_filenames_2_tensor[f"{self.name}_in{len(self.input_filenames_2_tensor)}_{get_shape_str(tensor)}.txt"] = tensor
   
-  def get_output_filename(self) -> str:
-    if len(self.filename_2_tensor) == 0:
-      raise ValueError(f"No output filename for {self.name}.")
-    return list(self.filename_2_tensor.keys())[-1]
+  def register_output_file(self, tensor: np.ndarray):
+    self.output_filenames_2_tensor[f"{self.name}_out{len(self.output_filenames_2_tensor)}_{get_shape_str(tensor)}.txt"] = tensor
   
   def save_txt(self, data_path: str):
-    for outname, outtensor in self.filename_2_tensor.items():
+    for outname, outtensor in self.input_filenames_2_tensor.items():
       save_tensor(f"{data_path}/{outname}", outtensor)
+    for outname, outtensor in self.output_filenames_2_tensor.items():
+      save_tensor(f"{data_path}/{outname}", outtensor)
+  
+  def get_input_filenames(self) -> List[str]:
+    if len(self.input_filenames_2_tensor) == 0:
+      raise ValueError(f"No input filename for {self.name}.")
+    return list(self.input_filenames_2_tensor.keys())
+  
+  def get_output_filenames(self) -> List[str]:
+    if len(self.output_filenames_2_tensor) == 0:
+      raise ValueError(f"No output filename for {self.name}.")
+    return list(self.output_filenames_2_tensor.keys())
   
   def get_kernel_line(self) -> str:
     pass
@@ -223,11 +235,14 @@ class OpParser:
     return 0
 
 
+# One input tensor, one input op
 class InputOp(OpParser):
   
-  def __init__(self, name: str, idx: int):
+  def __init__(self, name: str, idx: int, tensor: np.ndarray):
     super().__init__(name)
     self.idx = idx
+    self.tensor = tensor
+    self.register_input_file(tensor)
 
   def get_adf_port_name(self) -> str:
     return f"plin[{self.idx}].out[0]"
@@ -250,9 +265,9 @@ class AddOp(OpParser):
     self.dtype = tout.dtype
     self.disable_last_file_output = True
 
-    self.filename_2_tensor[f"{self.name}_inA_{get_shape_str(ta)}.txt"] = ta
-    self.filename_2_tensor[f"{self.name}_inB_{get_shape_str(tb)}.txt"] = tb
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(ta)
+    self.register_input_file(tb)
+    self.register_output_file(tout)
     
     self.W = ta.size
     self.out_size = tout.size # host buffer sizes
@@ -328,8 +343,8 @@ class ConvOp(OpParser):
                          tin: np.ndarray,
                          tout: np.ndarray):
     tin = pad_lastdim(tin, "ConvOp tin", self.INP_W_PAD)
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
   
   def pick_graph(self):
     PAD_H = self.INP_H + self.H0 + self.H1
@@ -440,8 +455,8 @@ class DequantizeLinearOp(OpParser):
     self.argname_2_tensor[f"{self.name}_zero"] = tzero
     
     tin = pad_lastdim(tin, "DequantizeLinearOp tin", get_vector_boundary(tin)) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
 
     tout = pad_lastdim(tout, "DequantizeLinearOp tin", get_vector_boundary(tout)) # config
     self.B, self.INP_W = tin.shape[0], math.prod(tin.shape[1:])
@@ -491,8 +506,8 @@ class GemmOp(OpParser):
     assert self.M == tout.shape[0] and (self.K, self.N) == tw.shape and (self.N, ) == tbias.shape
     
     tin = pad_lastdim(tin, "Gemm tin", get_vector_boundary(tin))
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
     self.out_size = tout.size # host buffer sizes
 
     tw = pad_lastdim(tw, "Gemm tw", 8)
@@ -561,8 +576,8 @@ class IdentityOp(OpParser):
     self.tout = tout # reference copy to check against to compress graph
 
     tin = pad_lastdim(tin, "Identity tin", get_vector_boundary(tin)) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tin
+    self.register_input_file(tin)
+    self.register_output_file(tout)
     
     self.N = tin.size
     self.dtype = tout.dtype
@@ -599,8 +614,8 @@ class MacOp(OpParser):
     self.argname_2_tensor[f"{self.name}_b"] = tbias
 
     tin = pad_lastdim(tin, "MacOp tin", get_vector_boundary(tin)) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
 
     tout = pad_lastdim(tout, "MacOp tout", get_vector_boundary(tout))
     
@@ -660,8 +675,8 @@ class PoolOp(OpParser):
     else:
       vector_boundary = 8 if self.OUT_W > 4 else 4
     tin = pad_lastdim(tin, "PoolOp tin", vector_boundary) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    self.register_input_file(tin)
+    self.register_output_file(tout)
     tout = pad_lastdim(tout, "PoolOp tout", vector_boundary)
     
     self.INP_W_PAD, self.OUT_W_PAD = tin.shape[-1], tout.shape[-1]
@@ -699,8 +714,8 @@ class PoolOp(OpParser):
       CCHUNK, _ = factor_int(self.C, self.B*PAD_H*PAD_W*self.dtype.itemsize, MAX_PARAM_SIZE)
       return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK},{self.get_graph_targs()}> {self.name};"
     
-    def get_computation_count(self):
-      return self.B * self.C * self.INP_H * self.INP_W_PAD
+  def get_computation_count(self):
+    return self.B * self.C * self.OUT_H * self.OUT_W_PAD * self.KH * self.KW
 
 
 class QGemmOp(OpParser):
@@ -733,8 +748,8 @@ class QGemmOp(OpParser):
     tbias = (tbias - (tw.astype(int) - tw_zero).sum(0) * tin_zero).astype(np.int32)
     
     tin = pad_lastdim(tin, "QGemm tin", vector_size, value=tin_zero) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    self.register_input_file(tin)
+    self.register_output_file(tout)
 
     tout = pad_lastdim(tout, "QGemm tout", vector_size, value=tin_zero) # config
     self.K, self.N = tin.shape[-1], tout.shape[-1]
@@ -811,9 +826,9 @@ class QLinearAddOp(OpParser):
 
     ta = pad_lastdim(ta, "QLinearAddOp ta", get_vector_boundary(ta), value=ta_zero) #files
     tb = pad_lastdim(tb, "QLinearAddOp tb", get_vector_boundary(tb), value=tb_zero)
-    self.filename_2_tensor[f"{self.name}_inA_{get_shape_str(ta)}.txt"] = ta
-    self.filename_2_tensor[f"{self.name}_inB_{get_shape_str(tb)}.txt"] = tb
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(ta)
+    self.register_input_file(tb)
+    self.register_output_file(tout)
     tout = pad_lastdim(tout, "QLinearAddOp tout", get_vector_boundary(tout), value=tout_zero)
     
     self.W = ta.size
@@ -879,8 +894,8 @@ class QLinearConvOp(OpParser):
                          tin_zero: int):
     # pad INP_W, OUT_W to vector boundary
     tin = pad_lastdim(tin, "QLinearConvOp tin", get_vector_boundary(tin), value=tin_zero) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    self.register_input_file(tin)
+    self.register_output_file(tout)
 
   def pick_graph(self):
     PAD_H = self.INP_H + self.H0 + self.H1
@@ -936,11 +951,10 @@ class QLinearConvOp(OpParser):
     if self.KH == self.KW == 1 and self.GROUP == 1 and self.INP_W_PAD % 16 == 0 and self.OUT_W_PAD % 16 == 0 and self.STEP_H in [1,2] and self.STEP_W in [1,2]:
       tw = pad_lastdim(tw.reshape(self.M,-1), "QLinearConvOp weights", get_vector_boundary(tw))
       if self.graph == "QLinearConvChunkCGraph":
+        assert self.B*self.CCHUNK*(self.INP_H+self.H0+self.H1)*(self.INP_W_PAD+self.W0+self.W1) <= TILE_SIZE and self.M*self.CCHUNK*self.KH*self.KW <= TILE_SIZE
         kernel = "QLinearConv1x1_0,QLinearConv1x1_1,QLinearConv1x1_2"
         tw = pad_lastdim(tw.reshape(self.M, -1, self.CCHUNK), "QLinearConvOp weights", get_vector_boundary(tw)) # if self.CCHUNK < 16
         self.argname_2_tensor[f"{self.name}_w"] = tw
-      elif self.graph == "QLinearConvChunkCStreamGraph":
-        raise NotImplementedError()
       elif self.graph == "QLinearConvChunkHPktStreamGraph":
         if tw.size <= TILE_SIZE:
           kernel = "QLinearConv1x1InputPackets"
@@ -956,12 +970,13 @@ class QLinearConvOp(OpParser):
       tw = pad_lastdim(tw, "QLinearConvOp weights", 4)
       tw = pad_lastdim(tw.reshape(self.M, self.C//self.GROUP, -1), "QLinearConvOp weights", get_vector_boundary(tw))
       if self.graph == "QLinearConvChunkCGraph":
-        kernel = "QLinearConvHx4_0,QLinearConvHx4_1,QLinearConvHx4_2"
-        self.argname_2_tensor[f"{self.name}_w"] = tw
-      elif self.graph == "QLinearConvChunkCStreamGraph":
-        kernel = "QLinearConvHx4Stream_0,QLinearConvHx4Stream_1,QLinearConvHx4Stream_2"
-        for i in range(self.CCHUNK):
-          self.gmioname_2_tensor[f"{self.name}_w{i}"] = tw[:, i*self.CCHUNK : (i+1)*self.CCHUNK, ...]
+        if self.B*self.CCHUNK*(self.INP_H+self.H0+self.H1)*(self.INP_W+self.W0+self.W1) <= TILE_SIZE and self.M*self.CCHUNK*self.KH*self.KW <= TILE_SIZE:
+          kernel = "QLinearConvHx4_0,QLinearConvHx4_1,QLinearConvHx4_2"
+          self.argname_2_tensor[f"{self.name}_w"] = tw
+        else:
+          kernel = "QLinearConvHx4Stream_0,QLinearConvHx4Stream_1,QLinearConvHx4Stream_2"
+          for i in range(self.CCHUNK):
+            self.gmioname_2_tensor[f"{self.name}_w{i}"] = tw[:, i*self.CCHUNK : (i+1)*self.CCHUNK, ...]
       else:
         kernel = "QLinearConvHx4PktStream" if self.graph == "QLinearConvChunkHPktStreamGraph" else "QLinearConvHx4Stream" # QLinearConvHx4StreamScale32bit
         self.gmioname_2_tensor[f"{self.name}_w"] = tw
@@ -993,7 +1008,7 @@ class QLinearConvOp(OpParser):
       self.kernel_type = f"{self.graph}<{self.pad_kernel},{kernel},{self.get_graph_targs()}"
     elif self.graph in ["QLinearConvChunkHStreamGraph", "QLinearConvChunkHPktStreamGraph"]:
       self.kernel_type = f"{self.graph}<{kernel},ConcatInt8Stream,{self.HCHUNK},{self.get_graph_targs()}"
-    elif self.graph in ["QLinearConvChunkCStreamGraph", "QLinearConvChunkCGraph"]:
+    elif self.graph == "QLinearConvChunkCGraph":
       self.kernel_type = f"{self.graph}<{kernel},ConcatInt8Stream,{self.CCHUNK},{self.get_graph_targs()}"
     else:
       raise NotImplementedError(f"QLinearConv Graph {self.graph} not implemented.")
@@ -1050,8 +1065,8 @@ class QLinearMacOp(OpParser):
     self.argname_2_tensor[f"{self.name}_zzero"] = tz_zero
     self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
 
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin # files
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
 
     self.W = tin.shape[-1]
     self.out_size = tout.size # host buffer sizes
@@ -1109,8 +1124,8 @@ class QLinearPoolOp(OpParser):
     self.argname_2_tensor[f"{self.name}_outzero"] = tout_zero
 
     tin = pad_lastdim(tin, "QLinearPoolOp tin", get_vector_boundary(tin)) #files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    self.register_input_file(tin)
+    self.register_output_file(tout)
  
     tout = pad_lastdim(tout, "QLinearPoolOp tout", get_vector_boundary(tout))
     assert tin.shape[:-2] == tout.shape[:-2] and tin.shape[-2] % tout.shape[-2] == 0
@@ -1165,8 +1180,8 @@ class QLinearSoftmaxOp(OpParser):
     self.argname_2_tensor[f"{self.name}_yzero"] = tout_zero
     
     tin = pad_lastdim(tin, "QLinearSoftmaxOp tin", get_vector_boundary(tin), value=tin_zero) # files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
     
     self.INP_H, self.INP_W_PAD = math.prod(tin.shape[:-1]), tin.shape[-1] # config
 
@@ -1220,8 +1235,8 @@ class QuantizeLinearOp(OpParser):
     self.argname_2_tensor[f"{self.name}_zero"] = tzero
 
     tin = pad_lastdim(tin, "QuantizeLinearOp tin", get_vector_boundary(tin)) # files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout # shape of non-padded
+    self.register_input_file(tin)
+    self.register_output_file(tout)
     
     tout = pad_lastdim(tout, "QuantizeLinearOp tout", get_vector_boundary(tout))
     assert tout.shape[:-1] == tin.shape[:-1]
@@ -1240,14 +1255,9 @@ class QuantizeLinearOp(OpParser):
     if self.HCHUNK == self.INP_H:
       return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
     return f"QuantizeLinearChunkHPktStreamGraph<QuantizeLinearFmulStream,{self.HCHUNK},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
-    
-  
-  def disable_input_pad(self):
-    # self.INP_W = self.inW
-    super().disable_input_pad()
   
   def get_computation_count(self):
-    return self.INP_H*self.INP_W_PAD * 2
+    return self.INP_H*self.INP_W * 2
   
   def get_input_shape(self):
     return [self.INP_H, self.INP_W]
@@ -1269,8 +1279,8 @@ class SoftmaxOp(OpParser):
     self.INP_W = tin.shape[-1]
 
     tin = pad_lastdim(tin, "SoftmaxOp tin", 8) # files
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
     
     tout = pad_lastdim(tout, "SoftmaxOp tout", get_vector_boundary(tout))
 
@@ -1320,8 +1330,8 @@ class TransposeOp(OpParser):
 
     self.tout = tout # reference copy to check against to compress graph
 
-    self.filename_2_tensor[f"{self.name}_in_{get_shape_str(tin)}.txt"] = tin
-    self.filename_2_tensor[f"{self.name}_goldenout_{get_shape_str(tout)}.txt"] = tout
+    self.register_input_file(tin)
+    self.register_output_file(tout)
     
     self.dtype = tout.dtype
     self.out_size = tout.size # host buffer sizes
