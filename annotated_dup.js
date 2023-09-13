@@ -84,7 +84,6 @@ var annotated_dup =
     [ "QLinearConv5x5", "classQLinearConv5x5.html", "classQLinearConv5x5" ],
     [ "QLinearConv5x5Scale32bit", "classQLinearConv5x5Scale32bit.html", null ],
     [ "QLinearConvChunkCGraph", "classQLinearConvChunkCGraph.html", null ],
-    [ "QLinearConvChunkCStreamGraph", "classQLinearConvChunkCStreamGraph.html", null ],
     [ "QLinearConvChunkHGraph", "classQLinearConvChunkHGraph.html", null ],
     [ "QLinearConvChunkHPktStreamGraph", "classQLinearConvChunkHPktStreamGraph.html", null ],
     [ "QLinearConvChunkHStreamGraph", "classQLinearConvChunkHStreamGraph.html", null ],
