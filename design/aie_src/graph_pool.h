@@ -18,6 +18,7 @@
  * @tparam POOL       Pool Kernel
  * @tparam INP_H      input height, used to calculate pool factor
  * @tparam INP_W      input width, used to calculate pool factor
+ * @tparam INP_W_PAD  input width, padded to vector boundary
  * @tparam OUT_H      output height, used to calculate pool factor
  * @tparam OUT_W      output width, used to calculate pool factor
  * @tparam B          batch size
@@ -34,12 +35,12 @@
  * @brief Single instance graph
  * 
  * @connections
- * @connect{pin[0], B*INP_H*INP_W*C*sizeof(TT)}
+ * @connect{pin[0], B*INP_H*INP_W_PAD*C*sizeof(TT)}
  * @connect{pout[0], B*OUT_H*OUT_W*C*sizeof(TT)}
  * @endconnections
  */
 template <template<typename, int, int, int, int, int, int, int, int, int, int> class POOL,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W,
+  typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W,
   template<typename, int, int, int, int, int, int, int, int> class PAD, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class PoolGraph : public adf::graph {
@@ -66,7 +67,7 @@ class PoolGraph : public adf::graph {
       
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<PAD<TT, B*C, INP_H, INP_W, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<PAD<TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
@@ -74,7 +75,7 @@ class PoolGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::window<B*PAD_H*PAD_W*C*sizeof(TT)>> (pad[0].out[0], k[0].in[0]);
         
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
       } else {
         adf::connect<adf::window<B*INP_H*INP_W*C*sizeof(TT)>> (pin[0], k[0].in[0]);
@@ -89,7 +90,7 @@ template <
   template<typename, int, int, int, int, int, int, int, int, int, int> class POOL,
   template<typename, int, int, int, int> class CONCAT, 
   int CCHUNK,
-  typename TT, int INP_H, int INP_W, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W,
+  typename TT, int INP_H, int INP_W, int INP_W_PAD, int OUT_H, int OUT_W, int B, int C, int KH, int KW, int STEP_H, int STEP_W,
   template<typename, int, int, int, int, int, int, int, int> class PAD, 
   int H0 = 0, int H1 = 0, int W0 = 0, int W1 = 0>
 class PoolChunkCGraph : public adf::graph {
@@ -131,7 +132,7 @@ class PoolChunkCGraph : public adf::graph {
 
       if (H0+H1+W0+W1 != 0) {
         pad.push_back(
-          adf::kernel::create_object<PAD<TT, B*C, INP_H, INP_W, INP_W, H0, H1, W0, W1>>());
+          adf::kernel::create_object<PAD<TT, B*C, INP_H, INP_W, INP_W_PAD, H0, H1, W0, W1>>());
         adf::source(pad[0]) = "pad.cc";
         adf::headers(pad[0]) = {"pad.h"};
         adf::runtime<ratio>(pad[0]) = 0.6;
@@ -140,7 +141,7 @@ class PoolChunkCGraph : public adf::graph {
         adf::connect<adf::stream> (pin[0], pad[0].in[0]);
         adf::connect<adf::stream> (pad[0].out[0], split_graph.pin[0]);
         
-        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W;
+        adf::samples_per_iteration(pad[0].in[0]) = B*C*INP_H*INP_W_PAD;
         adf::samples_per_iteration(pad[0].out[0]) = B*C*PAD_H*PAD_W;
       } else {
         adf::connect<adf::stream> (pin[0], split_graph.pin[0]);
