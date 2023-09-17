@@ -859,6 +859,7 @@ void SplitFilterFloatPktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
 
       int i = LCNT - 1;
       WRITE_OUT(i&0x1, OVERLAP, true);
+      READ_IN(INP_W - (OUT_W*LCNT - OVERLAP*(LCNT-1)));
     } // H
 
   } else {
@@ -873,7 +874,7 @@ void SplitFilterFloatPktStream<TT, H, INP_W, OUT_W, OVERLAP>::filter(
       int i = LCNT - 1;
       writeHeader(out[i&0x1], 0, ID[i]);
       WRITE_OUT(i&0x1, OUT_W, true);
-      READ_IN(INP_W - OUT_W*LCNT + OVERLAP*(LCNT-1));
+      READ_IN(INP_W - (OUT_W*LCNT - OVERLAP*(LCNT-1)));
     } // H 
   }
 
