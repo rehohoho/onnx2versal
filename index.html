@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>onnx2versal: onnx2aiengine</title>
+<title>onnx2versal: onnx2versal</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -89,176 +89,135 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">onnx2aiengine </div></div>
+  <div class="headertitle"><div class="title">onnx2versal </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_README"></a> This repo holds AIE kernels/graphs and generator scripts to create system level design given <code>some_model.onnx</code> and <code>some_data.npy</code>. Verify, profile and run your ONNX models on AI engine machines!</p>
+<div class="textblock"><p><a class="anchor" id="md_README"></a> Presentation Slides: <a href="https://docs.google.com/presentation/d/1xq7Fp-YRgMAOc_wpQ1FjY7M9irCAVrBn46ohUy1YuEw/edit?usp=sharing">https://docs.google.com/presentation/d/1xq7Fp-YRgMAOc_wpQ1FjY7M9irCAVrBn46ohUy1YuEw/edit?usp=sharing</a> <br  />
+ This covers an introduction to AI Engines, its architecture, onnx2versal and benchmark results on Tiny MLPerf.</p>
+<h1><a class="anchor" id="autotoc_md1"></a>
+What are AI engines?</h1>
+<p>The AI engine is a part of Versal Adaptive Compute Acceleration Platform (ACAP) architecture, designed for high compute density, deterministic timing and high performance applications. It comprises of an <b>array of tiles that support Very Long Instruction Word (VLIW) parallelism, and SIMD fixed point and floating point processors</b>. Below are images taken from Xilinx docs showing tile components and interfaces.</p>
+<div align="center"> <img src="docs/images/aiecomponents.png" alt="" height="250" class="inline"/> <img src="docs/images/aieinterfaces.png" alt="" height="250" class="inline"/> </div><p> <br  />
+</p>
+<p>For more details</p><ul>
+<li>Architecture documentation: <a href="https://docs.xilinx.com/r/en-US/am009-versal-ai-engine/Overview">https://docs.xilinx.com/r/en-US/am009-versal-ai-engine/Overview</a></li>
+<li>Main website: <a href="https://www.xilinx.com/products/technology/ai-engine.html">https://www.xilinx.com/products/technology/ai-engine.html</a></li>
+<li>White paper: <a href="https://www.xilinx.com/content/dam/xilinx/support/documents/white_papers/wp506-ai-engine.pdf">https://www.xilinx.com/content/dam/xilinx/support/documents/white_papers/wp506-ai-engine.pdf</a></li>
+</ul>
+<h1><a class="anchor" id="autotoc_md2"></a>
+What is onnx2versal?</h1>
+<p>This repo holds AIE kernels/graphs and generator scripts to create system level design for AI engines given <code>some_model.onnx</code> and <code>some_data.npy</code>. It is built on top of AI Engine ISA, AIE programming API and the ADF graph programming model. Verify, profile and run your ONNX models on AI engine machines!</p>
+<div align="center"> <img src="docs/images/onnx2versal.png" alt="" width="600" class="inline"/> </div><h2><a class="anchor" id="autotoc_md3"></a>
+TLDR CLI commands</h2>
+<div class="fragment"><div class="line">GRAPH=tiny_kws</div>
+<div class="line"> </div>
+<div class="line"># Step 1: fuse</div>
+<div class="line">python fuse_onnx.py ../models/${GRAPH}.onnx ../models/${GRAPH}.onnx</div>
+<div class="line"> </div>
+<div class="line"># Step 2: quantize</div>
+<div class="line">python -m onnxruntime.quantization.preprocess --input ../models/${GRAPH}.onnx --output ../models/${GRAPH}_infer.onnx</div>
+<div class="line">python quantize_onnx.py ../models/${GRAPH}_infer.onnx ../models/${GRAPH}_int8.onnx ../data/$GRAPH/X_test.npy</div>
+<div class="line"> </div>
+<div class="line"># Step 3: generate</div>
+<div class="line">python generate.py ../models/${GRAPH}_int8.onnx ../data/$GRAPH/X_test.npy</div>
+<div class="line"> </div>
+<div class="line"># Step 4: Test latency</div>
+<div class="line">TARGET=hw_emu GRAPH=${GRAPH}_int8 make graph aiesim_profile</div>
+<div class="line"> </div>
+<div class="line"># Step 5: Test throughput</div>
+<div class="line">TARGET=hw_emu DOUT=0 DLOG=0 GRAPH=${GRAPH} make graph clean_reports aiesim ITER_CNT=2</div>
+<div class="line">python throughput.py reports_dir/$GRAPH/hw_emu/aiesimulator_output/k*</div>
+<div class="line"> </div>
+<div class="line"># Step 6: Build for hardware</div>
+<div class="line">TARGET=hw DOUT=0 DLOG=0 GRAPH=${GRAPH} make graph kernels xsa application package</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md4"></a>
+@ref "/github/workspace/docs/md/usage.md" "Usage"</h1>
 <ul>
-<li>See end to end example at <a class="el" href="md_lenet__example.html">Lenet Example</a> <br  />
-</li>
-<li>See profiling of examples at <a class="el" href="md_profile.html">Profile</a> <br  />
-</li>
+<li>See setup and how to run details at docs/md/usage.md</li>
+<li>See end to end example at Lenet Example. <em>TODO: this example has not been updated and tested for a while.</em></li>
 <li>See jupyter notebooks that run through the same examples at<ul>
 <li>Conversion to Onnx <a href="python/part1_pytorch2onnx.ipynb">pytorch2onnx notebook</a>, <a href="python/part1_tf2onnx.ipynb">tf2onnx notebook</a></li>
 <li>Onnx2Versal <a href="python/part2_onnx2versal.ipynb">onnx2versal notebook</a> <br  />
 </li>
 </ul>
 </li>
-<li>See documentation for AIE kernels and graphs used at <a href="https://rehohoho.github.io/onnx2versal/">https://rehohoho.github.io/onnx2versal/</a></li>
 </ul>
-<h1><a class="anchor" id="autotoc_md1"></a>
-Requirements</h1>
-<p>This pipeline has only been tested on VCK190 using the following software.</p>
+<h1><a class="anchor" id="autotoc_md5"></a>
+@ref "/github/workspace/docs/md/profile.md" "How good are the AI engines?"</h1>
 <ul>
-<li>Vitis Software Platform 2022.2</li>
-<li>xilinx-versal-common image</li>
-<li>X86 XRT (only for software system emulation)</li>
-<li>Python 3</li>
+<li>See details at docs/md/profile.md</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md2"></a>
-Setup</h1>
-<p>Setup python environment. Anaconda/miniconda is an option. Install the requirements in your environment. Run <code>conda activate o2v</code> before scripts in <code>./python</code>. </p><div class="fragment"><div class="line">conda create -n o2v python=3.10 -y</div>
-<div class="line">conda activate o2v</div>
-<div class="line">which python # (conda path)/bin/python</div>
-<div class="line">pip install -r python/requirements.txt</div>
-</div><!-- fragment --><p>Setup following lines in <code>./sample_env_setup.sh</code>. Run <code>source sample_env_setup.sh</code> to setup environment in your shell. </p><div class="fragment"><div class="line">export PLATFORM_REPO_PATHS=/tools/Xilinx/Vitis/2022.2/base_platforms</div>
-<div class="line">export XILINX_VITIS=/tools/Xilinx/Vitis/2022.2</div>
-<div class="line">export COMMON_IMAGE_VERSAL=/tools/xilinx-versal-common-v2022.2</div>
-<div class="line">export XILINX_X86_XRT=/opt/xilinx/xrt</div>
-<div class="line">export PYTHON3_LOCATION=/usr/bin</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md3"></a>
-Usage - Generate</h1>
-<div class="fragment"><div class="line"># takes onnx model and numpy tensor, with batch as first dimension</div>
-<div class="line">$ python/generate.py ./models/my_model.onnx ./data/data.npy</div>
-</div><!-- fragment --><p>Example truncated stdout </p><div class="fragment"><div class="line">Saving tensor of shape (1, 1, 28, 28) into ../data/input.txt</div>
-<div class="line">WARNING: fusing Conv+Relu</div>
-<div class="line">Padding Conv weights (6, 1, 5, 5) to (6, 1, 5, 8)</div>
-<div class="line">Saving tensor of shape (1, 1, 28, 28) into ../data/k0conv_in_shape1x1x28x28.txt</div>
-<div class="line">...</div>
-<div class="line">WARNING: Shape not implemented, skipping...</div>
-<div class="line">WARNING: Constant not implemented, skipping...</div>
-<div class="line">...</div>
-<div class="line">Found matching output /Reshape_output_0 and k5pool output</div>
-<div class="line">Disabled output padding, may result in choosing scalar op instead of vector.</div>
-<div class="line">...</div>
-<div class="line">Generating MNIST txt for 100 data points</div>
-</div><!-- fragment --><p>Example generated files </p><div class="fragment"><div class="line">models/</div>
-<div class="line">├── lenet_mnist_inter.onnx              # generated onnx model to output at all layers</div>
-<div class="line">├── lenet_mnist.onnx</div>
-<div class="line">└── lenet_mnist.pkl</div>
-<div class="line">data/</div>
-<div class="line">├── input.txt                           # generated input data</div>
-<div class="line">├── input_host.txt                      # generated batch input data for e2e test</div>
-<div class="line">├── k0conv_goldenout.txt                # intermediate inputs and outputs for verification</div>
-<div class="line">├── k0conv_in.txt</div>
-<div class="line">├── k14gemm_goldenout.txt</div>
-<div class="line">├── k14gemm_in.txt</div>
-<div class="line">├── k16gemm_goldenout.txt</div>
-<div class="line">├── k16gemm_in.txt</div>
-<div class="line">├── k18gemm_goldenout.txt               # generated output data</div>
-<div class="line">├── k18gemm_goldenout_host.txt          # generated batch output data for e2e host</div>
-<div class="line">├── k18gemm_in.txt</div>
-<div class="line">├── k2pool_goldenout.txt</div>
-<div class="line">├── k2pool_in.txt</div>
-<div class="line">├── k3conv_goldenout.txt</div>
-<div class="line">├── k3conv_in.txt</div>
-<div class="line">├── k5pool_goldenout.txt</div>
-<div class="line">├── k5pool_in.txt</div>
-<div class="line">design/</div>
-<div class="line">├── aie_src</div>
-<div class="line">│   └── graph_lenet_mnist.cpp           # aiengine computation graph for aiecompiler</div>
-<div class="line">├── host_app_src</div>
-<div class="line">│   └── lenet_mnist_aie_app.cpp         # host code to load data and run compiled graph</div>
-<div class="line">├── system_configs</div>
-<div class="line">│   ├── lenet_mnist.cfg                 # configuration for v++ linking</div>
-<div class="line">│   └── lenet_mnist_output_inter.cfg</div>
-<div class="line">└── trafficgen</div>
-<div class="line">    ├── xtg_lenet_mnist_output_inter.py # traffic generators for testing computation graph</div>
-<div class="line">    └── xtg_lenet_mnist.py</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md4"></a>
-Usage - Simulation, Verification, Profiling, Hardware Build</h1>
-<p><code>make help</code> for full details. Only key (and probably insufficient) examples here. <br  />
- <b>If you run into issues running the make, try to run each recipe one by one.</b></p>
-<div class="fragment"><div class="line">OPTIONS:</div>
-<div class="line">Use the make recipes with required values for options mentioned below-</div>
-<div class="line">    TARGET      sw_emu(default)|hw_emu|hw, build target</div>
-<div class="line">    GRAPH       lenet (default),           target graph as per design/aie_src/graph_[].cpp</div>
-<div class="line">    EXTIO       0 (default) | 1,           traffic gen usage, graph runs only, redundant for system due to host script</div>
-<div class="line">    DOUT        1 (default) | 0,           if enable output intermediates, max 6-7 outputs, AIE has &lt;= 8 cascade channels</div>
-<div class="line"> </div>
-<div class="line">## Functional check: runs graph in x86simulator</div>
-<div class="line">$ TARGET=sw_emu GRAPH=my_model [EXTIO=1] [DOUT=0] make graph clean_reports aiesim</div>
-<div class="line"> </div>
-<div class="line">## Functional check: runs system software emulation (x86 graph, sysC kernels)</div>
-<div class="line">$ TARGET=sw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application package clean_reports run_emu</div>
-<div class="line"> </div>
-<div class="line">## Functional/performance check: runs graph in aiesimulator</div>
-<div class="line">$ TARGET=hw_emu GRAPH=my_model [EXTIO=1] [DOUT=0] make graph clean_reports aiesim_profile</div>
-<div class="line"> </div>
-<div class="line">## Functional/performance check: runs system in hardware emulation with QEMU (sysC graph, kernels NoC, DDR)</div>
-<div class="line">$ TARGET=hw_emu GRAPH=my_model [DOUT=0] make graph kernels xsa application package run_emu</div>
-<div class="line"> </div>
-<div class="line"> </div>
-<div class="line">## Hardware: create hardware image, flash the SD card</div>
-<div class="line">$ TARGET=hw GRAPH=my_model [DOUT=0] make graph kernels xsa application package</div>
-<div class="line">$ sudo dd if=build/my_model/hw/package/sd_card.img of=/dev/(DEVICE) conv=fsync status=progress</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md5"></a>
-Directory structure</h1>
-<div class="fragment"><div class="line">design/</div>
-<div class="line">├── aie_src</div>
-<div class="line">│   ├── *.cc            # kernel</div>
-<div class="line">│   ├── *.h</div>
-<div class="line">│   ├── graph*.cpp      # unit test</div>
-<div class="line">│   └── graph*.h        # graph</div>
-<div class="line">├── directives          # directives for linking</div>
-<div class="line">├── exec_scripts        # bash scripts to be packaged</div>
-<div class="line">├── host_app_src</div>
-<div class="line">│   └── *_aie_app.cpp   # host script for PS, used in system run</div>
-<div class="line">├── pl_src              # data moving kernels</div>
-<div class="line">├── profiling_configs   # xrt.inis for hardware profiling</div>
-<div class="line">├── system_configs      # .cfg for v++ linking</div>
-<div class="line">│   ├── *.cfg</div>
-<div class="line">│   └──  *_output_inter.cfg</div>
-<div class="line">├── trafficgen          # traffic gen python scripts for graph runs</div>
-<div class="line">│   ├── xtg_*.py</div>
-<div class="line">│   └──  xtg_*_output_inter.py</div>
-<div class="line">└── vivado_metrics_scripts</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md6"></a>
-Let me dev</h1>
+<p>The pipeline has been tested for Tiny MLPerf models. The models below are trained from hls4ml-finn repositories for direct comparison with hls4ml implementation. It has shown latency improvements of 5x (Keyword Spotting), 8x (Image Classifciation) and 18x (Anomaly Detection) under 11-15% utilization. For details on the hls4ml implementation see <a href="https://cds.cern.ch/record/2826586/files/2206.11791.pdf">Hls4ml MLPerf Tiny paper</a>.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadCenter">Use Case   </th><th class="markdownTableHeadCenter">Dtype   </th><th class="markdownTableHeadCenter">Latency (cycles or ns)   </th><th class="markdownTableHeadCenter">Throughput (samples/s)   </th><th class="markdownTableHeadCenter">Resource Utilization (Kernels/Buffers/Stream/PLIO/GMIO)   </th><th class="markdownTableHeadCenter">Accuracy (first 1k)   </th><th class="markdownTableHeadCenter">Quality Target   </th><th class="markdownTableHeadCenter">Model    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyCenter">Keyword Spotting   </td><td class="markdownTableBodyCenter">fp32 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">35076 <br  />
+ 3159   </td><td class="markdownTableBodyCenter">75369 <br  />
+ 1157407   </td><td class="markdownTableBodyCenter">46/56/116/5/24 <br  />
+ 48/51/83/7/0   </td><td class="markdownTableBodyCenter">84.8% (Top 1)   </td><td class="markdownTableBodyCenter">82.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/kws/KWS-W3A3/training/model/models.py">MLP</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyCenter">Anomaly Detection   </td><td class="markdownTableBodyCenter">fp32 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">3165 <br  />
+ 1014   </td><td class="markdownTableBodyCenter">3205128 <br  />
+ 7142857   </td><td class="markdownTableBodyCenter">44/58/128/7/0 <br  />
+ 46/48/76/2/0   </td><td class="markdownTableBodyCenter">0.830 (AUC)   </td><td class="markdownTableBodyCenter">0.83 (AUC)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ad/AD08/training/keras_model.py">AutoEncoder</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyCenter">Image Classification   </td><td class="markdownTableBodyCenter">fp32 <br  />
+ uint8   </td><td class="markdownTableBodyCenter">739274 <br  />
+ 174992   </td><td class="markdownTableBodyCenter">4324 <br  />
+ 22258   </td><td class="markdownTableBodyCenter">62/68/125/9/7 <br  />
+ 90/95/144/2/5   </td><td class="markdownTableBodyCenter">84.1% (Top 1)   </td><td class="markdownTableBodyCenter">83.5% (Top 1)   </td><td class="markdownTableBodyCenter"><a href="https://github.com/hls4ml-finn-mlperftiny/tiny_results_v0.7/blob/main/open/hls4ml-finn/code/ic/RN07/training/resnet_v1_eembc.py">CNN</a>   </td></tr>
+</table>
+<ul>
+<li>Latency is calculated based on cycle count from cycle-accurate aiesimulator through AI Engine programming logging API, specifically <code>aie::tile::current().cycles()</code>. Obtained through aiesimulator logs.</li>
+<li>Throughput is calculated based on output bandwidth over multiple iterations. Obtained by running <code>throughput.py</code> on aiesimulator output files and assumes AI engine is clocked at 1GHz.</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md6"></a>
+Issues</h1>
+<p>Below are certain issues that may arise from using the pipeline. </p>
 <h2><a class="anchor" id="autotoc_md7"></a>
+Certain operations, input shapes or parameter sizes is not supported</h2>
+<ol type="1">
+<li>Write a op. Files required:<ul>
+<li><code>design/aie_src/my_op.cc</code></li>
+<li><code>design/aie_src/my_op.h</code></li>
+<li><code>design/aie_src/graph_my_op.cpp</code></li>
+<li><code>design/aie_src/graph_my_op.h</code></li>
+</ul>
+</li>
+<li>Add data. Files required:<ul>
+<li><code>data/my_op_in.txt</code></li>
+<li><code>data/my_op_golden.txt</code></li>
+</ul>
+</li>
+<li>Test it:<ul>
+<li>x86 Graph test: <code>TARGET=sw_emu GRAPH=my_op make clean_reports graph aiesim # X86 GRAPH</code></li>
+<li>SysC Graph test: <code>TARGET=hw_emu GRAPH=my_op make clean_reports graph aiesim # SYSC GRAPH</code></li>
+</ul>
+</li>
+</ol>
+<h2><a class="anchor" id="autotoc_md8"></a>
+There are issues generating the ADF graph</h2>
+<ol type="1">
+<li>See reference generated graph from example</li>
+<li>See documentation for any dimension restrictions for kernels/graphs.</li>
+<li>Write the high level ADF graph for the network</li>
+</ol>
+<h2><a class="anchor" id="autotoc_md9"></a>
 Important documentation</h2>
 <ul>
+<li><a href="https://rehohoho.github.io/onnx2versal/">AIE kernels and graphs used in this repo</a></li>
 <li><a href="https://github.com/Xilinx/Vitis-Tutorials/tree/2022.1/AI_Engine_Development">Vitis Tutorials - AI Engine Development</a></li>
 <li><a href="https://docs.xilinx.com/r/en-US/ug1079-ai-engine-kernel-coding/">AI Engine Kernel and Graph Programming Guide (UG1079)</a></li>
 <li><a href="https://www.xilinx.com/htmldocs/aiengine_intrinsics_start.html">AI Engine Documentation - AIE API or Intrinsic guide</a></li>
 <li><a href="https://docs.xilinx.com/r/en-US/ug1076-ai-engine-environment/">AI Engine Tools and Flows User Guide (UG1076)</a></li>
 <li><a href="https://docs.xilinx.com/r/en-US/ug1399-vitis-hls">Vitis HLS</a></li>
 <li><a href="https://xilinx.github.io/XRT/master/html/index.html">XRT Documentation - Host application programming docs</a></li>
-<li><a href="https://github.com/Xilinx/XRT/blob/master/src/runtime_src/core/include/experimental/xrt_aie.h">XRT AIE API - xrt_aie.h</a></li>
+<li><a href="https://github.com/Xilinx/XRT/blob/master/src/runtime_src/core/include/experimental/xrt_aie.h">XRT AIE API - xrt_aie.h</a> </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md8"></a>
-Write a graph</h2>
-<p>See reference generated graph from example. See documentation for any dimension restrictions for kernels/graphs.</p>
-<h2><a class="anchor" id="autotoc_md9"></a>
-Write a op</h2>
-<div class="fragment"><div class="line">design/aie_src</div>
-<div class="line">├── my_op.cc</div>
-<div class="line">├── my_op.h</div>
-<div class="line">├── graph_my_op.h</div>
-<div class="line">└── graph_my_op.cpp</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md10"></a>
-Add data</h2>
-<div class="fragment"><div class="line">data/</div>
-<div class="line">├── my_op_in.txt</div>
-<div class="line">└── my_op_golden.txt</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
-Test the op</h2>
-<div class="fragment"><div class="line"># X86 GRAPH</div>
-<div class="line">TARGET=sw_emu GRAPH=my_op make clean_reports graph aiesim</div>
-<div class="line"> </div>
-<div class="line"># SYSC GRAPH</div>
-<div class="line">TARGET=hw_emu GRAPH=my_op make clean_reports graph aiesim</div>
-</div><!-- fragment --> </div></div><!-- PageDoc -->
+</div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -175,7 +175,7 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>            output_window&lt;TT&gt;* out0</div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        );</div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 &amp;&amp; STRIDE &gt;= 0));</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 &amp;&amp; STRIDE &gt;= 0));</div>
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>            <span class="keyword">static_assert</span>(<span class="keyword">sizeof</span>(TT) == 4); <span class="comment">// 32-bit width stream</span></div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>            <span class="keywordflow">if</span> (LCNT == 8) {</div>
@@ -272,8 +272,8 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>            <span class="keyword">static_assert</span>((std::is_same&lt;TT, int8_t&gt;::value) || (std::is_same&lt;TT, uint8_t&gt;::value));</div>
 <div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>            <span class="keyword">static_assert</span>(OVERLAP % 16 == 0);</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || (STRIDE % 16 == 0 &amp;&amp; STRIDE &gt;= 0));</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || (STRIDE % 16 == 0 &amp;&amp; STRIDE &gt;= 0));</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
 <div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W % 16 == 0));</div>
 <div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
@@ -315,7 +315,7 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>        );</div>
 <div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>            <span class="keyword">static_assert</span>(<span class="keyword">sizeof</span>(TT) == 4);</div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 &amp;&amp; STRIDE &gt;= 0));</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 &amp;&amp; STRIDE &gt;= 0));</div>
 <div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>            REGISTER_FUNCTION(SplitTwo32bitStreams::filter);</div>
 <div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>        }</div>
@@ -345,7 +345,7 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span> </div>
 <div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>            <span class="keyword">static_assert</span>(<span class="keyword">sizeof</span>(TT) == 4);</div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
 <div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>            REGISTER_FUNCTION(SplitFilterFloatStream::filter);</div>
 <div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>        }</div>
@@ -376,7 +376,7 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span> </div>
 <div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>            <span class="keyword">static_assert</span>(<span class="keyword">sizeof</span>(TT) == 4);</div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>            REGISTER_FUNCTION(SplitFilterFloatStreamTwice::filter);</div>
 <div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>        }</div>
@@ -401,7 +401,7 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span> </div>
 <div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>            <span class="keyword">static_assert</span>((std::is_same&lt;TT, float&gt;::value));</div>
-<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 &amp;&amp; STRIDE &gt;= 0));</div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0 &amp;&amp; STRIDE &gt;= 0));</div>
 <div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>            REGISTER_FUNCTION(SplitFilterFloatPktStream::filter);</div>
 <div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>        }</div>
@@ -432,8 +432,8 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>            <span class="keyword">static_assert</span>((std::is_same&lt;TT, int8_t&gt;::value) || (std::is_same&lt;TT, uint8_t&gt;::value));</div>
 <div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>            <span class="keyword">static_assert</span>(OVERLAP % 16 == 0);</div>
-<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || (STRIDE % 16 == 0));</div>
-<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
+<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || (STRIDE % 16 == 0));</div>
+<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
 <div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W % 16 == 0));</div>
 <div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>            REGISTER_FUNCTION(SplitFilterInt8Stream::filter);</div>
@@ -466,8 +466,8 @@ $(document).ready(function(){initNavTree('split_8h_source.html',''); initResizab
 <div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>        <span class="keyword">static</span> <span class="keywordtype">void</span> registerKernelClass() {</div>
 <div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>            <span class="keyword">static_assert</span>((std::is_same&lt;TT, int8_t&gt;::value) || (std::is_same&lt;TT, uint8_t&gt;::value));</div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>            <span class="keyword">static_assert</span>(OVERLAP % 16 == 0);</div>
-<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || (STRIDE % 16 == 0));</div>
-<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>            <span class="keyword">static_assert</span>((OVERLAP &lt; 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || (STRIDE % 16 == 0));</div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>            <span class="keyword">static_assert</span>((OVERLAP &lt;= 0) || ((INP_W-OUT_W) % FIRST_STRIDE == 0));</div>
 <div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W % 16 == 0));</div>
 <div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span>            <span class="keyword">static_assert</span>((OVERLAP &gt; 0) || (OUT_W*LCNT - OVERLAP*(LCNT-1) &lt;= INP_W));</div>
 <div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>            REGISTER_FUNCTION(SplitFilterInt8StreamTwice::filter);</div>

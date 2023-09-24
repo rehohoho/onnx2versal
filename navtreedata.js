@@ -25,30 +25,16 @@
 var NAVTREE =
 [
   [ "onnx2versal", "index.html", [
-    [ "onnx2aiengine", "index.html", "index" ],
-    [ "Lenet Example", "md_lenet__example.html", [
-      [ "Requirements and setup", "md_lenet__example.html#autotoc_md13", null ],
-      [ "Train Lenet model on MNIST", "md_lenet__example.html#autotoc_md14", null ],
-      [ "Quantize the model (optional)", "md_lenet__example.html#autotoc_md15", null ],
-      [ "Generate files", "md_lenet__example.html#autotoc_md16", null ],
-      [ "Make options", "md_lenet__example.html#autotoc_md17", null ],
-      [ "Functional verification", "md_lenet__example.html#autotoc_md18", null ],
-      [ "Performance verification", "md_lenet__example.html#autotoc_md19", null ],
-      [ "Functional check: runs graph in x86simulator", "md_lenet__example.html#autotoc_md20", null ],
-      [ "Functional check: runs system software emulation", "md_lenet__example.html#autotoc_md21", null ],
-      [ "Functional/performance check: runs graph in aiesimulator", "md_lenet__example.html#autotoc_md22", null ],
-      [ "Functional/performance check: runs system in hardware emulation with QEMU", "md_lenet__example.html#autotoc_md23", null ],
-      [ "Test system on hardware", "md_lenet__example.html#autotoc_md24", null ]
+    [ "What are AI engines?", "index.html#autotoc_md1", null ],
+    [ "What is onnx2versal?", "index.html#autotoc_md2", [
+      [ "TLDR CLI commands", "index.html#autotoc_md3", null ]
     ] ],
-    [ "Profiling", "md_profile.html", [
-      [ "Procedure", "md_profile.html#autotoc_md29", [
-        [ "Tiny MLPerf Open Division (hls4ml models)", "md_profile.html#autotoc_md26", null ],
-        [ "MLPerf Closed Division (MLPerf pretrained)", "md_profile.html#autotoc_md27", null ],
-        [ "Metrics", "md_profile.html#autotoc_md28", null ],
-        [ "Experiment Links", "md_profile.html#autotoc_md30", null ],
-        [ "Replication", "md_profile.html#autotoc_md31", null ],
-        [ "Result outputs", "md_profile.html#autotoc_md32", null ]
-      ] ]
+    [ "@ref \"/github/workspace/docs/md/usage.md\" \"Usage\"", "index.html#autotoc_md4", null ],
+    [ "@ref \"/github/workspace/docs/md/profile.md\" \"How good are the AI engines?\"", "index.html#autotoc_md5", null ],
+    [ "Issues", "index.html#autotoc_md6", [
+      [ "Certain operations, input shapes or parameter sizes is not supported", "index.html#autotoc_md7", null ],
+      [ "There are issues generating the ADF graph", "index.html#autotoc_md8", null ],
+      [ "Important documentation", "index.html#autotoc_md9", null ]
     ] ],
     [ "Topics", "topics.html", "topics" ],
     [ "Classes", "annotated.html", [
@@ -67,8 +53,7 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"add_8h_source.html",
-"md_profile.html#autotoc_md26"
+"add_8h_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

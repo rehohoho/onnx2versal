@@ -1,10 +1,15 @@
 var searchData=
 [
-  ['identity_0',['identity',['../classIdentity.html',1,'Identity&lt; TT, N &gt;'],['../group__Identity.html',1,'Identity']]],
-  ['identitygraph_1',['IdentityGraph',['../classIdentityGraph.html',1,'']]],
-  ['identitykernels_2',['IdentityKernels',['../group__IdentityKernels.html',1,'']]],
-  ['important_20documentation_3',['Important documentation',['../index.html#autotoc_md7',1,'']]],
-  ['in_20aiesimulator_4',['Functional/performance check: runs graph in aiesimulator',['../md_lenet__example.html#autotoc_md22',1,'']]],
-  ['in_20hardware_20emulation_20with_20qemu_5',['Functional/performance check: runs system in hardware emulation with QEMU',['../md_lenet__example.html#autotoc_md23',1,'']]],
-  ['in_20x86simulator_6',['Functional check: runs graph in x86simulator',['../md_lenet__example.html#autotoc_md20',1,'']]]
+  ['mac_0',['Mac',['../group__Mac.html',1,'']]],
+  ['macfloat_1',['MacFloat',['../classMacFloat.html',1,'']]],
+  ['macgraph_2',['MacGraph',['../classMacGraph.html',1,'']]],
+  ['mackernels_3',['MacKernels',['../group__MacKernels.html',1,'']]],
+  ['macscalar_4',['MacScalar',['../classMacScalar.html',1,'']]],
+  ['maxpool2x2floatbchw_5',['Maxpool2x2FloatBCHW',['../classMaxpool2x2FloatBCHW.html',1,'']]],
+  ['maxpool2x2int8bchw_6',['Maxpool2x2Int8BCHW',['../classMaxpool2x2Int8BCHW.html',1,'']]],
+  ['maxpool3x3int8bchw_7',['Maxpool3x3Int8BCHW',['../classMaxpool3x3Int8BCHW.html',1,'']]],
+  ['maxpoolscalarbchw_8',['MaxpoolScalarBCHW',['../classMaxpoolScalarBCHW.html',1,'']]],
+  ['maxpoolscalarbhwc_9',['MaxpoolScalarBHWC',['../classMaxpoolScalarBHWC.html',1,'']]],
+  ['md_20profile_20md_20how_20good_20are_20the_20ai_20engines_10',['@ref &quot;/github/workspace/docs/md/profile.md&quot; &quot;How good are the AI engines?&quot;',['../index.html#autotoc_md5',1,'']]],
+  ['md_20usage_20md_20usage_11',['@ref &quot;/github/workspace/docs/md/usage.md&quot; &quot;Usage&quot;',['../index.html#autotoc_md4',1,'']]]
 ];
