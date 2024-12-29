@@ -4,6 +4,10 @@ echo ""
 SECONDS=0
 
 # Executing the elf...
+export LD_LIBRARY_PATH=/mnt:/tmp:$LD_LIBRARY_PATH
+export XCL_EMULATION_MODE=hw_emu
+export XILINX_XRT=/usr
+export XILINX_VITIS=/mnt
 mkdir -p output/
 ./aie_xrt.elf a.xclbin 1 data output
 python3 check.py -f1 data -f2 output

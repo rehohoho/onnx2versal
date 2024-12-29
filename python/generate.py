@@ -50,6 +50,9 @@ if __name__ == '__main__':
   args = parser.parse_args()
   args.onnx = args.onnx[0]
   args.input_npy = args.input_npy[0]
+
+  # Create data dir if doesn't exist
+  os.makedirs(args.data, exist_ok=True)
   
   # Update ONNX to output intermediate tensors
   onnx_inter_path = args.onnx.replace(".onnx", "_inter.onnx")
@@ -81,9 +84,9 @@ if __name__ == '__main__':
                               is_output_all=args.is_output_all)
   parser.parse()
   CppGenerator(parser).generate_cpp_graph()
-  XtgGenerator(parser).generate_xtg_python()
-  CfgGenerator(parser).generate_cfg()
-  HostGenerator(parser).generate_host_cpp()
+  # XtgGenerator(parser).generate_xtg_python()
+  # CfgGenerator(parser).generate_cfg()
+  # HostGenerator(parser).generate_host_cpp()
 
   # Generate end-to-end data
   ort_session = onnxruntime.InferenceSession(args.onnx)
@@ -94,6 +97,7 @@ if __name__ == '__main__':
   for op in parser.g.in_ops:
     input_shape = op.tensor.shape
     input_path = f"{args.data}/{op.get_input_filenames()[0]}"
+    input_path = f"{args.data}/{parser.parse_filename(op.get_input_filenames()[0], is_e2e=True)}"
     input_path = get_e2efile_path(input_path, many_inputs)
     many_inputs = many_inputs.reshape(args.ndata, *input_shape[:-1], -1)
     many_inputs = pad_lastdim(many_inputs, "many inputs", input_shape[-1])

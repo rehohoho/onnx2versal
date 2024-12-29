@@ -9,8 +9,8 @@ class CppGenerator:
   def __init__(self,
                parser: Parser):
     self.parser = parser
-    self.g = parser.graphs[0]
 
+  def generate_cpp_graph_helpers(self):
     gmio_allocs = []
     gmio_cpys = []
     gmio_xfers = []
@@ -235,5 +235,8 @@ int main(int argc, char ** argv) {{
 """
   
   def generate_cpp_graph(self):
-    with open(f"../design/aie_src/graph_{self.g.name}.cpp", "w") as f:
-      f.write(self.generate_cpp_graph_str())
+    for graph in self.parser.graphs:
+      self.g = graph
+      self.generate_cpp_graph_helpers()
+      with open(f"../design/aie_src/graph_{self.g.name}.cpp", "w") as f:
+        f.write(self.generate_cpp_graph_str())

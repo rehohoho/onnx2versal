@@ -12,6 +12,7 @@ from op_parsers import dtype_to_cstr, save_tensor, OpParser, \
   QLinearAddOp, QLinearConvOp, QLinearMacOp, QLinearPoolOp, QLinearSoftmaxOp, QuantizeLinearOp, SoftmaxOp, \
   TransposeOp
 
+ARRAY_TILE_COUNT = 25 * 0.8
 SKIPPABLE_NODES = ["Shape", "Constant", "Gather", "Unsqueeze", "Concat", "Reshape", "Flatten"]
 
 
@@ -33,16 +34,16 @@ class ParsedGraph:
     self.optout_ops: List[OpParser] = []
     self.input_count = 0
     self.output_count = 0
+    self.tile_count = 0
     
   def register_port(self, 
                     onnx_innames: List[str], 
-                    onnx_outnames: List[str], 
                     op: OpParser) -> None:
     for i, input_name in enumerate(onnx_innames):
       in_port = self.onnxname_2_op[input_name].get_adf_port_name()
       self.adf_connects.append(op.get_connect_line(in_port, i))
     
-    gmio_connects = op.get_gmio_connect_line(len(onnx_innames))
+    gmio_connects = op.get_gmio_connect_line(start_idx=len(onnx_innames))
     if gmio_connects != "":
       self.adf_connects.append(gmio_connects)
 
@@ -70,7 +71,7 @@ class ParsedGraph:
         op.id = i
         i += 1
         self.in_ops.append(op)
-        self.input_count += 1
+        self.input_count += 1 # each InputOp only has one input
     
     i = 0 # index of plout
     for op in self.onnxname_2_op.values():
@@ -78,7 +79,7 @@ class ParsedGraph:
         op.id = i
         self.out_ops.append(op)
         i += 1
-        self.output_count += 1
+        self.output_count += len(op.get_output_filenames())
     for op in self.onnxname_2_op.values():
       if not op.is_output and not isinstance(op, InputOp):
         op.id = i
@@ -101,6 +102,7 @@ class Parser:
     model = onnx.load(onnx_path)
     self.graph = model.graph
     self.nodes = model.graph.node
+    self.graph_output = [valueinfo.name for valueinfo in self.graph.output]
     # for node in self.nodes:
     #   node_str = MessageToJson(node)
     #   with open("nodes.json", "a") as f:
@@ -110,11 +112,14 @@ class Parser:
     self.register_initializers(model, input_tensors, output_tensors)
 
     # generate first subgraph, register model inputs and outputs
-    self.graphs = [ParsedGraph(self.graph_name, data_count=data_count)]
-    self.g = self.graphs[0]
+    self.graphs = []
+    self.g = ParsedGraph(self.graph_name + "_0", data_count=data_count)
+    self.graphs.append(self.g)
     
     for i, (model_input, tensor) in enumerate(zip(model.graph.input, input_tensors)):
-      self.g.onnxname_2_op[model_input.name] = InputOp(model_input.name, i, tensor)
+      op = InputOp(model_input.name, i, tensor)
+      op.save_txt(self.data_path)
+      self.g.onnxname_2_op[model_input.name] = op
       self.g.input_count += 1
     
     self.g.modelout_2_op = {i.name: None for i in model.graph.output}
@@ -148,6 +153,26 @@ class Parser:
       filename = fn_list[0] + "shape" + "x".join(shape_list)
     
     return f"{filename}{suffix}.txt"
+  
+  def update_graph(self,
+                   op: OpParser,
+                   node):
+    for output_name in node.output: # set graph output
+      if output_name in self.graph_output:
+        op.is_output = True
+        break
+
+    tile_count = op.tile_count
+    print(f"Tile count: {self.g.tile_count + tile_count}")
+    if self.g.tile_count + tile_count >= ARRAY_TILE_COUNT: # split graph if tile count exceeds array size
+      self.g.get_last_op().is_output = True # end graph
+      
+      self.g = ParsedGraph(self.graph_name + f"_{len(self.graphs)}", data_count=self.data_count) # new graph
+      for i, inp_name in enumerate(node.output):
+        self.g.onnxname_2_op[inp_name] = InputOp(inp_name, i, self.tensor[inp_name])
+      self.graphs.append(self.g)
+    
+    self.g.tile_count += tile_count
 
   # assumes nodes are in topological sorted order
   def parse(self):
@@ -187,15 +212,17 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.tensor[tname] for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port(node.input, [onnx_out_name], op)
+        self.g.register_port(node.input, op)
       
       elif node.op_type == "AveragePool":
         op = PoolOp(f"k{i:03d}pool", reduction_mode="avg")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
-        self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port(node.input, [onnx_out_name], op)
+        self.update_graph(op, self.nodes[i])
+        self.g.onnxname_2_op[node.output[0]] = op
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "Conv":
         is_relu = self.get_optype(i+1) == "Relu"
@@ -208,15 +235,17 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.tensor[tname] for tname in (*node.input, onnx_out_name)], node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port([node.input[0]], [onnx_out_name], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "MaxPool":
         op = PoolOp(f"k{i:03d}pool", reduction_mode="max")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "Mul":
         if self.get_optype(i+1) != "Add": # lookahead
@@ -236,8 +265,9 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.tensor[tname] for tname in (*node.input, bias_name, onnx_out_name)])
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port([node.input[0]], [onnx_out_name], op)
+        self.g.register_port([node.input[0]], op)
 
       elif node.op_type == "Gemm":
         is_relu = self.get_optype(i+1) == "Relu" # lookahead
@@ -251,15 +281,17 @@ class Parser:
         op.register_params([self.tensor[tname] for tname in (*node.input, onnx_out_name)], 
                            node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port([node.input[0]], [onnx_out_name], op)
+        self.g.register_port([node.input[0]], op)
         
       elif node.op_type == "QuantizeLinear":
         op = QuantizeLinearOp(f"k{i:03d}quantizelinear")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
 
       elif node.op_type == "QLinearAdd": # reconvergent op
         is_relu = self.get_optype(i+1) == "Relu"
@@ -272,9 +304,10 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.tensor[tname] for tname in (*node.input, onnx_out_name)])
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         
         self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port([node.input[0]], [onnx_out_name], op)
+        self.g.register_port([node.input[0]], op)
         
         # external caching
         buf_name = op.name + "_i_buf"
@@ -290,30 +323,34 @@ class Parser:
         op = QLinearConvOp(f"k{i:03d}qlinearconv")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "QLinearGlobalAveragePool":
         op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg", is_global=True)
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
 
       elif node.op_type == "QLinearAveragePool":
         op = QLinearPoolOp(f"k{i:03d}qlinearpool", reduction_mode="avg", is_global=True)
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
         
       elif node.op_type == "QGemm":
         op = QGemmOp(f"k{i:03d}qgemm")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)],
                            node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "QLinearMul":
         if self.get_optype(i+1) != "QLinearAdd": # lookahead
@@ -333,15 +370,17 @@ class Parser:
         onnx_out_name = self.nodes[i].output[0]
         op.register_params([self.tensor[tname] for tname in (*node.input, *add_node_inputs, onnx_out_name)])
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port([node.input[0]], [onnx_out_name], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "DequantizeLinear":
         op = DequantizeLinearOp(f"k{i:03d}dequantizeLinear")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "MatMul":
         if self.get_optype(i+1) != "Add": # lookahead
@@ -361,40 +400,40 @@ class Parser:
         op.register_params([self.tensor[tname] for tname in (*node.input, bias_name, onnx_out_name)],
                            node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[onnx_out_name] = op
-        self.g.register_port([node.input[0]], [onnx_out_name], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "Softmax":
         op = SoftmaxOp(f"k{i:03d}softmax")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)])
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "QLinearSoftmax":
         op = QLinearSoftmaxOp(f"k{i:03d}qlinearsoftmax")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
       
       elif node.op_type == "Transpose":
         op = TransposeOp(f"k{i:03d}transpose")
         op.register_params([self.tensor[tname] for tname in (*node.input, *node.output)], node.attribute)
         op.save_txt(self.data_path)
+        self.update_graph(op, self.nodes[i])
         self.g.onnxname_2_op[node.output[0]] = op
-        self.g.register_port([node.input[0]], [node.output[0]], op)
+        self.g.register_port([node.input[0]], op)
       
       else:
         raise ValueError(f"Unexpected op_type {node.op_type}")
-      
-      for output_name in self.nodes[i-1].output:
-        if output_name in self.graph.output:
-          op.is_output = True
 
       if self.is_output_all:
         for ioname in [*node.input, *node.output]:
-          tensor = self.get_tensor[ioname]
+          tensor = self.tensor[ioname]
           tensor_shapestr = "x".join(str(dim) for dim in tensor.shape)
           out_path = f"{i:03d}__{node.name}__{ioname}__{tensor_shapestr}.txt".replace("/", "_")
           out_path = f"{self.data_path}/{out_path}"

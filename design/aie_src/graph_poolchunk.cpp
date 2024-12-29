@@ -68,9 +68,30 @@ PoolChunkCGraphTest<SplitFilterInt8PktStream, Maxpool2x2Int8BCHW, ConcatInt8Stre
                     Pad2DStreamInt8, 0, 0, 0, 8> maxpool2x2int8BCHW(
   "maxpool2x2int8BCHW", "pool_int8in_pad.txt", "poolBCHW_max_int8out_shape1x6x12x12_Maxpool2x2Int8BCHW.txt");
 
+/*
+Maxpool3x3Int8BCHW<114,128,56,64,1,1,3,3,2,2> start = 9323,end = 31000,total = 21677
+Maxpool3x3Int8BCHW<114,128,56,64,1,1,3,3,2,2> start = 17157,end = 38834,total = 21677
+ConcatInt8Stream<h,1,3584,3584,7168> start = 1423,end = 39865,total = 38442
+Maxpool3x3Int8BCHW<114,128,56,64,1,1,3,3,2,2> start = 24990,end = 46667,total = 21677
+Maxpool3x3Int8BCHW<114,128,56,64,1,1,3,3,2,2> start = 32823,end = 54500,total = 21677
+ConcatInt8Stream<h,1,3584,3584,7168> start = 1423,end = 55532,total = 54109
+ConcatInt8Stream<h,1,7168,7168,14336> start = 1421,end = 55543,total = 54122
+*/
+// PoolChunkCGraphTest<SplitFilterInt8PktStream,Maxpool3x3Int8BCHW,ConcatInt8Stream,
+//                     1,uint8_t,112,112,56,64,1,8,3,3,2,2,
+//                     Pad2DStreamInt8,1,1,1,15> k002pool(
+//   "k002pool",
+//   "k002pool_in_shape1x64x112x112.txt",
+//   "k002pool_goldenout_shape1x64x56x56.txt"
+// );
+
 
 #if defined(__X86SIM__) || defined(__AIESIM__)
 int main(int argc, char ** argv) {
+  // adfCheck(k002pool.init(), "init k002pool");
+  // adfCheck(k002pool.run(ITER_CNT), "run k002pool");
+	// adfCheck(k002pool.end(), "end k002pool");
+
   // BCHW
   adfCheck(maxpoolScalarBCHW.init(), "init maxpoolScalarBCHW");
   adfCheck(maxpoolScalarBCHW.run(ITER_CNT), "run maxpoolScalarBCHW");

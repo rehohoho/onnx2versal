@@ -116,7 +116,7 @@ RELATIVE_PROJECT_DIR := ./
 PROJECT_REPO := $(shell readlink -f $(RELATIVE_PROJECT_DIR))
 
 DESIGN_REPO  := $(PROJECT_REPO)/design
-DATA_REPO := $(PROJECT_REPO)/data
+DATA_REPO ?= $(PROJECT_REPO)/data
 AIE_SRC_REPO := $(DESIGN_REPO)/aie_src
 PL_SRC_REPO  := $(DESIGN_REPO)/pl_src
 HOST_APP_SRC_REPO := $(DESIGN_REPO)/host_app_src
@@ -171,9 +171,7 @@ ifeq ($(EXTIO), 1)
 								$(XILINX_VITIS)/data/emulation/XO/sim_ipc_axis_slave_$(TRAFFICGEN_WIDTH).xo
 else
 	KERNEL_XOS := $(BUILD_TARGET_DIR)/$(KERNEL1_XO).xo \
-							  $(BUILD_TARGET_DIR)/$(KERNEL2_XO).xo \
-							  $(BUILD_TARGET_DIR)/$(KERNEL3_XO).xo \
-							  $(BUILD_TARGET_DIR)/$(KERNEL4_XO).xo
+							  $(BUILD_TARGET_DIR)/$(KERNEL2_XO).xo
 endif
 
 kernels: $(KERNEL_XOS)
@@ -333,6 +331,9 @@ $(BLD_TGT_VCD_FILE):
 	aiesimulator $(AIE_SIM_FLAGS) --profile --dump-vcd $(GRAPH) 2>&1 | tee -a vcd.log; \
 	vcdanalyze --vcd $(GRAPH).vcd
 
+emconfig:
+	emconfigutil --platform $(PLATFORM) --od $(BUILD_TARGET_DIR)
+
 # =========================================================
 # Step 3. XSA File Generation
 # ========================================================
@@ -350,8 +351,6 @@ ifeq ($(DOUT), 1)
 else
 	VPP_LINK_FLAGS += --clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL1)_0 \
 										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL2)_0 \
-										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL3)_0 \
-										--clock.freqHz $(VPP_CLOCK_FREQ):$(KERNEL4)_0 \
 										--config $(SYSTEM_CONFIGS_REPO)/$(GRAPH).cfg
 endif
 
@@ -359,8 +358,6 @@ ifeq ($(EN_TRACE),1)
    ifeq ($(TARGET),hw)
       VPP_LINK_FLAGS += --profile.data $(KERNEL1):all:all \
                         --profile.data $(KERNEL2):all:all \
-                        --profile.data $(KERNEL3):all:all \
-                        --profile.data $(KERNEL4):all:all \
                         --profile.trace_memory DDR
    endif
 endif
@@ -403,7 +400,8 @@ GCC_FLAGS := -O \
              -std=c++17 \
              -D__linux__ \
              -D__PS_ENABLE_AIE__ \
-             -DXAIE_DEBUG
+             -DXAIE_DEBUG \
+						 -DITER_CNT=$(ITER_CNT)
 
 GCC_INC_FLAGS := -I$(XILINX_VITIS)/aietools/include/ \
                  -I$(AIE_SRC_REPO) \
@@ -466,7 +464,8 @@ PKG_FLAGS := -t $(TARGET) \
              -f $(PLATFORM) \
 						 --package.defer_aie_run \
 						 --package.enable_aie_debug \
-						 $(BUILD_TARGET_DIR)/$(XSA) $(LIBADF_A)
+						 $(BUILD_TARGET_DIR)/$(XSA) $(LIBADF_A) \
+						 --package.sd_file $(BUILD_TARGET_DIR)/emconfig.json
 
 ifeq ($(TARGET), sw_emu)
 PKG_FLAGS += -o $(BUILD_TARGET_DIR)/a.xclbin \
@@ -494,7 +493,7 @@ ifdef XRT_ROOT
    PKG_FLAGS += --package.sd_dir $(XRT_ROOT)
 endif
 
-package: application xsa $(EMBEDDED_PACKAGE_OUT)
+package: emconfig application xsa $(EMBEDDED_PACKAGE_OUT)
 ifeq ($(EXTIO), 1)
 	@echo "EXTIO not supported for system tests. Host code is traffic generator."
 else

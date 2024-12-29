@@ -130,6 +130,7 @@ class OpParser:
 
     self.id = -1
     self.is_output = False
+    self.tile_count = 1
   
   def get_adf_port_name(self) -> str:
     return f"{self.name}.pout[0]"
@@ -171,8 +172,8 @@ class OpParser:
   def get_connect_line(self, last_port: str, i: int = 0) -> str:
     return f"adf::connect<> ({last_port}, {self.name}.pin[{i}]);"
 
-  def get_gmio_connect_line(self, i: int = 0) -> str:
-    return "\n".join(f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+i}]);"
+  def get_gmio_connect_line(self, start_idx: int = 0) -> str:
+    return "\n".join(f"adf::connect<> (gmio_{gmio_name}.out[0], {self.name}.pin[{gmio_idx+start_idx}]);"
         for gmio_idx, gmio_name in enumerate(self.gmioname_2_tensor))
 
   def attach_gmio_in(self, buf_name: str) -> None:
@@ -243,9 +244,10 @@ class InputOp(OpParser):
     self.idx = idx
     self.tensor = tensor
     self.register_input_file(tensor)
+    self.tile_count = 0
 
   def get_adf_port_name(self) -> str:
-    return f"plin[{self.idx}].out[0]"
+    return f"plin[{self.idx}].out[0]"  
 
 
 class AddOp(OpParser):
@@ -435,6 +437,20 @@ class ConvOp(OpParser):
   def get_input_shape(self):
     return [self.B, self.C, self.INP_H, self.INP_W_PAD]
   
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph != "ConvReluStreamGraph":
+      lcnt = (self.INP_H + self.H0 + self.H1 - self.HCHUNK) // (self.HCHUNK - (self.KH - self.STEP_H)) + 1
+      cnt = lcnt
+      if self.graph == "ConvReluChunkHPktStreamGraph": # split
+        cnt += 1
+      elif self.graph == "ConvReluChunkHStreamGraph":
+        cnt += lcnt // 2
+      cnt += lcnt // 4 + lcnt // 2 + lcnt % 2 # concat
+    if self.H0 + self.H1 + self.W0 + self.W1 != 0:
+      cnt += 1 # pad
+    self.tile_count = cnt
+  
 
 class DequantizeLinearOp(OpParser):
   """Use input tensor, pad width to vector boundary for INP_SIZE
@@ -536,7 +552,7 @@ class GemmOp(OpParser):
       self.M, repeat = factor_int(self.M, self.N * self.dtype.itemsize, MAX_PARAM_SIZE, 0, force_split_chunksize=32)
       self.argname_2_tensor[f"{self.name}_b"] = tbias
       
-      nchunk, nchunk_count = factor_int(self.N, 0, 1, 0, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 8))
+      nchunk, self.nchunk_count = factor_int(self.N, 0, 1, 0, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 8))
 
       if (4*self.K + 3*nchunk) * 4 <= 24576:
         kernel = "GemmReluMKKNStream"
@@ -550,8 +566,8 @@ class GemmOp(OpParser):
         self.gmio_repeats = (self.M // 2 + self.M % 2) * repeat
         self.kernel_type = f"GemmReluStreamGraph<{kernel},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       else:
-        tw = tw.reshape(self.K, nchunk_count, nchunk).transpose(1,0,2)
-        for i in range(nchunk_count):
+        tw = tw.reshape(self.K, self.nchunk_count, nchunk).transpose(1,0,2)
+        for i in range(self.nchunk_count):
           self.gmioname_2_tensor[f"{self.name}_w{i}"] = tw[i].reshape(self.K, -1, 8).transpose(1,0,2)
         self.kernel_type = f"GemmReluMkknChunkNStreamGraph<{kernel},ConcatFloatStream,{nchunk},{self.M},{self.K},{self.N},{int(self.is_relu)}>"
       
@@ -563,6 +579,13 @@ class GemmOp(OpParser):
   
   def get_input_shape(self):
     return [self.M, self.K]
+  
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph == "GemmReluMkknChunkNStreamGraph":
+      cnt = self.nchunk_count
+      cnt += self.nchunk_count // 4 + self.nchunk_count // 2 + self.nchunk_count % 2
+    self.tile_count = cnt
 
 
 class IdentityOp(OpParser):
@@ -647,7 +670,7 @@ class PoolOp(OpParser):
   
   def get_graph_targs(self):
     pad_kernel = "Pad2DStreamInt8" if self.dtype in ["uint8", "int8"] else "Pad2DStreamFloat"
-    return f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W_PAD}," + \
+    return f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.INP_W_PAD},{self.OUT_H},{self.OUT_W_PAD}," + \
         f"{self.B},{self.C},{self.KH},{self.KW},{self.STEP_H},{self.STEP_W}," + \
         f"{pad_kernel},{self.H0},{self.H1},{self.W0},{self.W1}"
   
@@ -686,7 +709,10 @@ class PoolOp(OpParser):
   def get_kernel_line(self) -> str:
     PAD_H = self.INP_H + self.H0 + self.H1
     PAD_W = max(self.INP_W + self.W0 + self.W1, self.INP_W_PAD)
-    PAD_W = (PAD_W + 15)//16*16
+    if self.dtype in ["uint8", "int8"]:
+      PAD_W = (PAD_W + 15)//16*16
+    else:
+      PAD_W = (PAD_W + 3)//4*4
     self.W1 = PAD_W - self.INP_W - self.W0
 
     if self.reduction_mode == "max":
@@ -711,11 +737,26 @@ class PoolOp(OpParser):
         self.C, _ = factor_int(self.C, self.INP_H * self.INP_W_PAD * self.dtype.itemsize, MAX_PARAM_SIZE * MAX_CHUNKS, 0, force_split_chunksize=32)
       split_kernel = "SplitFilterFloatPktStream" if self.dtype == "float32" else "SplitFilterInt8PktStream"
       concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
-      CCHUNK, _ = factor_int(self.C, self.B*PAD_H*PAD_W*self.dtype.itemsize, MAX_PARAM_SIZE)
+      CCHUNK, self.cchunk_count = factor_int(self.C, self.B*PAD_H*PAD_W*self.dtype.itemsize, MAX_PARAM_SIZE)
       return f"PoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK},{self.get_graph_targs()}> {self.name};"
     
   def get_computation_count(self):
     return self.B * self.C * self.OUT_H * self.OUT_W_PAD * self.KH * self.KW
+  
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph == "PoolChunkCGraph":
+      cnt = self.cchunk_count
+      cnt += self.cchunk_count // 4 + self.cchunk_count // 2 + self.cchunk_count % 2
+    if self.H0 + self.H1 + self.W0 + self.W1 != 0:
+      cnt += 1
+    self.tile_count = cnt
+  
+  # required if pool before gemm
+  def disable_output_pad(self):
+    self.OUT_W_PAD = self.OUT_W
+    self.out_size = self.B * self.C * self.OUT_H * self.OUT_W
+    super().disable_output_pad()
 
 
 class QGemmOp(OpParser):
@@ -772,7 +813,7 @@ class QGemmOp(OpParser):
     elif tw.nbytes <= TILE_SIZE: # weights on tile
       self.argname_2_tensor[f"{self.name}_w"] = tw
 
-      chunkSize, _ = factor_int(self.N, self.K * self.dtype.itemsize, TILE_SIZE, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 16))
+      chunkSize, self.nchunk_count = factor_int(self.N, self.K * self.dtype.itemsize, TILE_SIZE, force_split_chunksize=max(round(self.N / MAX_CHUNKS), 16))
       if chunkSize == self.N:
         self.kernel_type = f"QgemmGraph<{kernel},{dtype_to_cstr(self.dtype)},{dtype_to_cstr(self.tw_dtype)},{self.M},{self.K},{self.N}>"    
       else:
@@ -795,6 +836,13 @@ class QGemmOp(OpParser):
   
   def get_computation_count(self):
     return self.M*self.K*self.N + self.M*self.N*2 # add bias then quantize
+  
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph == "QgemmChunkNGraph":
+      cnt = self.nchunk_count
+      cnt += self.nchunk_count // 4 + self.nchunk_count // 2 + self.nchunk_count % 2
+    self.tile_count = cnt
 
 
 class QLinearAddOp(OpParser):
@@ -909,10 +957,10 @@ class QLinearConvOp(OpParser):
     multiplier = self.B * self.C * PAD_W * self.STEP_H * self.dtype.itemsize
     overlap = self.KH - self.STEP_H
     offset = self.B * self.C * overlap * PAD_W * self.dtype.itemsize
-    HCHUNK, hchunk_count = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=2*overlap)
+    HCHUNK, self.hchunk_count = factor_int(self.OUT_H, multiplier, TILE_SIZE, offset, force_split_chunksize=2*overlap)
     self.HCHUNK = HCHUNK * self.STEP_H + overlap
 
-    if hchunk_count <= MAX_CHUNKS and self.HCHUNK > overlap:
+    if self.hchunk_count <= MAX_CHUNKS and self.HCHUNK > overlap:
       if self.HCHUNK >= PAD_H - (self.STEP_H-1):
         self.graph = "QLinearConvStreamGraph"
         self.disable_last_file_output = True
@@ -926,7 +974,7 @@ class QLinearConvOp(OpParser):
     # option 2: chunk by image channels
     else:
       print(f"Warning: Unable to chunk {self.name}'s input vector size {self.B*self.C*PAD_H*PAD_W} heightwise.")
-      self.CCHUNK, _ = factor_int(self.C, (self.B*PAD_H*PAD_W + self.KH*self.KW) * self.dtype.itemsize, MAX_HEAP_SIZE, 0, force_split_chunksize=1)
+      self.CCHUNK, self.cchunk_count = factor_int(self.C, (self.B*PAD_H*PAD_W + self.KH*self.KW) * self.dtype.itemsize, MAX_HEAP_SIZE, 0, force_split_chunksize=1)
       self.graph = "QLinearConvChunkCGraph" if self.B*self.CCHUNK*PAD_H*PAD_W <= TILE_SIZE and self.M*self.CCHUNK*self.KH*self.KW <= TILE_SIZE else "QLinearConvChunkCStreamGraph"
     
   def register_params(self, 
@@ -1026,6 +1074,23 @@ class QLinearConvOp(OpParser):
   
   def get_computation_count(self):
     return self.B*self.C*self.OUT_H*self.OUT_W_PAD * (self.KH*self.KW + 1) # quantize
+  
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph in ["QLinearConvChunkHStreamGraph", "QLinearConvChunkHPktStreamGraph"]:
+      cnt = self.hchunk_count
+      if self.graph == "QLinearConvChunkHPktStreamGraph": # split
+        cnt += 1
+      else:
+        cnt += self.hchunk_count // 2
+      cnt += self.hchunk_count // 4 + self.hchunk_count // 2 + self.hchunk_count % 2 # concat
+    elif self.graph == "QLinearConvChunkCGraph":
+      cnt = self.cchunk_count + 1 # split
+      cnt += self.cchunk_count // 4 + self.cchunk_count // 2 + self.cchunk_count % 2 # concat
+    
+    if self.H0 + self.H1 + self.W0 + self.W1 != 0:
+      cnt += 1 # pad
+    self.tile_count = cnt
 
 
 class QLinearMacOp(OpParser):
@@ -1152,7 +1217,7 @@ class QLinearPoolOp(OpParser):
     else:
       split_kernel = "SplitScalar" if self.dtype == "float32" else "SplitInt8"
       concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
-      CCHUNK, _ = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
+      CCHUNK, self.cchunk_count = factor_int(self.C, self.B*self.INP_H*self.INP_W*self.dtype.itemsize, MAX_PARAM_SIZE)
       return f"QLinearPoolChunkCGraph<{split_kernel},{kernel},{concat_kernel},{CCHUNK}," + \
         f"{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_H},{self.OUT_W},{self.B},{self.C},{self.KH},{self.KW}> {self.name};"
     
@@ -1163,6 +1228,13 @@ class QLinearPoolOp(OpParser):
   
   def get_computation_count(self):
     return self.B*self.C*self.OUT_H*self.OUT_W * (self.KH*self.KW + 1) # quantize
+  
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph == "QLinearPoolChunkCGraph":
+      cnt = self.cchunk_count + 1 # split
+      cnt += self.cchunk_count // 4 + self.cchunk_count // 2 + self.cchunk_count % 2 # concat
+    self.tile_count = cnt
 
 
 class QLinearSoftmaxOp(OpParser):
@@ -1251,7 +1323,7 @@ class QuantizeLinearOp(OpParser):
       raise NotImplementedError(f"Expect INP_W%4==0, OUT_W%16==0, but got INP_W {self.INP_W}, OUT_W {self.OUT_W}")
 
     # streaming kernels, no window limit
-    self.HCHUNK, _ = factor_int(self.INP_H, 0, 1, 0, force_split_chunksize=1)
+    self.HCHUNK, self.hchunk_cnt = factor_int(self.INP_H, 0, 1, 0, force_split_chunksize=1)
     if self.HCHUNK == self.INP_H:
       return f"QuantizeLinearStreamGraph<QuantizeLinearFmulStream,{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
     return f"QuantizeLinearChunkHPktStreamGraph<QuantizeLinearFmulStream,{self.HCHUNK},{dtype_to_cstr(self.dtype)},{self.INP_H},{self.INP_W},{self.OUT_W}> {self.name};"
@@ -1261,6 +1333,13 @@ class QuantizeLinearOp(OpParser):
   
   def get_input_shape(self):
     return [self.INP_H, self.INP_W]
+  
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph == "QuantizeLinearChunkHPktStreamGraph":
+      cnt = self.hchunk_count + 1 # split
+      cnt += self.hchunk_count // 4 + self.hchunk_count // 2 + self.hchunk_count % 2 # concat
+    self.tile_count = cnt
 
 
 class SoftmaxOp(OpParser):
@@ -1339,15 +1418,25 @@ class TransposeOp(OpParser):
   def get_kernel_line(self) -> str:
     kernel = "TransposeScalarBHWC2BCHW" if self.perm == [0,3,1,2] else "TransposeScalarBCHW2BHWC"
     if self.B*self.H*self.W*self.C*self.dtype.itemsize > TILE_SIZE and self.perm == [0,3,1,2] and self.dtype == "float32":
-      HCHUNK, _ = factor_int(self.H, self.B*self.W*self.C*self.dtype.itemsize, TILE_SIZE)
+      HCHUNK, self.hchunk_count = factor_int(self.H, self.B*self.W*self.C*self.dtype.itemsize, TILE_SIZE)
       kernel = "TransposeScalarBHWC2BCHWStream"
+      self.graph = "TransposeHChunkGraph"
       concat_kernel = "ConcatFloatStream" if self.dtype == "float32" else "ConcatInt8Stream"
-      return f"TransposeHChunkGraph<{kernel},{concat_kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C},{self.PAD_W}> {self.name};"
+      return f"{self.graph}<{kernel},{concat_kernel},{HCHUNK},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C},{self.PAD_W}> {self.name};"
     else:
-      return f"TransposeGraph<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C},{self.PAD_W}> {self.name};"
+      self.graph = "TransposeGraph"
+      return f"{self.graph}<{kernel},{dtype_to_cstr(self.dtype)},{self.B},{self.H},{self.W},{self.C},{self.PAD_W}> {self.name};"
   
   def get_computation_count(self):
     return self.B*self.H*self.W*self.C
   
   def get_input_shape(self):
     return [self.B, self.H, self.W, self.C]
+
+  def get_tile_count(self):
+    cnt = 1
+    if self.graph == "TransposeHChunkGraph":
+      cnt = self.hchunk_count
+      cnt += self.hchunk_count // 2 # split
+      cnt += self.hchunk_count // 4 + self.hchunk_count // 2 + self.hchunk_count % 2 # concat
+    self.tile_count = cnt

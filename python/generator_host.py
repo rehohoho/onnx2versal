@@ -9,6 +9,61 @@ class HostGenerator:
     self.parser = parser
     self.g = parser.graphs[0]
 
+    gmio_allocs = []
+    gmio_cpys = []
+    gmio_xfers = []
+    gmio_frees = []
+
+    gmio_buf_allocs = []
+    gmio_buf_xfers = []
+
+    for i, (_, op) in enumerate(self.g.onnxname_2_op.items()):
+      if i == 0: # skip input node
+        continue
+      
+      for gmio_name, tensor in op.gmioname_2_tensor.items():
+        ctype = dtype_to_cstr(tensor.dtype)
+        size = tensor.size
+        repeats = op.gmio_repeats
+
+        gmio_allocs.append(
+          f"{ctype}* {gmio_name}_buf = ({ctype} *) adf::GMIO::malloc({repeats}*{size}*iter_cnt*sizeof({ctype}));"
+        )
+        gmio_cpys.append(
+          f"for (int i = 0; i < {repeats}*iter_cnt; i++)\n"
+          f"   memcpy({gmio_name}_buf + i*{size}, {gmio_name}.data(), {size}*sizeof({ctype}));"
+        )
+        gmio_xfers.append(
+          f"{self.g.name}.gmio_{gmio_name}.gm2aie_nb({gmio_name}_buf, {repeats}*{size}*iter_cnt*sizeof({ctype}));"
+        )
+        gmio_frees.append(
+          f"adf::GMIO::free({gmio_name}_buf);"
+        )
+      
+      for gmio_name, bufname in op.gmioin_2_bufname.items():
+        gmio_buf_dtype, gmio_buf_size = self.g.gmiobuf_2_size[bufname]
+        gmio_buf_xfers.append(
+          f"{self.g.name}.gmio_{gmio_name}.gm2aie_nb({bufname}, 1*{gmio_buf_size}*iter_cnt*sizeof({gmio_buf_dtype}));"
+        )
+      
+      for gmio_name, bufname in op.gmioout_2_bufname.items():
+        gmio_buf_dtype, gmio_buf_size = self.g.gmiobuf_2_size[bufname]
+        gmio_buf_xfers.append(
+          f"{self.g.name}.gmio_{gmio_name}.aie2gm({bufname}, 1*{gmio_buf_size}*iter_cnt*sizeof({gmio_buf_dtype}));"
+        )
+    
+    for gmio_buf_name, (gmio_buf_dtype, gmio_buf_size) in self.g.gmiobuf_2_size.items():
+      gmio_buf_allocs.append(
+        f"{gmio_buf_dtype}* {gmio_buf_name} = ({gmio_buf_dtype} *) adf::GMIO::malloc(1*{gmio_buf_size}*iter_cnt*sizeof({gmio_buf_dtype}));"
+      )
+
+    self.gmio_allocs = "      " + "\n".join(gmio_allocs).replace("\n", "\n      ")
+    self.gmio_buf_allocs = "      " + "\n".join(gmio_buf_allocs).replace("\n", "\n      ")
+    self.gmio_cpys = "      " + "\n".join(gmio_cpys).replace("\n", "\n      ")
+    self.gmio_xfers = "      " + "\n".join(gmio_xfers).replace("\n", "\n      ")
+    self.gmio_buf_xfers = "      " + "\n".join(gmio_buf_xfers).replace("\n", "\n      ")
+    self.gmio_frees = "      " + "\n".join(gmio_frees).replace("\n", "\n      ")
+
   def get_host_datafiles(self) -> str:
     outfiles = ["#ifdef __OUTPUT_INTER__"]
     for op in self.g.in_ops:
@@ -34,12 +89,8 @@ class HostGenerator:
       ]
     outfiles += ["#endif"]
     
-    n_outs = self.g.output_count
     for op in self.g.optout_ops:
-      outfiles += [
-         f'#define INTER{n_outs+op.id}_FILENAME "{fn}"'
-         for fn in op.get_output_filenames()
-      ]
+      outfiles += [f'#define INTER{op.id}_FILENAME "{fn}"' for fn in op.get_output_filenames()]
     return "\n".join(outfiles)
   
   def get_host_input_inits(self) -> str:
@@ -264,14 +315,18 @@ int main(int argc, char ** argv) {{
    // Graph execution for AIE
    adf::registerXRT(dhdl, top->m_header.uuid);
    try {{
+{self.gmio_allocs}
+{self.gmio_buf_allocs}
+{self.gmio_cpys}
+      
       adfCheck({self.g.name}.init(), "init {self.g.name}");
-#ifdef __IS_SW_EMU__
+      
+{self.gmio_xfers}
       adfCheck({self.g.name}.run(iter_cnt), "run {self.g.name}");
-      adfCheck({self.g.name}.wait(), "wait {self.g.name}");
-#else
-      get_graph_throughput_by_port({self.g.name}, "plout[0]", {self.g.name}.plout[0], 1*iter_cnt, sizeof(float_t), iter_cnt);
-#endif
+{self.gmio_buf_xfers}
+      
       adfCheck({self.g.name}.end(), "end {self.g.name}");
+{self.gmio_frees}
    }}
    catch (const std::system_error& ex) {{
       xrt::error error(deviceIdx, XRT_ERROR_CLASS_AIE);

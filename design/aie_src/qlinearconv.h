@@ -948,7 +948,7 @@ class QLinearConvHx8PktStream {
   
   private:
     static constexpr int OUT_H = (INP_H - KH) / STEP_H + 1;
-    static constexpr int CKK_ROW_SIZE = C*((KH*KW+15)/16*16);
+    static constexpr int CKK_ROW_SIZE = C*((KH*8+15)/16*16);
     static constexpr int INP_SIZE = B*C*INP_H*INP_W;
 
     static constexpr unsigned int MAC_ZOFFSET = (STEP_W == 1) ? 0x43322110 : 0x76543210;

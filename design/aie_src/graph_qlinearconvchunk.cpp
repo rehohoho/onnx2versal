@@ -275,8 +275,8 @@ QLinearConvChunkHGraphTest<QLinearConvHx4Stream, ConcatInt8Stream, HCHUNK,
  */
 QLinearConvChunkHStreamGraphTest<QLinearConvHx4Stream, ConcatInt8Stream, HCHUNK, 
                            TT, TTPARAM, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
-                           PADH, PADH, PADW, W1> qLinearConvHx4StreamChunkChunkH(
-  "qLinearConvHx4StreamChunkChunkH", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+                           PADH, PADH, PADW, W1> qLinearConvHx4StreamChunkH(
+  "qLinearConvHx4StreamChunkH", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x4x26x28_QLinearConvHx4StreamChunkH.txt");
 
 /*
@@ -289,8 +289,8 @@ Total cycles 4088
 */
 QLinearConvChunkHPktStreamGraphTest<QLinearConvHx4PktStream, ConcatInt8Stream, HCHUNK, 
                                     TT, TTPARAM, INP_H, INP_W, INP_W_PAD16, OUT_W, OUT_W_PAD16, STEP_H, STEP_W, B, C, M, KH, KW, GROUP, 
-                                    PADH, PADH, PADW, W1> qLinearConvHx4StreamChunkChunkHPktStream(
-  "qLinearConvHx4StreamChunkChunkHPktStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
+                                    PADH, PADH, PADW, W1> qLinearConvHx4StreamChunkHPktStream(
+  "qLinearConvHx4StreamChunkHPktStream", int8bias_3x3, 0.004, 0.003, 0.002, 25, 0, 19,
   "qlinearconv_int8in_pad.txt", "qlinearconv_int8out_3x3_shape1x4x26x28_QLinearConvHx4StreamChunkHPktStream.txt");
 
 
@@ -327,19 +327,19 @@ int main(int argc, char ** argv) {
   memcpy(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac.data(), int8weights_3x3_int16int8mac_size);
 
   adfCheck(qLinearConvHx4Stream.init(), "init qLinearConvHx4Stream");
-  qLinearConvHx4Stream.gmio_w].gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
+  qLinearConvHx4Stream.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
   adfCheck(qLinearConvHx4Stream.run(ITER_CNT), "run qLinearConvHx4Stream");
 	adfCheck(qLinearConvHx4Stream.end(), "end qLinearConvHx4Stream");
 
-  adfCheck(qLinearConvHx4StreamChunkChunkH.init(), "init qLinearConvHx4StreamChunkChunkH");
-  qLinearConvHx4StreamChunkChunkH.gmio_w].gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
-  adfCheck(qLinearConvHx4StreamChunkChunkH.run(ITER_CNT), "run qLinearConvHx4StreamChunkChunkH");
-	adfCheck(qLinearConvHx4StreamChunkChunkH.end(), "end qLinearConvHx4StreamChunkChunkH");
+  adfCheck(qLinearConvHx4StreamChunkH.init(), "init qLinearConvHx4StreamChunkH");
+  qLinearConvHx4StreamChunkH.gmio_w.gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
+  adfCheck(qLinearConvHx4StreamChunkH.run(ITER_CNT), "run qLinearConvHx4StreamChunkH");
+	adfCheck(qLinearConvHx4StreamChunkH.end(), "end qLinearConvHx4StreamChunkH");
 
-  adfCheck(qLinearConvHx4StreamChunkChunkHPktStream.init(), "init qLinearConvHx4StreamChunkChunkHPktStream");
-  qLinearConvHx4StreamChunkChunkHPktStream.gmio_w].gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
-  adfCheck(qLinearConvHx4StreamChunkChunkHPktStream.run(ITER_CNT), "run qLinearConvHx4StreamChunkChunkHPktStream");
-	adfCheck(qLinearConvHx4StreamChunkChunkHPktStream.end(), "end qLinearConvHx4StreamChunkChunkHPktStream");
+  adfCheck(qLinearConvHx4StreamChunkHPktStream.init(), "init qLinearConvHx4StreamChunkHPktStream");
+  qLinearConvHx4StreamChunkHPktStream.gmio_w[0].gm2aie_nb(int8weights_3x3_int16int8mac_buf, int8weights_3x3_int16int8mac_size);
+  adfCheck(qLinearConvHx4StreamChunkHPktStream.run(ITER_CNT), "run qLinearConvHx4StreamChunkHPktStream");
+	adfCheck(qLinearConvHx4StreamChunkHPktStream.end(), "end qLinearConvHx4StreamChunkHPktStream");
 
   adfCheck(qLinearConvHx4StreamChunkC.init(), "init qLinearConvHx4StreamChunkC");
   adfCheck(qLinearConvHx4StreamChunkC.run(ITER_CNT), "run qLinearConvHx4StreamChunkC");
@@ -353,7 +353,7 @@ int main(int argc, char ** argv) {
   memcpy(int8weights_1x1_pad_buf, int8weights_1x1_pad.data(), int8weights_1x1_pad_size);
 
   adfCheck(qLinearConv1x1PktStreamChunkHPktStream.init(), "init qLinearConv1x1PktStreamChunkHPktStream");
-  qLinearConv1x1PktStreamChunkHPktStream.gmio_w].gm2aie_nb(int8weights_1x1_pad_buf, int8weights_1x1_pad_size);
+  qLinearConv1x1PktStreamChunkHPktStream.gmio_w[0].gm2aie_nb(int8weights_1x1_pad_buf, int8weights_1x1_pad_size);
   adfCheck(qLinearConv1x1PktStreamChunkHPktStream.run(ITER_CNT), "run qLinearConv1x1PktStreamChunkHPktStream");
 	adfCheck(qLinearConv1x1PktStreamChunkHPktStream.end(), "end qLinearConv1x1PktStreamChunkHPktStream");
 

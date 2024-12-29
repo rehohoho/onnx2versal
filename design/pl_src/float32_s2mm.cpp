@@ -18,6 +18,7 @@ void float32_s2mm(dinp_t* mem, hls::stream<dout_t>& s, int size) {
 #pragma HLS PIPELINE II=1
 		dout_t x = s.read();
 		mem[i] = x;
+		std::cout << x << std::endl;
 	}
 }
 

@@ -98,4 +98,4 @@ if __name__ == "__main__":
       except Exception as e:
         print(e)
   
-  assert(pass_count == len(filepairs)), f"{pass_count} / {len(filepairs)} tests passed."
+    assert(pass_count == len(filepairs)), f"{pass_count} / {len(filepairs)} tests passed."

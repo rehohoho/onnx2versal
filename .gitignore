@@ -27,6 +27,10 @@ data/input*.txt
 data/fc*
 *.npy
 
+data_lenet_mnist/
+data_lenet_mnist_int8/
+data_jettag/
+
 # python
 *.pyc
 *.pkl
@@ -35,7 +39,7 @@ data/mnist_*.txt
 data/lenet_mnist*.txt
 
 # docs
-docs/
+docs/html/
 
 # models
 models/
